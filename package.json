@@ -1,0 +1,36 @@
+{
+  "dependencies": {
+    "@stomp/stompjs": "^7.3.0",
+    "@tanstack/react-query": "^5.102.8",
+    "axios": "^1.20.0",
+    "bootstrap": "^5.3.8",
+    "keycloak-js": "^26.2.4",
+    "react": "^19.3.0",
+    "react-bootstrap": "^2.10.10",
+    "react-dom": "^19.3.0",
+    "react-hook-form": "^7.87.0",
+    "react-router-dom": "^7.18.3",
+    "sockjs-client": "^1.6.1",
+    "zod": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/sockjs-client": "^1.5.4",
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^14.0.0",
+    "css-loader": "^7.1.5",
+    "dotenv-webpack": "^9.0.0",
+    "html-webpack-plugin": "^5.6.8",
+    "mini-css-extract-plugin": "^2.10.2",
+    "sass": "^1.104.0",
+    "sass-loader": "^17.0.1",
+    "source-map-loader": "^5.0.0",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.6.2",
+    "typescript": "^7.0.2",
+    "webpack": "^5.110.3",
+    "webpack-cli": "^7.2.3",
+    "webpack-dev-server": "^6.0.0"
+  }
+}

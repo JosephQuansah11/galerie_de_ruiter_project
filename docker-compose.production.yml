@@ -1,0 +1,76 @@
+services:
+  database:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # keycloak:
+  #   image: quay.io/keycloak/keycloak:26.2
+  #   restart: unless-stopped
+  #   command: start --http-enabled=true --proxy-headers=xforwarded
+  #   environment:
+  #     KC_DB: postgres
+  #     KC_DB_URL: jdbc:postgresql://database:5432/${POSTGRES_DB}
+  #     KC_DB_USERNAME: ${POSTGRES_USER}
+  #     KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+  #     KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:?set KEYCLOAK_ADMIN_USERNAME}
+  #     KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD}
+  #   depends_on:
+  #     database:
+  #       condition: service_healthy
+
+  # java-api:
+  #   image: ${IMAGE_NAMESPACE:?set IMAGE_NAMESPACE}/demo-java-api:${IMAGE_TAG:-latest}
+  #   restart: unless-stopped
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: prod
+  #     JPA_DDL_AUTO: ${JPA_DDL_AUTO:-update}
+  #     FRONTEND_ORIGIN: ${PUBLIC_FRONTEND_ORIGIN:?set PUBLIC_FRONTEND_ORIGIN}
+  #     DATABASE_URL: postgresql://database:5432/${POSTGRES_DB}
+  #     DATABASE_USERNAME: ${POSTGRES_USER}
+  #     DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+  #     KEYCLOAK_ISSUER_URI: ${PUBLIC_KEYCLOAK_ISSUER_URI:?set PUBLIC_KEYCLOAK_ISSUER_URI}
+  #     KEYCLOAK_SERVER_URL: http://keycloak:8080
+  #     KEYCLOAK_REALM: ${KEYCLOAK_REALM:?set KEYCLOAK_REALM}
+  #     KEYCLOAK_ADMIN_REALM: master
+  #     KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:?set KEYCLOAK_ADMIN_CLIENT_ID}
+  #     KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
+  #     KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+  #   depends_on:
+  #     database:
+  #       condition: service_healthy
+  #     keycloak:
+  #       condition: service_started
+
+#   python-api:
+#     image: ${IMAGE_NAMESPACE:?set IMAGE_NAMESPACE}/demo-python-api:${IMAGE_TAG:-latest}
+#     restart: unless-stopped
+#     environment:
+#       JAVA_API_URL: http://java-api:8080
+#       FRONTEND_ORIGIN: ${PUBLIC_FRONTEND_ORIGIN:?set PUBLIC_FRONTEND_ORIGIN}
+#     depends_on:
+#       - java-api
+
+#   frontend:
+#     image: ${IMAGE_NAMESPACE:?set IMAGE_NAMESPACE}/demo-frontend:${IMAGE_TAG:-latest}
+#     restart: unless-stopped
+#     ports:
+#       - "80:80"
+#     depends_on:
+#       - java-api
+#       - python-api
+
+volumes:
+  postgres-data:

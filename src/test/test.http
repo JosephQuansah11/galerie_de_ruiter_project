@@ -1,0 +1,99 @@
+@app = http://localhost:8080
+@keycloak = http://localhost:8081
+@keycloak_realm = master
+@keycloak_client_id = admin-cli
+@keycloak_admin_username = admin
+@keycloak_admin_password = admin
+@keycloak_app_realm = movie_project_keycloak
+@keycloak_app_client_id = movie_project_client
+@new_username = test-admin-2026
+@new_user_email = test-admin-2026@example.com
+@new_user_password = admin
+
+@keycloak_app_client_secret = FvS0v7FLwngiKKn6CTqQykNN9xqQGoLl2gJKc8YAHRJBUn8GLPAiHzi4gte7OLC8C1MNKFh0R1hOO8n0lkuigE
+
+
+### Check Keycloak realm endpoint
+GET {{keycloak}}/realms/{{keycloak_app_realm}}
+
+
+# ### Request a Keycloak admin token
+# # @name adminToken
+# POST {{keycloak}}/realms/{{keycloak_realm}}/protocol/openid-connect/token
+# Content-Type: application/x-www-form-urlencoded
+
+# grant_type=password&client_id={{keycloak_client_id}}&username={{keycloak_admin_username}}&password={{keycloak_admin_password}}
+
+### Get application admin token
+# @name adminToken
+POST {{keycloak}}/realms/{{keycloak_app_realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{keycloak_app_client_id}}&client_secret={{keycloak_app_client_secret}}&username={{new_username}}&password={{new_user_password}}
+###
+@access_token = {{adminToken.response.body.$.access_token}}
+
+### Get a CSRF token before registration
+# @name getCsrf
+GET {{app}}/api/login
+Authorization: Bearer {{access_token}}
+
+
+## getting csrf token
+@csrf_token = {{getCsrf.response.body.$.token}}
+
+### debug csrf_token
+GET {{app}}/api/debug?value={{csrf_token}}
+Authorization: Bearer {{access_token}}
+
+### Register a user in Keycloak and the application database
+POST {{app}}/api/register
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+X-XSRF-TOKEN: {{csrf_token}}
+
+{
+  "username": "{{new_username}}",
+  "email": "josephemphasis18@gmail.com",
+  "firstName": "Joseph",
+  "lastName": "Quansah Kotei",
+  "displayName": "QuansinoJosepe",
+  "password": "JeP2020-2023",
+  "role": "USER"
+}
+
+
+###
+POST http://localhost:8081/realms/master/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=admin-cli&username=admin&password=admin
+
+
+### create artist
+# @name artistId
+POST {{app}}/api/designers/add/designer
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+X-XSRF-TOKEN: {{csrf_token}}
+
+{
+  "firstName": "Designer",
+  "middleName": "Middle",
+  "lastName": "Last"
+}
+
+@artistId = 7bb7d058-6519-4c58-9d54-5f245d0e07bf
+
+### creating antiques
+POST {{app}}/api/antiques
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+X-XSRF-TOKEN: {{csrf_token}}
+
+{
+  "title": "Antique 1",
+  "artistId": "7bb7d058-6519-4c58-9d54-5f245d0e07bf",
+  "description": "This is a very nice antique found in the year 1986",
+  "price": 1000.00
+}

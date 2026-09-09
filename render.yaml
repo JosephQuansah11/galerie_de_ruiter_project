@@ -1,0 +1,81 @@
+databases:
+  - name: demo-postgres
+    databaseName: demo
+    user: demo_app
+    plan: free
+
+services:
+  - type: web
+    name: demo-java-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: JPA_DDL_AUTO
+        value: update
+      - key: DATABASE_URL
+        fromDatabase:
+          name: demo-postgres
+          property: connectionString
+      - key: DATABASE_USERNAME
+        fromDatabase:
+          name: demo-postgres
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: demo-postgres
+          property: password
+      - key: FRONTEND_ORIGIN
+        value: https://demo-frontend.onrender.com
+      - key: KEYCLOAK_ISSUER_URI
+        sync: false
+      - key: KEYCLOAK_SERVER_URL
+        sync: false
+      - key: KEYCLOAK_REALM
+        sync: false
+      - key: KEYCLOAK_ADMIN_REALM
+        value: master
+      - key: KEYCLOAK_ADMIN_CLIENT_ID
+        sync: false
+      - key: KEYCLOAK_ADMIN_USERNAME
+        sync: false
+      - key: KEYCLOAK_ADMIN_PASSWORD
+        sync: false
+
+  - type: web
+    name: demo-python-api
+    runtime: docker
+    dockerfilePath: ./python-service/Dockerfile
+    dockerContext: ./python-service
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: JAVA_API_URL
+        value: https://demo-java-api.onrender.com
+      - key: FRONTEND_ORIGIN
+        value: https://demo-frontend.onrender.com
+
+  - type: web
+    name: demo-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci --legacy-peer-deps && npm run build
+    staticPublishPath: ./dist
+    autoDeploy: true
+    envVars:
+      - key: VITE_JAVA_API_URL
+        value: https://demo-java-api.onrender.com
+      - key: VITE_PYTHON_API_URL
+        value: https://demo-python-api.onrender.com
+      - key: VITE_KEYCLOAK_URL
+        sync: false
+      - key: VITE_KEYCLOAK_REALM
+        sync: false
+      - key: VITE_KEYCLOAK_CLIENT_ID
+        sync: false

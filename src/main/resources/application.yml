@@ -1,0 +1,47 @@
+spring:
+  # profiles:
+  #   active:
+  #   - dev
+
+  config:
+    import: optional:file:.env.production[.properties]
+    
+  application:
+    name: galerie_de_ruiter
+
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+  jpa: 
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+
+  devtools:
+    add-properties: false
+
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/movie_project_keycloak}
+  
+logging:
+  level:
+    org.springframework: DEBUG
+
+server:
+  port: ${PORT}
+
+keycloak:
+  server-url: ${PUBLIC_KEYCLOAK_URL}
+  realm: ${KEYCLOAK_REALM}
+  admin-realm: ${KEYCLOAK_ADMIN_REALM}
+  admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID}
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME}
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD}

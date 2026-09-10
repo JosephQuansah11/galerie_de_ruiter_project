@@ -1,0 +1,7 @@
+import { Check, Moon, RotateCcw, Sun } from 'lucide-react'
+import { useTheme } from '../../context/ThemeContext'
+
+export function PreferencesPage() {
+  const { theme, availableThemes, setTheme, toggleDarkMode, resetTheme } = useTheme()
+  return <div className="page"><section className="page-heading"><div><div className="eyebrow">WORKSPACE SETTINGS</div><h1>Preferences</h1><p>Choose the visual language for your Fable workspace.</p></div><button className="quiet-button" onClick={resetTheme}><RotateCcw size={16} />Reset</button></section><section className="preference-panel"><div className="preference-heading"><div><div className="eyebrow">APPEARANCE</div><h2>Theme selection</h2><p>Your choice is saved locally for this browser.</p></div><button className="quiet-button" onClick={toggleDarkMode}>{theme.isDark ? <Sun size={16} /> : <Moon size={16} />}{theme.isDark ? 'Light mode' : 'Dark mode'}</button></div><div className="theme-grid">{availableThemes.map((option) => <button className={`theme-option ${theme.id === option.id ? 'selected' : ''}`} key={option.id} onClick={() => setTheme(option.id)}><span className="theme-swatch" style={{ background: option.colors.background, borderColor: option.colors.primary }}><span style={{ background: option.colors.primary }} /></span><span><strong>{option.name}</strong><small>{option.isDark ? 'Dark interface' : 'Light interface'}</small></span>{theme.id === option.id && <Check size={18} />}</button>)}</div></section></div>
+}

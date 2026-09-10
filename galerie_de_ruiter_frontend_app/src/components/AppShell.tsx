@@ -1,0 +1,10 @@
+import { Film, LayoutDashboard, LogIn, LogOut, SlidersHorizontal, UserRound } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { NavLink } from 'react-router-dom'
+import { Avatar, DropdownPanel } from './UI'
+import { useAuth } from '../context/AuthContext'
+
+export function AppShell({ children }: { children: ReactNode }) {
+  const auth = useAuth()
+  return <div className="app-shell"><aside className="sidebar"><div className="brand"><span className="brand-mark"><Film size={18} /></span><span>Fable<span className="brand-dot">.</span></span></div><div className="workspace-label">Workspace</div><nav><NavLink to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}><LayoutDashboard size={18} />Overview</NavLink><NavLink to="/library" className={({ isActive }) => isActive ? 'active' : ''}><Film size={18} />Movie library</NavLink><NavLink to="/profile" className={({ isActive }) => isActive ? 'active' : ''}><UserRound size={18} />My profile</NavLink></nav><div className="sidebar-bottom"><NavLink to="/preferences" className={({ isActive }) => isActive ? 'active' : ''}><SlidersHorizontal size={18} />Preferences</NavLink><div className="status"><span className="status-dot" />Java API connected</div></div></aside><main className="main-content"><header className="topbar"><div className="mobile-brand">Fable<span className="brand-dot">.</span></div><div className="topbar-actions">{auth.authenticated ? <DropdownPanel label={<><Avatar name={auth.profile?.username} size="small" />{auth.profile?.username ?? 'Member'}</>}><button className="menu-action" onClick={auth.logout}><LogOut size={15} />Sign out</button></DropdownPanel> : <><button className="quiet-button" onClick={auth.login}><LogIn size={16} />Sign in</button><NavLink className="primary-button" to="/register">Create account</NavLink></>}</div></header>{children}</main></div>
+}

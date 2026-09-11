@@ -1,4 +1,6 @@
-
+export type FormBaseEntity = {
+    [key: string]: any;
+};
 export interface UserProfile {
   id?: number
   username: string

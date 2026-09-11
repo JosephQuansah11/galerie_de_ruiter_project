@@ -15,6 +15,7 @@ export default {
     path: path.resolve(__dirname, "dist"),
     filename: "js/[name].[contenthash].js",
     publicPath: "/",
+    clean: true,
   },
 
   resolve: {
@@ -37,14 +38,29 @@ export default {
           },
         },
       },
-      {
-        test: /\.scss$/,
-        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
-      },
-      {
-        test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, "css-loader"],
-      },
+    {
+      test: /\.s[ac]ss$/i,
+      use: [
+        MiniCssExtractPlugin.loader, // or "style-loader" in development
+        "css-loader",
+        {
+          loader: "sass-loader",
+          options: {
+            api: "modern-compiler",          // recommended with modern Sass
+            sassOptions: {
+              // Silence the noisy Bootstrap deprecations
+              quietDeps: true,
+              silenceDeprecations: [
+                "import",
+                "global-builtin",
+                "color-functions",
+                "if-function",  
+              ],
+            },
+          },
+        },
+      ],
+    },
       {
         test: /\.(png|jpe?g|gif|svg|webp)$/i,
         type: "asset/resource",

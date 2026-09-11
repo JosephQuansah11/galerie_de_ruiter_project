@@ -5,5 +5,6 @@ export type UserProfile = {
     lastName: string;
     preferences: UserPreferences;
     avatar: string;
+    role: string;
 
 }

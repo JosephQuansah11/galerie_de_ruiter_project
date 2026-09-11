@@ -47,7 +47,7 @@ export function SearchField({
 
 export function DropdownPanel({
   label,
-  children,
+  children
 }: {
   label: ReactNode;
   children: ReactNode;

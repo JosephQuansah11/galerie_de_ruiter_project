@@ -3,6 +3,7 @@
   "name": "galerie_de_ruiter_frontend_app",
   "version": "0.1.0",
   "private": true,
+
   "scripts": {
     "start": "webpack serve --mode development",
     "dev": "webpack serve --mode development",
@@ -20,6 +21,7 @@
     "flow-bin": "^0.288.0",
     "keycloak-js": "^26.2.4",
     "lucide-react": "^0.553.0",
+    "mixins": "^0.0.1",
     "react": "^19.3.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.3.0",

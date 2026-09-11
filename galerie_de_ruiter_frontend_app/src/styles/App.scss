@@ -1,203 +1,225 @@
-// 1. Load Bootstrap mixins & functions first (needed for the "with" configuration)
 @use "sass:math";
-// @use "bootstrap/scss/functions";
 
+// 1. Configure Bootstrap variables FIRST
+@use "bootstrap/scss/bootstrap" with (
+  $primary:   #411b6b,
+  $secondary: #6b581b,
+  $success:   #680909b2,
+  // add more overrides here if needed
+  // $body-bg: ...,
+  // $font-family-sans-serif: ...,
+  );
 
+  @import "bootstrap-icons/font/bootstrap-icons.css";
 
-// @use "bootstrap/scss/maps";
-// @use "bootstrap/scss/mixins";
-// @use "bootstrap/scss/utilities";
-
-// 2. Load the full Bootstrap stylesheet (now using the configured variables)
-// @use "bootstrap/scss/bootstrap";
-
-$primary: #411b6b;
-$secondary: #6b581b;
-$success: #680909b2;
-// 3. Bootstrap Icons – best imported from JS (index.tsx)
-// Do NOT put it here anymore
+// 2. Your own variables
 $navbar-width: 4rem;
 
+// --------------------------------------------------
 // Theme system CSS custom properties
+// --------------------------------------------------
 :root {
-    --theme-background: rgba(74, 29, 110, 0.61);
-    --theme-surface: #ffffff;
-    --theme-text: #1e2022;
-    --theme-text-secondary: #6c7985;
+  --theme-background: rgba(74, 29, 110, 0.61);
+  --theme-surface: #ffffff;
+  --theme-text: #1e2022;
+  --theme-text-secondary: #6c7985;
 }
 
-// Theme-specific styles
 .theme-dark {
-    --theme-background: #1f2937;
-    --theme-surface: #374151;
-    --theme-text: #f9fafb;
-    --theme-text-secondary: #d1d5db;
+  --theme-background: #1f2937;
+  --theme-surface: #374151;
+  --theme-text: #f9fafb;
+  --theme-text-secondary: #d1d5db;
 }
 
 .theme-ocean {
-    --theme-background: linear-gradient(135deg, #0a6996 0%, #046779 100%);
-    --theme-surface: #1f314d;
-    --theme-text: #f9fafb;
-    --theme-text-secondary: #b4b9c0;
+  --theme-background: linear-gradient(135deg, #0a6996 0%, #046779 100%);
+  --theme-surface: #1f314d;
+  --theme-text: #f9fafb;
+  --theme-text-secondary: #b4b9c0;
 }
 
 .theme-forest {
-    --theme-background: linear-gradient(135deg, #06704e 0%, #016d49 100%);
-    --theme-text: #1e2022;
-    --theme-text-secondary: #6c7985;
+  --theme-background: linear-gradient(135deg, #06704e 0%, #016d49 100%);
+  --theme-text: #1e2022;
+  --theme-text-secondary: #6c7985;
 }
 
 .theme-sunset {
-    --theme-background: linear-gradient(135deg, #c45a21 0%, #b14c04d5 100%);
-    --theme-surface: #ffffff;
-    --theme-text: #1e2022;
-    --theme-text-secondary: #6c7985;
+  --theme-background: linear-gradient(135deg, #c45a21 0%, #b14c04d5 100%);
+  --theme-surface: #ffffff;
+  --theme-text: #1e2022;
+  --theme-text-secondary: #6c7985;
 }
 
 .theme-royal {
-    --theme-background: linear-gradient(360deg, #4f1a5e 0%, #7c19d8 100%);
-    --theme-surface: #ffffff;
-    --theme-text: #f8f8f8;
-    --theme-text-secondary: #6c7985;
+  --theme-background: linear-gradient(360deg, #4f1a5e 0%, #7c19d8 100%);
+  --theme-surface: #ffffff;
+  --theme-text: #f8f8f8;
+  --theme-text-secondary: #6c7985;
 }
 
-html {
-    height: 100dvh;
-    width: 100dvw;
-}
+// --------------------------------------------------
+// Layout
+// --------------------------------------------------
+
 
 body {
-    margin: 0;
-    padding: 0;
-    height: 100dvh;
-    width: 100dvw;
+  margin: 0;
+  padding: 0;
 }
 
+
 #Navbar {
-    height: 100dvh !important;
-    position: fixed;
-    left: 0;
-    top: 0;
-    z-index: 1000;
-    width: $navbar-width;
-    color: whitesmoke;
-    background: #1a0e4e;
+  height: 100dvh;
+max-width: 4rem;
+min-width: 4rem;
+  position: relative;
+  color: whitesmoke;
+  background: #1a0e4e;
+  display: flex;
+  flex-direction: column; flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.navbar-brand-div{
+  width: 100%;
+  margin: 0px;
+  display:flex;
+  justify-content: center;
+  align-items: center;
+  height: 5%;
 }
 
 $total_number_of_icons: 4;
 
-.icons-list {
- $calculated-value: math.div(80, $total_number_of_icons);
-    // $string-result: quote("#{$calculated-value}rem");
-    padding: 0;
-    margin: 0;
-    // height: #{$string-result};
-    background: var(--theme-background);
-    color: var(--theme-text)
-    // display: flex;
-    // align-items: center;
-    // justify-content: center;
-    // text-align: center;
-    // z-index: -2;
-
+.navbar-nav .nav-link  {
+  padding: 0px;
+  margin: 0px;
 }
 
-.navbar-nav .nav-link {
-    padding: 0;
-    margin: 0;
+.navbar-nav {
+  height: 80%;
+  justify-content:center;
+  width: 90%;
 }
 
-i{
-    margin: 0;
-    width: 100%;
-    padding: 0.6rem;
+.navbar-nav > div {
+
+  width: 100%;
+}
+
+.navbar-brand{
+  margin: 0;
+  padding: 0;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  font-size: 0.6875rem;
+  color: #7eaaa0;
+  height: 2rem;
+}
+
+.status-dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: #71c99a;
+}
+
+i {
+  margin: 0;
+  width: 100%;
+  padding: 0.6rem;
 }
 
 .hover-effect {
-    text-decoration: none;
-    text-transform: none;
-    font-size: 1.8rem;
-    font-weight: 400;
-    margin: 0;
-    clip-path: circle(100%);
-    width: 100%;
-    height: 100%;
-    color: rgba(197, 181, 181, 0.767);
+  text-decoration: none;
+  text-transform: none;
+  font-size: 1.8rem;
+  font-weight: 400;
+  margin: 0;
+  clip-path: circle(100%);
+  width: 100%;
+  height: 100%;
+  color: rgba(197, 181, 181, 0.767);
 }
 
 .hover-effect:hover {
-    font-weight: 600;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background-color: rgba(92, 91, 91, 0.7);
-    color: rgb(255, 249, 249);
+  font-weight: 600;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(92, 91, 91, 0.7);
+  color: rgb(255, 249, 249);
 }
 
 .center-rounded-icons {
-    padding: 0.45rem 0.45rem 0.45rem 0.45rem;
-    font-size: 2rem;
-    clip-path: circle(40%);
+  padding: 0.45rem;
+  font-size: 2rem;
+  clip-path: circle(40%);
 }
 
-
+.app-main {
+  background: var(--theme-background);
+  height: 100dvh;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  margin: 0;
+  color: var(--theme-text);
+}
 
 main {
-    background: var(--theme-background);
-    height: 100dvh;
-    scrollbar-width: none;
-    scroll-behavior: smooth;
-    margin-left: calc($navbar-width); // Account for fixed navbar width
-    color: var(--theme-text);
-    margin: 0;
+  width: 100%;  
+  padding: 1rem;
+}
+
+.icons-list {
     padding: 0;
-    //scrolling should be possible but I don't want to see the scroll bar
+    margin: 0;
+    // background: var(--theme-background);
+    color: var(--theme-text);
+      position: relative;
+  width: 100%;
+  display:flex;
+      flex-direction: column;
+      align-items: center;
+    height: 70%;
+    gap: 2rem 0rem;
+}
+
+.icons-list-user-profile{
+  
+    padding: 0;
+    margin: 0;
+    background: var(--theme-background);
+    color: var(--theme-text);
+    position: relative;
+    width: 100%;
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem 0rem;
 }
 
 .main-content {
-    flex-grow: 1;
-    overflow-y: auto;
-    height: 100vh;
-    padding: 1rem;
-    position: relative;
-    margin-left: calc($navbar-width );
+    position: relative !important;
 }
 
-
-.main-content::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    // background-image: url('./images/2149548010.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    filter: blur(5px);
-    overflow-y: auto;
-    background-attachment: fixed;
-    z-index: -1;
-}
-
-
-.main-content>* {
-    position: relative;
-    z-index: 1;
-}
 
 #home {
-    flex-grow: 1;
-    overflow: auto;
+  flex-grow: 1;
+  overflow: auto;
 }
 
 ::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
-
 .custom-div {
-    width: 100%;
-    padding: 1rem;
+  width: 100%;
+  padding: 1rem;
 }

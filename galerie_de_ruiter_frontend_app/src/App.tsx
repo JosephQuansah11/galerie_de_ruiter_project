@@ -15,6 +15,19 @@ import "@/styles/App.scss";
 import { Container } from "react-bootstrap";
 import { CustomNav } from "@/components/Navigation";
 import AddNewAntique from "./pages/antiques/AddNewAntique";
+import AntiquesPage from "./pages/antiques/AntiquesPage";
+import AntiqueDetailPage from "./pages/antiques/AntiqueDetailPage";
+import WishlistPage from "./pages/shopping/WishlistPage";
+import CartPage from "./pages/shopping/CartPage";
+import { ShoppingProvider } from "./context/ShoppingContext";
+import WelcomePage from "./pages/WelcomePage";
+import CategoryAdminPage from "./pages/admin/CategoryAdminPage";
+import LocationAdminPage from "./pages/admin/LocationAdminPage";
+import LocationPage from "./pages/LocationPage";
+import { LanguageProvider } from "./context/LanguageContext";
+import AntiqueAdminPage from "./pages/admin/AntiqueAdminPage";
+import CheckoutResultPage from "./pages/shopping/CheckoutResultPage";
+import ChatPage from "./pages/ChatPage";
 
 function ProtectedLayout() {
   const auth = useAuth();
@@ -26,14 +39,28 @@ function ProtectedLayout() {
   return (
     <Container className="container-div">
       <CustomNav />
+      <ShoppingProvider>
       <main className="app-main main-content">
         <Routes>
-          <Route path="/dashboard" element={<AddNewAntique></AddNewAntique>} />
+          <Route path="/dashboard" element={<WelcomePage />} />
+          <Route path="/dashboard/chat" element={<ChatPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/preferences" element={<PreferencesPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/antiques" element={<AntiquesPage />} />
+          <Route path="/antiques/:id" element={<AntiqueDetailPage />} />
+          <Route path="/admin/antiques/new" element={<AddNewAntique />} />
+          <Route path="/admin/antiques" element={<AntiqueAdminPage />} />
+          <Route path="/admin/categories" element={<CategoryAdminPage />} />
+          <Route path="/admin/location" element={<LocationAdminPage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/map" element={<LocationPage />} />
+          <Route path="/checkout/success" element={<CheckoutResultPage />} />
+          <Route path="/checkout/cancel" element={<CheckoutResultPage />} />
         </Routes>
       </main>
+      </ShoppingProvider>
     </Container>
   );
 }
@@ -51,11 +78,13 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
+      <LanguageProvider>
       <AuthProvider>
         <BrowserRouter>
           <AppContent />
         </BrowserRouter>
       </AuthProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

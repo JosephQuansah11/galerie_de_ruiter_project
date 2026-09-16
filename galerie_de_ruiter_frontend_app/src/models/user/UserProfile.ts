@@ -6,5 +6,4 @@ export type UserProfile = {
     preferences: UserPreferences;
     avatar: string;
     role: string;
-
 }

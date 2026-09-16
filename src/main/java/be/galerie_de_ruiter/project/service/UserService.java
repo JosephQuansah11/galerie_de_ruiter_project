@@ -4,10 +4,6 @@ import be.galerie_de_ruiter.project.domain.User;
 import be.galerie_de_ruiter.project.domain.UserRole;
 import be.galerie_de_ruiter.project.dto.UserRegistrationRequest;
 import be.galerie_de_ruiter.project.repository.UserRepository;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 import org.keycloak.admin.client.CreatedResponseUtil;
@@ -101,9 +97,15 @@ public class UserService implements UserServiceImplementation {
         return usersRepository.findByKeycloakSubject(keycloakSubject)
                 .orElseGet(() ->
                         usersRepository.save(
-                                new User(keycloakSubject, username, email)
+                            new User(keycloakSubject, email, username)
                         )
                 );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<User> findAll() {
+        return usersRepository.findAll();
     }
 
     @Override

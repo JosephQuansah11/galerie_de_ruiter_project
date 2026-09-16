@@ -8,11 +8,11 @@ export interface Theme {
 }
 
 export const themes: Record<string, Theme> = {
-  default: { id: 'default', name: 'SDA Default', isDark: false, colors: { background: '#f5f6f2', surface: '#ffffff', text: '#26313d', textSecondary: '#78838c', primary: '#1e6f5c' } },
-  dark: { id: 'dark', name: 'Dark Mode', isDark: true, colors: { background: '#172329', surface: '#24343a', text: '#f4f7f3', textSecondary: '#b5c4c0', primary: '#78c6a3' } },
-  ocean: { id: 'ocean', name: 'Ocean Blue', isDark: false, colors: { background: '#eef7f8', surface: '#ffffff', text: '#173c4b', textSecondary: '#5d7a83', primary: '#087f8c' } },
-  forest: { id: 'forest', name: 'Forest Green', isDark: false, colors: { background: '#f0f6f0', surface: '#ffffff', text: '#1e4032', textSecondary: '#6c8577', primary: '#2f7d58' } },
-  sunset: { id: 'sunset', name: 'Sunset Orange', isDark: false, colors: { background: '#fff5ed', surface: '#ffffff', text: '#4e3025', textSecondary: '#92766a', primary: '#c65e32' } },
+  default: { id: 'default', name: 'Wine & white', isDark: false, colors: { background: '#f7f1ed', surface: '#ffffff', text: '#3c1f25', textSecondary: '#80656a', primary: '#6b2432' } },
+  dark: { id: 'dark', name: 'Deep wine', isDark: true, colors: { background: '#2d171d', surface: '#43242c', text: '#fffaf7', textSecondary: '#ddc3c0', primary: '#d49a9c' } },
+  ocean: { id: 'ocean', name: 'Rose paper', isDark: false, colors: { background: '#f1e6e2', surface: '#ffffff', text: '#3c1f25', textSecondary: '#80656a', primary: '#7d3f43' } },
+  forest: { id: 'forest', name: 'Oxblood', isDark: false, colors: { background: '#fffaf7', surface: '#ffffff', text: '#3c1f25', textSecondary: '#80656a', primary: '#6b2432' } },
+  sunset: { id: 'sunset', name: 'Blush', isDark: false, colors: { background: '#f7ebe7', surface: '#ffffff', text: '#3c1f25', textSecondary: '#80656a', primary: '#8a6258' } },
 }
 
 interface ThemeContextValue {

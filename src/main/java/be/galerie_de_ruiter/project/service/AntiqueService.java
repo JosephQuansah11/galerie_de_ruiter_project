@@ -5,6 +5,7 @@ import be.galerie_de_ruiter.project.domain.Designer;
 import be.galerie_de_ruiter.project.dto.AntiqueRequest;
 import be.galerie_de_ruiter.project.repository.AntiqueRepository;
 import be.galerie_de_ruiter.project.repository.DesignerRepository;
+import be.galerie_de_ruiter.project.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,6 +23,7 @@ public class AntiqueService {
     private final AntiqueRepository antiques;
     private final DesignerRepository designerRepository;
     private final UserService users;
+        private final CategoryRepository categoryRepository;
 
     @Transactional(readOnly = true)
     public List<Antique> findAll() {
@@ -38,8 +40,7 @@ public class AntiqueService {
                                 "Designer not found: " + request.artistId()
                         ));
 
-        return antiques.save(
-                new Antique(
+        Antique antique = new Antique(
                         request.title(),
                         artist,
                         request.description(),
@@ -48,8 +49,10 @@ public class AntiqueService {
                                 jwt.getSubject(),
                                 jwt.getClaimAsString("preferred_username"),
                                 jwt.getClaimAsString("email")
-                        )
-                )
-        );
+                        ),
+                        request.categoryId() == null ? null : categoryRepository.findById(request.categoryId()).orElseThrow()
+                );
+                antique.setModelUrl(request.modelUrl());
+        return antiques.save(antique);
     }
 }

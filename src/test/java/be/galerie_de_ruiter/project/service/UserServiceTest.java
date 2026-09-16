@@ -23,12 +23,10 @@ class UserServiceTest {
 	private UserRepository users;
 	@Mock
 	private Keycloak keycloakAdminClient;
-    @Mock
-	private String keycloakRealm;
 
 	@Test
 	void createsAProfileFromTheAuthenticatedKeycloakSubject() {
-		UserService service = new UserService(users, keycloakAdminClient, keycloakRealm);
+		UserService service = new UserService(users, keycloakAdminClient, "test-realm");
 		Jwt jwt = Jwt.withTokenValue("token").header("alg", "none").subject("subject-1")
 				.claim("email", "person@example.com").claim("preferred_username", "person")  .claim("realm_access", Map.of(
                     "roles", List.of("USER")

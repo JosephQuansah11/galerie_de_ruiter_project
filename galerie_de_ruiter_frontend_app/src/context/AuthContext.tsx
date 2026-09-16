@@ -93,7 +93,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 };
 
 keycloak.onAuthLogout = () => {
+  setAuthenticated(false);
   setToken(undefined);
+  setProfile(undefined);
+  setRoles([]);
   setAuthToken(undefined);
 };
 

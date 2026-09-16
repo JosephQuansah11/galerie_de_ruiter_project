@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
@@ -28,6 +29,11 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	ResponseEntity<ApiError> conflict(DataIntegrityViolationException exception, HttpServletRequest request) {
 		return response(HttpStatus.CONFLICT, "The request conflicts with existing data", request);
+	}
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	ResponseEntity<ApiError> unreadable(HttpMessageNotReadableException exception, HttpServletRequest request) {
+		return response(HttpStatus.BAD_REQUEST, "Malformed JSON request body", request);
 	}
 
 	@ExceptionHandler(Exception.class)

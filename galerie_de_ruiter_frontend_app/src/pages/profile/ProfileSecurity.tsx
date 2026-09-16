@@ -1,5 +1,5 @@
-import { ShieldCheck } from 'lucide-react'
+import { CheckCircle2, ShieldCheck } from 'lucide-react'
 
 export function ProfileSecurity({ isAdmin }: { isAdmin: boolean }) {
-  return <aside className="security-card"><ShieldCheck size={22} /><h3>Identity & access</h3><p>Authentication and authorization are handled by your Java service and Keycloak realm.</p><div className="security-line"><span>Provider</span><strong>Keycloak</strong></div><div className="security-line"><span>Roles</span><strong>{isAdmin ? 'Admin access' : 'User access'}</strong></div><div className="security-line"><span>API state</span><strong className="online">Connected</strong></div></aside>
+  return <aside className="security-card"><div className="security-card-icon"><ShieldCheck size={24} /></div><div className="eyebrow">ACCOUNT PROTECTION</div><h3>Your account is protected</h3><p>Your sign-in is securely managed. No authentication provider or technical configuration details are shown here.</p><div className="security-line"><span>Access level</span><strong>{isAdmin ? 'Administrator' : 'Member'}</strong></div><div className="security-line"><span>Session</span><strong className="online"><CheckCircle2 size={15} /> Active</strong></div></aside>
 }

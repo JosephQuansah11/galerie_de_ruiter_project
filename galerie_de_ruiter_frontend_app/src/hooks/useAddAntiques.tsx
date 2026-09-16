@@ -51,7 +51,7 @@ export function useAntiqueContent() {
 
 export async function AddAntiqueItem(antique: AntiqueForm): Promise<void> {
     try {
-        await addAntique(antique as any);
+        await addAntique(antique);
         // Trigger a refresh by updating the component state
         window.location.reload(); // Simple refresh for now
     } catch (error) {

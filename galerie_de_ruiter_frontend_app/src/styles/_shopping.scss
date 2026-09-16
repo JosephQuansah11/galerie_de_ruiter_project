@@ -1,0 +1,13 @@
+.shopping-page { max-width: 74rem; margin: 0 auto; padding: 1.5rem clamp(0.5rem, 3vw, 3rem) 4rem; }
+.shopping-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 2rem; }
+.shopping-heading h1 { margin: 0.55rem 0 1rem; font: 400 clamp(2.4rem, 5vw, 4.5rem) Georgia, serif; }
+.shopping-list { display: grid; gap: 0.8rem; }
+.shopping-row { display: flex; align-items: center; gap: 1.2rem; padding: 1rem; border: 1px solid rgba(30, 32, 34, 0.13); background: var(--theme-surface); }
+.shopping-thumb { display: grid; flex: 0 0 5.5rem; place-items: center; aspect-ratio: 1; background: linear-gradient(135deg, #cfb89b, #7b6d5c); color: white; font: 2.3rem Georgia, serif; }
+.shopping-row-copy { flex: 1; }
+.shopping-row-copy h2 { margin: 0.25rem 0; font: 1.35rem Georgia, serif; }
+.shopping-row-actions, .shopping-row-actions button, .cart-total button { display: inline-flex; align-items: center; gap: 0.4rem; }
+.quantity-input { max-width: 4.5rem; }
+.cart-total { display: flex; align-items: center; justify-content: flex-end; gap: 1.5rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(30, 32, 34, 0.15); }
+.cart-total strong { font-size: 1.2rem; }
+@media (max-width: 640px) { .shopping-row { align-items: flex-start; flex-wrap: wrap; } .shopping-row-actions { margin-left: 6.7rem; } .cart-total { align-items: stretch; flex-direction: column; gap: 0.7rem; } }

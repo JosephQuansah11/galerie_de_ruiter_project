@@ -55,6 +55,7 @@ export const initialUserForm: UserForm = {
             notifications: false,
         },
         avatar: '',
+        role: ''
     },
     role: '',
     lastActive: null,

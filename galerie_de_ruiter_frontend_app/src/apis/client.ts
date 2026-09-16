@@ -15,6 +15,6 @@ export function bearerHeaders(token: string) {
 }
 
 export async function csrfHeaders() {
-  const { data } = await javaApi.get<{ token: string }>('/users/csrf')
+  const { data } = await javaApi.get<{ token: string }>('/api/login')
   return { 'X-XSRF-TOKEN': data.token }
 }

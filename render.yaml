@@ -1,12 +1,58 @@
 databases:
-  - name: demo-postgres
-    databaseName: demo
-    user: demo_app
-    plan: free
+  - name: galerie-app-db
+    databaseName: galerie
+    user: galerie_app
+    plan: starter
+  - name: galerie-keycloak-db
+    databaseName: keycloak
+    user: keycloak_app
+    plan: starter
 
 services:
   - type: web
-    name: demo-java-api
+    name: galerie-keycloak
+    runtime: docker
+    dockerfilePath: ./keycloak/Dockerfile
+    dockerContext: ./keycloak
+    plan: starter
+    healthCheckPath: /health/ready
+    autoDeploy: true
+    envVars:
+      - key: KC_HOSTNAME
+        value: https://galerie-keycloak.onrender.com
+      - key: KC_PROXY_HEADERS
+        value: xforwarded
+      - key: KC_HTTP_ENABLED
+        value: "true"
+      - key: KC_DB
+        value: postgres
+      - key: KC_DB_URL_HOST
+        fromDatabase:
+          name: galerie-keycloak-db
+          property: host
+      - key: KC_DB_URL_PORT
+        fromDatabase:
+          name: galerie-keycloak-db
+          property: port
+      - key: KC_DB_URL_DATABASE
+        fromDatabase:
+          name: galerie-keycloak-db
+          property: database
+      - key: KC_DB_USERNAME
+        fromDatabase:
+          name: galerie-keycloak-db
+          property: user
+      - key: KC_DB_PASSWORD
+        fromDatabase:
+          name: galerie-keycloak-db
+          property: password
+      - key: KC_BOOTSTRAP_ADMIN_USERNAME
+        sync: false
+      - key: KC_BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
+
+  - type: web
+    name: galerie-java-api
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -18,26 +64,28 @@ services:
         value: prod
       - key: JPA_DDL_AUTO
         value: update
+      - key: PORT
+        value: "8080"
       - key: DATABASE_URL
         fromDatabase:
-          name: demo-postgres
+          name: galerie-app-db
           property: connectionString
       - key: DATABASE_USERNAME
         fromDatabase:
-          name: demo-postgres
+          name: galerie-app-db
           property: user
       - key: DATABASE_PASSWORD
         fromDatabase:
-          name: demo-postgres
+          name: galerie-app-db
           property: password
       - key: FRONTEND_ORIGIN
-        value: https://demo-frontend.onrender.com
+        value: https://galerie-frontend.onrender.com
       - key: KEYCLOAK_ISSUER_URI
-        sync: false
-      - key: KEYCLOAK_SERVER_URL
-        sync: false
+        value: https://galerie-keycloak.onrender.com/realms/galerie
+      - key: PUBLIC_KEYCLOAK_URL
+        value: https://galerie-keycloak.onrender.com
       - key: KEYCLOAK_REALM
-        sync: false
+        value: galerie
       - key: KEYCLOAK_ADMIN_REALM
         value: master
       - key: KEYCLOAK_ADMIN_CLIENT_ID
@@ -46,36 +94,33 @@ services:
         sync: false
       - key: KEYCLOAK_ADMIN_PASSWORD
         sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_SUCCESS_URL
+        value: https://galerie-frontend.onrender.com/checkout/success
+      - key: STRIPE_CANCEL_URL
+        value: https://galerie-frontend.onrender.com/checkout/cancel
 
-  - type: web
-    name: demo-python-api
-    runtime: docker
-    dockerfilePath: ./python-service/Dockerfile
-    dockerContext: ./python-service
-    plan: starter
-    healthCheckPath: /health
-    autoDeploy: true
-    envVars:
-      - key: JAVA_API_URL
-        value: https://demo-java-api.onrender.com
-      - key: FRONTEND_ORIGIN
-        value: https://demo-frontend.onrender.com
-
-  - type: web
-    name: demo-frontend
-    runtime: static
-    rootDir: frontend
-    buildCommand: npm ci --legacy-peer-deps && npm run build
+  - type: static
+    name: galerie-frontend
+    rootDir: galerie_de_ruiter_frontend_app
+    buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     autoDeploy: true
     envVars:
       - key: VITE_JAVA_API_URL
-        value: https://demo-java-api.onrender.com
-      - key: VITE_PYTHON_API_URL
-        value: https://demo-python-api.onrender.com
+        value: https://galerie-java-api.onrender.com
+      - key: VITE_JAVA_BACKEND_URL
+        value: https://galerie-java-api.onrender.com
+      - key: VITE_API_URL
+        value: https://galerie-java-api.onrender.com
       - key: VITE_KEYCLOAK_URL
-        sync: false
+        value: https://galerie-keycloak.onrender.com
       - key: VITE_KEYCLOAK_REALM
-        sync: false
+        value: galerie
       - key: VITE_KEYCLOAK_CLIENT_ID
-        sync: false
+        value: galerie-frontend
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import be.galerie_de_ruiter.project.domain.Designer;
 import be.galerie_de_ruiter.project.dto.DesignerRequest;
+import be.galerie_de_ruiter.project.dto.DesignerResponse;
 import be.galerie_de_ruiter.project.service.implementation.DesignerServiceImplementation;
 import lombok.RequiredArgsConstructor;
 
@@ -24,18 +24,18 @@ public class DesignerController {
     private final DesignerServiceImplementation designerService;
 
     @GetMapping
-    public List<Designer> getAllDesigners() {
-        return designerService.getAllDesigners();
+    public List<DesignerResponse> getAllDesigners() {
+        return designerService.getAllDesigners().stream().map(DesignerResponse::from).toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Designer> getDesigner(@PathVariable UUID id) {
-        return ResponseEntity.ok(designerService.getDesigner(id));
+    public ResponseEntity<DesignerResponse> getDesigner(@PathVariable UUID id) {
+        return ResponseEntity.ok(DesignerResponse.from(designerService.getDesigner(id)));
     }
 
     @PostMapping("/add/designer")
-    public ResponseEntity<Designer> assignDesigner(@RequestBody DesignerRequest request) {
-        return ResponseEntity.ok(designerService.saveDesigner(request));
+    public ResponseEntity<DesignerResponse> assignDesigner(@RequestBody DesignerRequest request) {
+        return ResponseEntity.ok(DesignerResponse.from(designerService.saveDesigner(request)));
     }
     
 }

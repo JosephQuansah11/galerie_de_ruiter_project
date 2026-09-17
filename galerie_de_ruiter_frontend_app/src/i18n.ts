@@ -22,7 +22,7 @@ const resources = {
       priceOnRequest: "Price on request",
       storyWaiting: "A story waiting to be discovered.",
       cart: "Cart",
-      wishlist: "Saved pieces",
+      wishlist: "Wishlist",
       addToCart: "Add to cart",
       browseAntiques: "Browse antiques",
       requestPurchase: "Request purchase",

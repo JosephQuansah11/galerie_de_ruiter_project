@@ -3,10 +3,12 @@
 .settings-page .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(60, 31, 37, 0.14); }
 .settings-page .page-heading h1 { margin: 0.35rem 0; font: 400 clamp(2.3rem, 5vw, 4rem) Georgia, serif; }
 .settings-page .page-heading p { margin: 0; color: var(--theme-text-secondary); }
-.settings-page .preference-panel { display: grid; gap: 1.5rem; padding: 1.5rem; border: 1px solid rgba(60, 31, 37, 0.14); background: var(--theme-surface); }
+.settings-page .preference-panel { display: grid; gap: 1.5rem; padding: clamp(1.25rem, 3vw, 2.5rem); border: 1px solid rgba(60, 31, 37, 0.14); background: var(--theme-surface); box-shadow: 0 1rem 2.5rem rgba(60, 31, 37, 0.08); }
 .settings-page .language-setting { margin: 0; }
 .settings-page .preference-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding-top: 1.5rem; border-top: 1px solid rgba(60, 31, 37, 0.12); }
 .settings-page .preference-heading h2 { margin: 0.3rem 0; font: 1.7rem Georgia, serif; }
 .settings-page .preference-heading p { margin: 0; color: var(--theme-text-secondary); }
 .settings-page .theme-grid { margin-top: 0.25rem; }
+.settings-page .theme-option { min-height: 6.5rem; border-color: rgba(60, 31, 37, 0.16); }
+.settings-page .theme-option.selected { border-width: 2px; box-shadow: 0 0.5rem 1.25rem rgba(60, 31, 37, 0.12); }
 @media (max-width: 650px) { .settings-page .page-heading, .settings-page .preference-heading { align-items: stretch; flex-direction: column; } .settings-page .language-setting { align-items: stretch; flex-direction: column; } .settings-page .language-setting select { width: 100%; min-width: 0; } }

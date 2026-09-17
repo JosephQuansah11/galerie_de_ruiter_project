@@ -12,24 +12,68 @@
 
 @keycloak_app_client_secret = FvS0v7FLwngiKKn6CTqQykNN9xqQGoLl2gJKc8YAHRJBUn8GLPAiHzi4gte7OLC8C1MNKFh0R1hOO8n0lkuigE
 
-
 ### Check Keycloak realm endpoint
 GET {{keycloak}}/realms/{{keycloak_app_realm}}
 
+### Request a Keycloak administrator token from master
+# @name keycloakAdminToken
+POST {{keycloak}}/realms/{{keycloak_realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
 
-# ### Request a Keycloak admin token
-# # @name adminToken
-# POST {{keycloak}}/realms/{{keycloak_realm}}/protocol/openid-connect/token
-# Content-Type: application/x-www-form-urlencoded
+grant_type=password&client_id={{keycloak_client_id}}&username={{keycloak_admin_username}}&password={{keycloak_admin_password}}
 
-# grant_type=password&client_id={{keycloak_client_id}}&username={{keycloak_admin_username}}&password={{keycloak_admin_password}}
+### Create the application administrator (expect HTTP 201)
+# @name createRealmAdmin
+POST {{keycloak}}/admin/realms/{{keycloak_app_realm}}/users
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+Content-Type: application/json
 
-### Get application admin token
+{
+  "username": "{{new_username}}",
+  "email": "{{new_user_email}}",
+  "enabled": true,
+  "emailVerified": true,
+  "credentials": [
+    {
+      "type": "password",
+      "value": "{{new_user_password}}",
+      "temporary": false
+    }
+  ]
+}
+
+### Look up the new user's Keycloak ID
+# @name realmAdminUser
+GET {{keycloak}}/admin/realms/{{keycloak_app_realm}}/users?username={{new_username}}&exact=true
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+
+###
+@realm_admin_user_id = {{realmAdminUser.response.body.$[0].id}}
+
+### Get the admin realm role
+# @name applicationAdminRole
+GET {{keycloak}}/admin/realms/{{keycloak_app_realm}}/roles/admin
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+
+### Grant the admin realm role
+POST {{keycloak}}/admin/realms/{{keycloak_app_realm}}/users/{{realm_admin_user_id}}/role-mappings/realm
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+Content-Type: application/json
+
+[
+  {
+    "id": "{{applicationAdminRole.response.body.$.id}}",
+    "name": "{{applicationAdminRole.response.body.$.name}}"
+  }
+]
+
+### Log in as the newly registered application administrator
 # @name adminToken
 POST {{keycloak}}/realms/{{keycloak_app_realm}}/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
 grant_type=password&client_id={{keycloak_app_client_id}}&client_secret={{keycloak_app_client_secret}}&username={{new_username}}&password={{new_user_password}}
+
 ###
 @access_token = {{adminToken.response.body.$.access_token}}
 
@@ -59,18 +103,12 @@ X-XSRF-TOKEN: {{csrf_token}}
   "lastName": "Quansah Kotei",
   "displayName": "QuansinoJosepe",
   "password": "JeP2020-2023",
-  "role": "USER"
+  "role": "ADMIN"
 }
 
 
-###
-POST http://localhost:8081/realms/master/protocol/openid-connect/token
-Content-Type: application/x-www-form-urlencoded
-
-grant_type=password&client_id=admin-cli&username=admin&password=admin
 
 
-# Run this request first. Its response creates the artistId used below.
 ### create artist
 # @name createArtist
 POST {{app}}/api/designers/add/designer
@@ -87,9 +125,7 @@ X-XSRF-TOKEN: {{csrf_token}}
 ###
 @artistId = {{createArtist.response.body.$.id}}
 
-# Run the createArtist request above before sending this request.
 ### creating antiques
-# @name createAntique
 POST {{app}}/api/antiques
 Content-Type: application/json
 Authorization: Bearer {{access_token}}
@@ -102,7 +138,6 @@ X-XSRF-TOKEN: {{csrf_token}}
   "price": 1000.00
 }
 
-# Run each named category request below before running the resolved-ID block.
 ### Create catalogue categories for the sample collection
 # @name lightingCategory
 POST {{app}}/api/categories
@@ -135,7 +170,7 @@ Authorization: Bearer {{access_token}}
 
 {"name":"Art","visible":true}
 
-### Resolved category IDs (requires all four category requests above to have run)
+### Resolved category IDs
 @lighting_category_id = {{lightingCategory.response.body.$.id}}
 @furniture_category_id = {{furnitureCategory.response.body.$.id}}
 @decor_category_id = {{decorCategory.response.body.$.id}}

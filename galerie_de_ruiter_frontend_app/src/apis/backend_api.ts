@@ -1,6 +1,6 @@
 
 import axiosInstance from '@/apis/authPromise';
-import Antique, { AntiqueForm, Category } from '@/models/antiques/Antique';
+import Antique, { AntiqueForm, Category, Designer } from '@/models/antiques/Antique';
 
 export type StoreLocation = {
     id: string;
@@ -28,7 +28,19 @@ export const addAntique = async (antique: AntiqueForm): Promise<Antique> => {
 export const uploadAntiqueImage = async (id: string, image: File): Promise<void> => {
     const body = new FormData();
     body.append("image", image);
-    await axiosInstance.put(`${backendBaseURL}/api/antiques/${id}/image`, body, { headers: { "Content-Type": "multipart/form-data" } });
+    // Clear the instance's default JSON header so axios sets the multipart boundary itself.
+    await axiosInstance.put(`${backendBaseURL}/api/antiques/${id}/image`, body, {
+        headers: { "Content-Type": undefined },
+    });
+};
+
+export const saveAntiqueReconstruction = async (
+    id: string,
+    views: { position: string; url: string }[],
+    modelUrl?: string | null,
+): Promise<Antique> => {
+    const response = await axiosInstance.put<Antique>(`${backendBaseURL}/api/antiques/${id}/reconstruction`, { views, modelUrl });
+    return response.data;
 };
 
 export const getVisibleCategories = async (): Promise<Category[]> => {
@@ -40,6 +52,21 @@ export const getAllCategories = async (): Promise<Category[]> => {
     const response = await axiosInstance.get<Category[]>(`${backendBaseURL}/api/categories/admin`);
     return response.data;
 }
+
+export const getAllDesigners = async (): Promise<Designer[]> => {
+    const response = await axiosInstance.get<Designer[]>(`${backendBaseURL}/api/designers`);
+    return response.data;
+};
+
+export const searchDesigners = async (query: string): Promise<Designer[]> => {
+    const response = await axiosInstance.get<Designer[]>(`${backendBaseURL}/api/designers/search`, { params: { query } });
+    return response.data;
+};
+
+export const createDesigner = async (designer: Omit<Designer, "id">): Promise<Designer> => {
+    const response = await axiosInstance.post<Designer>(`${backendBaseURL}/api/designers/add/designer`, designer);
+    return response.data;
+};
 
 export const updateCategory = async (category: Category): Promise<Category> => {
     const response = await axiosInstance.put<Category>(`${backendBaseURL}/api/categories/${category.id}`, {

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import be.galerie_de_ruiter.project.dto.DesignerRequest;
@@ -26,6 +27,11 @@ public class DesignerController {
     @GetMapping
     public List<DesignerResponse> getAllDesigners() {
         return designerService.getAllDesigners().stream().map(DesignerResponse::from).toList();
+    }
+
+    @GetMapping("/search")
+    public List<DesignerResponse> searchDesigners(@RequestParam String query) {
+        return designerService.searchDesigners(query.trim()).stream().map(DesignerResponse::from).toList();
     }
 
     @GetMapping("/{id}")

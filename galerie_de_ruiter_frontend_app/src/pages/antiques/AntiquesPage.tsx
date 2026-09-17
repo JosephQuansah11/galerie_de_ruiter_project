@@ -4,6 +4,7 @@ import { Heart, Search, ShoppingBag } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAntiqueContent } from "@/hooks/useAddAntiques";
 import type Antique from "@/models/antiques/Antique";
+import { resolveAntiqueImageUrl } from "@/models/antiques/Antique";
 import { useShopping } from "@/context/ShoppingContext";
 import { getVisibleCategories } from "@/apis/backend_api";
 import type { Category } from "@/models/antiques/Antique";
@@ -79,7 +80,7 @@ export default function AntiquesPage() {
         {filteredAntiques.map((antique) => (
           <Col key={antique.id}>
             <article className="catalogue-card" onClick={() => navigate(`/antiques/${antique.id}`)}>
-              <div className="catalogue-card-image" aria-hidden="true">{antique.imageUrl ? <img src={`${import.meta.env.VITE_JAVA_BACKEND_URL ?? "http://localhost:8080"}${antique.imageUrl}`} alt="" /> : antique.title.slice(0, 1).toUpperCase()}</div>
+              <div className="catalogue-card-image" aria-hidden="true">{(antique.imageUrl ?? antique.imageUrls?.[0]) ? <img src={resolveAntiqueImageUrl(antique.imageUrl ?? antique.imageUrls?.[0])} alt="" /> : antique.title.slice(0, 1).toUpperCase()}</div>
               <div className="catalogue-card-content">
                 <span className="catalogue-artist">{artistName(antique)}</span>
                 <h2>{antique.title}</h2>

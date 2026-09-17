@@ -1,4 +1,17 @@
 services:
+  reconstruction-api:
+    build:
+      context: ./services/reconstruction-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      RECONSTRUCTION_MODE: ${RECONSTRUCTION_MODE:-local}
+      DATA_DIR: /app/data
+      CORS_ORIGINS: ${PUBLIC_FRONTEND_ORIGIN:-http://localhost:3000}
+    volumes:
+      - reconstruction-data:/app/data
+
   database:
     image: postgres:17-alpine
     restart: unless-stopped
@@ -74,3 +87,4 @@ services:
 
 volumes:
   postgres-data:
+  reconstruction-data:

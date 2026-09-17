@@ -35,6 +35,8 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.POST, "/api").authenticated()
 				.requestMatchers( "/api").authenticated()
 				.requestMatchers(HttpMethod.GET, "/api/antiques").permitAll()
+				.requestMatchers(HttpMethod.GET, "/api/antiques/*/image").permitAll()
+				.requestMatchers(HttpMethod.GET, "/api/antiques/*/image/*").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/location").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/chat").authenticated()

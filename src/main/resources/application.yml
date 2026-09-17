@@ -20,16 +20,26 @@ spring:
     hibernate:
       ddl-auto: update
 
+  sql:
+    init:
+      mode: always
+      separator: "@@@@"
+
 
   devtools:
     add-properties: false
 
+  servlet:
+    multipart:
+      max-file-size: 8MB
+      max-request-size: 10MB
 
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/movie_project_keycloak}
+          # issuer-uri: https://3kbd6fkk-8081.euw.devtunnels.ms/realms/movie_project_keycloak
   
 logging:
   level:

@@ -10,6 +10,26 @@ databases:
 
 services:
   - type: web
+    name: galerie-reconstruction-api
+    runtime: docker
+    dockerfilePath: ./services/reconstruction-api/Dockerfile
+    dockerContext: ./services/reconstruction-api
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: reconstruction-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: RECONSTRUCTION_MODE
+        value: local
+      - key: CORS_ORIGINS
+        value: https://galerie-frontend.onrender.com
+      - key: DATA_DIR
+        value: /app/data
+
+  - type: web
     name: galerie-keycloak
     runtime: docker
     dockerfilePath: ./keycloak/Dockerfile
@@ -101,8 +121,9 @@ services:
       - key: STRIPE_CANCEL_URL
         value: https://galerie-frontend.onrender.com/checkout/cancel
 
-  - type: static
+  - type: web
     name: galerie-frontend
+    runtime: static
     rootDir: galerie_de_ruiter_frontend_app
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist

@@ -8,6 +8,7 @@ import be.galerie_de_ruiter.project.dto.DesignerRequest;
 
 public interface DesignerServiceImplementation {
     List<Designer> getAllDesigners();
+    List<Designer> searchDesigners(String query);
     Designer getDesigner(UUID id);
 
     Designer saveDesigner(DesignerRequest designer);

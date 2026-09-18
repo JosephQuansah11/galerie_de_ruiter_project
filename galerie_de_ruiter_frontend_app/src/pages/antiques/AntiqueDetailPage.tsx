@@ -92,13 +92,16 @@ export default function AntiqueDetailPage() {
       url: `${jobBaseUrl}${view.url}`,
     }));
     // Persist so the six views survive a page reload and are visible to every user, not just this browser session.
-    saveAntiqueReconstruction(
-      antique.id,
-      views,
-      reconstructionJob.model_url,
-    ).catch(() => {
-      /* keep showing the freshly generated views even if persisting fails */
-    });
+    saveAntiqueReconstruction(antique.id, views, reconstructionJob.model_url)
+      .then(() => {
+        setReconstructionMessage("Six views saved successfully.");
+      })
+      .catch((error) => {
+        console.error("Failed to persist reconstruction:", error);
+        setReconstructionMessage(
+          "The six views were generated, but could not be saved.",
+        );
+      });
   }, [antique, reconstructionJob]);
 
   if (loading)
@@ -139,10 +142,18 @@ export default function AntiqueDetailPage() {
   const selectImage = (position: Position, file?: File) => {
     if (!file) return;
     setModelImages((current) => ({ ...current, [position]: file }));
-    setImagePreviews((current) => ({
-      ...current,
-      [position]: URL.createObjectURL(file),
-    }));
+    setImagePreviews((current) => {
+      const oldPreview = current[position];
+
+      if (oldPreview) {
+        URL.revokeObjectURL(oldPreview);
+      }
+
+      return {
+        ...current,
+        [position]: URL.createObjectURL(file),
+      };
+    });
   };
   const startDrag = (event: React.PointerEvent) => {
     dragStart.current = { x: event.clientX, y: event.clientY };
@@ -212,16 +223,24 @@ export default function AntiqueDetailPage() {
             )}
           </div>
           {antiqueImageUrls.length > 1 && (
-            <div className="detail-image-gallery" aria-label="Additional images">
+            <div
+              className="detail-image-gallery"
+              aria-label="Additional images"
+            >
               {antiqueImageUrls.map((imageUrl, index) => (
                 <button
                   key={imageUrl}
-                  className={previewImageUrl === imageUrl ? "is-selected" : undefined}
+                  className={
+                    previewImageUrl === imageUrl ? "is-selected" : undefined
+                  }
                   type="button"
                   onClick={() => setSelectedImageUrl(imageUrl)}
                   aria-label={`Preview ${antique.title}, ${index + 1}`}
                 >
-                  <img src={resolveAntiqueImageUrl(imageUrl)} alt={`${antique.title}, ${index + 1}`} />
+                  <img
+                    src={resolveAntiqueImageUrl(imageUrl)}
+                    alt={`${antique.title}, ${index + 1}`}
+                  />
                 </button>
               ))}
             </div>

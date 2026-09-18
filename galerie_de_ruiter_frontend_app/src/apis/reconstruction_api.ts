@@ -1,30 +1,58 @@
 import axios from "axios";
 
-const reconstructionBaseUrl = import.meta.env.VITE_RECONSTRUCTION_API_URL ?? "http://localhost:8000";
-const reconstructionClient = axios.create({ baseURL: reconstructionBaseUrl, timeout: 30000, withCredentials: false });
+const reconstructionBaseUrl =
+  import.meta.env.VITE_RECONSTRUCTION_API_URL ?? "http://localhost:8000";
+const reconstructionClient = axios.create({
+  baseURL: reconstructionBaseUrl,
+  timeout: 30000,
+  withCredentials: false,
+});
+
+export type ReconstructionView = {
+  position: string;
+  url: string;
+};
 
 export type ReconstructionJob = {
   job_id: string;
   antique_id?: string | null;
-  status: "queued" | "running" | "completed" | "failed" | "processing_disabled";
+  status:
+    | "queued"
+    | "running"
+    | "completed"
+    | "failed"
+    | "processing_disabled";
   progress: number;
   error?: string | null;
   model_url?: string | null;
   image_urls?: string[];
-  image_views?: Array<{ position: string; url: string }>;
+  image_views?: ReconstructionView[];
   created_at: string;
   updated_at: string;
 };
 
-export async function createReconstructionJob(antiqueId: string, images: Array<{ position: string; file: File }>): Promise<ReconstructionJob> {
+export async function createReconstructionJob(
+  antiqueId: string,
+  images: Array<{ position: string; file: File }>,
+): Promise<ReconstructionJob> {
   const body = new FormData();
   body.append("antique_id", antiqueId);
-  images.forEach(({ position, file }) => { body.append("images", file); body.append("positions", position); });
-  const response = await reconstructionClient.post<ReconstructionJob>("/v1/reconstructions", body);
+  images.forEach(({ position, file }) => {
+    body.append("images", file);
+    body.append("positions", position);
+  });
+  const response = await reconstructionClient.post<ReconstructionJob>(
+    "/v1/reconstructions",
+    body,
+  );
   return response.data;
 }
 
-export async function getReconstructionJob(jobId: string): Promise<ReconstructionJob> {
-  const response = await reconstructionClient.get<ReconstructionJob>(`/v1/reconstructions/${jobId}`);
+export async function getReconstructionJob(
+  jobId: string,
+): Promise<ReconstructionJob> {
+  const response = await reconstructionClient.get<ReconstructionJob>(
+    `/v1/reconstructions/${jobId}`,
+  );
   return response.data;
 }

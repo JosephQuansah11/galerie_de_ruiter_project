@@ -11,7 +11,7 @@ import {
   getReconstructionJob,
   type ReconstructionJob,
 } from "@/apis/reconstruction_api";
-import { saveAntiqueReconstruction } from "@/apis/backend_api";
+import { saveAntiqueReconstruction, getAntiqueReconstructionImages } from "@/apis/backend_api";
 import { resolveAntiqueImageUrl } from "@/models/antiques/Antique";
 
 type Position = "front" | "back" | "left" | "right" | "top" | "bottom";
@@ -85,23 +85,22 @@ export default function AntiqueDetailPage() {
     )
       return;
     savedJobIdRef.current = reconstructionJob.job_id;
-    const jobBaseUrl =
-      import.meta.env.VITE_RECONSTRUCTION_API_URL ?? "http://localhost:8000";
-    const views = reconstructionJob.image_views.map((view) => ({
-      position: view.position,
-      url: `${jobBaseUrl}${view.url}`,
-    }));
-    // Persist so the six views survive a page reload and are visible to every user, not just this browser session.
-    saveAntiqueReconstruction(antique.id, views, reconstructionJob.model_url)
-      .then(() => {
-        setReconstructionMessage("Six views saved successfully.");
-      })
-      .catch((error) => {
-        console.error("Failed to persist reconstruction:", error);
-        setReconstructionMessage(
-          "The six views were generated, but could not be saved.",
-        );
-      });
+    const jobBaseUrl = import.meta.env.VITE_RECONSTRUCTION_API_URL ?? "http://localhost:8000";
+    // const views = reconstructionJob.image_views.map((view) => ({
+    //   position: view.position,
+    //   url: `${jobBaseUrl}${view.url}`,
+    // }));
+    // // Persist so the six views survive a page reload and are visible to every user, not just this browser session.
+    // saveAntiqueReconstruction(antique.id, views, reconstructionJob.model_url)
+    //   .then(() => {
+    //     setReconstructionMessage("Six views saved successfully.");
+    //   })
+    //   .catch((error) => {
+    //     // console.error("Failed to persist reconstruction:", error);
+    //     setReconstructionMessage(
+    //       "The six views were generated, but could not be saved.",
+    //     );
+    //   });
   }, [antique, reconstructionJob]);
 
   if (loading)
@@ -117,28 +116,38 @@ export default function AntiqueDetailPage() {
     antique.artist?.displayName ??
     antique.artist?.name ??
     "Galerie de Ruiter collection";
-  const price =
-    antique.price == null
+
+
+  const price = antique.price == null
       ? "Price on request"
       : `EUR ${antique.price.toLocaleString("en-BE", { minimumFractionDigits: 2 })}`;
+
   const wishlisted = isWishlisted(antique.id);
+
   const baseUrl =
     import.meta.env.VITE_RECONSTRUCTION_API_URL ?? "http://localhost:8000";
   const viewMap = new Map<Position, string>();
+
   (antique.sixViewImages ?? []).forEach((view) =>
     viewMap.set(view.position as Position, view.url),
   );
+
   (reconstructionJob?.image_views ?? []).forEach((view) =>
     viewMap.set(view.position as Position, `${baseUrl}${view.url}`),
   );
+
   const activeImage = viewMap.get(activeView) ?? imagePreviews[activeView];
+
   const modelUrl = reconstructionJob?.model_url ?? antique.modelUrl;
+
   const antiqueImageUrls = antique.imageUrls?.length
     ? antique.imageUrls
     : antique.imageUrl
       ? [antique.imageUrl]
       : [];
+
   const previewImageUrl = selectedImageUrl ?? antiqueImageUrls[0];
+
   const selectImage = (position: Position, file?: File) => {
     if (!file) return;
     setModelImages((current) => ({ ...current, [position]: file }));
@@ -155,10 +164,12 @@ export default function AntiqueDetailPage() {
       };
     });
   };
+
   const startDrag = (event: React.PointerEvent) => {
     dragStart.current = { x: event.clientX, y: event.clientY };
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   };
+
   const endDrag = (event: React.PointerEvent) => {
     if (!dragStart.current) return;
     const dx = event.clientX - dragStart.current.x;
@@ -176,10 +187,15 @@ export default function AntiqueDetailPage() {
       setActiveView(dy > 0 ? "bottom" : "top");
     }
   };
+
   const submit = async () => {
     if (positions.some((position) => !modelImages[position])) return;
     setReconstructionMessage("Uploading six views...");
     try {
+      const images_to_preview = positions.map((position) => ({
+        position,
+        image_data: modelImages[position]!,
+      }));
       const job = await createReconstructionJob(
         antique.id,
         positions.map((position) => ({
@@ -187,12 +203,23 @@ export default function AntiqueDetailPage() {
           file: modelImages[position]!,
         })),
       );
+
       setReconstructionJob(job);
       setReconstructionMessage(
         job.status === "processing_disabled"
           ? "The reconstruction service is disabled."
           : "Reconstruction started.",
       );
+
+      saveAntiqueReconstruction(antique.id, images_to_preview, job.model_url)
+        .then(() => {
+          setReconstructionMessage("Six views saved successfully.");
+        })
+        .catch((error) => {
+          setReconstructionMessage(
+            "The six views were generated, but could not be saved.",
+          );
+        });
     } catch {
       setReconstructionMessage("The reconstruction job could not be started.");
     }
@@ -312,13 +339,14 @@ export default function AntiqueDetailPage() {
                   <Form.Label>{position}</Form.Label>
                   <Form.Control
                     type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={(event) =>
+                    accept="image/jpeg,image/png,image/webp,image/jpg"
+                    onChange={(event) => {
                       selectImage(
                         position,
                         (event.currentTarget as HTMLInputElement).files?.[0],
-                      )
-                    }
+                      );
+                      // images_to_preview.push((event.currentTarget as HTMLInputElement).files?.[0]);
+                    }}
                   />
                 </div>
               ))}

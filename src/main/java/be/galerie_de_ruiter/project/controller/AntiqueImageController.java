@@ -50,7 +50,7 @@ public class AntiqueImageController {
             return ResponseEntity.badRequest().build();
         }
         Antique antique = antiques.findById(id).orElseThrow();
-        images.save(new AntiqueImage(antique, Math.toIntExact(images.countByAntiqueId(id)), image.getBytes(), image.getContentType()));
+        images.save(new AntiqueImage(antique, String.valueOf(images.countByAntiqueId(id)), image.getBytes(), image.getContentType()));
         return ResponseEntity.noContent().build();
     }
 

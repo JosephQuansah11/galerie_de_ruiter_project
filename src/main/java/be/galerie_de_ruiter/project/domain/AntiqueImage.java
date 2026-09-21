@@ -9,6 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -25,8 +27,11 @@ public class AntiqueImage {
     @JoinColumn(name = "antique_id", nullable = false)
     private Antique antique;
 
-    @Column(nullable = false)
-    private int displayOrder;
+    @Column(nullable = true)
+    private String displayOrder;
+
+    @Column (nullable = false)
+    private String position;
 
     @JdbcTypeCode(SqlTypes.LONGVARBINARY)
     @Column(nullable = false, columnDefinition = "bytea")
@@ -35,12 +40,20 @@ public class AntiqueImage {
     @Column(nullable = false)
     private String contentType;
 
-    protected AntiqueImage() {
+    public AntiqueImage() {
     }
 
-    public AntiqueImage(Antique antique, int displayOrder, byte[] data, String contentType) {
+    public AntiqueImage(Antique antique, String displayOrder, String position, byte[] data, String contentType) {
         this.antique = antique;
         this.displayOrder = displayOrder;
+        this.position = position;   
+        this.data = data;
+        this.contentType = contentType;
+    }
+
+    public AntiqueImage(Antique antique, String position, byte[] data, String contentType) {
+        this.antique = antique;
+        this.position = position;   
         this.data = data;
         this.contentType = contentType;
     }
@@ -53,7 +66,7 @@ public class AntiqueImage {
         return antique;
     }
 
-    public int getDisplayOrder() {
+    public String getDisplayOrder() {
         return displayOrder;
     }
 
@@ -63,5 +76,17 @@ public class AntiqueImage {
 
     public String getContentType() {
         return contentType;
+    }
+
+    public void setImageData(byte[] imageData) {
+        this.data = imageData;
+    }
+
+    public void setContentType(String contentType2) {
+        this.contentType = contentType2;
+    }
+
+    public String getPosition() {
+        return position;
     }
 }

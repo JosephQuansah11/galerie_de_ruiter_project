@@ -34,9 +34,9 @@ public class Antique {
     @OneToMany(mappedBy = "antique")
     private List<AntiqueImage> images = new ArrayList<>();
     private String modelUrl;
-    // JSON array of {position, url} produced by the reconstruction service, persisted so every user sees the same six views.
-    @Column(columnDefinition = "text")
-    private String sixViewImagesJson;
+    // // JSON array of {position, url} produced by the reconstruction service, persisted so every user sees the same six views.
+    // @Column(columnDefinition = "bytea")
+    // private List<byte[]> sixViewImages;
 
     @ManyToOne
     private Category category;
@@ -112,11 +112,11 @@ public class Antique {
         this.modelUrl = modelUrl;
     }
 
-    public String getSixViewImagesJson() {
-        return sixViewImagesJson;
-    }
+    // public List<byte[]> getSixViewImages() {
+    //     return sixViewImages;
+    // }
 
-    public void setSixViewImagesJson(String sixViewImagesJson) {
-        this.sixViewImagesJson = sixViewImagesJson;
-    }
+    // public void setSixViewImages(List<byte[]> sixViewImagesJson) {
+    //     this.sixViewImages= sixViewImagesJson;
+    // }
 }

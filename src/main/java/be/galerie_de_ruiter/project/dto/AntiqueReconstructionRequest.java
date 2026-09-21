@@ -6,5 +6,5 @@ import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 public record AntiqueReconstructionRequest(@NotEmpty @Valid List<ReconstructionViewDto> views, String modelUrl) {
-    public record ReconstructionViewDto(@NotBlank String position, @NotBlank String url) {}
+    public record ReconstructionViewDto(@NotBlank String position,  @NotBlank byte[] imageData, @NotBlank String contentType) {}
 }

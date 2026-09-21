@@ -90,31 +90,23 @@ export const saveAntiqueReconstruction = async (
   id: string,
   views: {
     position: string;
-    url: string;
+    image_data: File;
   }[],
   modelUrl?: string | null,
 ): Promise<Antique> => {
+  console.log("Saving antique reconstruction for ID:", id, views, "Model URL:", modelUrl);
   const reconstructionViews = await Promise.all(
     views.map(async (view) => {
-      const response = await fetch(view.url);
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to download ${view.position} image: ${response.status}`,
-        );
-      }
-
-      const blob = await response.blob();
-
-      const imageData = await fileToBase64(blob);
-
+      const imageData = await fileToBase64(view.image_data);
       return {
         position: view.position,
         imageData,
-        contentType: blob.type,
+        contentType: view.image_data.type // Assuming JPEG; adjust as needed
       };
     }),
   );
+
+  console.log("Reconstruction views prepared:", reconstructionViews);
 
   const response = await axiosInstance.put<Antique>(
     `${backendBaseURL}/api/antiques/${id}/reconstruction`,
@@ -126,6 +118,17 @@ export const saveAntiqueReconstruction = async (
 
   return response.data;
 };
+
+
+export const getAntiqueReconstructionImages = async (
+  id: string,
+): Promise<{ position: string; imageData: string; contentType: string }[]> => {
+  const response = await axiosInstance.get<{ position: string; imageData: string; contentType: string }[]>(
+    `${backendBaseURL}/api/antiques/${id}/reconstruction`,
+  );
+  return response.data;
+}
+
 
 export const getVisibleCategories = async (): Promise<Category[]> => {
   const response = await axiosInstance.get<Category[]>(

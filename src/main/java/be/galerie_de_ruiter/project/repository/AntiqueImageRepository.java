@@ -1,6 +1,7 @@
 package be.galerie_de_ruiter.project.repository;
 
 import be.galerie_de_ruiter.project.domain.AntiqueImage;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,4 +13,8 @@ public interface AntiqueImageRepository extends JpaRepository<AntiqueImage, UUID
     Optional<AntiqueImage> findFirstByAntiqueIdOrderByDisplayOrderAsc(UUID antiqueId);
 
     long countByAntiqueId(UUID antiqueId);
+
+    Optional<AntiqueImage> findByAntiqueIdAndPosition(UUID id, String position);
+
+    List<AntiqueImage> findAllByAntiqueId(UUID id);
 }

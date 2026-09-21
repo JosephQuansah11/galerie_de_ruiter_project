@@ -2,15 +2,14 @@ package be.galerie_de_ruiter.project.dto;
 
 import be.galerie_de_ruiter.project.domain.Antique;
 import be.galerie_de_ruiter.project.domain.AntiqueImage;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-public record AntiqueResponse(UUID id, String title, DesignerResponse artist, String description, BigDecimal price, String category, String modelUrl, String imageUrl, List<String> imageUrls, List<AntiqueReconstructionRequest.ReconstructionViewDto> sixViewImages) {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+public record AntiqueResponse(UUID id, String title, DesignerResponse artist, String description, BigDecimal price,
+                              String category, String modelUrl, String imageUrl, List<String> imageUrls,
+                              List<AntiqueReconstructionRequest.ReconstructionViewDto> sixViewImages) {
 
     public static AntiqueResponse from(Antique antique) {
         return new AntiqueResponse(
@@ -23,23 +22,20 @@ public record AntiqueResponse(UUID id, String title, DesignerResponse artist, St
                 antique.getModelUrl(),
                 imageUrls(antique).stream().findFirst().orElse(null),
                 imageUrls(antique),
-                parseSixViewImages(antique.getSixViewImagesJson())
+                parseSixViewImages(antique)
         );
     }
 
     private static List<String> imageUrls(Antique antique) {
         return antique.getImages().stream()
+                .filter(image -> image.getDisplayOrder() == null)
                 .map(AntiqueImage::getId)
                 .map(imageId -> "/api/antiques/" + antique.getId() + "/image/" + imageId)
                 .toList();
     }
 
-    private static List<AntiqueReconstructionRequest.ReconstructionViewDto> parseSixViewImages(String json) {
-        if (json == null || json.isBlank()) return List.of();
-        try {
-            return MAPPER.readValue(json, new TypeReference<List<AntiqueReconstructionRequest.ReconstructionViewDto>>() {});
-        } catch (Exception e) {
-            return List.of();
-        }
+    private static List<AntiqueReconstructionRequest.ReconstructionViewDto> parseSixViewImages(Antique antique) {
+        return antique.getImages().stream().filter(image -> image.getDisplayOrder() != null)
+                .map(image -> new AntiqueReconstructionRequest.ReconstructionViewDto(image.getDisplayOrder(), image.getData(), image.getContentType())).toList();
     }
 }

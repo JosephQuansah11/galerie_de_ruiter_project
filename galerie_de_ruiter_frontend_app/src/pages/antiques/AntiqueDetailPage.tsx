@@ -11,8 +11,13 @@ import {
   getReconstructionJob,
   type ReconstructionJob,
 } from "@/apis/reconstruction_api";
-import { saveAntiqueReconstruction, getAntiqueReconstructionImages } from "@/apis/backend_api";
+import {
+  saveAntiqueReconstruction,
+  // getAntiqueReconstructionImages,
+} from "@/apis/backend_api";
 import { resolveAntiqueImageUrl } from "@/models/antiques/Antique";
+import { ThreeDModelDesigner } from "@/3dmodel/three-d/ThreeDModelDesigner";
+import { createAntiqueModel } from "@/3dmodel/three-d/generated/createAntiqueModel";
 
 type Position = "front" | "back" | "left" | "right" | "top" | "bottom";
 const positions: Position[] = [
@@ -42,12 +47,17 @@ export default function AntiqueDetailPage() {
     Partial<Record<Position, string>>
   >({});
   const [reconstructionJob, setReconstructionJob] =
-    useState<ReconstructionJob>();
+  useState<ReconstructionJob>();
   const [reconstructionMessage, setReconstructionMessage] = useState("");
   const [activeView, setActiveView] = useState<Position>("front");
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>();
   const dragStart = useRef<{ x: number; y: number } | undefined>(undefined);
+  // const jobBaseUrl =
+  //   import.meta.env.VITE_RECONSTRUCTION_API_URL ?? "http://localhost:8000";
   const savedJobIdRef = useRef<string | undefined>(undefined);
+  const handleBackClick = () => {
+    navigate(-1);
+  };
 
   useEffect(
     () => () =>
@@ -85,7 +95,6 @@ export default function AntiqueDetailPage() {
     )
       return;
     savedJobIdRef.current = reconstructionJob.job_id;
-    const jobBaseUrl = import.meta.env.VITE_RECONSTRUCTION_API_URL ?? "http://localhost:8000";
     // const views = reconstructionJob.image_views.map((view) => ({
     //   position: view.position,
     //   url: `${jobBaseUrl}${view.url}`,
@@ -117,12 +126,15 @@ export default function AntiqueDetailPage() {
     antique.artist?.name ??
     "Galerie de Ruiter collection";
 
-
-  const price = antique.price == null
+  const price =
+    antique.price == null
       ? "Price on request"
       : `EUR ${antique.price.toLocaleString("en-BE", { minimumFractionDigits: 2 })}`;
 
   const wishlisted = isWishlisted(antique.id);
+  const wishlistButtonVariant: "danger" | "outline-dark" = wishlisted
+    ? "danger"
+    : "outline-dark";
 
   const baseUrl =
     import.meta.env.VITE_RECONSTRUCTION_API_URL ?? "http://localhost:8000";
@@ -138,15 +150,34 @@ export default function AntiqueDetailPage() {
 
   const activeImage = viewMap.get(activeView) ?? imagePreviews[activeView];
 
-  const modelUrl = reconstructionJob?.model_url ?? antique.modelUrl;
+  const reconstructionInProgress =
+    reconstructionJob?.status === "queued" ||
+    reconstructionJob?.status === "running";
+  const allViewsSelected: boolean = positions.every(
+    (position) => modelImages[position] !== undefined,
+  );
+  const submitDisabled: boolean =
+    !allViewsSelected || reconstructionInProgress;
 
-  const antiqueImageUrls = antique.imageUrls?.length
-    ? antique.imageUrls
-    : antique.imageUrl
-      ? [antique.imageUrl]
-      : [];
+  let antiqueImageUrls: string[] = [];
+  if (antique.imageUrls?.length) {
+    antiqueImageUrls = antique.imageUrls;
+  } else if (antique.imageUrl) {
+    antiqueImageUrls = [antique.imageUrl];
+  }
 
   const previewImageUrl = selectedImageUrl ?? antiqueImageUrls[0];
+  const modelSource = reconstructionJob?.model_url ?? antique.modelUrl;
+  const modelSourceUrl = modelSource?.startsWith("http")
+    ? modelSource
+    : modelSource
+      ? `${baseUrl}${modelSource}`
+      : undefined;
+  const frontImageSource =
+    modelImages.front ??
+    (previewImageUrl ? resolveAntiqueImageUrl(previewImageUrl) : undefined) ??
+    activeImage;
+  const hasThreeDPreview = Boolean(modelSourceUrl || frontImageSource);
 
   const selectImage = (position: Position, file?: File) => {
     if (!file) return;
@@ -188,8 +219,12 @@ export default function AntiqueDetailPage() {
     }
   };
 
-  const submit = async () => {
-    if (positions.some((position) => !modelImages[position])) return;
+  const handleViewChange = (position: Position): void => {
+    setActiveView(position);
+  };
+
+  const submit = async (): Promise<void> => {
+    if (!allViewsSelected) return;
     setReconstructionMessage("Uploading six views...");
     try {
       const images_to_preview = positions.map((position) => ({
@@ -225,15 +260,28 @@ export default function AntiqueDetailPage() {
     }
   };
 
+  const handleSubmit = (): void => {
+    window.location.reload();
+    void submit();
+  };
+
+  const handleAddToCart = (): void => {
+    addToCart(antique);
+  };
+
+  const handleWishlistToggle = (): void => {
+    toggleWishlist(antique);
+  };
+
   return (
     <section className="detail-page">
-      <Button
-        variant="link"
+      <button
+        type="button"
         className="detail-back"
-        onClick={() => navigate(-1)}
+        onClick={handleBackClick}
       >
         <ArrowLeft size={17} /> {t("backToCollection")}
-      </Button>
+      </button>
       <div className="detail-layout">
         <div className="detail-media">
           <div
@@ -284,10 +332,14 @@ export default function AntiqueDetailPage() {
               "A considered piece with a story still unfolding."}
           </p>
           <div className="model-preview">
-            {modelUrl && (
-              <iframe title={`3D preview of ${antique.title}`} src={modelUrl} />
+            {hasThreeDPreview && (
+              <ThreeDModelDesigner
+                frontImage={frontImageSource}
+                modelUrl={modelSourceUrl}
+                createModel={createAntiqueModel}
+              />
             )}
-            {!modelUrl && activeImage && (
+            {!hasThreeDPreview && activeImage && (
               <div
                 className="image-cube-viewer"
                 onPointerDown={startDrag}
@@ -301,28 +353,31 @@ export default function AntiqueDetailPage() {
                 <span className="cube-view-label">{activeView}</span>
               </div>
             )}
-            {!modelUrl && !activeImage && (
+            {!hasThreeDPreview && !activeImage && (
               <>
                 <span>3D PREVIEW</span>
                 <strong>{t("modelComingSoon")}</strong>
                 <p>{t("modelDescription")}</p>
               </>
             )}
-            {!modelUrl &&
+            {!hasThreeDPreview &&
             (viewMap.size > 0 || Object.keys(imagePreviews).length > 0) ? (
               <div className="cube-view-controls">
-                {positions.map((position) => (
-                  <Button
-                    key={position}
-                    size="sm"
-                    variant={
-                      activeView === position ? "dark" : "outline-secondary"
-                    }
-                    onClick={() => setActiveView(position)}
-                  >
-                    {position}
-                  </Button>
-                ))}
+                {positions.map((position) => {
+                  const variant: "dark" | "outline-secondary" =
+                    activeView === position ? "dark" : "outline-secondary";
+
+                  return (
+                    <button
+                    type="button"
+                      key={position}
+                      className={`btn btn-${variant}`}
+                      onClick={() => handleViewChange(position)}
+                    >
+                      {position}
+                    </button>
+                  );
+                })}
               </div>
             ) : null}
           </div>
@@ -351,16 +406,12 @@ export default function AntiqueDetailPage() {
                 </div>
               ))}
               <small>{Object.keys(modelImages).length}/6 views selected.</small>
-              <Button
-                disabled={
-                  positions.some((position) => !modelImages[position]) ||
-                  (!!reconstructionJob &&
-                    ["queued", "running"].includes(reconstructionJob.status))
-                }
-                onClick={submit}
+              <button
+                disabled={submitDisabled}
+                onClick={handleSubmit}
               >
                 Submit six views
-              </Button>
+              </button>
               {reconstructionJob && (
                 <small>
                   Status: {reconstructionJob.status}{" "}
@@ -379,16 +430,21 @@ export default function AntiqueDetailPage() {
             <strong>{price}</strong>
           </div>
           <div className="detail-actions">
-            <Button variant="dark" onClick={() => addToCart(antique)}>
+            <button
+              type="button"
+              className="btn btn-dark"
+              onClick={handleAddToCart}
+            >
               <ShoppingBag size={17} /> {t("addToCart")}
-            </Button>
-            <Button
-              variant={wishlisted ? "danger" : "outline-dark"}
-              onClick={() => toggleWishlist(antique)}
+            </button>
+            <button
+              type="button"
+              className={`btn btn-${wishlistButtonVariant}`}
+              onClick={handleWishlistToggle}
             >
               <Heart size={17} fill={wishlisted ? "currentColor" : "none"} />{" "}
               {wishlisted ? t("saved") : t("savePiece")}
-            </Button>
+            </button>
           </div>
           <p className="detail-note">
             <UserRound size={16} /> Purchase requests and appointments are

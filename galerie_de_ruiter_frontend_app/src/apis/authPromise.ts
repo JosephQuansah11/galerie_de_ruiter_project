@@ -9,12 +9,11 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-// We will set the token dynamically
 export const setAuthToken = (token: string | undefined) => {
   if (token) {
-    axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    axiosInstance.defaults.headers.common.Authorization = `Bearer ${token}`;
   } else {
-    delete axiosInstance.defaults.headers.common["Authorization"];
+    delete axiosInstance.defaults.headers.common.Authorization;
   }
 };
 

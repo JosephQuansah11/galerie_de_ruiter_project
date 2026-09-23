@@ -40,6 +40,39 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [profile, setProfile] = useState<UserProfile>();
   const [roles, setRoles] = useState<string[]>([]);
   const initialized = useRef(false);
+  const refreshInProgress = useRef<Promise<boolean> | undefined>(undefined);
+
+  const syncToken = useCallback((nextToken?: string) => {
+    setToken(nextToken);
+    setAuthToken(nextToken);
+  }, []);
+
+  const refreshToken = useCallback(async (force = false) => {
+    if (!keycloak.authenticated) return false;
+    if (refreshInProgress.current) return refreshInProgress.current;
+
+    const refresh = keycloak
+      .updateToken(force ? -1 : 60)
+      .then((refreshed) => {
+        syncToken(keycloak.token);
+        return refreshed;
+      })
+      .catch((error: unknown) => {
+        console.error("Authentication token refresh failed.", error);
+        keycloak.clearToken();
+        setAuthenticated(false);
+        setProfile(undefined);
+        setRoles([]);
+        syncToken(undefined);
+        return false;
+      })
+      .finally(() => {
+        refreshInProgress.current = undefined;
+      });
+
+    refreshInProgress.current = refresh;
+    return refresh;
+  }, [syncToken]);
 
   useEffect(() => {
     if (initialized.current) return;
@@ -53,8 +86,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       })
       .then((isAuthenticated) => {
         setAuthenticated(isAuthenticated);
-        setToken(keycloak.token);
-        setAuthToken(keycloak.token);
+        syncToken(keycloak.token);
         if (isAuthenticated) {
           const tokenData = keycloak.tokenParsed as
             | {
@@ -85,20 +117,47 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       })
       .catch(() => setAuthenticated(false))
       .finally(() => setLoading(false));
-  }, []);
+  }, [syncToken]);
 
-  keycloak.onAuthRefreshSuccess = () => {
-  setToken(keycloak.token);
-  setAuthToken(keycloak.token);
-};
+  useEffect(() => {
+    keycloak.onAuthRefreshSuccess = () => syncToken(keycloak.token);
+    keycloak.onAuthLogout = () => {
+      setAuthenticated(false);
+      setProfile(undefined);
+      setRoles([]);
+      syncToken(undefined);
+    };
+    keycloak.onTokenExpired = () => {
+      void refreshToken(true);
+    };
 
-keycloak.onAuthLogout = () => {
-  setAuthenticated(false);
-  setToken(undefined);
-  setProfile(undefined);
-  setRoles([]);
-  setAuthToken(undefined);
-};
+    return () => {
+      keycloak.onAuthRefreshSuccess = undefined;
+      keycloak.onAuthLogout = undefined;
+      keycloak.onTokenExpired = undefined;
+    };
+  }, [refreshToken, syncToken]);
+
+  useEffect(() => {
+    if (!authenticated) return;
+
+    const refreshEveryThirtyMinutes = window.setInterval(
+      () => void refreshToken(true),
+      30 * 60 * 1000,
+    );
+    const refreshWhenReturning = () => {
+      if (document.visibilityState === "visible") void refreshToken();
+    };
+
+    document.addEventListener("visibilitychange", refreshWhenReturning);
+    window.addEventListener("focus", refreshWhenReturning);
+
+    return () => {
+      window.clearInterval(refreshEveryThirtyMinutes);
+      document.removeEventListener("visibilitychange", refreshWhenReturning);
+      window.removeEventListener("focus", refreshWhenReturning);
+    };
+  }, [authenticated, refreshToken]);
 
   const register = useCallback(
     async (registration: UserProfile & { password: string }) => {

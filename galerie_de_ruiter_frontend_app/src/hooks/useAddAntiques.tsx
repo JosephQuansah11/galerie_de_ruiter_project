@@ -59,26 +59,3 @@ export async function AddAntiqueItem(antique: AntiqueForm): Promise<void> {
         throw error;
     }
 }
-
-// export async function DeleteUserContent(userId: string): Promise<void> {
-//     try {
-//         await deleteUser(userId);
-//         // Trigger a refresh by updating the component state
-//         window.location.reload(); // Simple refresh for now
-//     } catch (error) {
-//         console.error('Failed to delete user:', error);
-//         throw error;
-//     }
-// }
-
-// export async function EditUserContent(userId: string, user: User): Promise<void> {
-//     try {
-//          // console.log('final edit: ', userId);
-//         await editUserById(userId, user);
-//         // Trigger a refresh by updating the component state
-//         window.location.reload(); // Simple refresh for now
-//     } catch (error) {
-//         console.error('Failed to edit user:', error);
-//         throw error;
-//     }
-// }

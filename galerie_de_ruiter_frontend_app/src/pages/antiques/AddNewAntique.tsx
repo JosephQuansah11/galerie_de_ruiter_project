@@ -88,6 +88,7 @@ export default function AddNewAntique() {
         modelUrl: form.modelUrl || undefined,
       });
       await Promise.all(imageFiles.map((imageFile) => uploadAntiqueImage(created.id, imageFile)));
+      window.location.reload();
       navigate(`/antiques/${created.id}`);
     } catch {
       setMessage("The antique could not be saved.");

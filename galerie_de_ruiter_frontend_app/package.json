@@ -26,6 +26,8 @@
     "mixins": "^0.0.1",
     "react": "^19.3.0",
     "react-bootstrap": "^2.10.10",
+    "react-smooth": "4.0.4",
+    "react-bootstrap-icons": "1.11.6",
     "react-dom": "^19.3.0",
     "react-hook-form": "^7.87.0",
     "react-i18next": "^17.0.14",

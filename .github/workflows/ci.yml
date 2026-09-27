@@ -12,7 +12,48 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
           cache: gradle
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew test check build
+
+  boot-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Start backend with PostgreSQL and Keycloak
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew bootRun > "$RUNNER_TEMP/galerie-bootRun.log" 2>&1 &
+          app_pid=$!
+          cleanup() {
+            kill "$app_pid" 2>/dev/null || true
+            wait "$app_pid" 2>/dev/null || true
+            ./gradlew stopDevServices
+          }
+          trap cleanup EXIT
+
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://localhost:8080/actuator/health > /dev/null \
+              && curl --fail --silent http://localhost:8000/health > /dev/null; then
+              echo "Spring Boot and the reconstruction API are healthy with PostgreSQL and Keycloak."
+              exit 0
+            fi
+            if ! kill -0 "$app_pid" 2>/dev/null; then
+              echo "Spring Boot exited before becoming healthy."
+              tail -n 80 "$RUNNER_TEMP/galerie-bootRun.log"
+              exit 1
+            fi
+            sleep 5
+          done
+
+          echo "Spring Boot did not become healthy before the timeout."
+          tail -n 80 "$RUNNER_TEMP/galerie-bootRun.log"
+          exit 1

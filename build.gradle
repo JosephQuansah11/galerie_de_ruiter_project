@@ -48,8 +48,99 @@ dependencies {
 	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
+def devComposeFile = layout.projectDirectory.file("docker-compose.dev.yml")
+def devRealmFile = layout.projectDirectory.file("keycloak/realms/movie_project_keycloak-realm.json")
+def devFrontendClientFile = layout.projectDirectory.file("keycloak/realms/movie_project_frontend_client.json")
+def devBackendClientFile = layout.projectDirectory.file("keycloak/realms/movie_project_client.json")
+def devKeycloakImportDirectory = layout.buildDirectory.dir("dev-keycloak-import")
+def devKeycloakRealmFile = devKeycloakImportDirectory.map { it.file("movie_project_keycloak-realm.json") }
+
+tasks.register("prepareDevKeycloakRealm") {
+	group = "application"
+	description = "Builds a Keycloak realm import from the checked-in realm and client exports."
+	inputs.files(devRealmFile, devFrontendClientFile, devBackendClientFile)
+	outputs.file(devKeycloakRealmFile)
+
+	doLast {
+		def realm = new groovy.json.JsonSlurper().parse(devRealmFile.asFile)
+		def clients = [devFrontendClientFile, devBackendClientFile].collect { clientFile ->
+			def client = new groovy.json.JsonSlurper().parse(clientFile.asFile)
+			client.remove("access")
+			client.remove("secret")
+			if (client.defaultClientScopes instanceof Collection) {
+				client.defaultClientScopes = client.defaultClientScopes.findAll {
+					it != "movie_project_client_scope"
+				}
+			}
+			client
+		}
+		realm.clients = clients
+		def output = devKeycloakRealmFile.get().asFile
+		output.parentFile.mkdirs()
+		output.setText(
+				groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(realm)) + System.lineSeparator(),
+				"UTF-8")
+	}
+}
+
+tasks.register("startDevServices", Exec) {
+	group = "application"
+	description = "Starts the local PostgreSQL, Keycloak, and reconstruction API dependencies for bootRun."
+	dependsOn tasks.named("prepareDevKeycloakRealm")
+	commandLine "docker", "compose", "-f", devComposeFile.asFile.absolutePath,
+			"up", "--detach", "--wait", "database", "keycloak-database", "keycloak", "reconstruction-api"
+}
+
+tasks.register("waitForDevKeycloak") {
+	group = "application"
+	description = "Waits until the development Keycloak realm is ready."
+	dependsOn tasks.named("startDevServices")
+
+	doLast {
+		def deadline = System.nanoTime() + java.time.Duration.ofMinutes(3).toNanos()
+		def keycloakReady = false
+		def keycloakPort = System.getenv().getOrDefault("KEYCLOAK_HTTP_PORT", "8082")
+		while (!keycloakReady && System.nanoTime() < deadline) {
+			java.net.HttpURLConnection connection = null
+			try {
+				connection = (java.net.HttpURLConnection) new URL(
+						"http://localhost:${keycloakPort}/realms/movie_project_keycloak/.well-known/openid-configuration")
+						.openConnection()
+				connection.connectTimeout = 2000
+				connection.readTimeout = 2000
+				keycloakReady = connection.responseCode == 200
+			} catch (java.io.IOException ignored) {
+				// Keycloak can take a short time to start and import the development realm.
+			} finally {
+				connection?.disconnect()
+			}
+
+			if (!keycloakReady) {
+				sleep(2000)
+			}
+		}
+
+		if (!keycloakReady) {
+			throw new GradleException("Keycloak did not become ready within three minutes. Check Docker and the Keycloak container logs.")
+		}
+	}
+}
+
+tasks.register("stopDevServices", Exec) {
+	group = "application"
+	description = "Stops local PostgreSQL and Keycloak containers without deleting their data."
+	commandLine "docker", "compose", "-f", devComposeFile.asFile.absolutePath, "down"
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.named("bootRun") {
+	dependsOn tasks.named("waitForDevKeycloak")
+	if (!System.getenv().containsKey("SPRING_PROFILES_ACTIVE")) {
+		environment "SPRING_PROFILES_ACTIVE", "dev"
+	}
 }
 
 tasks.named("compileJava") {

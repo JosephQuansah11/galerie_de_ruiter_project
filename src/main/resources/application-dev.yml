@@ -1,13 +1,10 @@
 spring:
-  config:
-    import: optional:file:.env.production[.properties]
-
   application:
-    name: dev_demo
+    name: galerie_de_ruiter
   datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:galerie}
+    username: ${POSTGRES_USER:galerie_app}
+    password: ${POSTGRES_PASSWORD:dev-local-only}
 
   jpa:
     show-sql: false
@@ -19,15 +16,15 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${PUBLIC_KEYCLOAK_ISSUER_URI}
+          issuer-uri: ${PUBLIC_KEYCLOAK_ISSUER_URI:http://localhost:${KEYCLOAK_HTTP_PORT:8082}/realms/movie_project_keycloak}
   
 server:
-  port: ${PORT}
+  port: ${PORT:8080}
 
 keycloak:
-  server-url: ${PUBLIC_KEYCLOAK_URL}
-  realm: ${KEYCLOAK_REALM}
-  admin-realm: ${KEYCLOAK_ADMIN_REALM}
-  admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID}
-  admin-username: ${KEYCLOAK_ADMIN_USERNAME}
-  admin-password: ${KEYCLOAK_ADMIN_PASSWORD}
+  server-url: ${PUBLIC_KEYCLOAK_URL:http://localhost:${KEYCLOAK_HTTP_PORT:8082}}
+  realm: ${KEYCLOAK_REALM:movie_project_keycloak}
+  admin-realm: ${KEYCLOAK_ADMIN_REALM:master}
+  admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli}
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD:dev-local-only}

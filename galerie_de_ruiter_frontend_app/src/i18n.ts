@@ -144,7 +144,7 @@ const resources = {
       oneIdentityText:
         "Your roles and profile come from the Java-backed Keycloak realm.",
       username: "Username",
-      password: "Password",
+      // password: "Password",
       passwordPlaceholder: "At least 8 characters",
       piecesListed: "pieces listed",
       collectionLoadError: "The collection could not be loaded. Please try again.",
@@ -382,7 +382,7 @@ const resources = {
       oneIdentityText:
         "Vos rôles et votre profil proviennent du domaine Keycloak géré par Java.",
       username: "Nom d'utilisateur",
-      password: "Mot de passe",
+      // password: "Mot de passe",
       passwordPlaceholder: "Au moins 8 caractères",
       piecesListed: "pièces listées",
       collectionLoadError:
@@ -622,7 +622,7 @@ const resources = {
       oneIdentityText:
         "Je rollen en profiel komen uit het Java-gestuurde Keycloak-realm.",
       username: "Gebruikersnaam",
-      password: "Wachtwoord",
+      // password: "Wachtwoord",
       passwordPlaceholder: "Minimaal 8 tekens",
       piecesListed: "stukken vermeld",
       collectionLoadError:
@@ -864,7 +864,7 @@ const resources = {
       oneIdentityText:
         "Ihre Rollen und Ihr Profil stammen aus dem Java-basierten Keycloak-Realm.",
       username: "Benutzername",
-      password: "Passwort",
+      // password: "Passwort",
       passwordPlaceholder: "Mindestens 8 Zeichen",
       piecesListed: "Stücke gelistet",
       collectionLoadError:
@@ -1105,7 +1105,7 @@ const resources = {
       oneIdentityText:
         "Je rollen en profiel komen uit het Java-gestuurde Keycloak-realm.",
       username: "Gebruikersnaam",
-      password: "Wachtwoord",
+      // password: "Wachtwoord",
       passwordPlaceholder: "Minimaal 8 tekens",
       piecesListed: "stukken vermeld",
       collectionLoadError:

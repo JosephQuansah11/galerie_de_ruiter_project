@@ -1,6 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import type Antique from "@/models/antiques/Antique";
-import { useAuth } from "@/context/AuthContext";
 
 type CartItem = { antique: Antique; quantity: number };
 
@@ -16,34 +15,15 @@ type ShoppingContextValue = {
 
 const ShoppingContext = createContext<ShoppingContextValue | undefined>(undefined);
 
-function readStorage<T>(key: string, fallback: T): T {
-  try {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) as T : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 export function ShoppingProvider({ children }: Readonly<{ children: ReactNode }>) {
-  const auth = useAuth();
-  const storageKey = auth.profile?.id?.toString() ?? auth.profile?.username ?? "anonymous";
-  const wishlistKey = `galerie-wishlist:${storageKey}`;
-  const cartKey = `galerie-cart:${storageKey}`;
-  const [wishlist, setWishlist] = useState<Antique[]>(() => readStorage(`galerie-wishlist:${storageKey}`, []));
-  const [cart, setCart] = useState<CartItem[]>(() => readStorage(`galerie-cart:${storageKey}`, []));
-
-  useEffect(() => {
-    setWishlist(readStorage(wishlistKey, []));
-    setCart(readStorage(cartKey, []));
-  }, [wishlistKey, cartKey]);
+  const [wishlist, setWishlist] = useState<Antique[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
 
   const toggleWishlist = (antique: Antique) => {
     setWishlist((current) => {
       const next = current.some((item) => item.id === antique.id)
         ? current.filter((item) => item.id !== antique.id)
         : [...current, antique];
-      localStorage.setItem(wishlistKey, JSON.stringify(next));
       return next;
     });
   };
@@ -54,7 +34,6 @@ export function ShoppingProvider({ children }: Readonly<{ children: ReactNode }>
       const next = existing
         ? current.map((item) => item.antique.id === antique.id ? { ...item, quantity: item.quantity + 1 } : item)
         : [...current, { antique, quantity: 1 }];
-      localStorage.setItem(cartKey, JSON.stringify(next));
       return next;
     });
   };
@@ -62,7 +41,6 @@ export function ShoppingProvider({ children }: Readonly<{ children: ReactNode }>
   const removeFromCart = (id: string) => {
     setCart((current) => {
       const next = current.filter((item) => item.antique.id !== id);
-      localStorage.setItem(cartKey, JSON.stringify(next));
       return next;
     });
   };
@@ -71,7 +49,6 @@ export function ShoppingProvider({ children }: Readonly<{ children: ReactNode }>
     if (quantity < 1) return removeFromCart(id);
     setCart((current) => {
       const next = current.map((item) => item.antique.id === id ? { ...item, quantity } : item);
-      localStorage.setItem(cartKey, JSON.stringify(next));
       return next;
     });
   };

@@ -6,13 +6,14 @@ import { FormBaseEntity } from "../../types/types";
 
 interface AddFormProps<T extends FormBaseEntity> {
     items: T;
-    onSubmit?: (data: T) => void;
+    onSubmit?: (data: T) => void | Promise<void>;
     buttonName?: string;
 }
 
 
 export function AddForm<T extends FormBaseEntity>({ items, onSubmit, buttonName }: Readonly<AddFormProps<T>>) {
     const [validated, setValidated] = useState(false);
+    const [submissionError, setSubmissionError] = useState<string>();
 
     // Generic function to build form data object from FormData
     const buildFormObject = (formData: FormData, template: T): T => {
@@ -76,7 +77,7 @@ export function AddForm<T extends FormBaseEntity>({ items, onSubmit, buttonName 
         return fields;
     };
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
 
@@ -87,24 +88,22 @@ export function AddForm<T extends FormBaseEntity>({ items, onSubmit, buttonName 
         }
 
         setValidated(true);
+        setSubmissionError(undefined);
 
         // Build the form object generically based on the template
         const formObject = buildFormObject(formData, items);
 
-         // console.log('Generated form object:', formObject);
-
         if (form.checkValidity()) {
-            // Generic submission - call the provided onSubmit handler
-            if (onSubmit) {
-                console.log('Form object:', formObject);
-                onSubmit(formObject);
-            } else {
-                // Fallback for UserForm if no onSubmit provided
-                if ('name' in formObject && 'email' in formObject) {
-                    AddAntiqueItem(formObject as unknown as AntiqueForm);
-                }else{
-                    console.error('No onSubmit handler provided and form object does not match expected structure.');
+            try {
+                if (onSubmit) {
+                    await onSubmit(formObject);
+                } else if ('name' in formObject && 'email' in formObject) {
+                    await AddAntiqueItem(formObject as unknown as AntiqueForm);
+                } else {
+                    setSubmissionError('This form could not be submitted.');
                 }
+            } catch {
+                setSubmissionError('The form could not be saved. Please try again.');
             }
         }
     };
@@ -112,6 +111,7 @@ export function AddForm<T extends FormBaseEntity>({ items, onSubmit, buttonName 
     return (
         <div className="ms-2">
             <Form action="" noValidate validated={validated} method="post" onSubmit={handleSubmit} style={{ width: '100%' }}>
+                {submissionError && <div className="alert alert-danger" role="alert">{submissionError}</div>}
                 {generateFormFields(items)}
                 <button type="submit" style={{ width: '100%' }} className="btn btn-primary mt-3">{buttonName}</button>
             </Form>

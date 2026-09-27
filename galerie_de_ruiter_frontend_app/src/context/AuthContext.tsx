@@ -57,8 +57,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         syncToken(keycloak.token);
         return refreshed;
       })
-      .catch((error: unknown) => {
-        console.error("Authentication token refresh failed.", error);
+      .catch(() => {
         keycloak.clearToken();
         setAuthenticated(false);
         setProfile(undefined);

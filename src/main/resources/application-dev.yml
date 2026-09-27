@@ -10,7 +10,7 @@ spring:
     password: ${POSTGRES_PASSWORD}
 
   jpa:
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: update
   devtools:
@@ -21,10 +21,6 @@ spring:
         jwt:
           issuer-uri: ${PUBLIC_KEYCLOAK_ISSUER_URI}
   
-logging:
-  level:
-    org.springframework: INFO
-
 server:
   port: ${PORT}
 

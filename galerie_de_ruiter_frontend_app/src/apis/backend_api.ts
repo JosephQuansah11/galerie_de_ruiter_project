@@ -115,7 +115,6 @@ export const saveAntiqueReconstruction = async (
   }[],
   modelUrl?: string | null,
 ): Promise<Antique> => {
-  console.log("Saving antique reconstruction for ID:", id, views, "Model URL:", modelUrl);
   const reconstructionViews = await Promise.all(
     views.map(async (view) => {
       const imageData = await fileToBase64(view.image_data);
@@ -126,8 +125,6 @@ export const saveAntiqueReconstruction = async (
       };
     }),
   );
-
-  console.log("Reconstruction views prepared:", reconstructionViews);
 
   const response = await axiosInstance.put<Antique>(
     `${backendBaseURL}/api/antiques/${id}/reconstruction`,

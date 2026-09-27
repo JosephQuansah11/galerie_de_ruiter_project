@@ -16,7 +16,7 @@ spring:
     password: ${POSTGRES_PASSWORD}
 
   jpa: 
-    show-sql: true
+    show-sql: false
     hibernate:
       ddl-auto: update
 
@@ -43,7 +43,7 @@ spring:
   
 logging:
   level:
-    org.springframework: DEBUG
+    root: OFF
 
 server:
   port: ${PORT}

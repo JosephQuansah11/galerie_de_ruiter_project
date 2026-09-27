@@ -50,12 +50,7 @@ export function useAntiqueContent() {
 
 
 export async function AddAntiqueItem(antique: AntiqueForm): Promise<void> {
-    try {
-        await addAntique(antique);
-        // Trigger a refresh by updating the component state
-        window.location.reload(); // Simple refresh for now
-    } catch (error) {
-        console.error('Failed to add user:', error);
-        throw error;
-    }
+    await addAntique(antique);
+    // Trigger a refresh by updating the component state
+    window.location.reload(); // Simple refresh for now
 }

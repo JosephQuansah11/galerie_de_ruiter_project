@@ -14,7 +14,6 @@ import jakarta.validation.constraints.NotEmpty;
 import be.galerie_de_ruiter.project.repository.CategoryRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class AntiqueService {
     private final AntiqueRepository antiques;
@@ -43,7 +41,6 @@ public class AntiqueService {
 
     @Transactional
     public Antique create(AntiqueRequest request, Jwt jwt) {
-        log.info("Creating antique: {}", request.toString());
         Designer artist = designerRepository
                 .findById(request.artistId())
                 .orElseThrow(() ->

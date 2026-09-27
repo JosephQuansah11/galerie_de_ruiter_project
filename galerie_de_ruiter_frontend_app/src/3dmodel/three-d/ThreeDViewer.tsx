@@ -5,7 +5,6 @@ import {
   Suspense,
   useEffect,
   useState,
-  type ErrorInfo,
   type ReactElement,
 } from "react";
 import { Canvas } from "@react-three/fiber";
@@ -56,10 +55,6 @@ class ViewerErrorBoundary extends Component<
 
   static getDerivedStateFromError(): ViewerErrorBoundaryState {
     return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("The 3D viewer could not be initialized.", error, errorInfo);
   }
 
   render() {

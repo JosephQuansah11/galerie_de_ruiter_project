@@ -104,8 +104,7 @@ export default function AntiqueDetailPage() {
     //   .then(() => {
     //     setReconstructionMessage("Six views saved successfully.");
     //   })
-    //   .catch((error) => {
-    //     // console.error("Failed to persist reconstruction:", error);
+    //   .catch(() => {
     //     setReconstructionMessage(
     //       "The six views were generated, but could not be saved.",
     //     );

@@ -17,11 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import be.galerie_de_ruiter.project.service.implementation.UserServiceImplementation;
 
 import jakarta.ws.rs.core.Response;
-import lombok.extern.slf4j.Slf4j;
 
 
 @Service
-@Slf4j
 @Transactional
 public class UserService implements UserServiceImplementation {
 
@@ -76,7 +74,6 @@ public class UserService implements UserServiceImplementation {
             User user = new User(keycloakSubject, request.getEmail(), request.getDisplayName(), userRequestRole,
                     request.getFirstName(), request.getLastName());
             assignKeycloakRole(keycloakSubject, userRequestRole);
-            log.info("USER ROLE ASSIGNED: : {}", userRequestRole);
             return usersRepository.save(user);
         } catch (RuntimeException exception) {
             try {

@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Alert, Button, Card, Form, Spinner } from "react-bootstrap";
+import { Alert, Card, Spinner } from "react-bootstrap";
 import { Save } from "lucide-react";
 import { getAboutContent, updateAboutContent } from "@/apis/backend_api";
 
@@ -52,23 +52,25 @@ export default function AboutAdminPage() {
             </Alert>
           )}
           {message && !error && <Alert variant="success">{message}</Alert>}
-          <Form onSubmit={submit}>
-            <Form.Group className="mb-3">
-              <Form.Label>Page content (Markdown supported)</Form.Label>
-              <Form.Control
-                as="textarea"
+          <form onSubmit={submit}>
+            <div className="mb-3">
+              <label className="form-label">
+                Page content (Markdown supported)
+              </label>
+              <textarea
+                className="form-control"
                 rows={28}
                 required
                 maxLength={50000}
                 value={content}
                 onChange={(event) => setContent(event.target.value)}
               />
-            </Form.Group>
-            <Button disabled={saving} type="submit">
+            </div>
+            <button className="btn btn-primary" disabled={saving} type="submit">
               {saving ? <Spinner size="sm" /> : <Save size={16} />}
               {saving ? "Saving..." : "Save About page"}
-            </Button>
-          </Form>
+            </button>
+          </form>
         </Card.Body>
       </Card>
     </section>

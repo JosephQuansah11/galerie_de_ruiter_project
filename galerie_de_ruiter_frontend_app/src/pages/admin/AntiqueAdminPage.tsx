@@ -30,9 +30,7 @@ export default function AntiqueAdminPage() {
           <span className="catalogue-artist">{t("ADMINISTRATION")}</span>
           <h1>{t("ANTIQUE_INVENTORY")}</h1>
         </div>
-        <Button onClick={() => navigate("/admin/antiques/new")}>
-          <Plus size={16} /> {t("ADD_ANTIQUE")}
-        </Button>
+       
       </div>
       <div className="inventory-search">
         <Search size={17} />
@@ -41,7 +39,10 @@ export default function AntiqueAdminPage() {
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t("SEARCH_INVENTORY")}
           aria-label={t("SEARCH_INVENTORY")}
-        />
+        /> 
+        <button className="btn btn-outline-primary button-wide" onClick={() => navigate("/admin/antiques/new")}>
+          <Plus size={16} /> {t("ADD_ANTIQUE")}
+        </button>
       </div>
       {loading && (
         <div className="catalogue-state">
@@ -93,13 +94,15 @@ export default function AntiqueAdminPage() {
               <strong>{item.title}</strong>
               <span>{item.category}</span>
               <p>{item.modellingNote}</p>
-              <Button
-                size="sm"
-                variant="outline-dark"
+              <button
+                // size="sm"
+                // variant="outline-dark"
+                style={{ width: "100%" }}
+                className="btn btn-outline-secondary"
                 onClick={() => navigate("/admin/antiques/new")}
               >
                 {t("USE_AS_REFERENCE")}
-              </Button>
+              </button>
             </div>
           </article>
         ))}

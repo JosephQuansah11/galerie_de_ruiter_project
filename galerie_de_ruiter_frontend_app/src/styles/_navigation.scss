@@ -1,3 +1,13 @@
+@use "sass:math";
+// 1. Configure Bootstrap variables FIRST
+@use "bootstrap/scss/bootstrap" with (
+  $primary: #843544,
+  $secondary: #816058,
+  $success: #3f7d68,
+  // add more overrides here if needed
+  // $body-bg: ...,
+   // $font-family-sans-serif: ...,
+);
 #Navbar {
   --nav-item-padding: 0.4em 0.6em;
 }

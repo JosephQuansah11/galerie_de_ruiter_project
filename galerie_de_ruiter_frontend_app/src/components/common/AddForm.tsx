@@ -1,5 +1,5 @@
 import React, {  useState } from "react";
-import { Button, Form } from "react-bootstrap";
+import { Form } from "react-bootstrap";
 import { AntiqueForm } from "../../models/antiques/Antique";
 import { AddAntiqueItem } from "../../hooks/useAddAntiques";
 import { FormBaseEntity } from "../../types/types";
@@ -113,7 +113,7 @@ export function AddForm<T extends FormBaseEntity>({ items, onSubmit, buttonName 
         <div className="ms-2">
             <Form action="" noValidate validated={validated} method="post" onSubmit={handleSubmit} style={{ width: '100%' }}>
                 {generateFormFields(items)}
-                <Button type="submit" style={{ width: '100%' }} className="mt-3">{buttonName}</Button>
+                <button type="submit" style={{ width: '100%' }} className="btn btn-primary mt-3">{buttonName}</button>
             </Form>
         </div>
     )

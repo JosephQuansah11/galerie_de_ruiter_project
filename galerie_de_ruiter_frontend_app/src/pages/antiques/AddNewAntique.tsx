@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Alert, Button, Card, Container, Form, Spinner } from "react-bootstrap";
-import { LibraryBig, Plus, Save, Search } from "lucide-react";
+import { Box, LibraryBig, Plus, Save, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   addAntique,
@@ -127,7 +127,7 @@ export default function AddNewAntique() {
   };
 
   return (
-    <Container className="admin-form-page add-antique-page">
+    <div className="admin-form-page add-antique-page">
       <Card>
         <Card.Header>
           <LibraryBig size={20} /> Catalogue entry
@@ -231,9 +231,9 @@ export default function AddNewAntique() {
                   />
                 </div>
                 <div className="col-md-auto">
-                  <Button
+                  <button
                     type="button"
-                    variant="outline-secondary"
+                    // variant="outline-secondary"
                     onClick={addArtist}
                     disabled={
                       creatingArtist ||
@@ -247,7 +247,7 @@ export default function AddNewAntique() {
                       <Plus size={16} />
                     )}{" "}
                     Add artist
-                  </Button>
+                  </button>
                 </div>
               </div>
             </fieldset>
@@ -316,13 +316,18 @@ export default function AddNewAntique() {
                 onChange={(event) => update("price", event.target.value)}
               />
             </Form.Group>
-            <Button type="submit" variant="primary" disabled={saving}>
+            <button
+              // size="sm"
+              // variant="outline-dark"
+               className="btn btn-outline-secondary"
+              type="submit"
+              disabled={saving}>
               {saveContent}
               Save antique
-            </Button>
+            </button>
           </Form>
         </Card.Body>
       </Card>
-    </Container>
+    </div>
   );
 }

@@ -8,14 +8,14 @@
 }
 
 .location-page .map-frame {
-  max-width: 70vw;
+  max-width: 40vw;
 }
 
 .location-page {
   display: grid;
   grid-template-columns: minmax(18rem, 0.75fr) minmax(24rem, 1.25fr);
   gap: 2rem;
-  max-width: 70rem;
+  max-width: 40vw;
   margin: 0 auto;
   padding: 2rem clamp(0.5rem, 3vw, 3rem) 4rem;
 }

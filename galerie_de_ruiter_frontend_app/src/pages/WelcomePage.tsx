@@ -1,12 +1,12 @@
 import { ArrowRight, MapPin, MessageCircle, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "@/context/LanguageContext";
+// import { useLanguage } from "@/context/LanguageContext";
 
 export default function WelcomePage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { language } = useLanguage();
+  // const { language } = useLanguage();
   const shareUrl = window.location.origin;
   return (
     <section className="welcome-page">

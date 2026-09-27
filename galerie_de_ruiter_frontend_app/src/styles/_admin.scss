@@ -9,7 +9,7 @@
 .admin-row-actions { display: flex; align-items: center; gap: 0.5rem; }
 .category-create-form { display: grid; grid-template-columns: 1.2fr 1fr auto; gap: 0.6rem; margin: 1.5rem 0; }
 .category-create-form button { display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
-.inventory-search { display: flex; align-items: center; gap: 0.6rem; max-width: 34rem; margin: 1.5rem 0; padding: 0.65rem 0.85rem; border: 1px solid rgba(60, 31, 37, 0.18); background: var(--theme-surface); }
+.inventory-search { display: flex; align-items: center; gap: 0.6rem; max-width: 45rem; margin: 1.5rem 0; padding: 0.65rem 0.85rem; border: 1px solid rgba(60, 31, 37, 0.18); background: var(--theme-surface); }
 .inventory-search input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--theme-text); font-size: 1rem; }
 .inventory-list { display: grid; gap: 0.65rem; }
 .inventory-row { display: flex; align-items: center; gap: 1rem; width: 100%; padding: 0.7rem; border: 1px solid rgba(60, 31, 37, 0.14); background: var(--theme-surface); color: var(--theme-text); text-align: left; }

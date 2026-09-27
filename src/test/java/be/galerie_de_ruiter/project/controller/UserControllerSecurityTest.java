@@ -31,11 +31,7 @@ class UserControllerSecurityTest {
 
     @Test
     void unauthenticatedRequestsAreRejected() throws Exception {
-        mvc.perform(get("/api/admin/users")
-                        .with(jwt().authorities(
-                                new SimpleGrantedAuthority("ROLE_USER")
-                        ))
-                )
+        mvc.perform(get("/api/admin/users"))
                 .andExpect(status().isUnauthorized());
     }
 

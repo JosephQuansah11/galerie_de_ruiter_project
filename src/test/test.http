@@ -12,24 +12,68 @@
 
 @keycloak_app_client_secret = FvS0v7FLwngiKKn6CTqQykNN9xqQGoLl2gJKc8YAHRJBUn8GLPAiHzi4gte7OLC8C1MNKFh0R1hOO8n0lkuigE
 
-
 ### Check Keycloak realm endpoint
 GET {{keycloak}}/realms/{{keycloak_app_realm}}
 
+### Request a Keycloak administrator token from master
+# @name keycloakAdminToken
+POST {{keycloak}}/realms/{{keycloak_realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
 
-# ### Request a Keycloak admin token
-# # @name adminToken
-# POST {{keycloak}}/realms/{{keycloak_realm}}/protocol/openid-connect/token
-# Content-Type: application/x-www-form-urlencoded
+grant_type=password&client_id={{keycloak_client_id}}&username={{keycloak_admin_username}}&password={{keycloak_admin_password}}
 
-# grant_type=password&client_id={{keycloak_client_id}}&username={{keycloak_admin_username}}&password={{keycloak_admin_password}}
+### Create the application administrator (expect HTTP 201)
+# @name createRealmAdmin
+POST {{keycloak}}/admin/realms/{{keycloak_app_realm}}/users
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+Content-Type: application/json
 
-### Get application admin token
+{
+  "username": "{{new_username}}",
+  "email": "{{new_user_email}}",
+  "enabled": true,
+  "emailVerified": true,
+  "credentials": [
+    {
+      "type": "password",
+      "value": "{{new_user_password}}",
+      "temporary": false
+    }
+  ]
+}
+
+### Look up the new user's Keycloak ID
+# @name realmAdminUser
+GET {{keycloak}}/admin/realms/{{keycloak_app_realm}}/users?username={{new_username}}&exact=true
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+
+###
+@realm_admin_user_id = {{realmAdminUser.response.body.$[0].id}}
+
+### Get the admin realm role
+# @name applicationAdminRole
+GET {{keycloak}}/admin/realms/{{keycloak_app_realm}}/roles/admin
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+
+### Grant the admin realm role
+POST {{keycloak}}/admin/realms/{{keycloak_app_realm}}/users/{{realm_admin_user_id}}/role-mappings/realm
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+Content-Type: application/json
+
+[
+  {
+    "id": "{{applicationAdminRole.response.body.$.id}}",
+    "name": "{{applicationAdminRole.response.body.$.name}}"
+  }
+]
+
+### Log in as the newly registered application administrator
 # @name adminToken
 POST {{keycloak}}/realms/{{keycloak_app_realm}}/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
 grant_type=password&client_id={{keycloak_app_client_id}}&client_secret={{keycloak_app_client_secret}}&username={{new_username}}&password={{new_user_password}}
+
 ###
 @access_token = {{adminToken.response.body.$.access_token}}
 
@@ -59,19 +103,14 @@ X-XSRF-TOKEN: {{csrf_token}}
   "lastName": "Quansah Kotei",
   "displayName": "QuansinoJosepe",
   "password": "JeP2020-2023",
-  "role": "USER"
+  "role": "ADMIN"
 }
 
 
-###
-POST http://localhost:8081/realms/master/protocol/openid-connect/token
-Content-Type: application/x-www-form-urlencoded
-
-grant_type=password&client_id=admin-cli&username=admin&password=admin
 
 
 ### create artist
-# @name artistId
+# @name createArtist
 POST {{app}}/api/designers/add/designer
 Content-Type: application/json
 Authorization: Bearer {{access_token}}
@@ -83,7 +122,8 @@ X-XSRF-TOKEN: {{csrf_token}}
   "lastName": "Last"
 }
 
-@artistId = 7bb7d058-6519-4c58-9d54-5f245d0e07bf
+###
+@artistId = {{createArtist.response.body.$.id}}
 
 ### creating antiques
 POST {{app}}/api/antiques
@@ -93,7 +133,145 @@ X-XSRF-TOKEN: {{csrf_token}}
 
 {
   "title": "Antique 1",
-  "artistId": "7bb7d058-6519-4c58-9d54-5f245d0e07bf",
+  "artistId": "{{artistId}}",
   "description": "This is a very nice antique found in the year 1986",
   "price": 1000.00
+}
+
+### Create catalogue categories for the sample collection
+# @name lightingCategory
+POST {{app}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{"name":"Lighting","visible":true}
+
+###
+# @name furnitureCategory
+POST {{app}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{"name":"Furniture","visible":true}
+
+###
+# @name decorCategory
+POST {{app}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{"name":"Decor","visible":true}
+
+###
+# @name artCategory
+POST {{app}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{"name":"Art","visible":true}
+
+### Resolved category IDs
+@lighting_category_id = {{lightingCategory.response.body.$.id}}
+@furniture_category_id = {{furnitureCategory.response.body.$.id}}
+@decor_category_id = {{decorCategory.response.body.$.id}}
+@art_category_id = {{artCategory.response.body.$.id}}
+
+### Lighting item 1
+# @name lightingAntique1
+POST {{app}}/api/antiques
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+X-XSRF-TOKEN: {{csrf_token}}
+
+{
+  "title":"Murano glass pendant lamp",
+  "artistId":"{{artistId}}",
+  "categoryId":"{{lighting_category_id}}",
+  "description":"Hand-blown amber glass pendant lamp.",
+  "price":780.00
+}
+
+### Resolved lighting antique ID
+@lighting_antique_1_id = {{lightingAntique1.response.body.$.id}}
+
+### Upload a local binary image for Lighting item 1
+PUT {{app}}/api/antiques/{{lighting_antique_1_id}}/image
+Authorization: Bearer {{access_token}}
+Content-Type: multipart/form-data; boundary=antiqueImageBoundary
+
+--antiqueImageBoundary
+Content-Disposition: form-data; name="image"; filename="ceramic-lamp.svg"
+Content-Type: image/svg+xml
+
+< ../galerie_de_ruiter_frontend_app/public/images/antiques/ceramic-lamp.svg
+--antiqueImageBoundary--
+
+### Lighting item 2
+POST {{app}}/api/antiques
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+X-XSRF-TOKEN: {{csrf_token}}
+
+{
+  "title":"Brass articulating desk lamp",
+  "artistId":"{{artistId}}",
+  "categoryId":"{{lighting_category_id}}",
+  "description":"Adjustable mid-century brass desk lamp.",
+  "price":340.00
+}
+
+### Lighting item 3
+POST {{app}}/api/antiques
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+X-XSRF-TOKEN: {{csrf_token}}
+
+{
+  "title":"Opaline globe wall light",
+  "artistId":"{{artistId}}",
+  "categoryId":"{{lighting_category_id}}",
+  "description":"Soft opaline glass wall light with brass mount.",
+  "price":495.00
+}
+
+### Furniture item
+POST {{app}}/api/antiques
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+X-XSRF-TOKEN: {{csrf_token}}
+
+{
+  "title":"Teak lounge chair",
+  "artistId":"{{artistId}}",
+  "categoryId":"{{furniture_category_id}}",
+  "description":"Vintage teak lounge chair with renewed upholstery.",
+  "price":1250.00
+}
+
+### Decor item
+POST {{app}}/api/antiques
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+X-XSRF-TOKEN: {{csrf_token}}
+
+{
+  "title":"Carved oak mirror",
+  "artistId":"{{artistId}}",
+  "categoryId":"{{decor_category_id}}",
+  "description":"Hand-carved oak mirror with original patina.",
+  "price":620.00
+}
+
+### Art item
+POST {{app}}/api/antiques
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+X-XSRF-TOKEN: {{csrf_token}}
+
+{
+  "title":"Framed botanical lithograph",
+  "artistId":"{{artistId}}",
+  "categoryId":"{{art_category_id}}",
+  "description":"Archival botanical lithograph in a period frame.",
+  "price":280.00
 }

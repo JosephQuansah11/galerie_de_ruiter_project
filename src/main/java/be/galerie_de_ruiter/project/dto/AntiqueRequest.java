@@ -12,5 +12,8 @@ public record AntiqueRequest(
 	@NotBlank String title, 
 	@NotNull UUID artistId, 
 	String description,
-	@NotNull @DecimalMin("0.0") BigDecimal price) {
+	@NotNull @DecimalMin("0.0") BigDecimal price,
+		UUID categoryId,
+		String imageUrl,
+		String modelUrl) {
 }

@@ -22,6 +22,12 @@ public class DesignerService implements DesignerServiceImplementation{
     }
 
     @Override
+    public List<Designer> searchDesigners(String query) {
+        return designerRepository.findTop10ByFirstNameContainingIgnoreCaseOrMiddleNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
+                query, query, query);
+    }
+
+    @Override
     public Designer getDesigner(UUID id) {
         return designerRepository.findById(id).orElse(null);
     }

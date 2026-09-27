@@ -4,10 +4,6 @@ import be.galerie_de_ruiter.project.domain.User;
 import be.galerie_de_ruiter.project.domain.UserRole;
 import be.galerie_de_ruiter.project.dto.UserRegistrationRequest;
 import be.galerie_de_ruiter.project.repository.UserRepository;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 import org.keycloak.admin.client.CreatedResponseUtil;
@@ -21,11 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import be.galerie_de_ruiter.project.service.implementation.UserServiceImplementation;
 
 import jakarta.ws.rs.core.Response;
-import lombok.extern.slf4j.Slf4j;
 
 
 @Service
-@Slf4j
 @Transactional
 public class UserService implements UserServiceImplementation {
 
@@ -80,7 +74,6 @@ public class UserService implements UserServiceImplementation {
             User user = new User(keycloakSubject, request.getEmail(), request.getDisplayName(), userRequestRole,
                     request.getFirstName(), request.getLastName());
             assignKeycloakRole(keycloakSubject, userRequestRole);
-            log.info("USER ROLE ASSIGNED: : {}", userRequestRole);
             return usersRepository.save(user);
         } catch (RuntimeException exception) {
             try {
@@ -101,9 +94,15 @@ public class UserService implements UserServiceImplementation {
         return usersRepository.findByKeycloakSubject(keycloakSubject)
                 .orElseGet(() ->
                         usersRepository.save(
-                                new User(keycloakSubject, username, email)
+                            new User(keycloakSubject, email, username)
                         )
                 );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<User> findAll() {
+        return usersRepository.findAll();
     }
 
     @Override

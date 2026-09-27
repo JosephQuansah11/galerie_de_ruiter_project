@@ -1,0 +1,59 @@
+.profile-page {
+  max-width: 74rem;
+  margin: 0 auto;
+  padding: 2rem clamp(0.75rem, 3vw, 3rem) 4rem;
+}
+
+.profile-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 17rem;
+  margin-bottom: 1.5rem;
+  padding: 2rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, #6b2432, #8a6258);
+  color: #fffaf7;
+}
+
+.profile-hero::after {
+  content: "";
+  position: absolute;
+  right: -4rem;
+  top: -5rem;
+  width: 18rem;
+  height: 18rem;
+  border: 1px solid rgba(255, 250, 247, 0.22);
+  border-radius: 50%;
+}
+
+.profile-hero-art {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+}
+
+.profile-hero .avatar { position: relative; z-index: 1; border: 3px solid rgba(255, 250, 247, 0.8); background: #fffaf7; color: #6b2432; }
+.profile-hero-copy { position: relative; z-index: 1; }
+.profile-hero h1 { margin: 0.35rem 0; font: 400 clamp(2.2rem, 5vw, 4.5rem) Georgia, serif; }
+.profile-hero p { max-width: 32rem; margin: 0; color: rgba(255, 250, 247, 0.82); }
+.profile-access-summary { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 1rem; padding: 0.4rem 0.7rem; border: 1px solid rgba(255, 250, 247, 0.35); border-radius: 999px; color: #fffaf7; font-size: 0.82rem; }
+.profile-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr); gap: 1rem; }
+.profile-details-panel, .security-card { padding: 1.5rem; border: 1px solid rgba(60, 31, 37, 0.14); background: var(--theme-surface); }
+.profile-section-icon, .security-card-icon { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; margin-bottom: 1rem; border-radius: 50%; background: #f1e6e2; color: var(--theme-primary); }
+.profile-details-panel h2, .security-card h3 { margin: 0.35rem 0; font: 1.8rem Georgia, serif; }
+.profile-section-intro, .security-card p { color: var(--theme-text-secondary); line-height: 1.6; }
+.security-card { align-self: start; }
+.security-card .eyebrow { color: var(--theme-text-secondary); }
+.security-card h3 { font-size: 1.55rem; }
+.security-line { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.8rem 0; border-top: 1px solid rgba(60, 31, 37, 0.12); }
+.security-line span { color: var(--theme-text-secondary); }
+.security-line strong { display: inline-flex; align-items: center; gap: 0.3rem; }
+@media (max-width: 700px) { .profile-hero { align-items: flex-start; flex-direction: column; padding-top: 4rem; } .profile-layout { grid-template-columns: 1fr; } }

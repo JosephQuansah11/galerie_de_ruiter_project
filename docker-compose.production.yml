@@ -2,12 +2,10 @@ services:
   database:
     image: postgres:17-alpine
     restart: unless-stopped
-    ports:
-      - "5432:5432"
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-galerie}
+      POSTGRES_USER: ${POSTGRES_USER:-galerie_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -16,61 +14,108 @@ services:
       timeout: 5s
       retries: 5
 
-  # keycloak:
-  #   image: quay.io/keycloak/keycloak:26.2
-  #   restart: unless-stopped
-  #   command: start --http-enabled=true --proxy-headers=xforwarded
-  #   environment:
-  #     KC_DB: postgres
-  #     KC_DB_URL: jdbc:postgresql://database:5432/${POSTGRES_DB}
-  #     KC_DB_USERNAME: ${POSTGRES_USER}
-  #     KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
-  #     KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:?set KEYCLOAK_ADMIN_USERNAME}
-  #     KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD}
-  #   depends_on:
-  #     database:
-  #       condition: service_healthy
+  keycloak-database:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak_app
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Set KEYCLOAK_DB_PASSWORD}
+    volumes:
+      - keycloak-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # java-api:
-  #   image: ${IMAGE_NAMESPACE:?set IMAGE_NAMESPACE}/demo-java-api:${IMAGE_TAG:-latest}
-  #   restart: unless-stopped
-  #   environment:
-  #     SPRING_PROFILES_ACTIVE: prod
-  #     JPA_DDL_AUTO: ${JPA_DDL_AUTO:-update}
-  #     FRONTEND_ORIGIN: ${PUBLIC_FRONTEND_ORIGIN:?set PUBLIC_FRONTEND_ORIGIN}
-  #     DATABASE_URL: postgresql://database:5432/${POSTGRES_DB}
-  #     DATABASE_USERNAME: ${POSTGRES_USER}
-  #     DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
-  #     KEYCLOAK_ISSUER_URI: ${PUBLIC_KEYCLOAK_ISSUER_URI:?set PUBLIC_KEYCLOAK_ISSUER_URI}
-  #     KEYCLOAK_SERVER_URL: http://keycloak:8080
-  #     KEYCLOAK_REALM: ${KEYCLOAK_REALM:?set KEYCLOAK_REALM}
-  #     KEYCLOAK_ADMIN_REALM: master
-  #     KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:?set KEYCLOAK_ADMIN_CLIENT_ID}
-  #     KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
-  #     KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-  #   depends_on:
-  #     database:
-  #       condition: service_healthy
-  #     keycloak:
-  #       condition: service_started
+  keycloak:
+    build:
+      context: ./keycloak
+    restart: unless-stopped
+    command:
+      - start
+      - --optimized
+      - --http-enabled=true
+      - --hostname=${PUBLIC_KEYCLOAK_ISSUER_BASE:-http://localhost:8081}
+      - --hostname-strict=false
+      - --proxy-headers=xforwarded
+    ports:
+      - "8081:8080"
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-database:5432/keycloak
+      KC_DB_USERNAME: keycloak_app
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Set KEYCLOAK_DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:?Set KEYCLOAK_ADMIN_USERNAME}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD}
+    depends_on:
+      keycloak-database:
+        condition: service_healthy
 
-#   python-api:
-#     image: ${IMAGE_NAMESPACE:?set IMAGE_NAMESPACE}/demo-python-api:${IMAGE_TAG:-latest}
-#     restart: unless-stopped
-#     environment:
-#       JAVA_API_URL: http://java-api:8080
-#       FRONTEND_ORIGIN: ${PUBLIC_FRONTEND_ORIGIN:?set PUBLIC_FRONTEND_ORIGIN}
-#     depends_on:
-#       - java-api
+  java-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      PORT: 8080
+      JPA_DDL_AUTO: ${JPA_DDL_AUTO:-update}
+      DATABASE_URL: postgresql://database:5432/${POSTGRES_DB:-galerie}
+      DATABASE_USERNAME: ${POSTGRES_USER:-galerie_app}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      FRONTEND_ORIGIN: ${PUBLIC_FRONTEND_ORIGIN:-http://localhost:3000}
+      KEYCLOAK_ISSUER_URI: ${PUBLIC_KEYCLOAK_ISSUER_URI:-http://localhost:8081/realms/galerie}
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/galerie/protocol/openid-connect/certs
+      PUBLIC_KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-galerie}
+      KEYCLOAK_ADMIN_REALM: master
+      KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:?Set KEYCLOAK_ADMIN_CLIENT_ID}
+      KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:?Set KEYCLOAK_ADMIN_USERNAME}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_SUCCESS_URL: ${STRIPE_SUCCESS_URL:-http://localhost:3000/checkout/success}
+      STRIPE_CANCEL_URL: ${STRIPE_CANCEL_URL:-http://localhost:3000/checkout/cancel}
+    depends_on:
+      database:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
 
-#   frontend:
-#     image: ${IMAGE_NAMESPACE:?set IMAGE_NAMESPACE}/demo-frontend:${IMAGE_TAG:-latest}
-#     restart: unless-stopped
-#     ports:
-#       - "80:80"
-#     depends_on:
-#       - java-api
-#       - python-api
+  reconstruction-api:
+    build:
+      context: ./services/reconstruction-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      RECONSTRUCTION_MODE: ${RECONSTRUCTION_MODE:-disabled}
+      DATA_DIR: /app/data
+      CORS_ORIGINS: ${PUBLIC_FRONTEND_ORIGIN:-http://localhost:3000}
+    volumes:
+      - reconstruction-data:/app/data
+
+  frontend:
+    build:
+      context: ./galerie_de_ruiter_frontend_app
+      args:
+        VITE_JAVA_API_URL: ${VITE_JAVA_API_URL:-http://localhost:8080}
+        VITE_JAVA_BACKEND_URL: ${VITE_JAVA_BACKEND_URL:-http://localhost:8080}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
+        VITE_KEYCLOAK_URL: ${VITE_KEYCLOAK_URL:-http://localhost:8081}
+        VITE_KEYCLOAK_REALM: ${KEYCLOAK_REALM:-galerie}
+        VITE_KEYCLOAK_CLIENT_ID: ${VITE_KEYCLOAK_CLIENT_ID:-galerie-frontend}
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - java-api
+      - keycloak
 
 volumes:
   postgres-data:
+  keycloak-postgres-data:
+  reconstruction-data:

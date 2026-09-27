@@ -2,6 +2,40 @@
 
 Antiques, art, design, vintage, furniture and decor.
 
+## Run the application locally
+
+Install Docker with the Compose plugin and Java 25, then start the backend with:
+
+```powershell
+.\gradlew.bat bootRun
+```
+
+On macOS/Linux, run `./gradlew bootRun`. The Gradle task starts the development
+PostgreSQL and Keycloak containers, waits for them to be ready, and then starts
+the reconstruction API and Spring Boot using the `dev` profile. The Keycloak development realm is imported
+automatically. The import is assembled from
+`keycloak/realms/movie_project_keycloak-realm.json`,
+`keycloak/realms/movie_project_frontend_client.json`, and
+`keycloak/realms/movie_project_client.json`. The adapter-specific
+`keycloak/realms/keycloak.json` is not a realm-import file and is not used by
+this flow. Local development credentials and persisted database volumes are
+defined in `docker-compose.dev.yml`; do not reuse its defaults outside
+development. Keycloak is published on `http://localhost:8082` by default
+(override with `KEYCLOAK_HTTP_PORT` if needed). Point the frontend's
+`VITE_KEYCLOAK_URL` to that address when running it locally. The reconstruction
+API is available at `http://localhost:8000`; its mode defaults to `disabled`
+until a local reconstruction command or external worker is configured.
+
+Stop the dependencies with `.\gradlew.bat stopDevServices` (or
+`./gradlew stopDevServices`). This keeps the database volumes. To remove the
+containers and local data, run `docker compose -f docker-compose.dev.yml down
+-v`.
+
+This flow can also run on Docker-enabled GitHub Actions runners and GitHub
+Codespaces. GitHub repository hosting itself does not keep Docker containers or
+databases running; public production deployments need a container host and
+persistent PostgreSQL service, such as the resources declared in `render.yaml`.
+
 ## Production Docker stack
 
 The production Compose file runs the frontend, Spring API, Keycloak, the

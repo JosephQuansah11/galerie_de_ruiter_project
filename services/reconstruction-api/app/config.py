@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     max_image_bytes: int = 6 * 1024 * 1024
     model_base_url: str = ''
     local_engine_command: str = ''
+    external_worker_url: str = ''
+    external_worker_timeout_seconds: int = 1800
 
     @property
     def cors_origin_list(self) -> list[str]:

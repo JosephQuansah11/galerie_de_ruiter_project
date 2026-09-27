@@ -62,3 +62,11 @@ def reconstruction_image(job_id: str, filename: str):
     if not path.exists() or path.parent != store.input_dir(job_id):
         raise HTTPException(404, 'Image not found')
     return FileResponse(path)
+
+@app.get('/v1/reconstructions/{job_id}/model/{filename}')
+def reconstruction_model(job_id: str, filename: str):
+    path = store.output_dir(job_id) / filename
+    if not path.exists() or path.parent != store.output_dir(job_id):
+        raise HTTPException(404, 'Model not found')
+    media_type = 'model/gltf-binary' if path.suffix == '.glb' else 'model/gltf+json'
+    return FileResponse(path, media_type=media_type)

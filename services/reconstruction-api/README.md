@@ -5,10 +5,10 @@ Standalone FastAPI service for image-to-3D reconstruction jobs.
 ## Modes
 
 - `disabled` (default): accepts and records jobs, then reports that processing is unavailable. Recommended for Render web services without GPU workers.
-- `local`: reserved for a local Meshroom/COLMAP runner.
-- `external`: reserved for a separately managed GPU worker.
+- `local`: runs a configured Meshroom/COLMAP command and serves its `.glb`/`.gltf` output.
+- `external`: submits the six images to a separately managed GPU worker and stores the returned model URL.
 
-The API intentionally does not embed a paid reconstruction provider or credentials. The service contract is stable so a local or external engine can be added later.
+The API intentionally does not embed a paid reconstruction provider or credentials.
 
 ## Run locally
 
@@ -19,6 +19,21 @@ pip install -r requirements-dev.txt
 $env:RECONSTRUCTION_MODE = "disabled"
 uvicorn app.main:app --reload --port 8000
 ```
+
+For a local Meshroom or COLMAP runner, set `RECONSTRUCTION_MODE=local` and configure
+`LOCAL_ENGINE_COMMAND`. The command is trusted local configuration and can use
+`${input_dir}`, `${output_dir}`, and `${job_id}` placeholders. It must write a
+`.glb` or `.gltf` file into `${output_dir}`.
+
+Example wrapper command:
+
+```text
+python C:\tools\reconstruct.py --input ${input_dir} --output ${output_dir}
+```
+
+For a GPU worker, set `RECONSTRUCTION_MODE=external` and `EXTERNAL_WORKER_URL`.
+The worker must accept `POST /v1/reconstructions` as multipart `images` and return
+`{"model_url":"https://.../model.glb"}`.
 
 Endpoints:
 
@@ -31,4 +46,4 @@ The service accepts JPEG, PNG, and WEBP images. Six images are recommended for a
 
 ## Production
 
-Render should run this API in `disabled` or `external` mode. Do not run Meshroom/COLMAP inside a normal Render web service. Use a GPU worker and object storage for production artifacts, then implement the `external` engine adapter.
+Render should run this API in `disabled` or `external` mode. Do not run Meshroom/COLMAP inside a normal Render web service. Use a GPU worker and object storage for production artifacts.

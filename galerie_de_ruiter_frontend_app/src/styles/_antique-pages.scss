@@ -62,5 +62,14 @@
 .three-d-viewer { width: min(100%, 36rem); height: clamp(18rem, 55vw, 28rem); min-height: 18rem; margin: 0 auto; overflow: hidden; }
 .three-d-viewer canvas { display: block; width: 100% !important; height: 100% !important; }
 .three-d-viewer-fallback { display: grid; place-items: center; width: 100%; min-height: 18rem; padding: 1.5rem; color: var(--theme-text-secondary); text-align: center; }
+.about-page { max-width: 58rem; margin: 0 auto; padding: 2.5rem clamp(0.75rem, 4vw, 3rem) 5rem; }
+.about-content { color: var(--theme-text); font: 1.05rem/1.85 Georgia, serif; }
+.about-content h1, .about-content h2, .about-content h3 { color: var(--theme-primary); font-family: Georgia, serif; font-weight: 400; line-height: 1.2; }
+.about-content h1 { margin: 2.5rem 0 1rem; font-size: clamp(2.2rem, 5vw, 3.6rem); }
+.about-content h1:first-child { margin-top: 0; }
+.about-content h2 { margin: 2.5rem 0 0.75rem; font-size: clamp(1.7rem, 3vw, 2.3rem); }
+.about-content h3 { margin: 1.6rem 0 0.65rem; font-size: 1.3rem; }
+.about-content p { margin: 0.65rem 0; white-space: pre-wrap; }
+.about-content hr { margin: 2rem 0; border-color: rgba(60, 31, 37, 0.2); }
 .model-admin-panel { display: grid; gap: 0.6rem; padding: 1rem; border: 1px solid rgba(60, 31, 37, 0.14); background: var(--theme-surface); }
 @media (max-width: 640px) { .catalogue-heading { align-items: start; flex-direction: column; } .catalogue-count { text-align: left; } .detail-layout { grid-template-columns: 1fr; } }

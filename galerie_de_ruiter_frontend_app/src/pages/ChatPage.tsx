@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Form, Spinner } from "react-bootstrap";
+import { Form, Spinner } from "react-bootstrap";
 import { MessageCircle, Send, ExternalLink } from "lucide-react";
 import { sendChatMessage } from "@/apis/chat_api";
 
@@ -95,9 +95,13 @@ export default function ChatPage() {
           placeholder="Write a message..."
           aria-label="Chat message"
         />
-        <Button type="submit" disabled={sending || !draft.trim()}>
+        <button
+          className="btn btn-dark"
+          type="submit"
+          disabled={sending || !draft.trim()}
+        >
           <Send size={17} />
-        </Button>
+        </button>
       </Form>
     </section>
   );

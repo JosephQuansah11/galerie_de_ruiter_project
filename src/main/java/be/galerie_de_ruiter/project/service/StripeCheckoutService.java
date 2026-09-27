@@ -9,6 +9,7 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import java.math.BigDecimal;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,14 @@ public class StripeCheckoutService {
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl(successUrl)
                 .setCancelUrl(cancelUrl);
+        for (SessionCreateParams.PaymentMethodType paymentMethodType : List.of(
+                SessionCreateParams.PaymentMethodType.CARD,
+                SessionCreateParams.PaymentMethodType.IDEAL,
+                SessionCreateParams.PaymentMethodType.BANCONTACT,
+                SessionCreateParams.PaymentMethodType.EPS,
+                SessionCreateParams.PaymentMethodType.SEPA_DEBIT)) {
+            session.addPaymentMethodType(paymentMethodType);
+        }
 
         for (CheckoutItemRequest item : request.items()) {
             Antique antique = antiques.findById(item.antiqueId())

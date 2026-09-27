@@ -1,4 +1,5 @@
 import axiosInstance from "@/apis/authPromise";
+import { csrfHeaders } from "@/apis/client";
 import Antique, {
   AntiqueForm,
   Category,
@@ -13,8 +14,28 @@ export type StoreLocation = {
   longitude: number;
 };
 
+export type AboutContent = { content: string };
+
 const backendBaseURL =
   import.meta.env.VITE_JAVA_BACKEND_URL ?? "http://localhost:8080";
+
+export const getAboutContent = async (): Promise<AboutContent> => {
+  const response = await axiosInstance.get<AboutContent>(
+    `${backendBaseURL}/api/about`,
+  );
+  return response.data;
+};
+
+export const updateAboutContent = async (
+  content: string,
+): Promise<AboutContent> => {
+  const response = await axiosInstance.put<AboutContent>(
+    `${backendBaseURL}/api/about`,
+    { content },
+    { headers: await csrfHeaders() },
+  );
+  return response.data;
+};
 
 export const getAllAntiques = async (): Promise<Antique[]> => {
   const response = await axiosInstance.get<

@@ -3,7 +3,7 @@ import Navbar from "react-bootstrap/Navbar";
 
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, LibraryBig, Map, Menu, MessageCircle, Settings, ShoppingBag, Heart, SlidersHorizontal, UserRound } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, LibraryBig, Map, Menu, MessageCircle, Settings, ShoppingBag, Heart, SlidersHorizontal, UserRound, BookOpen } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getVisibleCategories } from "@/apis/backend_api";
 import type { Category } from "@/models/antiques/Antique";
@@ -27,6 +27,7 @@ export function CustomNav() {
     { href: "/wishlist", icon: Heart, title: t("wishlist") },
     { href: "/cart", icon: ShoppingBag, title: t("cart") },
     { href: "/dashboard/chat", icon: MessageCircle, title: "Gallery chat" },
+    { href: "/about", icon: BookOpen, title: "About the gallery" },
   ];
 
   // const handleShowHelp = () => {
@@ -89,6 +90,7 @@ export function CustomNav() {
           {auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("categories")}</Tooltip>}><NavLink to="/admin/categories" className="nav-item-link"><Menu className="nav-icon" />{expanded && <span>{t("categories")}</span>}</NavLink></OverlayTrigger>}
           {!auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("location")}</Tooltip>}><NavLink to="/map" className="nav-item-link"><Map className="nav-icon" />{expanded && <span>{t("location")}</span>}</NavLink></OverlayTrigger>}
           {auth.isAdmin && <div className="nav-location-dropdown"><OverlayTrigger placement="right" overlay={<Tooltip>Location</Tooltip>}><NavLink to="/map" className="nav-item-link"><Map className="nav-icon" />{expanded && <><span>Location</span><ChevronDown className="nav-submenu-chevron" size={15} /></>}</NavLink></OverlayTrigger><div className="nav-admin-submenu"><NavLink to="/admin/location">Edit location</NavLink></div></div>}
+          {auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>Edit About page</Tooltip>}><NavLink to="/admin/about" className="nav-item-link"><BookOpen className="nav-icon" />{expanded && <span>Edit About page</span>}</NavLink></OverlayTrigger>}
         </div>
       </Nav>
       {/* User Profile Section */}

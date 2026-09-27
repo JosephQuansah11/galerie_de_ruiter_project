@@ -39,6 +39,7 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.GET, "/api/antiques/*/image/*").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/location").permitAll()
+				.requestMatchers(HttpMethod.GET, "/api/about").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/chat").authenticated()
 				.requestMatchers(HttpMethod.GET, "/api/me").hasAnyRole("USER", "ADMIN")
 				.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()

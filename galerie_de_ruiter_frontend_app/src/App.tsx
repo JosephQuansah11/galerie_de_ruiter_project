@@ -28,6 +28,8 @@ import { LanguageProvider } from "./context/LanguageContext";
 import AntiqueAdminPage from "./pages/admin/AntiqueAdminPage";
 import CheckoutResultPage from "./pages/shopping/CheckoutResultPage";
 import ChatPage from "./pages/ChatPage";
+import AboutPage from "./pages/AboutPage";
+import AboutAdminPage from "./pages/admin/AboutAdminPage";
 
 function ProtectedLayout() {
   const auth = useAuth();
@@ -53,6 +55,7 @@ function ProtectedLayout() {
           <Route path="/admin/antiques" element={<AntiqueAdminPage />} />
           <Route path="/admin/categories" element={<CategoryAdminPage />} />
           <Route path="/admin/location" element={<LocationAdminPage />} />
+          <Route path="/admin/about" element={<AboutAdminPage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/map" element={<LocationPage />} />
@@ -70,6 +73,7 @@ function AppContent() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<AuthPage />} />
+      <Route path="/about" element={<AboutPage />} />
       <Route path="/*" element={<ProtectedLayout />} />
     </Routes>
   );

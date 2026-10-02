@@ -86,10 +86,26 @@ services:
         value: update
       - key: PORT
         value: "8080"
-      - key: DATABASE_URL
+      - key: DATABASE_HOST
         fromDatabase:
           name: galerie-app-db
-          property: connectionString
+          property: host
+      - key: DATABASE_PORT
+        fromDatabase:
+          name: galerie-app-db
+          property: port
+      - key: DATABASE_NAME
+        fromDatabase:
+          name: galerie-app-db
+          property: database
+      - key: DATABASE_USERNAME
+        fromDatabase:
+          name: galerie-app-db
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: galerie-app-db
+          property: password
       - key: FRONTEND_ORIGIN
         value: https://galerie-frontend.onrender.com
       - key: KEYCLOAK_ISSUER_URI

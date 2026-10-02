@@ -50,6 +50,12 @@ be configured separately in its dashboard.
   `KC_BOOTSTRAP_ADMIN_PASSWORD`, `KEYCLOAK_ADMIN_USERNAME`,
   `KEYCLOAK_ADMIN_PASSWORD`, and `KEYCLOAK_REALM_ADMIN_PASSWORD`.
 - The frontend environment variables are build-time values for the static site. Trigger a frontend deploy after changing them.
+- The frontend's public Keycloak settings are already declared in `render.yaml`:
+  `VITE_KEYCLOAK_URL=https://galerie-keycloak.onrender.com`,
+  `VITE_KEYCLOAK_REALM=movie_project_keycloak`, and
+  `VITE_KEYCLOAK_CLIENT_ID=movie_project_frontend_client`. They are public
+  client configuration, not secrets. The Webpack build injects these values
+  from Render's build environment; deploy the frontend after changing them.
 - `FRONTEND_ORIGIN`, Stripe success/cancel URLs, and Keycloak issuer URL must match the final Render service URLs.
 - The Java API receives the `galerie-app-db` internal host, port, database, username, and password through the `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` variables. The Spring profile assembles these into a JDBC URL.
 - If you created a standalone Java web service instead of the `galerie-java-api` blueprint service, add those five variables and link each to the corresponding **internal** property of `galerie-app-db` in that service's environment. Alternatively, set `DATABASE_URL` to a valid JDBC URL beginning `jdbc:postgresql://`. Ensure the database and web service are in the same Render region.

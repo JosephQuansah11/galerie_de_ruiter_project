@@ -86,7 +86,10 @@ export default {
     new MiniCssExtractPlugin({
       filename: "css/[name].[contenthash].css",
     }),
-    new Dotenv(),
+    new Dotenv({
+      prefix: "import.meta.env.",
+      systemvars: true,
+    }),
   ],
 
   devServer: {

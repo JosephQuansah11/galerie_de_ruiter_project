@@ -169,7 +169,7 @@ const resources = {
       oneIdentityText:
         "Your roles and profile come from the Java-backed Keycloak realm.",
       username: "Username",
-      // password: "Password",
+      password: "Password",
       passwordPlaceholder: "At least 8 characters",
       piecesListed: "pieces listed",
       collectionLoadError: "The collection could not be loaded. Please try again.",
@@ -288,7 +288,6 @@ const resources = {
       searchAntiques: "Search antiques",
       collectionCategories: "Collection categories",
       savePieceNamed: "Save {{title}}",
-      password: "Password",
       accountSetup: "JAVA + KEYCLOAK ACCOUNT",
       quantityFor: "Quantity for {{title}}",
       removeFromCart: "Remove {{title}} from cart",

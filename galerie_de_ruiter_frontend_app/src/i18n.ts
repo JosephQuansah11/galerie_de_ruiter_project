@@ -35,6 +35,26 @@ const resources = {
       welcomeTitle: "A slower way to discover beautiful things.",
       welcomeIntro:
         "Antiques, art, design vintage and objects with a story, carefully gathered for the next chapter of their lives.",
+      welcomeStoryEyebrow: "OUR STORY",
+      welcomeStoryTitle: "A home for objects with a story.",
+      welcomeStoryParagraph1:
+        "Galerie De Ruiter is a pop-up store in rural Waasmunster, between Antwerp and Ghent, in a nearby hamlet with the fascinating name De Ruiter.",
+      welcomeStoryParagraph2:
+        "What began as a hobby and a search for beautiful pieces of art, design, vintage and antiques has grown into an eclectic mix. You can discover it in Dirk's charming home. His motto is “Entrez sans frapper” — come in without knocking — where visitors can relax as they search for the object of their dreams.",
+      welcomeStoryParagraph3:
+        "Dirk is passionate about beautiful things and bringing them together in a harmonious interior. It is a way of life and a passion he loves to share with his customers, who often become friends.",
+      welcomeStoryParagraph4:
+        "After nearly 30 years pursuing this passion, Dirk has developed extensive knowledge of everything he sells and is always happy to explain more about each piece.",
+      welcomeStoryParagraph5:
+        "An eclectic interior brings freshness and a new perspective. A good object can set your imagination wandering.",
+      welcomeStoryParagraph6:
+        "Living with art and design is a way to express yourself and enrich your life.",
+      detailBannerMotto: "Entrez sans frapper",
+      detailBannerCategories: "ANTIQUES · ART · DESIGN · VINTAGE",
+      detailRelatedEyebrow: "DISCOVER SOMETHING ELSE",
+      detailRelatedTitle: "More from the collection",
+      scrollCollectionLeft: "Scroll collection left",
+      scrollCollectionRight: "Scroll collection right",
       explore: "Explore the collection",
       findPopup: "Find the pop-up.",
       openingHours: "Opening hours",
@@ -272,6 +292,26 @@ const resources = {
       welcomeTitle: "Une manière plus douce de découvrir de belles choses.",
       welcomeIntro:
         "Antiquités, art, design vintage et objets avec une histoire, réunis avec soin pour la suite de leur vie.",
+      welcomeStoryEyebrow: "NOTRE HISTOIRE",
+      welcomeStoryTitle: "Un lieu pour les objets qui ont une histoire.",
+      welcomeStoryParagraph1:
+        "La Galerie De Ruiter est une boutique éphémère située dans le cadre rural de Waasmunster, entre Anvers et Gand, dans un hameau voisin au nom fascinant : De Ruiter.",
+      welcomeStoryParagraph2:
+        "Ce qui a commencé comme un passe-temps et une recherche de belles pièces d’art, de design, vintage et d’antiquités est devenu un mélange éclectique. Vous pouvez le découvrir dans la charmante maison de Dirk. Sa devise est « Entrez sans frapper » : les visiteurs peuvent s’y détendre en cherchant l’objet de leurs rêves.",
+      welcomeStoryParagraph3:
+        "Dirk est passionné par les beaux objets et par l’art de les réunir dans un intérieur harmonieux. C’est un mode de vie et une passion qu’il aime partager avec ses clients, qui deviennent souvent des amis.",
+      welcomeStoryParagraph4:
+        "Après près de 30 ans consacrés à cette passion, Dirk a acquis une vaste connaissance des pièces qu’il vend et aime en raconter l’histoire.",
+      welcomeStoryParagraph5:
+        "Un intérieur éclectique apporte un souffle nouveau et un autre regard. Un bel objet peut faire voyager l’imagination.",
+      welcomeStoryParagraph6:
+        "Vivre avec l’art et le design est une façon de s’exprimer et d’enrichir sa vie.",
+      detailBannerMotto: "Entrez sans frapper",
+      detailBannerCategories: "ANTIQUITÉS · ART · DESIGN · VINTAGE",
+      detailRelatedEyebrow: "DÉCOUVREZ AUTRE CHOSE",
+      detailRelatedTitle: "D’autres pièces de la collection",
+      scrollCollectionLeft: "Faire défiler la collection vers la gauche",
+      scrollCollectionRight: "Faire défiler la collection vers la droite",
       explore: "Explorer la collection",
       findPopup: "Trouvez le pop-up.",
       openingHours: "Heures d'ouverture",
@@ -512,6 +552,26 @@ const resources = {
       welcomeTitle: "Een rustigere manier om mooie dingen te ontdekken.",
       welcomeIntro:
         "Antiek, kunst, vintage design en objecten met een verhaal, zorgvuldig verzameld voor hun volgende hoofdstuk.",
+      welcomeStoryEyebrow: "ONS VERHAAL",
+      welcomeStoryTitle: "Een plek voor objecten met een verhaal.",
+      welcomeStoryParagraph1:
+        "Galerie De Ruiter is een pop-upstore in het landelijke Waasmunster (tussen Antwerpen & Gent), in een nabijgelegen gehucht met de fascinerende naam De Ruiter.",
+      welcomeStoryParagraph2:
+        "Wat begon als een hobby en een zoektocht naar mooie items — kunst, design, vintage en antiek — is uitgegroeid tot een eclectische mix. Alles is te ontdekken in de charmante woning van Dirk. Zijn motto is “Entrez sans frapper”: bezoekers kunnen er op een ontspannen manier op zoek gaan naar het voorwerp van hun dromen.",
+      welcomeStoryParagraph3:
+        "Dirk is zelf gepassioneerd door mooie spullen en door de manier waarop ze samen een mooi interieur vormen. Het is een manier van leven en een passie die hij graag deelt met zijn klanten, die gemakkelijk vrienden worden.",
+      welcomeStoryParagraph4:
+        "Na bijna 30 jaar met deze passie bezig te zijn, heeft Dirk een uitgebreide kennis opgebouwd van alles wat hij verkoopt. Met veel plezier vertelt hij meer over de items.",
+      welcomeStoryParagraph5:
+        "Een eclectisch interieur brengt verjonging en een andere kijk. Een goed object kan je laten wegdromen.",
+      welcomeStoryParagraph6:
+        "Leven met kunst en design is een manier om jezelf te personaliseren en te verrijken.",
+      detailBannerMotto: "Entrez sans frapper",
+      detailBannerCategories: "ANTIEK · KUNST · DESIGN · VINTAGE",
+      detailRelatedEyebrow: "ONTDEK NOG MEER",
+      detailRelatedTitle: "Meer uit de collectie",
+      scrollCollectionLeft: "Collectie naar links schuiven",
+      scrollCollectionRight: "Collectie naar rechts schuiven",
       explore: "Bekijk de collectie",
       findPopup: "Vind de pop-up.",
       openingHours: "Openingstijden",
@@ -752,6 +812,26 @@ const resources = {
       welcomeTitle: "Eine ruhigere Art, schöne Dinge zu entdecken.",
       welcomeIntro:
         "Antiquitäten, Kunst, Vintage-Design und Objekte mit Geschichte, sorgfältig für ihr nächstes Kapitel ausgewählt.",
+      welcomeStoryEyebrow: "UNSERE GESCHICHTE",
+      welcomeStoryTitle: "Ein Zuhause für Objekte mit Geschichte.",
+      welcomeStoryParagraph1:
+        "Die Galerie De Ruiter ist ein Pop-up-Store im ländlichen Waasmunster zwischen Antwerpen und Gent, in einem nahegelegenen Weiler mit dem faszinierenden Namen De Ruiter.",
+      welcomeStoryParagraph2:
+        "Was als Hobby und Suche nach schönen Kunst-, Design-, Vintage- und antiken Stücken begann, ist zu einer eklektischen Mischung gewachsen. Entdecken lässt sie sich in Dirks charmantem Zuhause. Sein Motto lautet „Entrez sans frapper“ — einfach hereinkommen — und in entspannter Atmosphäre nach dem Objekt der eigenen Träume suchen.",
+      welcomeStoryParagraph3:
+        "Dirk begeistert sich für schöne Dinge und dafür, sie in einem stimmigen Interieur zusammenzubringen. Diese Leidenschaft und Lebensart teilt er gerne mit seinen Kunden, die oft auch zu Freunden werden.",
+      welcomeStoryParagraph4:
+        "Nach fast 30 Jahren mit dieser Leidenschaft verfügt Dirk über umfassende Kenntnisse der Stücke, die er verkauft, und erzählt gerne mehr über sie.",
+      welcomeStoryParagraph5:
+        "Ein eklektisches Interieur bringt frischen Wind und einen neuen Blick. Ein besonderes Objekt kann zum Träumen anregen.",
+      welcomeStoryParagraph6:
+        "Mit Kunst und Design zu leben ist eine Möglichkeit, sich selbst auszudrücken und das Leben zu bereichern.",
+      detailBannerMotto: "Entrez sans frapper",
+      detailBannerCategories: "ANTIQUITÄTEN · KUNST · DESIGN · VINTAGE",
+      detailRelatedEyebrow: "ENTDECKEN SIE WEITERE STÜCKE",
+      detailRelatedTitle: "Weitere Stücke aus der Kollektion",
+      scrollCollectionLeft: "Kollektion nach links scrollen",
+      scrollCollectionRight: "Kollektion nach rechts scrollen",
       explore: "Kollektion entdecken",
       findPopup: "Finden Sie den Pop-up-Store.",
       openingHours: "Öffnungszeiten",
@@ -995,6 +1075,26 @@ const resources = {
       welcomeTitle: "Een rustigere manier om mooie dingen te ontdekken.",
       welcomeIntro:
         "Antiek, kunst, vintage design en objecten met een verhaal, zorgvuldig verzameld voor hun volgende hoofdstuk.",
+      welcomeStoryEyebrow: "ONS VERHAAL",
+      welcomeStoryTitle: "Een plek voor objecten met een verhaal.",
+      welcomeStoryParagraph1:
+        "Galerie De Ruiter is een pop-upstore in het landelijke Waasmunster (tussen Antwerpen & Gent), in een nabijgelegen gehucht met de fascinerende naam De Ruiter.",
+      welcomeStoryParagraph2:
+        "Wat begon als een hobby en een zoektocht naar mooie items — kunst, design, vintage en antiek — is uitgegroeid tot een eclectische mix. Alles is te ontdekken in de charmante woning van Dirk. Zijn motto is “Entrez sans frapper”: bezoekers kunnen er op een ontspannen manier op zoek gaan naar het voorwerp van hun dromen.",
+      welcomeStoryParagraph3:
+        "Dirk is zelf gepassioneerd door mooie spullen en door de manier waarop ze samen een mooi interieur vormen. Het is een manier van leven en een passie die hij graag deelt met zijn klanten, die gemakkelijk vrienden worden.",
+      welcomeStoryParagraph4:
+        "Na bijna 30 jaar met deze passie bezig te zijn, heeft Dirk een uitgebreide kennis opgebouwd van alles wat hij verkoopt. Met veel plezier vertelt hij meer over de items.",
+      welcomeStoryParagraph5:
+        "Een eclectisch interieur brengt verjonging en een andere kijk. Een goed object kan je laten wegdromen.",
+      welcomeStoryParagraph6:
+        "Leven met kunst en design is een manier om jezelf te personaliseren en te verrijken.",
+      detailBannerMotto: "Entrez sans frapper",
+      detailBannerCategories: "ANTIEK · KUNST · DESIGN · VINTAGE",
+      detailRelatedEyebrow: "ONTDEK NOG MEER",
+      detailRelatedTitle: "Meer uit de collectie",
+      scrollCollectionLeft: "Collectie naar links schuiven",
+      scrollCollectionRight: "Collectie naar rechts schuiven",
       explore: "Ontdek de collectie",
       findPopup: "Vind de pop-up.",
       openingHours: "Openingsuren",

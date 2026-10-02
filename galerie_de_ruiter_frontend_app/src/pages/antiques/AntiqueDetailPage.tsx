@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Badge, Button, Form, Spinner } from "react-bootstrap";
-import { ArrowLeft, Heart, ShoppingBag, UserRound } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  ShoppingBag,
+  UserRound,
+} from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAntiqueContent } from "@/hooks/useAddAntiques";
 import { useShopping } from "@/context/ShoppingContext";
@@ -52,6 +59,7 @@ export default function AntiqueDetailPage() {
   const [activeView, setActiveView] = useState<Position>("front");
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>();
   const dragStart = useRef<{ x: number; y: number } | undefined>(undefined);
+  const relatedTrackRef = useRef<HTMLDivElement>(null);
   // const jobBaseUrl =
   //   import.meta.env.VITE_RECONSTRUCTION_API_URL ?? "http://localhost:8000";
   const savedJobIdRef = useRef<string | undefined>(undefined);
@@ -131,6 +139,13 @@ export default function AntiqueDetailPage() {
       : `EUR ${antique.price.toLocaleString("en-BE", { minimumFractionDigits: 2 })}`;
 
   const wishlisted = isWishlisted(antique.id);
+  const relatedAntiques = antiques
+    .filter((item) => item.id !== antique.id)
+    .sort((first, second) => {
+      const firstMatches = first.category === antique.category;
+      const secondMatches = second.category === antique.category;
+      return Number(secondMatches) - Number(firstMatches);
+    });
   const wishlistButtonVariant: "danger" | "outline-dark" = wishlisted
     ? "danger"
     : "outline-dark";
@@ -272,6 +287,13 @@ export default function AntiqueDetailPage() {
     toggleWishlist(antique);
   };
 
+  const scrollRelated = (direction: -1 | 1): void => {
+    relatedTrackRef.current?.scrollBy({
+      left: direction * relatedTrackRef.current.clientWidth * 0.8,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <section className="detail-page">
       <button
@@ -281,6 +303,13 @@ export default function AntiqueDetailPage() {
       >
         <ArrowLeft size={17} /> {t("backToCollection")}
       </button>
+      <div className="detail-banner">
+        <div>
+          <span>{t("galleryName")}</span>
+          <p>{t("detailBannerMotto")}</p>
+        </div>
+        <span className="detail-banner-caption">{t("detailBannerCategories")}</span>
+      </div>
       <div className="detail-layout">
         <div className="detail-media">
           <div
@@ -451,6 +480,73 @@ export default function AntiqueDetailPage() {
           </p>
         </div>
       </div>
+      {relatedAntiques.length > 0 && (
+        <section
+          className="detail-related"
+          aria-labelledby="detail-related-title"
+        >
+          <div className="detail-related-heading">
+            <div>
+              <span className="catalogue-artist">
+                {t("detailRelatedEyebrow")}
+              </span>
+              <h2 id="detail-related-title">{t("detailRelatedTitle")}</h2>
+            </div>
+            <div className="detail-related-controls">
+              <button
+                type="button"
+                aria-label={t("scrollCollectionLeft")}
+                onClick={() => scrollRelated(-1)}
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                type="button"
+                aria-label={t("scrollCollectionRight")}
+                onClick={() => scrollRelated(1)}
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+          <div
+            className="detail-related-track"
+            ref={relatedTrackRef}
+            role="region"
+            aria-label="More pieces from the collection"
+          >
+            {relatedAntiques.map((item) => {
+              const itemImage = item.imageUrls?.[0] ?? item.imageUrl;
+              return (
+                <button
+                  className="detail-related-item"
+                  key={item.id}
+                  type="button"
+                  onClick={() => navigate(`/antiques/${item.id}`)}
+                >
+                  <span className="detail-related-image">
+                    {itemImage ? (
+                      <img
+                        src={resolveAntiqueImageUrl(itemImage)}
+                        alt=""
+                        loading="lazy"
+                      />
+                    ) : (
+                      item.title.slice(0, 1).toUpperCase()
+                    )}
+                  </span>
+                  <span className="detail-related-name">{item.title}</span>
+                  <span className="detail-related-price">
+                    {item.price == null
+                      ? t("priceOnRequest")
+                      : `EUR ${item.price.toLocaleString("en-BE", { minimumFractionDigits: 2 })}`}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </section>
   );
 }

@@ -64,6 +64,18 @@ export default function WelcomePage() {
           </div>
         </article>
       </div>
+      <section className="welcome-story" aria-labelledby="welcome-story-title">
+        <span className="catalogue-artist">{t("welcomeStoryEyebrow")}</span>
+        <h2 id="welcome-story-title">{t("welcomeStoryTitle")}</h2>
+        <div className="welcome-story-copy">
+          <p>{t("welcomeStoryParagraph1")}</p>
+          <p>{t("welcomeStoryParagraph2")}</p>
+          <p>{t("welcomeStoryParagraph3")}</p>
+          <p>{t("welcomeStoryParagraph4")}</p>
+          <p>{t("welcomeStoryParagraph5")}</p>
+          <p>{t("welcomeStoryParagraph6")}</p>
+        </div>
+      </section>
     </section>
   );
 }

@@ -52,9 +52,8 @@ export function CustomNav() {
         >
           <img
             src="/images/galerie_de_ruiter.png"
-            alt="My Icon"
-            width="60%"
-            style={{ borderRadius: "20%" }}
+            alt="Galerie de Ruiter"
+            className="navbar-logo"
           />
         </NavLink>
       </div>

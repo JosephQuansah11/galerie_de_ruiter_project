@@ -2,11 +2,11 @@ databases:
   - name: galerie-app-db
     databaseName: galerie
     user: galerie_app
-    plan: starter
+    plan: basic-256mb
   - name: galerie-keycloak-db
     databaseName: keycloak
     user: keycloak_app
-    plan: starter
+    plan: basic-256mb
 
 services:
   - type: web

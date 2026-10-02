@@ -10,6 +10,10 @@ managed PostgreSQL databases:
 - `galerie-java-api`: Spring Boot API
 - `galerie-frontend`: static React frontend with SPA rewrites
 
+Both PostgreSQL databases use Render's current `basic-256mb` plan rather than
+the retired `starter` plan. Review the database pricing and capacity in Render
+before syncing; changing a plan can affect monthly costs.
+
 ## Secrets and first-time setup
 
 1. Create or apply the blueprint from `render.yaml`; it sets Render's automatic

@@ -1,5 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
+import CopyPlugin from "copy-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
@@ -80,6 +81,17 @@ export default {
 
   plugins: [
     new CleanWebpackPlugin(),
+    new CopyPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, "public"),
+          to: ".",
+          globOptions: {
+            ignore: ["**/index.html", "**/galerie_de_ruiter_admin.png"],
+          },
+        },
+      ],
+    }),
     new HtmlWebpackPlugin({
       template: "./index.html",
     }),

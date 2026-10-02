@@ -43,7 +43,9 @@ be configured separately in its dashboard.
   `KEYCLOAK_ADMIN_PASSWORD`, and `KEYCLOAK_REALM_ADMIN_PASSWORD`.
 - The frontend environment variables are build-time values for the static site. Trigger a frontend deploy after changing them.
 - `FRONTEND_ORIGIN`, Stripe success/cancel URLs, and Keycloak issuer URL must match the final Render service URLs.
-- The Java API uses the managed PostgreSQL host/port/database values supplied by Render and listens on Render's `PORT`.
+- The Java API's `DATABASE_URL` is linked to Render's internal connection string for `galerie-app-db`; do not paste a local or external database URL there.
+- If you created a standalone Java web service instead of the `galerie-java-api` blueprint service, configure `DATABASE_URL` to the **internal** connection string of `galerie-app-db` in that service's environment. The database and web service must be in the same Render region.
+- The Java API listens on Render's `PORT`.
 - Render health checks use `/health` for the reconstruction service,
   `/health/ready` for Keycloak, and `/actuator/health` for Spring Boot.
 - The frontend uses Nginx SPA fallback so React routes such as `/antiques/:id` and `/checkout/success` work after refresh.

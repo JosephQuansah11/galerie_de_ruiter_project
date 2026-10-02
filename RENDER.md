@@ -13,6 +13,9 @@ managed PostgreSQL databases:
 Both PostgreSQL databases use Render's current `basic-256mb` plan rather than
 the retired `starter` plan. Review the database pricing and capacity in Render
 before syncing; changing a plan can affect monthly costs.
+Keycloak uses the `standard` web-service plan (2 GiB RAM) because its startup
+exceeded the 512 MiB available on the `starter` plan. This service-plan change
+increases costs; review the current price in Render before syncing.
 
 ## Secrets and first-time setup
 

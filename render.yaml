@@ -34,7 +34,7 @@ services:
     runtime: docker
     dockerfilePath: ./keycloak/Dockerfile
     dockerContext: ./keycloak
-    plan: starter
+    plan: standard
     healthCheckPath: /health/ready
     autoDeploy: true
     envVars:

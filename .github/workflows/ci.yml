@@ -5,6 +5,21 @@ on:
   pull_request:
 
 jobs:
+  frontend-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: galerie_de_ruiter_frontend_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: galerie_de_ruiter_frontend_app/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -31,6 +46,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export KEYCLOAK_ADMIN_USERNAME=ci-bootstrap
+          export KEYCLOAK_ADMIN_PASSWORD="$(openssl rand -hex 32)"
+          export KEYCLOAK_REALM_ADMIN_USERNAME=de-ruiter
+          export KEYCLOAK_REALM_ADMIN_FIRST_NAME=De
+          export KEYCLOAK_REALM_ADMIN_LAST_NAME=Ruiter
+          export KEYCLOAK_REALM_ADMIN_PASSWORD="$(openssl rand -hex 32)"
           ./gradlew bootRun > "$RUNNER_TEMP/galerie-bootRun.log" 2>&1 &
           app_pid=$!
           cleanup() {
@@ -43,8 +64,7 @@ jobs:
           for attempt in $(seq 1 60); do
             if curl --fail --silent http://localhost:8080/actuator/health > /dev/null \
               && curl --fail --silent http://localhost:8000/health > /dev/null; then
-              echo "Spring Boot and the reconstruction API are healthy with PostgreSQL and Keycloak."
-              exit 0
+              break
             fi
             if ! kill -0 "$app_pid" 2>/dev/null; then
               echo "Spring Boot exited before becoming healthy."
@@ -54,6 +74,34 @@ jobs:
             sleep 5
           done
 
-          echo "Spring Boot did not become healthy before the timeout."
-          tail -n 80 "$RUNNER_TEMP/galerie-bootRun.log"
-          exit 1
+          if ! curl --fail --silent http://localhost:8080/actuator/health > /dev/null \
+            || ! curl --fail --silent http://localhost:8000/health > /dev/null; then
+            echo "Spring Boot did not become healthy before the timeout."
+            tail -n 80 "$RUNNER_TEMP/galerie-bootRun.log"
+            exit 1
+          fi
+
+          master_token_response="$(curl --fail --silent --show-error \
+            --data-urlencode "client_id=admin-cli" \
+            --data-urlencode "grant_type=password" \
+            --data-urlencode "username=$KEYCLOAK_ADMIN_USERNAME" \
+            --data-urlencode "password=$KEYCLOAK_ADMIN_PASSWORD" \
+            http://localhost:8082/realms/master/protocol/openid-connect/token)"
+          master_access_token="$(printf '%s' "$master_token_response" | jq -r '.access_token')"
+          provisioned_user="$(curl --fail --silent --show-error \
+            -H "Authorization: Bearer $master_access_token" \
+            --get --data-urlencode "username=$KEYCLOAK_REALM_ADMIN_USERNAME" \
+            http://localhost:8082/admin/realms/movie_project_keycloak/users)"
+          user_id="$(printf '%s' "$provisioned_user" | jq -r --arg username "$KEYCLOAK_REALM_ADMIN_USERNAME" '.[] | select(.username == $username) | .id' | head -n 1)"
+          if [[ -z "$user_id" ]]; then
+            echo "The configured application administrator was not provisioned in Keycloak."
+            exit 1
+          fi
+          role_mappings="$(curl --fail --silent --show-error \
+            -H "Authorization: Bearer $master_access_token" \
+            "http://localhost:8082/admin/realms/movie_project_keycloak/users/$user_id/role-mappings/realm")"
+          if ! printf '%s' "$role_mappings" | jq -e 'any(.[]; .name == "ADMIN")' > /dev/null; then
+            echo "The configured realm administrator is missing the application ADMIN role."
+            exit 1
+          fi
+          echo "Spring Boot, reconstruction API, and realm-admin role provisioning are healthy."

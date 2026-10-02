@@ -12,6 +12,7 @@ import Keycloak from "keycloak-js";
 import type { UserProfile } from "../types/types";
 import { registerUser, syncCurrentUser } from "../pages/auth/authApi";
 import { setAuthToken } from "../apis/authPromise";
+import { useTranslation } from "react-i18next";
 
 interface AuthContextValue {
   authenticated: boolean;
@@ -34,13 +35,23 @@ const keycloak = new Keycloak({
 });
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
+  const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [token, setToken] = useState<string>();
   const [profile, setProfile] = useState<UserProfile>();
   const [roles, setRoles] = useState<string[]>([]);
   const initialized = useRef(false);
+  const fallbackUsername = useRef(false);
   const refreshInProgress = useRef<Promise<boolean> | undefined>(undefined);
+
+  useEffect(() => {
+    if (fallbackUsername.current) {
+      setProfile((current) =>
+        current ? { ...current, username: t("member") } : current,
+      );
+    }
+  }, [i18n.language, t]);
 
   const syncToken = useCallback((nextToken?: string) => {
     setToken(nextToken);
@@ -104,19 +115,26 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
               ...clientRoles,
             ]),
           ]);
+          fallbackUsername.current = !tokenData?.preferred_username;
           setProfile({
-            username: tokenData?.preferred_username ?? "Member",
+            username: tokenData?.preferred_username ?? t("member"),
             email: tokenData?.email,
           });
           if (keycloak.token)
             syncCurrentUser(keycloak.token)
-              .then(setProfile)
+              .then((syncedProfile) => {
+                fallbackUsername.current = !syncedProfile.username;
+                setProfile({
+                  ...syncedProfile,
+                  username: syncedProfile.username || i18n.t("member"),
+                });
+              })
               .catch(() => undefined);
         }
       })
       .catch(() => setAuthenticated(false))
       .finally(() => setLoading(false));
-  }, [syncToken]);
+  }, [syncToken, t]);
 
   useEffect(() => {
     keycloak.onAuthRefreshSuccess = () => syncToken(keycloak.token);

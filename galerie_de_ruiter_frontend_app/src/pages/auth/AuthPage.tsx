@@ -3,44 +3,40 @@ import { LogIn, UserPlus } from "lucide-react";
 import { DynamicForm } from "../../components/UI";
 import { useAuth } from "../../context/AuthContext";
 import type { FormField, UserProfile } from "../../types/types";
+import { useTranslation } from "react-i18next";
 
 type Registration = UserProfile & { password: string };
-const fields: FormField<Registration>[] = [
-  { name: "username", label: "Username", required: true },
-  { name: "email", label: "Email", type: "email", required: true },
-  { name: "firstName", label: "First name", required: true },
-  { name: "lastName", label: "Last name", required: true },
-  {
-    name: "password",
-    label: "Password",
-    type: "password",
-    required: true,
-    placeholder: "At least 8 characters",
-  },
-];
-
 export function AuthPage() {
   const auth = useAuth();
+  const { t } = useTranslation();
   const [error, setError] = useState("");
+  const fields: FormField<Registration>[] = [
+    { name: "username", label: t("username"), required: true },
+    { name: "email", label: t("email"), type: "email", required: true },
+    { name: "firstName", label: t("firstName"), required: true },
+    { name: "lastName", label: t("lastName"), required: true },
+    {
+      name: "password",
+      label: t("password"),
+      type: "password",
+      required: true,
+      placeholder: t("passwordPlaceholder"),
+    },
+  ];
   const submit = async (registration: Registration) => {
     try {
       await auth.register(registration);
     } catch {
-      setError(
-        "Registration could not be completed. Check the Java API and Keycloak configuration.",
-      );
+      setError("registrationError");
     }
   };
   return (
     <div className="page auth-page">
       <div className="auth-panel">
-        <div className="eyebrow">JAVA + KEYCLOAK ACCOUNT</div>
-        <h1>Create your Fable account</h1>
-        <p>
-          The Java backend creates the Keycloak identity and synchronizes the
-          application profile.
-        </p>
-        {error && <div className="notice">{error}</div>}
+        <div className="eyebrow">{t("accountSetup")}</div>
+        <h1>{t("createFableAccount")}</h1>
+        <p>{t("registerIntro")}</p>
+        {error && <div className="notice">{t(error)}</div>}
         <DynamicForm
           fields={fields}
           initialValue={{
@@ -50,20 +46,18 @@ export function AuthPage() {
             lastName: "",
             password: "",
           }}
-          submitLabel="Create account"
+          submitLabel={t("createAccountButton")}
           onSubmit={submit}
         />
         <button className="quiet-button auth-login" onClick={auth.login}>
           <LogIn size={16} />
-          Already have an account? Sign in
+          {t("alreadyHaveAccount")}
         </button>
       </div>
       <div className="auth-aside">
         <UserPlus size={28} />
-        <strong>One identity, shared everywhere.</strong>
-        <span>
-          Your roles and profile come from the Java-backed Keycloak realm.
-        </span>
+        <strong>{t("oneIdentity")}</strong>
+        <span>{t("oneIdentityText")}</span>
       </div>
     </div>
   );

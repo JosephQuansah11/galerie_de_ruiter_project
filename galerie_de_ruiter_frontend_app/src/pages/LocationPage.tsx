@@ -2,14 +2,24 @@ import { useEffect, useState } from "react";
 import { Clock3, MapPin, Navigation } from "lucide-react";
 import { getStoreLocation, type StoreLocation } from "@/apis/backend_api";
 import { useLanguage } from "@/context/LanguageContext";
+import { subscribeToContentUpdates } from "@/services/contentUpdates";
 
 export default function LocationPage() {
   const [location, setLocation] = useState<StoreLocation>();
   const { t } = useLanguage();
   useEffect(() => {
-    getStoreLocation()
-      .then(setLocation)
-      .catch(() => undefined);
+    let active = true;
+    const loadLocation = () => {
+      getStoreLocation().then((value) => {
+        if (active) setLocation(value);
+      });
+    };
+    loadLocation();
+    const unsubscribe = subscribeToContentUpdates("location", loadLocation);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
   if (!location)
     return <div className="catalogue-state">{t("loadingLocation")}</div>;
@@ -21,8 +31,7 @@ export default function LocationPage() {
         <span className="catalogue-artist">{t("location")}</span>
         <h1>{t("findPopup")}</h1>
         <p>
-          See the current collection in person, meet the owner and take your
-          time with the objects.
+          {t("locationIntro")}
         </p>
         <div className="location-facts">
           <div>
@@ -42,9 +51,9 @@ export default function LocationPage() {
         </div>
       </div>
       <div className="map-frame">
-        <iframe id="galerie-de-ruiter-location-map" title="Galerie de Ruiter location map" src={mapUrl} />
+        <iframe id="galerie-de-ruiter-location-map" title={t("locationMapTitle")} src={mapUrl} />
         <a href={externalMapUrl} target="_blank" rel="noreferrer">
-          <Navigation size={15} /> Open in map
+          <Navigation size={15} /> {t("openInMap")}
         </a>
       </div>
     </section>

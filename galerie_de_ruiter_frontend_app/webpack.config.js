@@ -96,6 +96,8 @@ export default {
     port: 3000,
     historyApiFallback: true,
     hot: true,
+    liveReload: true,
+    watchFiles: ["src/**/*", "public/**/*"],
     open: true,
     client: {
       overlay: true,

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import type { ThreeDModelFactory } from "./types";
 import { ThreeDViewer } from "./ThreeDViewer";
+import { useTranslation } from "react-i18next";
 
 interface ThreeDModelDesignerProps {
   frontImage?: File | string;
@@ -16,6 +17,7 @@ export function ThreeDModelDesigner({
   modelUrl,
   createModel,
 }: ThreeDModelDesignerProps) {
+  const { t } = useTranslation();
   const [previewUrl, setPreviewUrl] = useState<string>();
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export function ThreeDModelDesigner({
   if (!frontImage && !modelUrl) {
     return (
       <div className="alert alert-info">
-        Upload a front image to create the 3D model.
+        {t("uploadFrontImage")}
       </div>
     );
   }
@@ -45,7 +47,7 @@ export function ThreeDModelDesigner({
   if (!createModel && !modelUrl) {
     return (
       <div className="alert alert-warning">
-        No 3D model has been generated yet.
+        {t("no3DModelYet")}
       </div>
     );
   }

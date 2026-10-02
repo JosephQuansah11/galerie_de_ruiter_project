@@ -6,8 +6,12 @@ import {
   updateStoreLocation,
   type StoreLocation,
 } from "@/apis/backend_api";
+import { publishContentUpdate } from "@/services/contentUpdates";
+
+import { useTranslation } from "react-i18next";
 
 export default function LocationAdminPage() {
+  const { t } = useTranslation();
   const [form, setForm] = useState<Omit<StoreLocation, "id">>({
     address: "",
     openingHours: "",
@@ -22,7 +26,7 @@ export default function LocationAdminPage() {
   useEffect(() => {
     getStoreLocation()
       .then(({ id: _id, ...location }) => setForm(location))
-      .catch(() => setMessage("Location could not be loaded."))
+      .catch(() => setMessage("locationCouldNotLoad"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -36,7 +40,7 @@ export default function LocationAdminPage() {
 
   const lookupAddress = async () => {
     if (!form.address.trim()) return;
-    setLookupMessage("Finding coordinates...");
+    setLookupMessage("findingCoordinates");
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(form.address)}`,
@@ -47,7 +51,7 @@ export default function LocationAdminPage() {
         lon: string;
       }>;
       if (!results[0]) {
-        setLookupMessage("No matching address found.");
+        setLookupMessage("noMatchingAddress");
         return;
       }
       setForm((current) => ({
@@ -55,9 +59,9 @@ export default function LocationAdminPage() {
         latitude: Number(results[0].lat),
         longitude: Number(results[0].lon),
       }));
-      setLookupMessage("Coordinates found.");
+      setLookupMessage("coordinatesFound");
     } catch {
-      setLookupMessage("Address lookup failed. Enter coordinates manually.");
+      setLookupMessage("addressLookupFailed");
     }
   };
 
@@ -66,9 +70,10 @@ export default function LocationAdminPage() {
     setSaving(true);
     try {
       await updateStoreLocation(form);
-      setMessage("Location updated.");
+      publishContentUpdate("location");
+      setMessage("locationUpdated");
     } catch {
-      setMessage("Location could not be updated.");
+      setMessage("locationCouldNotUpdate");
     } finally {
       setSaving(false);
     }
@@ -77,7 +82,7 @@ export default function LocationAdminPage() {
   if (loading) {
     return (
       <div className="catalogue-state">
-        <Spinner animation="border" size="sm" /> Loading location...
+        <Spinner animation="border" size="sm" /> {t("loadingLocation")}
       </div>
     );
   }
@@ -86,19 +91,19 @@ export default function LocationAdminPage() {
     <section className="admin-form-page">
       <Card>
         <Card.Header>
-          <MapPin size={20} /> Edit store location
+          <MapPin size={20} /> {t("editStoreLocation")}
         </Card.Header>
         <Card.Body>
           {message && (
             <Alert
-              variant={message.includes("could not") ? "danger" : "success"}
+              variant={message.includes("CouldNot") ? "danger" : "success"}
             >
-              {message}
+              {t(message)}
             </Alert>
           )}
           <Form onSubmit={submit}>
             <Form.Group className="mb-3">
-              <Form.Label>Address</Form.Label>
+              <Form.Label>{t("address")}</Form.Label>
               <div className="address-lookup">
                 <Form.Control
                   required
@@ -110,14 +115,14 @@ export default function LocationAdminPage() {
                   type="button"
                   onClick={lookupAddress}
                 >
-                  Find coordinates
+                  {t("findCoordinates")}
                 </button>
               </div>
-              {lookupMessage && <Form.Text>{lookupMessage}</Form.Text>}
+              {lookupMessage && <Form.Text>{t(lookupMessage)}</Form.Text>}
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>
-                <Clock3 size={15} /> Opening hours
+                <Clock3 size={15} /> {t("openingHours")}
               </Form.Label>
               <Form.Control
                 required
@@ -125,12 +130,12 @@ export default function LocationAdminPage() {
                 onChange={(event) =>
                   update("openingHours", event.target.value)
                 }
-                placeholder="Thursday to Sunday, 11:00 to 18:00"
+                placeholder={t("openingHoursPlaceholder")}
               />
             </Form.Group>
             <div className="admin-coordinate-grid">
               <Form.Group>
-                <Form.Label>Latitude</Form.Label>
+                <Form.Label>{t("latitude")}</Form.Label>
                 <Form.Control
                   required
                   type="number"
@@ -140,7 +145,7 @@ export default function LocationAdminPage() {
                 />
               </Form.Group>
               <Form.Group>
-                <Form.Label>Longitude</Form.Label>
+                <Form.Label>{t("longitude")}</Form.Label>
                 <Form.Control
                   required
                   type="number"
@@ -156,7 +161,7 @@ export default function LocationAdminPage() {
               type="submit"
             >
               {saving ? <Spinner size="sm" /> : <Save size={16} />}
-              {saving ? "Saving..." : "Save location"}
+              {saving ? t("saving") : t("saveLocation")}
             </button>
           </Form>
         </Card.Body>

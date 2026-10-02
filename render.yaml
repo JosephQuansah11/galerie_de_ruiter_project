@@ -2,11 +2,11 @@ databases:
   - name: galerie-app-db
     databaseName: galerie
     user: galerie_app
-    plan: starter
+    plan: basic-256mb
   - name: galerie-keycloak-db
     databaseName: keycloak
     user: keycloak_app
-    plan: starter
+    plan: basic-256mb
 
 services:
   - type: web
@@ -34,8 +34,8 @@ services:
     runtime: docker
     dockerfilePath: ./keycloak/Dockerfile
     dockerContext: ./keycloak
-    plan: starter
-    healthCheckPath: /health/ready
+    plan: standard
+    healthCheckPath: /realms/movie_project_keycloak/.well-known/openid-configuration
     autoDeploy: true
     envVars:
       - key: KC_HOSTNAME
@@ -86,10 +86,18 @@ services:
         value: update
       - key: PORT
         value: "8080"
-      - key: DATABASE_URL
+      - key: DATABASE_HOST
         fromDatabase:
           name: galerie-app-db
-          property: connectionString
+          property: host
+      - key: DATABASE_PORT
+        fromDatabase:
+          name: galerie-app-db
+          property: port
+      - key: DATABASE_NAME
+        fromDatabase:
+          name: galerie-app-db
+          property: database
       - key: DATABASE_USERNAME
         fromDatabase:
           name: galerie-app-db
@@ -101,18 +109,28 @@ services:
       - key: FRONTEND_ORIGIN
         value: https://galerie-frontend.onrender.com
       - key: KEYCLOAK_ISSUER_URI
-        value: https://galerie-keycloak.onrender.com/realms/galerie
+        value: https://galerie-keycloak.onrender.com/realms/movie_project_keycloak
       - key: PUBLIC_KEYCLOAK_URL
         value: https://galerie-keycloak.onrender.com
       - key: KEYCLOAK_REALM
-        value: galerie
+        value: movie_project_keycloak
       - key: KEYCLOAK_ADMIN_REALM
         value: master
       - key: KEYCLOAK_ADMIN_CLIENT_ID
-        sync: false
+        value: admin-cli
       - key: KEYCLOAK_ADMIN_USERNAME
         sync: false
       - key: KEYCLOAK_ADMIN_PASSWORD
+        sync: false
+      - key: KEYCLOAK_REALM_ADMIN_USERNAME
+        value: de-ruiter
+      - key: KEYCLOAK_REALM_ADMIN_FIRST_NAME
+        value: De
+      - key: KEYCLOAK_REALM_ADMIN_LAST_NAME
+        value: Ruiter
+      - key: KEYCLOAK_REALM_ADMIN_EMAIL
+        value: ""
+      - key: KEYCLOAK_REALM_ADMIN_PASSWORD
         sync: false
       - key: STRIPE_SECRET_KEY
         sync: false
@@ -135,12 +153,16 @@ services:
         value: https://galerie-java-api.onrender.com
       - key: VITE_API_URL
         value: https://galerie-java-api.onrender.com
+      - key: VITE_RECONSTRUCTION_API_URL
+        value: https://galerie-reconstruction-api.onrender.com
+      - key: VITE_PYTHON_API_URL
+        value: https://galerie-reconstruction-api.onrender.com
       - key: VITE_KEYCLOAK_URL
         value: https://galerie-keycloak.onrender.com
       - key: VITE_KEYCLOAK_REALM
-        value: galerie
+        value: movie_project_keycloak
       - key: VITE_KEYCLOAK_CLIENT_ID
-        value: galerie-frontend
+        value: movie_project_frontend_client
     routes:
       - type: rewrite
         source: /*

@@ -4,7 +4,7 @@ spring:
       on-profile: prod
     import: optional:file:.env.production[.properties]
   datasource:
-    url: jdbc:${DATABASE_URL}
+    url: ${DATABASE_URL:jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT:5432}/${DATABASE_NAME}}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -24,7 +24,8 @@ spring:
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/certs}
 
 server:
-  port: ${PORT}
+  address: 0.0.0.0
+  port: ${PORT:8080}
 
 keycloak:
   server-url: ${PUBLIC_KEYCLOAK_URL}
@@ -33,3 +34,17 @@ keycloak:
   admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID}
   admin-username: ${KEYCLOAK_ADMIN_USERNAME}
   admin-password: ${KEYCLOAK_ADMIN_PASSWORD}
+  provision-admin:
+    required: true
+    username: ${KEYCLOAK_REALM_ADMIN_USERNAME:}
+    first-name: ${KEYCLOAK_REALM_ADMIN_FIRST_NAME:}
+    last-name: ${KEYCLOAK_REALM_ADMIN_LAST_NAME:}
+    email: ${KEYCLOAK_REALM_ADMIN_EMAIL:}
+    password: ${KEYCLOAK_REALM_ADMIN_PASSWORD:}
+
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY:}
+  success-url: ${STRIPE_SUCCESS_URL}
+  cancel-url: ${STRIPE_CANCEL_URL}
+
+FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}

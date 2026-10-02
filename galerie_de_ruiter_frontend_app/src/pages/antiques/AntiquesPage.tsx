@@ -9,13 +9,14 @@ import { useShopping } from "@/context/ShoppingContext";
 import { getVisibleCategories } from "@/apis/backend_api";
 import type { Category } from "@/models/antiques/Antique";
 import { useLanguage } from "@/context/LanguageContext";
+import { formatEuroAmount } from "@/i18n";
 
-function artistName(antique: Antique) {
-  return antique.artist?.displayName ?? antique.artist?.name ?? "Galerie collection";
+function artistName(antique: Antique, fallback: string) {
+  return antique.artist?.displayName ?? antique.artist?.name ?? fallback;
 }
 
-function priceLabel(price: number | null | undefined, priceText: string) {
-  return price == null ? priceText : `EUR ${price.toLocaleString("en-BE", { minimumFractionDigits: 2 })}`;
+function priceLabel(price: number | null | undefined, priceText: string, locale: string) {
+  return price == null ? priceText : formatEuroAmount(price, locale);
 }
 
 export default function AntiquesPage() {
@@ -23,28 +24,29 @@ export default function AntiquesPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { addToCart, toggleWishlist, isWishlisted } = useShopping();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState(() => searchParams.get("category") ?? "All pieces");
+  const [category, setCategory] = useState(() => searchParams.get("category") ?? "");
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     getVisibleCategories().then(setCategories).catch(() => setCategories([]));
   }, []);
 
-  useEffect(() => { setCategory(searchParams.get("category") ?? "All pieces"); }, [searchParams]);
+  const allPiecesCategory = t("allPieces");
+  useEffect(() => { setCategory(searchParams.get("category") ?? ""); }, [searchParams]);
 
   const filteredAntiques = useMemo(() => {
     const antiqueList = Array.isArray(antiques) ? antiques : [];
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery && category === "All pieces") return antiqueList;
+    if (!normalizedQuery && (!category || category === allPiecesCategory)) return antiqueList;
     return antiqueList.filter((antique) =>
-      [antique.title, antique.description, artistName(antique), antique.category]
+      [antique.title, antique.description, artistName(antique, t("galerieCollection")), antique.category]
         .filter(Boolean)
         .some((value) => value?.toLowerCase().includes(normalizedQuery)) &&
-      (category === "All pieces" || antique.category?.toLowerCase() === category.toLowerCase()),
+      ((!category || category === allPiecesCategory) || antique.category?.toLowerCase() === category.toLowerCase()),
     );
-  }, [antiques, query, category]);
+  }, [antiques, query, category, allPiecesCategory]);
 
   return (
     <section className= "catalogue-page" >
@@ -56,16 +58,16 @@ export default function AntiquesPage() {
         </div>
         < div className = "catalogue-count" >
           <strong>{ Array.isArray(antiques) ? antiques.length : 0 } </strong>
-          < span > pieces listed </span>
+          < span > {t("piecesListed")} </span>
             </div>
             </div>
 
             <Form className = "catalogue-search" role = "search" >
               <Search size={ 18 } aria-hidden="true" />
-                <Form.Control  aria-label="Search antiques" value = { query } onChange = {(event) => setQuery(event.target.value)} placeholder = { t("searchPlaceholder") } />
+                <Form.Control  aria-label={t("searchAntiques")} value = { query } onChange = {(event) => setQuery(event.target.value)} placeholder = { t("searchPlaceholder") } />
 
-                        <div className = "category-tabs" aria-label="Collection categories" >
-                            <button className={ `btn btn-sm ${category === "All pieces" ? "btn-dark" : "btn-outline-secondary"}` } type = "button" onClick = {() => setCategory("All pieces")} >
+                        <div className = "category-tabs" aria-label={t("collectionCategories")} >
+                            <button className={ `btn btn-sm ${!category || category === allPiecesCategory ? "btn-dark" : "btn-outline-secondary"}` } type = "button" onClick = {() => setCategory("")} >
                             { t("allPieces") }
                             </button>
                             {
@@ -80,10 +82,10 @@ export default function AntiquesPage() {
                         </div>
 
                           { loading && <div className="catalogue-state" > <Spinner animation="border" size = "sm" /> { t("loadingCollection") } </div> }
-                          { error && <Alert variant="danger" > The collection could not be loaded.Please try again.</Alert> }
+                          { error && <Alert variant="danger" > {t("collectionLoadError")}</Alert> }
                           {
                             !loading && !error && filteredAntiques.length === 0 && (
-                              <div className="catalogue-state" > <ShoppingBag size={ 28 } /><span>{query ? "No pieces match that search." : "The collection is waiting for its next arrival."}</span > </div>
+                              <div className="catalogue-state" > <ShoppingBag size={ 28 } /><span>{query ? t("noPiecesMatch") : t("collectionWaiting")}</span > </div>
                                 )
                           }
                           <Row xs={ 1 } md = { 2} xl = { 3} className = "g-4" >
@@ -95,16 +97,16 @@ export default function AntiquesPage() {
                                         {(antique.imageUrl ?? antique.imageUrls?.[0]) ? <img src={ resolveAntiqueImageUrl(antique.imageUrl ?? antique.imageUrls?.[0]) } alt = "" /> : antique.title.slice(0, 1).toUpperCase()} 
                                     </div>
                                       < div className = "catalogue-card-content" >
-                                        <span className="catalogue-artist" > { artistName(antique) } </span>
+                                        <span className="catalogue-artist" > { artistName(antique, t("galerieCollection")) } </span>
                                           < h2 > { antique.title } </h2>
                                           < p > { antique.description || t("storyWaiting") } </p>
                                           < div className = "catalogue-card-footer" > 
-                                              <strong>{ priceLabel(antique.price, t("priceOnRequest")) } </strong>
+                                              <strong>{ priceLabel(antique.price, t("priceOnRequest"), locale) } </strong>
                                               <div className="catalogue-card-actions">
                                                     <button className="btn btn-sm btn-outline-dark" type="button" onClick={(event) => { event.stopPropagation(); addToCart(antique); }}>
                                                         <ShoppingBag size={15} / > { t("add") } 
                                                     </button>
-                                                    <button className="btn btn-sm btn-link" type="button" aria-label={`Save ${antique.title}`} onClick={(event) => { event.stopPropagation(); toggleWishlist(antique); }}>
+                                                    <button className="btn btn-sm btn-link" type="button" aria-label={t("savePieceNamed", { title: antique.title })} onClick={(event) => { event.stopPropagation(); toggleWishlist(antique); }}>
                                                           <Heart size={18} fill={isWishlisted(antique.id) ? "currentColor" : "none"} / > 
                                                     </button>
                                                     

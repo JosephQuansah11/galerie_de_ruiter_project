@@ -27,7 +27,7 @@
 .reference-card-body span { color: var(--theme-text-secondary); font-size: 0.82rem; }
 .reference-card-body p { min-height: 3rem; margin: 0.5rem 0; color: var(--theme-text-secondary); font-size: 0.82rem; }
 .admin-form-page { width: min(70%, 56rem); max-width: none; margin: 0 auto; padding: 2rem 0 4rem; }
-.admin-form-page .card-header { display: flex; align-items: center; gap: 0.5rem; background: var(--theme-primary); color: #fffaf7; }
+.admin-form-page .card-header { display: flex; align-items: center; gap: 0.5rem; background: var(--theme-primary); color: var(--theme-on-primary); }
 .admin-form-page button { display: inline-flex; align-items: center; gap: 0.4rem; }
 .add-antique-page .card { border: 1px solid rgba(107, 36, 50, 0.2); box-shadow: 0 1.1rem 2.8rem rgba(60, 31, 37, 0.13); }
 .add-antique-intro { margin-bottom: 1.75rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(60, 31, 37, 0.12); }
@@ -36,5 +36,5 @@
 .add-antique-intro p { margin: 0; color: var(--theme-text-secondary); }
 .admin-coordinate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
 .language-setting { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
-.language-setting select { min-width: 14rem; padding: 0.5rem 0.7rem; border: 1px solid rgba(60, 31, 37, 0.2); background: var(--theme-surface); color: var(--theme-text); }
+.language-setting select { min-width: 14rem; padding: 0.5rem 0.7rem; border: 1px solid var(--theme-border); background: var(--theme-surface); color: var(--theme-text); }
 @media (max-width: 640px) { .category-create-form { grid-template-columns: 1fr; } .admin-form-page { width: 100%; padding-inline: 0.75rem; } }

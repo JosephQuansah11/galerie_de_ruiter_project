@@ -52,8 +52,8 @@
 .map-frame {
     width: 100%;
   min-height: 34rem;
-  border: 1px solid rgba(60, 31, 37, 0.2);
-  background: #e8dfda;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
 }
 .map-frame iframe {
   display: block;

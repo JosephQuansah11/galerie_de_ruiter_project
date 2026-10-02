@@ -19,10 +19,10 @@ import { useTranslation } from "react-i18next";
 
 export const languages = [
   { code: "en", label: "English", locale: "en-BE" },
-  { code: "fr", label: "French", locale: "fr-BE" },
-  { code: "nl-NL", label: "Netherlands Dutch", locale: "nl-NL" },
-  { code: "de", label: "German", locale: "de-DE" },
-  { code: "nl-BE", label: "Belgian Dutch", locale: "nl-BE" },
+  { code: "fr", label: "Français", locale: "fr-BE" },
+  { code: "nl-NL", label: "Nederlands (Nederland)", locale: "nl-NL" },
+  { code: "de", label: "Deutsch", locale: "de-DE" },
+  { code: "nl-BE", label: "Nederlands (België)", locale: "nl-BE" },
 ] as const;
 
 type LanguageCode = (typeof languages)[number]["code"];
@@ -75,18 +75,21 @@ export function LanguageProvider({
 
 function LanguageSwitcher() {
   const { i18n } = useTranslation();
+  const { language, locale, setLanguage } = useLanguage();
 
   const changeLanguage = (code: string) => {
-    i18n.changeLanguage(code);
-    localStorage.setItem("galerie-language", code);
-    document.documentElement.lang = code; // or your more specific locale
-    window.location.reload();
+    const selected = languages.find((item) => item.code === code);
+    if (!selected) return;
+    setLanguage(selected.code);
+    void i18n.changeLanguage(selected.code);
+    document.documentElement.lang = selected.locale;
   };
 
   return (
     <select
-      value={i18n.language}
+      value={language}
       onChange={(e) => changeLanguage(e.target.value)}
+      aria-label={i18n.t("language")}
     >
       {languages.map((lang) => (
         <option key={lang.code} value={lang.code}>

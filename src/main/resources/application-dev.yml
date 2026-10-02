@@ -28,3 +28,10 @@ keycloak:
   admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:admin-cli}
   admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
   admin-password: ${KEYCLOAK_ADMIN_PASSWORD:dev-local-only}
+  provision-admin:
+    required: false
+    username: ${KEYCLOAK_REALM_ADMIN_USERNAME:}
+    first-name: ${KEYCLOAK_REALM_ADMIN_FIRST_NAME:}
+    last-name: ${KEYCLOAK_REALM_ADMIN_LAST_NAME:}
+    email: ${KEYCLOAK_REALM_ADMIN_EMAIL:}
+    password: ${KEYCLOAK_REALM_ADMIN_PASSWORD:}

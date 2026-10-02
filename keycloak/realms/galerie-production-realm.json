@@ -1,0 +1,41 @@
+{
+  "realm": "movie_project_keycloak",
+  "enabled": true,
+  "registrationAllowed": true,
+  "roles": {
+    "realm": [
+      { "name": "USER" },
+      { "name": "ADMIN" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "movie_project_frontend_client",
+      "name": "Galerie de Ruiter frontend",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "rootUrl": "https://galerie-frontend.onrender.com",
+      "redirectUris": [
+        "https://galerie-frontend.onrender.com/*"
+      ],
+      "webOrigins": [
+        "https://galerie-frontend.onrender.com"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "basic",
+        "email"
+      ]
+    }
+  ]
+}

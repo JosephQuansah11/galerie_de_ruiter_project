@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Alert, Spinner } from "react-bootstrap";
 import { getAboutContent } from "@/apis/backend_api";
+import { subscribeToContentUpdates } from "@/services/contentUpdates";
+import { useTranslation } from "react-i18next";
 
 function inlineFormatting(text: string) {
   return text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).map((part, index) => {
@@ -32,26 +34,43 @@ function renderAboutContent(content: string) {
 }
 
 export default function AboutPage() {
+  const { t } = useTranslation();
   const [content, setContent] = useState<string>();
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    getAboutContent()
-      .then((result) => setContent(result.content))
-      .catch(() => setError(true));
+    let active = true;
+    const loadContent = () => {
+      getAboutContent()
+        .then((result) => {
+          if (active) {
+            setContent(result.content);
+            setError(false);
+          }
+        })
+        .catch(() => {
+          if (active) setError(true);
+        });
+    };
+    loadContent();
+    const unsubscribe = subscribeToContentUpdates("about", loadContent);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   if (error) {
     return (
       <section className="about-page">
-        <Alert variant="danger">The gallery story could not be loaded.</Alert>
+        <Alert variant="danger">{t("aboutLoadError")}</Alert>
       </section>
     );
   }
   if (content === undefined) {
     return (
       <div className="catalogue-state">
-        <Spinner animation="border" size="sm" /> Loading the gallery story...
+        <Spinner animation="border" size="sm" /> {t("aboutLoading")}
       </div>
     );
   }

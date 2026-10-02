@@ -1,6 +1,10 @@
 import Antique, { AntiqueForm } from "../models/antiques/Antique";
 import { useEffect, useState, useMemo } from "react";
 import { getAllAntiques, addAntique } from "../apis/backend_api";
+import {
+    publishContentUpdate,
+    subscribeToContentUpdates,
+} from "../services/contentUpdates";
 
 export function useAntiqueContent() {
     const [antiques, setAntiques] = useState<Antique[]>([]);
@@ -14,17 +18,26 @@ export function useAntiqueContent() {
     // const innerObjectKeys = useMemo(() => ['street', 'city'], []);
     
     useEffect(() => {
+        let active = true;
         const fetchAntiques = async () => {
             try {
                 const response = await getAllAntiques();
+                if (!active) return;
                 setAntiques(response);
+                setError(null);
                 setLoading(false);
             } catch (error) {
+                if (!active) return;
                 setError(error as string);
                 setLoading(false);
             }
         };
-        fetchAntiques();
+        void fetchAntiques();
+        const unsubscribe = subscribeToContentUpdates("antiques", fetchAntiques);
+        return () => {
+            active = false;
+            unsubscribe();
+        };
     }, []);
 
 //     useEffect(() => {
@@ -51,6 +64,5 @@ export function useAntiqueContent() {
 
 export async function AddAntiqueItem(antique: AntiqueForm): Promise<void> {
     await addAntique(antique);
-    // Trigger a refresh by updating the component state
-    window.location.reload(); // Simple refresh for now
+    publishContentUpdate("antiques");
 }

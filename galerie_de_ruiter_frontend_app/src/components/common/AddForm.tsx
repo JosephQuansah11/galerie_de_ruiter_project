@@ -3,6 +3,7 @@ import { Form } from "react-bootstrap";
 import { AntiqueForm } from "../../models/antiques/Antique";
 import { AddAntiqueItem } from "../../hooks/useAddAntiques";
 import { FormBaseEntity } from "../../types/types";
+import { useTranslation } from "react-i18next";
 
 interface AddFormProps<T extends FormBaseEntity> {
     items: T;
@@ -12,6 +13,7 @@ interface AddFormProps<T extends FormBaseEntity> {
 
 
 export function AddForm<T extends FormBaseEntity>({ items, onSubmit, buttonName }: Readonly<AddFormProps<T>>) {
+    const { t } = useTranslation();
     const [validated, setValidated] = useState(false);
     const [submissionError, setSubmissionError] = useState<string>();
 
@@ -53,21 +55,21 @@ export function AddForm<T extends FormBaseEntity>({ items, onSubmit, buttonName 
             if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
                 fields.push(
                     <h6 key={`header-${fullKey}`} className="mt-3 mb-2 text-capitalize">
-                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                        {t(key, { defaultValue: key.replace(/([A-Z])/g, ' $1').trim() })}
                     </h6>
                 , ...generateFormFields(value, fullKey));
             } else {
                 fields.push(
                     <Form.Group controlId={`formBasic${fullKey}`} key={fullKey} className="mb-3">
                         <Form.Label className="text-capitalize">
-                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                            {t(key, { defaultValue: key.replace(/([A-Z])/g, ' $1').trim() })}
                         </Form.Label>
                         <Form.Control
                             required
                             type="text"
                             name={fullKey}
                             defaultValue={value}
-                            placeholder={`Enter ${key.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}`}
+                            placeholder={t("enterField", { field: t(key, { defaultValue: key.replace(/([A-Z])/g, ' $1').trim() }) })}
                         />
                     </Form.Group>
                 );
@@ -100,10 +102,10 @@ export function AddForm<T extends FormBaseEntity>({ items, onSubmit, buttonName 
                 } else if ('name' in formObject && 'email' in formObject) {
                     await AddAntiqueItem(formObject as unknown as AntiqueForm);
                 } else {
-                    setSubmissionError('This form could not be submitted.');
+                    setSubmissionError('formCouldNotSubmit');
                 }
             } catch {
-                setSubmissionError('The form could not be saved. Please try again.');
+                setSubmissionError('formCouldNotSave');
             }
         }
     };
@@ -111,7 +113,7 @@ export function AddForm<T extends FormBaseEntity>({ items, onSubmit, buttonName 
     return (
         <div className="ms-2">
             <Form action="" noValidate validated={validated} method="post" onSubmit={handleSubmit} style={{ width: '100%' }}>
-                {submissionError && <div className="alert alert-danger" role="alert">{submissionError}</div>}
+                {submissionError && <div className="alert alert-danger" role="alert">{t(submissionError)}</div>}
                 {generateFormFields(items)}
                 <button type="submit" style={{ width: '100%' }} className="btn btn-primary mt-3">{buttonName}</button>
             </Form>

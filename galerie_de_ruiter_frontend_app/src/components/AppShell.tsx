@@ -10,9 +10,11 @@ import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { Avatar, DropdownPanel } from "./UI";
 import { useAuth } from "../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const auth = useAuth();
+  const { t } = useTranslation();
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -24,28 +26,28 @@ export function AppShell({ children }: { children: ReactNode }) {
             Fable<span className="brand-dot">.</span>
           </span>
         </div>
-        <div className="workspace-label">Workspace</div>
+        <div className="workspace-label">{t("workspace")}</div>
         <nav>
           <NavLink
             to="/dashboard"
             className={({ isActive }) => (isActive ? "active" : "")}
           >
             <LayoutDashboard size={18} />
-            Overview
+            {t("overview")}
           </NavLink>
           <NavLink
             to="/library"
             className={({ isActive }) => (isActive ? "active" : "")}
           >
             <Film size={18} />
-            Movie library
+            {t("movieLibrary")}
           </NavLink>
           <NavLink
             to="/profile"
             className={({ isActive }) => (isActive ? "active" : "")}
           >
             <UserRound size={18} />
-            My profile
+            {t("myProfile")}
           </NavLink>
         </nav>
         <div className="sidebar-bottom">
@@ -54,11 +56,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             className={({ isActive }) => (isActive ? "active" : "")}
           >
             <SlidersHorizontal size={18} />
-            Preferences
+            {t("preferences")}
           </NavLink>
           <div className="status">
             <span className="status-dot" />
-            Java API connected
+            {t("apiConnected")}
           </div>
         </div>
       </aside>
@@ -73,23 +75,23 @@ export function AppShell({ children }: { children: ReactNode }) {
                 label={
                   <>
                     <Avatar name={auth.profile?.username} size="small" />
-                    {auth.profile?.username ?? "Member"}
+                    {auth.profile?.username ?? t("member")}
                   </>
                 }
               >
                 <button className="menu-action" onClick={auth.logout}>
                   <LogOut size={15} />
-                  Sign out
+                  {t("signOut")}
                 </button>
               </DropdownPanel>
             ) : (
               <>
                 <button className="quiet-button" onClick={auth.login}>
                   <LogIn size={16} />
-                  Sign in
+                  {t("signIn")}
                 </button>
                 <NavLink className="primary-button" to="/register">
-                  Create account
+                  {t("createAccountButton")}
                 </NavLink>
               </>
             )}

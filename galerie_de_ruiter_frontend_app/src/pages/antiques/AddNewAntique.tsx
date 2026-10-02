@@ -10,8 +10,11 @@ import {
   uploadAntiqueImage,
 } from "@/apis/backend_api";
 import type { Category, Designer } from "@/models/antiques/Antique";
+import { useTranslation } from "react-i18next";
+import { publishContentUpdate } from "@/services/contentUpdates";
 
 export default function AddNewAntique() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [designers, setDesigners] = useState<Designer[]>([]);
@@ -40,7 +43,7 @@ export default function AddNewAntique() {
       .then((loadedCategories) => {
         setCategories(loadedCategories);
       })
-      .catch(() => setMessage("Categories could not be loaded."));
+      .catch(() => setMessage("categoriesCouldNotLoad"));
   }, []);
 
   useEffect(() => {
@@ -52,7 +55,7 @@ export default function AddNewAntique() {
     const timeout = window.setTimeout(() => {
       searchDesigners(query)
         .then(setDesigners)
-        .catch(() => setMessage("Artists could not be loaded."));
+        .catch(() => setMessage("artistsCouldNotLoad"));
     }, 250);
     return () => window.clearTimeout(timeout);
   }, [artistQuery]);
@@ -65,7 +68,7 @@ export default function AddNewAntique() {
   const selectImages = (files: FileList | null) => {
     const selectedFiles = Array.from(files ?? []);
     if (selectedFiles.some((file) => !file.type.startsWith("image/"))) {
-      setMessage("Please choose an image file.");
+      setMessage("pleaseChooseImage");
       return;
     }
     setImageFiles(selectedFiles);
@@ -94,7 +97,7 @@ export default function AddNewAntique() {
       selectArtist(created);
       setNewArtist({ firstName: "", middleName: "", lastName: "" });
     } catch {
-      setMessage("The artist could not be added.");
+      setMessage("artistCouldNotAdd");
     } finally {
       setCreatingArtist(false);
     }
@@ -118,9 +121,10 @@ export default function AddNewAntique() {
         ),
       );
 
+      publishContentUpdate("antiques");
       navigate(`/antiques/${created.id}`);
     } catch {
-      setMessage("The antique could not be saved.");
+      setMessage("antiqueCouldNotSave");
     } finally {
       setSaving(false);
     }
@@ -130,20 +134,18 @@ export default function AddNewAntique() {
     <div className="admin-form-page add-antique-page">
       <Card>
         <Card.Header>
-          <LibraryBig size={20} /> Catalogue entry
+          <LibraryBig size={20} /> {t("catalogueEntry")}
         </Card.Header>
         <Card.Body>
           <div className="add-antique-intro">
-            <span>NEW OBJECT</span>
-            <h1>Add an antique</h1>
-            <p>
-              Give the collection a clear story, a maker, and a lasting image.
-            </p>
+            <span>{t("newObject")}</span>
+            <h1>{t("addAnAntique")}</h1>
+            <p>{t("addAntiqueIntro")}</p>
           </div>
-          {message && <Alert variant="danger">{message}</Alert>}
+          {message && <Alert variant="danger">{t(message)}</Alert>}
           <Form onSubmit={submit}>
             <Form.Group className="mb-3">
-              <Form.Label>Title</Form.Label>
+              <Form.Label>{t("title")}</Form.Label>
               <Form.Control
                 required
                 value={form.title}
@@ -151,7 +153,7 @@ export default function AddNewAntique() {
               />
             </Form.Group>
             <Form.Group className="mb-2">
-              <Form.Label>Artist</Form.Label>
+              <Form.Label>{t("artist")}</Form.Label>
               <div className="position-relative">
                 <Form.Control
                   required
@@ -160,7 +162,7 @@ export default function AddNewAntique() {
                     setArtistQuery(event.target.value);
                     update("artistId", "");
                   }}
-                  placeholder="Search by artist name"
+                  placeholder={t("searchByArtist")}
                   autoComplete="off"
                 />
                 <Search
@@ -191,7 +193,7 @@ export default function AddNewAntique() {
             </Form.Group>
             <fieldset className="border rounded p-3 mb-3">
               <legend className="float-none w-auto px-2 fs-6">
-                Add artist
+                {t("addArtist")}
               </legend>
               <div className="row g-2">
                 <div className="col-md">
@@ -203,7 +205,7 @@ export default function AddNewAntique() {
                         firstName: event.target.value,
                       }))
                     }
-                    placeholder="First name"
+                    placeholder={t("firstName")}
                   />
                 </div>
                 <div className="col-md">
@@ -215,7 +217,7 @@ export default function AddNewAntique() {
                         middleName: event.target.value,
                       }))
                     }
-                    placeholder="Middle name"
+                    placeholder={t("middleName")}
                   />
                 </div>
                 <div className="col-md">
@@ -227,7 +229,7 @@ export default function AddNewAntique() {
                         lastName: event.target.value,
                       }))
                     }
-                    placeholder="Last name"
+                    placeholder={t("lastName")}
                   />
                 </div>
                 <div className="col-md-auto">
@@ -246,19 +248,19 @@ export default function AddNewAntique() {
                     ) : (
                       <Plus size={16} />
                     )}{" "}
-                    Add artist
+                    {t("addArtist")}
                   </button>
                 </div>
               </div>
             </fieldset>
             <Form.Group className="mb-3">
-              <Form.Label>Category</Form.Label>
+              <Form.Label>{t("category")}</Form.Label>
               <Form.Select
                 required
                 value={form.categoryId}
                 onChange={(event) => update("categoryId", event.target.value)}
               >
-                <option value="">Choose a category</option>
+                <option value="">{t("chooseCategory")}</option>
                 {categories.flatMap((category) => [
                   <option key={category.id} value={category.id}>
                     {category.name}
@@ -272,7 +274,7 @@ export default function AddNewAntique() {
               </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Upload local images</Form.Label>
+              <Form.Label>{t("uploadLocalImages")}</Form.Label>
               <Form.Control
                 type="file"
                 accept="image/*"
@@ -284,20 +286,20 @@ export default function AddNewAntique() {
               <Form.Text>
                 {imageFileNames.length
                   ? imageFileNames.join(", ")
-                  : "Choose images from your computer."}
+                  : t("chooseImages")}
               </Form.Text>
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>3D model URL</Form.Label>
+              <Form.Label>{t("modelUrl")}</Form.Label>
               <Form.Control
                 type="url"
                 value={form.modelUrl}
                 onChange={(event) => update("modelUrl", event.target.value)}
-                placeholder="https://.../model.glb or viewer URL"
+                placeholder={t("modelUrlPlaceholder")}
               />
             </Form.Group>
             <Form.Group className="mb-4">
-              <Form.Label>Description</Form.Label>
+              <Form.Label>{t("description")}</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={4}
@@ -306,7 +308,7 @@ export default function AddNewAntique() {
               />
             </Form.Group>
             <Form.Group className="mb-4">
-              <Form.Label>Price (EUR)</Form.Label>
+              <Form.Label>{t("priceEur")}</Form.Label>
               <Form.Control
                 required
                 type="number"
@@ -323,7 +325,7 @@ export default function AddNewAntique() {
               type="submit"
               disabled={saving}>
               {saveContent}
-              Save antique
+              {saving ? t("saving") : t("saveAntique")}
             </button>
           </Form>
         </Card.Body>

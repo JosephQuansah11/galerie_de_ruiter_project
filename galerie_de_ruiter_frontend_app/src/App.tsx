@@ -5,6 +5,7 @@ import {
   Routes,
   useLocation,
 } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { AuthPage } from "./pages/auth/AuthPage";
@@ -34,8 +35,9 @@ import AboutAdminPage from "./pages/admin/AboutAdminPage";
 function ProtectedLayout() {
   const auth = useAuth();
   const location = useLocation();
+  const { t } = useTranslation();
   if (auth.loading)
-    return <div className="loading-screen">Checking your Fable session...</div>;
+    return <div className="loading-screen">{t("checkingSession")}</div>;
   if (!auth.authenticated)
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   return (

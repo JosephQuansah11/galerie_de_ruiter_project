@@ -8,9 +8,9 @@ export function LoginPage() {
   const { t } = useLanguage()
   return <div className="page auth-page">
   <div className="auth-panel">
-  <div className="eyebrow">GALERIE DE RUITER</div>
+  <div className="eyebrow">{t("galleryName")}</div>
   <h1>{t("welcomeBack")}</h1>
-  <p>Enter a considered collection of antiques, art, and design pieces chosen for their next chapter.</p>
+  <p>{t("loginIntro")}</p>
   <button className="primary-button" onClick={auth.login}>
   <LogIn size={26} />{t("continueKeycloak")}
   </button>
@@ -19,9 +19,9 @@ export function LoginPage() {
   </Link>
   </div>
   <div className="auth-aside">
-  <span>THE COLLECTION</span>
-  <strong>Objects worth returning to.</strong>
-  <p>Save pieces, arrange a visit, and keep the conversation with the gallery close at hand.</p>
+  <span>{t("theCollection")}</span>
+  <strong>{t("objectsWorthReturning")}</strong>
+  <p>{t("loginAsideText")}</p>
   </div>
   </div>
 }

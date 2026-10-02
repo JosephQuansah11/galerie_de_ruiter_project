@@ -11,7 +11,7 @@ export default function WelcomePage() {
   return (
     <section className="welcome-page">
       <div className="welcome-hero">
-        <span className="catalogue-artist">{t("GALERIE DE RUITER")}</span>
+        <span className="catalogue-artist">{t("galleryName")}</span>
         <h1>{t("welcomeTitle")}</h1>
         <p>{t("welcomeIntro")}</p>
         <div className="welcome-actions">
@@ -23,44 +23,35 @@ export default function WelcomePage() {
             type="button"
             onClick={() => navigate("/dashboard/chat")}
           >
-            <MessageCircle size={17} /> {t("Talk to the gallery")}
+            <MessageCircle size={17} /> {t("talkToGallery")}
           </button>
         </div>
       </div>
       <div className="welcome-grid">
         <article>
           <Sparkles size={24} />
-          <span className="catalogue-artist">{t("OUR PHILOSOPHY")}</span>
-          <h2>{t("Curiosity over clutter.")}</h2>
-          <p>
-            {t(
-              "Every piece is selected for its material quality, character and the conversation it starts.",
-            )}
-          </p>
+          <span className="catalogue-artist">{t("ourPhilosophy")}</span>
+          <h2>{t("curiosityOverClutter")}</h2>
+          <p>{t("philosophyText")}</p>
         </article>
         <article>
           <MapPin size={24} />
-          <span className="catalogue-artist">{t("POP-UP SHOP")}</span>
-          <h2>{t("Meet the collection in person.")}</h2>
-          <p>
-            {t(
-              "Visit the current location, ask questions and find the right piece",
-            )}
-            {t("for your home.")}
-          </p>
+          <span className="catalogue-artist">{t("popupShop")}</span>
+          <h2>{t("meetCollection")}</h2>
+          <p>{t("visitLocationText")}</p>
           <button className="btn btn-link" type="button" onClick={() => navigate("/map")}>
-            {t("See location")} <ArrowRight size={15} />
+            {t("seeLocation")} <ArrowRight size={15} />
           </button>
         </article>
         <article className="share-card">
           <img
             src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}`}
-            alt="QR code linking to Galerie de Ruiter"
+            alt={t("galleryQrCodeAlt")}
           />
           <div>
-            <span className="catalogue-artist">{t("SHARE THE GALERIE")}</span>
-            <h2>{t("Take the collection with you.")}</h2>
-            <p>{t("Scan this code to open the gallery online.")}</p>
+            <span className="catalogue-artist">{t("shareTheGalerie")}</span>
+            <h2>{t("takeCollectionWithYou")}</h2>
+            <p>{t("scanCodeText")}</p>
           </div>
         </article>
       </div>

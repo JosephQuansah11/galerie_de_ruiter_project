@@ -7,9 +7,12 @@ import type Antique from "@/models/antiques/Antique";
 import { resolveAntiqueImageUrl } from "@/models/antiques/Antique";
 import { suggestedAntiques } from "@/data/suggestedAntiques";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/context/LanguageContext";
+import { formatEuroAmount } from "@/i18n";
 
 export default function AntiqueAdminPage() {
   const { t } = useTranslation();
+  const { locale } = useLanguage();
   const navigate = useNavigate();
   const [antiques, setAntiques] = useState<Antique[]>([]);
   const [query, setQuery] = useState("");
@@ -27,8 +30,8 @@ export default function AntiqueAdminPage() {
     <section className="admin-page">
       <div className="shopping-heading">
         <div>
-          <span className="catalogue-artist">{t("ADMINISTRATION")}</span>
-          <h1>{t("ANTIQUE_INVENTORY")}</h1>
+          <span className="catalogue-artist">{t("administration")}</span>
+          <h1>{t("antiqueInventory")}</h1>
         </div>
        
       </div>
@@ -37,20 +40,20 @@ export default function AntiqueAdminPage() {
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder={t("SEARCH_INVENTORY")}
-          aria-label={t("SEARCH_INVENTORY")}
+          placeholder={t("searchInventory")}
+          aria-label={t("searchInventory")}
         /> 
         <button className="btn btn-outline-primary button-wide" onClick={() => navigate("/admin/antiques/new")}>
-          <Plus size={16} /> {t("ADD_ANTIQUE")}
+          <Plus size={16} /> {t("addAntique")}
         </button>
       </div>
       {loading && (
         <div className="catalogue-state">
-          <Spinner animation="border" size="sm" /> {t("LOADING_INVENTORY")}...
+          <Spinner animation="border" size="sm" /> {t("loadingInventory")}
         </div>
       )}
       {!loading && filtered.length === 0 && (
-        <Alert variant="light">{t("NO_ANTIQUES_FOUND")}</Alert>
+        <Alert variant="light">{t("noAntiquesFound")}</Alert>
       )}
       <div className="inventory-list">
         {filtered.map((antique) => (
@@ -70,10 +73,10 @@ export default function AntiqueAdminPage() {
             <span>
               <strong>{antique.title}</strong>
               <small>
-                {antique.category ?? t("UNCATEGORIZED")} ·{" "}
+                {antique.category ?? t("uncategorized")} ·{" "}
                 {antique.price == null
-                  ? t("PRICE_ON_REQUEST")
-                  : `EUR ${antique.price.toFixed(2)}`}
+                  ? t("priceOnRequest")
+                  : formatEuroAmount(antique.price, locale)}
               </small>
             </span>
           </button>
@@ -81,10 +84,10 @@ export default function AntiqueAdminPage() {
       </div>
       <div className="reference-heading">
         <div>
-          <span className="catalogue-artist">{t("REFERENCE_SHORTLIST")}</span>
-          <h2>{t("PIECES_TO_ADD_NEXT")}</h2>
+          <span className="catalogue-artist">{t("referenceShortlist")}</span>
+          <h2>{t("piecesToAddNext")}</h2>
         </div>
-        <span>{t("IMAGES_ARE_VISUAL_REFERENCES_FOR_SIX-VIEW_CAPTURE")}</span>
+        <span>{t("imagesVisualReferences")}</span>
       </div>
       <div className="reference-grid">
         {suggestedAntiques.map((item) => (
@@ -101,7 +104,7 @@ export default function AntiqueAdminPage() {
                 className="btn btn-outline-secondary"
                 onClick={() => navigate("/admin/antiques/new")}
               >
-                {t("USE_AS_REFERENCE")}
+                {t("useAsReference")}
               </button>
             </div>
           </article>

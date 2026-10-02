@@ -2,14 +2,21 @@ import { useState } from "react";
 import { Form, Spinner } from "react-bootstrap";
 import { MessageCircle, Send, ExternalLink } from "lucide-react";
 import { sendChatMessage } from "@/apis/chat_api";
+import { useTranslation } from "react-i18next";
 
-type ChatMessage = { role: "user" | "assistant"; text: string };
+type ChatMessage = {
+  role: "user" | "assistant";
+  text: string;
+  translationKey?: string;
+};
 
 export default function ChatPage() {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
-      text: "Welcome to Galerie de Ruiter. I can help arrange a visit or online consultation.",
+      text: "",
+      translationKey: "chatWelcome",
     },
   ]);
   const [draft, setDraft] = useState("");
@@ -37,7 +44,8 @@ export default function ChatPage() {
         ...current,
         {
           role: "assistant",
-          text: "The assistant is unavailable. Please try WhatsApp or try again later.",
+          text: "",
+          translationKey: "chatUnavailable",
         },
       ]);
     } finally {
@@ -51,12 +59,9 @@ export default function ChatPage() {
           <MessageCircle size={24} />
         </div>
         <div>
-          <span className="catalogue-artist">GALERIE CONCIERGE</span>
-          <h1>Talk to the gallery</h1>
-          <p>
-            Ask about a piece, arrange a visit, or continue directly with the
-            owner.
-          </p>
+          <span className="catalogue-artist">{t("galerieConcierge")}</span>
+          <h1>{t("talkToGallery")}</h1>
+          <p>{t("chatIntro")}</p>
         </div>
         <a
           className="chat-whatsapp"
@@ -64,7 +69,7 @@ export default function ChatPage() {
           target="_blank"
           rel="noreferrer"
         >
-          <ExternalLink size={15} /> Message on WhatsApp
+          <ExternalLink size={15} /> {t("messageOnWhatsApp")}
         </a>
       </header>
       <div className="chat-thread">
@@ -73,18 +78,18 @@ export default function ChatPage() {
             className={`chat-bubble chat-${message.role}`}
             key={`${message.role}-${index}`}
           >
-            {message.text}
+            {message.translationKey ? t(message.translationKey) : message.text}
           </div>
         ))}
         {sending && (
           <div className="chat-bubble chat-assistant">
-            <Spinner size="sm" animation="border" /> Thinking...
+            <Spinner size="sm" animation="border" /> {t("thinking")}
           </div>
         )}
       </div>
       {appointment && (
         <div className="appointment-summary">
-          <strong>Appointment noted</strong>
+          <strong>{t("appointmentNoted")}</strong>
           <span>{appointment}</span>
         </div>
       )}
@@ -92,8 +97,8 @@ export default function ChatPage() {
         <Form.Control
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder="Write a message..."
-          aria-label="Chat message"
+          placeholder={t("writeMessage")}
+          aria-label={t("chatMessage")}
         />
         <button
           className="btn btn-dark"

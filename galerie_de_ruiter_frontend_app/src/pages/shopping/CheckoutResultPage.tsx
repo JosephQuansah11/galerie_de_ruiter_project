@@ -1,8 +1,10 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function CheckoutResultPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const successful = useLocation().pathname.endsWith("success");
 
   return (
@@ -10,18 +12,18 @@ export default function CheckoutResultPage() {
       <div className="checkout-result-icon">
         {successful ? <CheckCircle2 size={48} /> : <XCircle size={48} />}
       </div>
-      <h1>{successful ? "Payment received" : "Payment cancelled"}</h1>
+      <h1>{successful ? t("paymentReceived") : t("paymentCancelled")}</h1>
       <p>
         {successful
-          ? "Thank you. Your payment was completed securely through Stripe."
-          : "Your payment was cancelled. Your cart is still available."}
+          ? t("paymentSuccessText")
+          : t("paymentCancelledText")}
       </p>
       <button
         className="btn btn-dark"
         type="button"
         onClick={() => navigate(successful ? "/antiques" : "/cart")}
       >
-        {successful ? "Continue browsing" : "Return to cart"}
+        {successful ? t("continueBrowsing") : t("returnToCart")}
       </button>
     </section>
   );

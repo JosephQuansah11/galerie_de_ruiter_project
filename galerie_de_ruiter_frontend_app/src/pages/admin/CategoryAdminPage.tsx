@@ -10,6 +10,7 @@ import {
 import type { Category } from "@/models/antiques/Antique";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
+import { publishContentUpdate } from "@/services/contentUpdates";
 
 export default function CategoryAdminPage() {
   const { t } = useTranslation();
@@ -37,6 +38,7 @@ export default function CategoryAdminPage() {
     setCategories((current) =>
       current.map((item) => (item.id === updated.id ? updated : item)),
     );
+    publishContentUpdate("categories");
   };
 
   const addCategory = async (event: FormEvent) => {
@@ -46,10 +48,11 @@ export default function CategoryAdminPage() {
     try {
       const created = await createCategory(name.trim(), parentId || undefined);
       setCategories((current) => [...current, created]);
+      publishContentUpdate("categories");
       setName("");
       setParentId("");
     } catch {
-      setCreateError("This category already exists here.");
+      setCreateError("categoryExists");
     }
   };
 
@@ -58,56 +61,55 @@ export default function CategoryAdminPage() {
     setCategories((current) =>
       current.filter((category) => category.id !== id),
     );
+    publishContentUpdate("categories");
   };
 
   if (!auth.isAdmin)
     return (
-      <Alert variant="warning">{t("Administrator access is required.")}</Alert>
+      <Alert variant="warning">{t("adminAccessRequired")}</Alert>
     );
   return (
     <section className="admin-page">
       <div className="shopping-heading">
         <div>
-          <span className="catalogue-artist">{t("ADMINISTRATION")}</span>
-          <h1>{t("CATALOGUE_NAVIGATION")}</h1>
+          <span className="catalogue-artist">{t("administration")}</span>
+          <h1>{t("catalogueNavigation")}</h1>
         </div>
         <ListTree size={32} />
       </div>
       <p className="admin-intro">
-        {t(
-          "Create categories and choose which ones visitors can see. Ordering follows assigned antique counts.",
-        )}
+        {t("categoryAdminIntro")}
       </p>
       <Form className="category-create-form" onSubmit={addCategory}>
         <Form.Control
           required
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder={t("New category name")}
+          placeholder={t("newCategoryName")}
         />
         <Form.Select
           value={parentId}
           onChange={(event) => setParentId(event.target.value)}
         >
-          <option value="">{t("Top-level category")}</option>
+          <option value="">{t("topLevelCategory")}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
-              {t("Subcategory of")} {category.name}
+              {t("subcategoryOf")} {category.name}
             </option>
           ))}
         </Form.Select>
         <button className="btn btn-primary" type="submit">
-          <Plus size={16} /> {t("Add category")}
+          <Plus size={16} /> {t("addCategory")}
         </button>
       </Form>
-      {createError && <Alert variant="warning">{createError}</Alert>}
+      {createError && <Alert variant="warning">{t(createError)}</Alert>}
       {loading && (
         <div className="catalogue-state">
-          <Spinner animation="border" size="sm" /> {t("Loading categories...")}
+          <Spinner animation="border" size="sm" /> {t("loadingCategories")}
         </div>
       )}
       {error && (
-        <Alert variant="danger">{t("Categories could not be loaded.")}</Alert>
+        <Alert variant="danger">{t("categoriesLoadError")}</Alert>
       )}
       <div className="admin-list">
         {categories.map((category) => (
@@ -127,11 +129,11 @@ export default function CategoryAdminPage() {
                 label={
                   category.visible ? (
                     <>
-                      <Eye size={15} /> {t("Visible")}
+                      <Eye size={15} /> {t("visible")}
                     </>
                   ) : (
                     <>
-                      <EyeOff size={15} /> {t("Hidden")}
+                      <EyeOff size={15} /> {t("hidden")}
                     </>
                   )
                 }
@@ -139,7 +141,7 @@ export default function CategoryAdminPage() {
               <button
                 className="btn btn-link"
                 type="button"
-                aria-label={`Delete ${category.name}`}
+                aria-label={t("deleteCategoryNamed", { name: category.name })}
                 onClick={() => removeCategory(category.id)}
               >
                 <Trash2 size={16} />

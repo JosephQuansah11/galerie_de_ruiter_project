@@ -37,11 +37,11 @@ services:
       - start
       - --optimized
       - --http-enabled=true
-      - --hostname=${PUBLIC_KEYCLOAK_ISSUER_BASE:-http://localhost:8081}
+      - --hostname=${PUBLIC_KEYCLOAK_URL:?Set PUBLIC_KEYCLOAK_URL}
       - --hostname-strict=false
       - --proxy-headers=xforwarded
     ports:
-      - "8081:8080"
+      - "${BIND_ADDRESS:-0.0.0.0}:8081:8080"
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-database:5432/keycloak
@@ -59,26 +59,29 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "${BIND_ADDRESS:-0.0.0.0}:8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
       PORT: 8080
       JPA_DDL_AUTO: ${JPA_DDL_AUTO:-update}
-      DATABASE_URL: postgresql://database:5432/${POSTGRES_DB:-galerie}
+      DATABASE_URL: jdbc:postgresql://database:5432/${POSTGRES_DB:-galerie}
       DATABASE_USERNAME: ${POSTGRES_USER:-galerie_app}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
-      FRONTEND_ORIGIN: ${PUBLIC_FRONTEND_ORIGIN:-http://localhost:3000}
-      KEYCLOAK_ISSUER_URI: ${PUBLIC_KEYCLOAK_ISSUER_URI:-http://localhost:8081/realms/galerie}
-      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/galerie/protocol/openid-connect/certs
+      FRONTEND_ORIGIN: ${PUBLIC_FRONTEND_ORIGIN:?Set PUBLIC_FRONTEND_ORIGIN}
+      KEYCLOAK_ISSUER_URI: ${PUBLIC_KEYCLOAK_ISSUER_URI:?Set PUBLIC_KEYCLOAK_ISSUER_URI}
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/${KEYCLOAK_REALM:-galerie}/protocol/openid-connect/certs
       PUBLIC_KEYCLOAK_URL: http://keycloak:8080
-      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-galerie}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-movie_project_keycloak}
       KEYCLOAK_ADMIN_REALM: master
       KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:?Set KEYCLOAK_ADMIN_CLIENT_ID}
       KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:?Set KEYCLOAK_ADMIN_USERNAME}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_REALM_ADMIN_USERNAME: ${KEYCLOAK_REALM_ADMIN_USERNAME:?Set KEYCLOAK_REALM_ADMIN_USERNAME}
+      KEYCLOAK_REALM_ADMIN_EMAIL: ${KEYCLOAK_REALM_ADMIN_EMAIL:-}
+      KEYCLOAK_REALM_ADMIN_PASSWORD: ${KEYCLOAK_REALM_ADMIN_PASSWORD:?Set KEYCLOAK_REALM_ADMIN_PASSWORD}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
-      STRIPE_SUCCESS_URL: ${STRIPE_SUCCESS_URL:-http://localhost:3000/checkout/success}
-      STRIPE_CANCEL_URL: ${STRIPE_CANCEL_URL:-http://localhost:3000/checkout/cancel}
+      STRIPE_SUCCESS_URL: ${STRIPE_SUCCESS_URL:?Set STRIPE_SUCCESS_URL}
+      STRIPE_CANCEL_URL: ${STRIPE_CANCEL_URL:?Set STRIPE_CANCEL_URL}
     depends_on:
       database:
         condition: service_healthy
@@ -90,11 +93,11 @@ services:
       context: ./services/reconstruction-api
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${BIND_ADDRESS:-0.0.0.0}:8000:8000"
     environment:
       RECONSTRUCTION_MODE: ${RECONSTRUCTION_MODE:-disabled}
       DATA_DIR: /app/data
-      CORS_ORIGINS: ${PUBLIC_FRONTEND_ORIGIN:-http://localhost:3000}
+      CORS_ORIGINS: ${PUBLIC_FRONTEND_ORIGIN:?Set PUBLIC_FRONTEND_ORIGIN}
     volumes:
       - reconstruction-data:/app/data
 
@@ -102,15 +105,17 @@ services:
     build:
       context: ./galerie_de_ruiter_frontend_app
       args:
-        VITE_JAVA_API_URL: ${VITE_JAVA_API_URL:-http://localhost:8080}
-        VITE_JAVA_BACKEND_URL: ${VITE_JAVA_BACKEND_URL:-http://localhost:8080}
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
-        VITE_KEYCLOAK_URL: ${VITE_KEYCLOAK_URL:-http://localhost:8081}
-        VITE_KEYCLOAK_REALM: ${KEYCLOAK_REALM:-galerie}
-        VITE_KEYCLOAK_CLIENT_ID: ${VITE_KEYCLOAK_CLIENT_ID:-galerie-frontend}
+        VITE_JAVA_API_URL: ${VITE_JAVA_API_URL:?Set VITE_JAVA_API_URL}
+        VITE_JAVA_BACKEND_URL: ${VITE_JAVA_BACKEND_URL:?Set VITE_JAVA_BACKEND_URL}
+        VITE_API_URL: ${VITE_API_URL:?Set VITE_API_URL}
+        VITE_KEYCLOAK_URL: ${VITE_KEYCLOAK_URL:?Set VITE_KEYCLOAK_URL}
+        VITE_KEYCLOAK_REALM: ${KEYCLOAK_REALM:-movie_project_keycloak}
+        VITE_KEYCLOAK_CLIENT_ID: ${VITE_KEYCLOAK_CLIENT_ID:-movie_project_frontend_client}
+        VITE_RECONSTRUCTION_API_URL: ${VITE_RECONSTRUCTION_API_URL:?Set VITE_RECONSTRUCTION_API_URL}
+        VITE_PYTHON_API_URL: ${VITE_PYTHON_API_URL:?Set VITE_PYTHON_API_URL}
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "${BIND_ADDRESS:-0.0.0.0}:3000:80"
     depends_on:
       - java-api
       - keycloak

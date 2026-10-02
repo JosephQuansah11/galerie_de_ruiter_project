@@ -25,6 +25,8 @@ import {
 import { resolveAntiqueImageUrl } from "@/models/antiques/Antique";
 import { ThreeDModelDesigner } from "@/3dmodel/three-d/ThreeDModelDesigner";
 import { createAntiqueModel } from "@/3dmodel/three-d/generated/createAntiqueModel";
+import { formatEuroAmount } from "@/i18n";
+import { publishContentUpdate } from "@/services/contentUpdates";
 
 type Position = "front" | "back" | "left" | "right" | "top" | "bottom";
 const positions: Position[] = [
@@ -42,7 +44,7 @@ export default function AntiqueDetailPage() {
   const { antiques, loading, error } = useAntiqueContent();
   const { addToCart, toggleWishlist, isWishlisted } = useShopping();
   const auth = useAuth();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const antique = useMemo(
     () => antiques.find((item) => item.id === id),
     [antiques, id],
@@ -122,7 +124,7 @@ export default function AntiqueDetailPage() {
   if (loading)
     return (
       <div className="catalogue-state">
-        <Spinner animation="border" size="sm" /> Loading piece...
+        <Spinner animation="border" size="sm" /> {t("loadingPiece")}
       </div>
     );
   if (error || !antique)
@@ -131,12 +133,12 @@ export default function AntiqueDetailPage() {
   const artist =
     antique.artist?.displayName ??
     antique.artist?.name ??
-    "Galerie de Ruiter collection";
+    t("galerieDeRuiterCollection");
 
   const price =
     antique.price == null
-      ? "Price on request"
-      : `EUR ${antique.price.toLocaleString("en-BE", { minimumFractionDigits: 2 })}`;
+      ? t("priceOnRequest")
+      : formatEuroAmount(antique.price, locale);
 
   const wishlisted = isWishlisted(antique.id);
   const relatedAntiques = antiques
@@ -167,6 +169,13 @@ export default function AntiqueDetailPage() {
   const reconstructionInProgress =
     reconstructionJob?.status === "queued" ||
     reconstructionJob?.status === "running";
+  const reconstructionStatusKeys: Record<string, string> = {
+    queued: "reconstructionStatusQueued",
+    running: "reconstructionStatusRunning",
+    completed: "reconstructionStatusCompleted",
+    failed: "reconstructionStatusFailed",
+    processing_disabled: "reconstructionStatusProcessingDisabled",
+  };
   const allViewsSelected: boolean = positions.every(
     (position) => modelImages[position] !== undefined,
   );
@@ -239,7 +248,7 @@ export default function AntiqueDetailPage() {
 
   const submit = async (): Promise<void> => {
     if (!allViewsSelected) return;
-    setReconstructionMessage("Uploading six views...");
+    setReconstructionMessage("uploadingSixViews");
     try {
       const images_to_preview = positions.map((position) => ({
         position,
@@ -256,26 +265,26 @@ export default function AntiqueDetailPage() {
       setReconstructionJob(job);
       setReconstructionMessage(
         job.status === "processing_disabled"
-          ? "The reconstruction service is disabled."
-          : "Reconstruction started.",
+          ? "reconstructionDisabled"
+          : "reconstructionStarted",
       );
 
       saveAntiqueReconstruction(antique.id, images_to_preview, job.model_url)
         .then(() => {
-          setReconstructionMessage("Six views saved successfully.");
+          setReconstructionMessage("sixViewsSaved");
+          publishContentUpdate("antiques");
         })
-        .catch((error) => {
+        .catch(() => {
           setReconstructionMessage(
-            "The six views were generated, but could not be saved.",
+            "sixViewsNotSaved",
           );
         });
     } catch {
-      setReconstructionMessage("The reconstruction job could not be started.");
+      setReconstructionMessage("reconstructionFailed");
     }
   };
 
   const handleSubmit = (): void => {
-    window.location.reload();
     void submit();
   };
 
@@ -314,7 +323,7 @@ export default function AntiqueDetailPage() {
         <div className="detail-media">
           <div
             className="detail-image"
-            aria-label={`Preview of ${antique.title}`}
+            aria-label={t("previewNamed", { title: antique.title })}
           >
             {previewImageUrl ? (
               <img
@@ -328,7 +337,7 @@ export default function AntiqueDetailPage() {
           {antiqueImageUrls.length > 1 && (
             <div
               className="detail-image-gallery"
-              aria-label="Additional images"
+              aria-label={t("additionalImages")}
             >
               {antiqueImageUrls.map((imageUrl, index) => (
                 <button
@@ -338,7 +347,7 @@ export default function AntiqueDetailPage() {
                   }
                   type="button"
                   onClick={() => setSelectedImageUrl(imageUrl)}
-                  aria-label={`Preview ${antique.title}, ${index + 1}`}
+                  aria-label={t("previewImageNumber", { title: antique.title, number: index + 1 })}
                 >
                   <img
                     src={resolveAntiqueImageUrl(imageUrl)}
@@ -357,7 +366,7 @@ export default function AntiqueDetailPage() {
           <h1>{antique.title}</h1>
           <p className="detail-description">
             {antique.description ||
-              "A considered piece with a story still unfolding."}
+              t("consideredPiece")}
           </p>
           <div className="model-preview">
             {hasThreeDPreview && (
@@ -378,12 +387,12 @@ export default function AntiqueDetailPage() {
                   src={activeImage}
                   alt={`${activeView} view of ${antique.title}`}
                 />
-                <span className="cube-view-label">{activeView}</span>
+                <span className="cube-view-label">{t(`position${activeView[0].toUpperCase()}${activeView.slice(1)}`)}</span>
               </div>
             )}
             {!hasThreeDPreview && !activeImage && (
               <>
-                <span>3D PREVIEW</span>
+                <span>{t("threeDPreview")}</span>
                 <strong>{t("modelComingSoon")}</strong>
                 <p>{t("modelDescription")}</p>
               </>
@@ -402,7 +411,7 @@ export default function AntiqueDetailPage() {
                       className={`btn btn-${variant}`}
                       onClick={() => handleViewChange(position)}
                     >
-                      {position}
+                      {t(`position${position[0].toUpperCase()}${position.slice(1)}`)}
                     </button>
                   );
                 })}
@@ -411,15 +420,11 @@ export default function AntiqueDetailPage() {
           </div>
           {auth.isAdmin && (
             <div className="model-admin-panel">
-              <strong>CPU six-view preview</strong>
-              <p>
-                Upload one image for each named position. Drag the preview to
-                switch between directional views; click it to toggle front and
-                back.
-              </p>
+              <strong>{t("cpuSixView")}</strong>
+              <p>{t("sixViewInstructions")}</p>
               {positions.map((position) => (
                 <div className="position-upload" key={position}>
-                  <Form.Label>{position}</Form.Label>
+                  <Form.Label>{t(`position${position[0].toUpperCase()}${position.slice(1)}`)}</Form.Label>
                   <Form.Control
                     type="file"
                     accept="image/jpeg,image/png,image/webp,image/jpg"
@@ -433,28 +438,28 @@ export default function AntiqueDetailPage() {
                   />
                 </div>
               ))}
-              <small>{Object.keys(modelImages).length}/6 views selected.</small>
+              <small>{Object.keys(modelImages).length}/6 {t("viewsSelected")}</small>
               <button
                 disabled={submitDisabled}
                 onClick={handleSubmit}
               >
-                Submit six views
+                {t("submitSixViews")}
               </button>
               {reconstructionJob && (
                 <small>
-                  Status: {reconstructionJob.status}{" "}
+                  {t("status")}: {t(reconstructionStatusKeys[reconstructionJob.status] ?? reconstructionJob.status, { defaultValue: reconstructionJob.status })}{" "}
                   {reconstructionJob.progress}%
                 </small>
               )}
-              {reconstructionMessage && <small>{reconstructionMessage}</small>}
+              {reconstructionMessage && <small>{t(reconstructionMessage)}</small>}
             </div>
           )}
           <div className="detail-facts">
-            <span>Condition</span>
-            <strong>Available to discuss</strong>
-            <span>Ownership</span>
-            <strong>Galerie de Ruiter</strong>
-            <span>Price</span>
+            <span>{t("condition")}</span>
+            <strong>{t("availableToDiscuss")}</strong>
+            <span>{t("ownership")}</span>
+            <strong>{t("galerieDeRuiter")}</strong>
+            <span>{t("price")}</span>
             <strong>{price}</strong>
           </div>
           <div className="detail-actions">
@@ -475,8 +480,7 @@ export default function AntiqueDetailPage() {
             </button>
           </div>
           <p className="detail-note">
-            <UserRound size={16} /> Purchase requests and appointments are
-            confirmed personally by the gallery.
+            <UserRound size={16} /> {t("purchaseNote")}
           </p>
         </div>
       </div>
@@ -513,7 +517,7 @@ export default function AntiqueDetailPage() {
             className="detail-related-track"
             ref={relatedTrackRef}
             role="region"
-            aria-label="More pieces from the collection"
+            aria-label={t("morePiecesFromCollection")}
           >
             {relatedAntiques.map((item) => {
               const itemImage = item.imageUrls?.[0] ?? item.imageUrl;
@@ -539,7 +543,7 @@ export default function AntiqueDetailPage() {
                   <span className="detail-related-price">
                     {item.price == null
                       ? t("priceOnRequest")
-                      : `EUR ${item.price.toLocaleString("en-BE", { minimumFractionDigits: 2 })}`}
+                      : formatEuroAmount(item.price, locale)}
                   </span>
                 </button>
               );

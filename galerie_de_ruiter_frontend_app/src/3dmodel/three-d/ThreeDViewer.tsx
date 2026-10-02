@@ -18,6 +18,7 @@ import {
 
 import type { ThreeDModelFactory } from "./types";
 import { AntiqueModel } from "./AntiqueModel";
+import { useTranslation } from "react-i18next";
 
 interface ThreeDViewerProps {
   createModel?: ThreeDModelFactory;
@@ -41,6 +42,7 @@ function LoadedModel({ modelUrl }: { modelUrl: string }) {
 
 interface ViewerErrorBoundaryProps {
   children: ReactElement;
+  unavailableText: string;
 }
 
 interface ViewerErrorBoundaryState {
@@ -61,7 +63,7 @@ class ViewerErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div className="three-d-viewer-fallback" role="status">
-          3D preview is unavailable in this browser.
+          {this.props.unavailableText}
         </div>
       );
     }
@@ -86,6 +88,7 @@ export function ThreeDViewer({
   modelUrl,
   frontImageUrl,
 }: ThreeDViewerProps) {
+  const { t } = useTranslation();
   const [webGLSupported, setWebGLSupported] = useState<boolean>();
 
   useEffect(() => {
@@ -95,7 +98,7 @@ export function ThreeDViewer({
   if (webGLSupported === false) {
     return (
       <div className="three-d-viewer-fallback" role="status">
-        3D preview is unavailable in this browser.
+        {t("threeDUnavailable")}
       </div>
     );
   }
@@ -103,14 +106,14 @@ export function ThreeDViewer({
   if (webGLSupported === undefined) {
     return (
       <div className="three-d-viewer-fallback" role="status">
-        Preparing 3D preview...
+        {t("preparing3DPreview")}
       </div>
     );
   }
 
   return (
     <div className="three-d-viewer">
-      <ViewerErrorBoundary>
+      <ViewerErrorBoundary unavailableText={t("threeDUnavailable")}>
         <Canvas
           camera={{
             position: [2.5, 2, 4],

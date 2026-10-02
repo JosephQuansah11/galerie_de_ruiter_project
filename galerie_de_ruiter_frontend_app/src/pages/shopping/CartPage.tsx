@@ -1,16 +1,16 @@
 import { Form } from "react-bootstrap";
 import { ArrowRight, ShoppingBag, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { useShopping } from "@/context/ShoppingContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { createCheckoutSession } from "@/apis/backend_api";
 import { useState } from "react";
+import { formatEuroAmount } from "@/i18n";
 
 export default function CartPage() {
   const navigate = useNavigate();
   const { cart, updateQuantity, removeFromCart } = useShopping();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [checkoutError, setCheckoutError] = useState<string>();
   const total = cart.reduce(
     (sum, item) => sum + (item.antique.price ?? 0) * item.quantity,
@@ -27,13 +27,8 @@ export default function CartPage() {
         })),
       );
       window.location.assign(url);
-    } catch (error) {
-      const message = axios.isAxiosError(error)
-        ? error.response?.data?.message
-        : undefined;
-      setCheckoutError(
-        message ?? "Checkout could not be started. Please try again.",
-      );
+    } catch {
+      setCheckoutError("checkoutError");
     }
   };
 
@@ -72,7 +67,7 @@ export default function CartPage() {
                   <strong>
                     {antique.price == null
                       ? t("priceOnRequest")
-                      : `EUR ${antique.price.toFixed(2)}`}
+                      : formatEuroAmount(antique.price, locale)}
                   </strong>
                 </div>
                 <Form.Control
@@ -80,7 +75,7 @@ export default function CartPage() {
                   type="number"
                   min={1}
                   value={quantity}
-                  aria-label={`Quantity for ${antique.title}`}
+                  aria-label={t("quantityFor", { title: antique.title })}
                   onChange={(event) =>
                     updateQuantity(antique.id, Number(event.target.value))
                   }
@@ -88,7 +83,7 @@ export default function CartPage() {
                 <button
                   className="btn btn-link"
                   type="button"
-                  aria-label={`Remove ${antique.title} from cart`}
+                  aria-label={t("removeFromCart", { title: antique.title })}
                   onClick={() => removeFromCart(antique.id)}
                 >
                   <Trash2 size={17} />
@@ -98,7 +93,7 @@ export default function CartPage() {
           </div>
           <div className="cart-total">
             <span>{t("estimatedTotal")}</span>
-            <strong>EUR {total.toFixed(2)}</strong>
+            <strong>{formatEuroAmount(total, locale)}</strong>
             <button
               className="btn btn-dark"
               type="button"
@@ -108,7 +103,7 @@ export default function CartPage() {
             </button>
           </div>
           {checkoutError && (
-            <p className="checkout-error">{checkoutError}</p>
+            <p className="checkout-error">{t(checkoutError)}</p>
           )}
         </>
       )}

@@ -62,13 +62,15 @@ The app and Keycloak databases have separate containers and persistent volumes.
 
 `KEYCLOAK_ADMIN_USERNAME` and `KEYCLOAK_ADMIN_PASSWORD` are the Keycloak
 bootstrap credentials used by the backend's Admin API client; they are not the
-application administrator's login. The separate
-`KEYCLOAK_REALM_ADMIN_USERNAME` (set to `De Ruiter` in the cloud blueprint) and
-`KEYCLOAK_REALM_ADMIN_PASSWORD` provision or update that application user in the
-`movie_project_keycloak` realm and assign the realm-level `ADMIN` role read by
-the frontend. `KEYCLOAK_REALM_ADMIN_EMAIL` is optional. For local `bootRun`,
-set `KEYCLOAK_REALM_ADMIN_USERNAME=De Ruiter` and the password in the process
-environment or an untracked local environment file. Never commit passwords.
+application administrator's login. The separate `KEYCLOAK_REALM_ADMIN_USERNAME` (set to `de-ruiter` in the cloud
+blueprint) and `KEYCLOAK_REALM_ADMIN_PASSWORD` provision or update that
+application user in the `movie_project_keycloak` realm and assign the
+realm-level `ADMIN` role read by the frontend. The account's display name is
+`De Ruiter`; `KEYCLOAK_REALM_ADMIN_FIRST_NAME` and
+`KEYCLOAK_REALM_ADMIN_LAST_NAME` are optional. `KEYCLOAK_REALM_ADMIN_EMAIL` is
+also optional. For local `bootRun`, set the username and password in the
+process environment or an untracked local environment file. Never commit
+passwords.
 
 The Render deployment in `render.yaml` builds the Spring API and Keycloak from
 their Dockerfiles and uses Render-managed PostgreSQL databases. Render's
@@ -78,13 +80,10 @@ PostgreSQL containers are for deployments that use the Compose stack.
 GitHub Actions builds both the frontend and backend, runs backend tests, and
 executes a Docker-backed startup smoke test. Unit tests use an in-memory
 database; the smoke test starts the real PostgreSQL, Keycloak, and
-reconstruction containers. Add repository Actions secrets `KEYCLOAK_ADMIN_USERNAME`,
-`KEYCLOAK_ADMIN_PASSWORD`, and `KEYCLOAK_REALM_ADMIN_PASSWORD` for that smoke
-test; the application username is set to `De Ruiter`. The check is skipped for
-pull-request branches from forks, where GitHub withholds secrets. Render
-auto-deploys the blueprint independently of the Actions workflow, so runtime
-secrets must also be entered in the corresponding Render service settings (they
-are not copied from GitHub Actions).
+reconstruction containers. The smoke test generates temporary random
+credentials and does not require production secrets. Render auto-deploys the
+blueprint independently of the Actions workflow, so runtime secrets must be
+entered in the corresponding Render service settings.
 
 ## Stripe bank payments
 

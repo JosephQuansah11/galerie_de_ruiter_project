@@ -37,6 +37,8 @@ keycloak:
   provision-admin:
     required: true
     username: ${KEYCLOAK_REALM_ADMIN_USERNAME:}
+    first-name: ${KEYCLOAK_REALM_ADMIN_FIRST_NAME:}
+    last-name: ${KEYCLOAK_REALM_ADMIN_LAST_NAME:}
     email: ${KEYCLOAK_REALM_ADMIN_EMAIL:}
     password: ${KEYCLOAK_REALM_ADMIN_PASSWORD:}
 

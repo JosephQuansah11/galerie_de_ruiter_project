@@ -48,7 +48,9 @@ jobs:
           set -euo pipefail
           export KEYCLOAK_ADMIN_USERNAME=ci-bootstrap
           export KEYCLOAK_ADMIN_PASSWORD="$(openssl rand -hex 32)"
-          export KEYCLOAK_REALM_ADMIN_USERNAME="De Ruiter"
+          export KEYCLOAK_REALM_ADMIN_USERNAME=de-ruiter
+          export KEYCLOAK_REALM_ADMIN_FIRST_NAME=De
+          export KEYCLOAK_REALM_ADMIN_LAST_NAME=Ruiter
           export KEYCLOAK_REALM_ADMIN_PASSWORD="$(openssl rand -hex 32)"
           ./gradlew bootRun > "$RUNNER_TEMP/galerie-bootRun.log" 2>&1 &
           app_pid=$!

@@ -24,6 +24,8 @@ public class KeycloakRealmAdminProvisioner implements ApplicationRunner {
     private final String realmName;
     private final boolean required;
     private final String username;
+    private final String firstName;
+    private final String lastName;
     private final String email;
     private final String password;
 
@@ -32,12 +34,16 @@ public class KeycloakRealmAdminProvisioner implements ApplicationRunner {
             @Value("${keycloak.realm}") String realmName,
             @Value("${keycloak.provision-admin.required:false}") boolean required,
             @Value("${keycloak.provision-admin.username:}") String username,
+            @Value("${keycloak.provision-admin.first-name:}") String firstName,
+            @Value("${keycloak.provision-admin.last-name:}") String lastName,
             @Value("${keycloak.provision-admin.email:}") String email,
             @Value("${keycloak.provision-admin.password:}") String password) {
         this.keycloakAdminClient = keycloakAdminClient;
         this.realmName = realmName;
         this.required = required;
         this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.password = password;
     }
@@ -86,6 +92,8 @@ public class KeycloakRealmAdminProvisioner implements ApplicationRunner {
             representation = new UserRepresentation();
             representation.setUsername(username);
             representation.setEnabled(true);
+            representation.setFirstName(firstName.isBlank() ? null : firstName);
+            representation.setLastName(lastName.isBlank() ? null : lastName);
             representation.setEmail(email.isBlank() ? null : email);
             try (Response response = users.create(representation)) {
                 if (response.getStatus() == Response.Status.CONFLICT.getStatusCode()) {
@@ -104,6 +112,8 @@ public class KeycloakRealmAdminProvisioner implements ApplicationRunner {
         } else {
             userId = representation.getId();
             representation.setEnabled(true);
+            representation.setFirstName(firstName.isBlank() ? null : firstName);
+            representation.setLastName(lastName.isBlank() ? null : lastName);
             if (!email.isBlank()) {
                 representation.setEmail(email);
             }

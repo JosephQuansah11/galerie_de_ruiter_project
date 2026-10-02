@@ -123,7 +123,11 @@ services:
       - key: KEYCLOAK_ADMIN_PASSWORD
         sync: false
       - key: KEYCLOAK_REALM_ADMIN_USERNAME
-        value: De Ruiter
+        value: de-ruiter
+      - key: KEYCLOAK_REALM_ADMIN_FIRST_NAME
+        value: De
+      - key: KEYCLOAK_REALM_ADMIN_LAST_NAME
+        value: Ruiter
       - key: KEYCLOAK_REALM_ADMIN_EMAIL
         value: ""
       - key: KEYCLOAK_REALM_ADMIN_PASSWORD

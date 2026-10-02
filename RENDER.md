@@ -23,8 +23,9 @@ managed PostgreSQL databases:
    set `KEYCLOAK_REALM_ADMIN_PASSWORD` on `galerie-java-api` to provision that
    application user, and optionally set `KEYCLOAK_REALM_ADMIN_EMAIL`. Startup
    creates or updates the user in the `movie_project_keycloak` realm and assigns
-   the application `ADMIN` realm role. This is not a Keycloak master-realm
-   superadmin account. Set `STRIPE_SECRET_KEY` only when enabling payments.
+   the application `ADMIN` realm role. Its login is `de-ruiter` and its display
+   name is `De Ruiter`. This is not a Keycloak master-realm superadmin account.
+   Set `STRIPE_SECRET_KEY` only when enabling payments.
 4. The Keycloak image imports the production realm and frontend client from
    `keycloak/realms/galerie-production-realm.json`; no manual realm/client setup
    is required.

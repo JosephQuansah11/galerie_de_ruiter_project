@@ -109,7 +109,7 @@ services:
       - key: FRONTEND_ORIGIN
         value: https://galerie-frontend.onrender.com
       - key: KEYCLOAK_ISSUER_URI
-        value: https://galerie-keycloak.onrender.com/realms/galerie
+        value: https://galerie-keycloak.onrender.com/realms/movie_project_keycloak
       - key: PUBLIC_KEYCLOAK_URL
         value: https://galerie-keycloak.onrender.com
       - key: KEYCLOAK_REALM

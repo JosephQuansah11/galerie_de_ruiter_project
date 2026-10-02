@@ -29,14 +29,9 @@ managed PostgreSQL databases:
    `keycloak/realms/galerie-production-realm.json`; no manual realm/client setup
    is required.
 
-For GitHub Actions, add repository secrets `KEYCLOAK_ADMIN_USERNAME` and
-`KEYCLOAK_ADMIN_PASSWORD` for Keycloak's bootstrap account, and
-`KEYCLOAK_REALM_ADMIN_PASSWORD` for the application admin login. The username
-is set to `De Ruiter` by the workflow. `KEYCLOAK_REALM_ADMIN_EMAIL` is optional.
-These secrets are separate from Render's environment settings; Actions secrets
-do not propagate to Render. The smoke test checks that the provisioned account
-has the application `ADMIN` role and is skipped for pull requests from forks
-because GitHub does not make repository secrets available to them.
+GitHub Actions generates temporary, random credentials for its isolated service
+smoke test. These credentials are not used in production; Render's secrets must
+be configured separately in its dashboard.
 
 ## Important production values
 

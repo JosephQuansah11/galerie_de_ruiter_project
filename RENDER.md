@@ -19,8 +19,8 @@ managed PostgreSQL databases:
 3. Set the same username/password as `KEYCLOAK_ADMIN_USERNAME` and
    `KEYCLOAK_ADMIN_PASSWORD` on `galerie-java-api`, and set
    `KEYCLOAK_ADMIN_CLIENT_ID` to `admin-cli`. The app uses them for Keycloak
-   administration. The blueprint sets the application login name to `De Ruiter`;
-   set `KEYCLOAK_REALM_ADMIN_PASSWORD` on `galerie-java-api` to provision that
+   administration. The blueprint sets the application login name to
+   `de-ruiter`; set `KEYCLOAK_REALM_ADMIN_PASSWORD` on `galerie-java-api` to provision that
    application user, and optionally set `KEYCLOAK_REALM_ADMIN_EMAIL`. Startup
    creates or updates the user in the `movie_project_keycloak` realm and assigns
    the application `ADMIN` realm role. Its login is `de-ruiter` and its display

@@ -54,8 +54,11 @@ be configured separately in its dashboard.
 - The Java API receives the `galerie-app-db` internal host, port, database, username, and password through the `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` variables. The Spring profile assembles these into a JDBC URL.
 - If you created a standalone Java web service instead of the `galerie-java-api` blueprint service, add those five variables and link each to the corresponding **internal** property of `galerie-app-db` in that service's environment. Alternatively, set `DATABASE_URL` to a valid JDBC URL beginning `jdbc:postgresql://`. Ensure the database and web service are in the same Render region.
 - The Java API listens on Render's `PORT`.
-- Render health checks use `/health` for the reconstruction service,
-  `/health/ready` for Keycloak, and `/actuator/health` for Spring Boot.
+- Render health checks use `/health` for the reconstruction service, the
+  `movie_project_keycloak` realm's OpenID Connect metadata endpoint for
+  Keycloak, and `/actuator/health` for Spring Boot. Keycloak's health endpoints
+  are served on its separate management port by default, so Render checks the
+  realm metadata on the public HTTP port instead.
 - The frontend uses Nginx SPA fallback so React routes such as `/antiques/:id` and `/checkout/success` work after refresh.
 
 ## Local production-like compose

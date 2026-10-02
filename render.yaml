@@ -35,7 +35,7 @@ services:
     dockerfilePath: ./keycloak/Dockerfile
     dockerContext: ./keycloak
     plan: standard
-    healthCheckPath: /health/ready
+    healthCheckPath: /realms/movie_project_keycloak/.well-known/openid-configuration
     autoDeploy: true
     envVars:
       - key: KC_HOSTNAME

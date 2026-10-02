@@ -31,8 +31,9 @@ before syncing; changing a plan can affect monthly costs.
    name is `De Ruiter`. This is not a Keycloak master-realm superadmin account.
    Set `STRIPE_SECRET_KEY` only when enabling payments.
 4. The Keycloak image imports the production realm and frontend client from
-   `keycloak/realms/galerie-production-realm.json`; no manual realm/client setup
-   is required.
+   `keycloak/realms/galerie-production-realm.json`, copied into the image using
+   Keycloak's required `movie_project_keycloak-realm.json` import filename; no
+   manual realm/client setup is required.
 
 GitHub Actions generates temporary, random credentials for its isolated service
 smoke test. These credentials are not used in production; Render's secrets must

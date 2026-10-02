@@ -34,13 +34,6 @@ jobs:
 
   boot-run:
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    env:
-      KEYCLOAK_ADMIN_USERNAME: ${{ secrets.KEYCLOAK_ADMIN_USERNAME }}
-      KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
-      KEYCLOAK_REALM_ADMIN_USERNAME: De Ruiter
-      KEYCLOAK_REALM_ADMIN_EMAIL: ${{ secrets.KEYCLOAK_REALM_ADMIN_EMAIL }}
-      KEYCLOAK_REALM_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_REALM_ADMIN_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -53,9 +46,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          : "${KEYCLOAK_ADMIN_USERNAME:?Configure the KEYCLOAK_ADMIN_USERNAME Actions secret}"
-          : "${KEYCLOAK_ADMIN_PASSWORD:?Configure the KEYCLOAK_ADMIN_PASSWORD Actions secret}"
-          : "${KEYCLOAK_REALM_ADMIN_PASSWORD:?Configure the KEYCLOAK_REALM_ADMIN_PASSWORD Actions secret}"
+          export KEYCLOAK_ADMIN_USERNAME=ci-bootstrap
+          export KEYCLOAK_ADMIN_PASSWORD="$(openssl rand -hex 32)"
+          export KEYCLOAK_REALM_ADMIN_USERNAME="De Ruiter"
+          export KEYCLOAK_REALM_ADMIN_PASSWORD="$(openssl rand -hex 32)"
           ./gradlew bootRun > "$RUNNER_TEMP/galerie-bootRun.log" 2>&1 &
           app_pid=$!
           cleanup() {

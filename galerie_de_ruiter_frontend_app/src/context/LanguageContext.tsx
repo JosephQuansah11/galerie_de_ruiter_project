@@ -68,7 +68,6 @@ export function LanguageProvider({
   return (
     <LanguageContext.Provider value={value}>
       {children}
-      <LanguageSwitcher />
     </LanguageContext.Provider>
   );
 }

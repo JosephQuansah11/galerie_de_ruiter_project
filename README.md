@@ -38,8 +38,8 @@ persistent PostgreSQL service, such as the resources declared in `render.yaml`.
 
 ## Production Docker stack
 
-The production Compose file runs the frontend, Spring API, Keycloak, the
-reconstruction API, and two persistent PostgreSQL databases. Supply required
+The production Compose file runs the frontend, Spring API, Keycloak, Ollama,
+the reconstruction API, and two persistent PostgreSQL databases. Supply required
 credentials and public service URLs through the environment or an untracked
 `.env` file, then run:
 
@@ -54,8 +54,11 @@ Required variables include `POSTGRES_PASSWORD`, `KEYCLOAK_DB_PASSWORD`,
 `PUBLIC_KEYCLOAK_ISSUER_URI`, and the public frontend URLs used by the Vite
 build (`VITE_JAVA_API_URL`, `VITE_JAVA_BACKEND_URL`, `VITE_API_URL`,
 `VITE_KEYCLOAK_URL`, `VITE_RECONSTRUCTION_API_URL`, and `VITE_PYTHON_API_URL`).
-Set `OLLAMA_BASE_URL` to an Ollama service reachable by the Spring API and
-`OLLAMA_MODEL` to a model installed on that service.
+The Compose stack builds and runs Ollama as a container, pulls `llama3.2:3b`
+on first start, and keeps model files in a persistent volume. The Ollama
+container is not considered healthy until the configured model is available,
+so the Java API waits for the model before starting. Set `OLLAMA_MODEL` to
+another model if needed; the Ollama service and Java API use the same value.
 The Compose stack publishes web services on all interfaces by default; set
 `BIND_ADDRESS` only when an intentional host-interface restriction is needed.
 The app and Keycloak databases have separate containers and persistent volumes.
@@ -78,18 +81,21 @@ managed databases are the production PostgreSQL services; the Docker Compose
 PostgreSQL containers are for deployments that use the Compose stack.
 
 GitHub Actions builds both the frontend and backend, runs backend tests, and
-executes a Docker-backed startup smoke test. Unit tests use an in-memory
-database; the smoke test starts the real PostgreSQL, Keycloak, and
-reconstruction containers. The smoke test generates temporary random
-credentials and does not require production secrets. Render auto-deploys the
-blueprint independently of the Actions workflow, so runtime secrets must be
+executes Docker-backed development and production-profile smoke tests. The
+production-profile test runs against an isolated PostgreSQL 17 service with
+Open Session in View disabled, exercises the public catalogue, admin category
+and antique writes, image persistence, CSRF/CORS behavior, chat context, and
+appointment persistence. It substitutes a local Ollama HTTP stub and does not
+connect to or write to production services. The development startup smoke test
+starts PostgreSQL, Keycloak, and the reconstruction containers with temporary
+credentials. Neither workflow requires production secrets. Render auto-deploys
+the blueprint independently of the Actions workflow, so runtime secrets must be
 entered in the corresponding Render service settings.
 
 ## Purchases
 
 The application does not process online payments. Contact the gallery to
-arrange purchases. The gallery chatbot uses Ollama; the configured model
-service must be reachable from the backend.
+arrange purchases. The gallery chatbot uses the Ollama container service.
 
 ## About page
 

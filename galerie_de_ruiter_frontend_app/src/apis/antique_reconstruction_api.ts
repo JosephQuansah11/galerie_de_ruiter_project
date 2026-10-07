@@ -1,4 +1,5 @@
 import type Antique from "@/models/antiques/Antique";
+import { csrfHeaders } from "@/apis/client";
 import { axiosInstance, backendBaseURL } from "./backendClient";
 
 function fileToBase64(file: Blob): Promise<string> {
@@ -19,7 +20,7 @@ export async function saveAntiqueReconstruction(id: string, views: { position: s
   })));
   const response = await axiosInstance.put<Antique>(`${backendBaseURL}/api/antiques/${id}/reconstruction`, {
     views: reconstructionViews, modelUrl: modelUrl ?? null,
-  });
+  }, { headers: await csrfHeaders() });
   return response.data;
 }
 export async function getAntiqueReconstructionImages(id: string): Promise<{ position: string; imageData: string; contentType: string }[]> {

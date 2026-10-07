@@ -33,9 +33,7 @@ public class AntiqueReconstructionController {
     @PreAuthorize("hasRole('ADMIN')")
     public AntiqueResponse save(@PathVariable UUID id, @RequestBody AntiqueReconstructionRequest request) {
         
-        return AntiqueResponse.from(
-            antiques.saveReconstruction(id, request)
-        ); 
+        return antiques.saveReconstructionResponse(id, request);
     }
 
     @GetMapping

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useShopping } from "@/context/ShoppingContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { formatEuroAmount } from "@/i18n";
+import { resolveAntiqueImageUrl } from "@/models/antiques/Antique";
 
 export default function WishlistPage() {
   const navigate = useNavigate();
@@ -15,7 +16,9 @@ export default function WishlistPage() {
       {wishlist.length === 0 ? <div className="catalogue-state"><Heart size={28} /><span>{t("wishlistEmpty")}</span></div> : <div className="shopping-list">
         {wishlist.map((antique) => (
           <article className="shopping-row" key={antique.id}>
-            <div className="shopping-thumb">{antique.title.slice(0, 1)}</div>
+            <div className="shopping-thumb">{(antique.imageUrl ?? antique.imageUrls?.[0])
+              ? <img src={resolveAntiqueImageUrl(antique.imageUrl ?? antique.imageUrls?.[0])} alt="" loading="lazy" />
+              : antique.title.slice(0, 1)}</div>
             <div className="shopping-row-copy">
               <span className="catalogue-artist">
                 {antique.artist?.displayName ?? antique.artist?.name ?? t("galerieCollection")}

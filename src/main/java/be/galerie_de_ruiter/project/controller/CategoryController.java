@@ -26,25 +26,25 @@ public class CategoryController {
 
     @GetMapping
     public List<CategoryResponse> visible() {
-        return categories.findVisible().stream().map(CategoryResponse::from).toList();
+        return categories.findVisibleResponses();
     }
 
     @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
     public List<CategoryResponse> all() {
-        return categories.findAll().stream().map(CategoryResponse::from).toList();
+        return categories.findAllResponses();
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public CategoryResponse create(@Valid @RequestBody CategoryRequest request) {
-        return CategoryResponse.from(categories.create(request));
+        return categories.createResponse(request);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public CategoryResponse update(@PathVariable UUID id, @Valid @RequestBody CategoryRequest request) {
-        return CategoryResponse.from(categories.update(id, request));
+        return categories.updateResponse(id, request);
     }
 
     @DeleteMapping("/{id}")

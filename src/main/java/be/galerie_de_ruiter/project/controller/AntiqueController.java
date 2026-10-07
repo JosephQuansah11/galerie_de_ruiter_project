@@ -22,11 +22,11 @@ public class AntiqueController {
 	public AntiqueController(AntiqueService antiques) { this.antiques = antiques; }
 
 	@GetMapping
-	public List<AntiqueResponse> findAll() { return antiques.findAll().stream().map(AntiqueResponse::from).toList(); }
+	public List<AntiqueResponse> findAll() { return antiques.findAllResponses(); }
 
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
 	public AntiqueResponse create(@Valid @RequestBody AntiqueRequest request, @AuthenticationPrincipal Jwt jwt) {
-		return AntiqueResponse.from(antiques.create(request, jwt));
+		return antiques.createResponse(request, jwt);
 	}
 }

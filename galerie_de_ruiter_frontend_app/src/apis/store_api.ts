@@ -12,5 +12,7 @@ export async function getStoreLocation(): Promise<StoreLocation> {
   return (await axiosInstance.get<StoreLocation>(`${backendBaseURL}/api/location`)).data;
 }
 export async function updateStoreLocation(location: Omit<StoreLocation, "id">): Promise<StoreLocation> {
-  return (await axiosInstance.put<StoreLocation>(`${backendBaseURL}/api/location`, location)).data;
+  return (await axiosInstance.put<StoreLocation>(`${backendBaseURL}/api/location`, location, {
+    headers: await csrfHeaders(),
+  })).data;
 }

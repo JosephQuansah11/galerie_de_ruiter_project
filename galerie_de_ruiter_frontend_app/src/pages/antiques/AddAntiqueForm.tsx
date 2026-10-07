@@ -18,15 +18,18 @@ export function AddAntiqueForm({ draft, lookups, selectArtist }: { draft: Draft;
   return <>
     {(draft.message || lookups.error) && <Alert variant="danger">{t(draft.message ?? lookups.error!)}</Alert>}
     <Form onSubmit={draft.submit}>
-      <ArtistSearch query={lookups.query} setQuery={(value) => { lookups.setQuery(value); draft.update("artistId", ""); }}
-        designers={lookups.designers} choose={selectArtist} />
-      <DesignerCreator newArtist={lookups.newArtist} setNewArtist={lookups.setNewArtist}
-        creating={lookups.creating} addArtist={lookups.addArtist} />
-      <AntiqueIdentityFields form={draft.form} update={draft.update} categories={lookups.categories} />
-      <AntiqueMediaFields form={draft.form} update={draft.update} fileNames={draft.fileNames} selectImages={draft.selectImages} />
-      <AntiqueDescriptionFields form={draft.form} update={draft.update} />
+      <fieldset disabled={Boolean(draft.createdId)} className="border-0 p-0">
+        <ArtistSearch query={lookups.query} setQuery={(value) => { lookups.setQuery(value); draft.update("artistId", ""); }}
+          designers={lookups.designers} choose={selectArtist} />
+        <DesignerCreator newArtist={lookups.newArtist} setNewArtist={lookups.setNewArtist}
+          creating={lookups.creating} addArtist={lookups.addArtist} />
+        <AntiqueIdentityFields form={draft.form} update={draft.update} categories={lookups.categories} />
+        <AntiqueMediaFields form={draft.form} update={draft.update} fileNames={draft.fileNames} selectImages={draft.selectImages} />
+        <AntiqueDescriptionFields form={draft.form} update={draft.update} />
+      </fieldset>
       <Button className="btn btn-outline-secondary" type="submit" disabled={draft.saving}>
-        {draft.saving ? <Spinner size="sm" /> : <Save size={16} />} {draft.saving ? t("saving") : t("saveAntique")}
+        {draft.saving ? <Spinner size="sm" /> : <Save size={16} />}
+        {draft.saving ? t("saving") : t(draft.createdId ? "retryImageUpload" : "saveAntique")}
       </Button>
     </Form>
   </>;

@@ -6,6 +6,7 @@ import be.galerie_de_ruiter.project.domain.Designer;
 import be.galerie_de_ruiter.project.dto.AntiqueReconstructionRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueReconstructionRequest.ReconstructionViewDto;
 import be.galerie_de_ruiter.project.dto.AntiqueRequest;
+import be.galerie_de_ruiter.project.dto.AntiqueResponse;
 import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueRepository;
 import be.galerie_de_ruiter.project.repository.DesignerRepository;
@@ -39,6 +40,11 @@ public class AntiqueService {
         return antiques.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public List<AntiqueResponse> findAllResponses() {
+        return antiques.findAll().stream().map(AntiqueResponse::from).toList();
+    }
+
     @Transactional
     public Antique create(AntiqueRequest request, Jwt jwt) {
         Designer artist = designerRepository
@@ -62,6 +68,11 @@ public class AntiqueService {
         );
         antique.setModelUrl(request.modelUrl());
         return antiques.save(antique);
+    }
+
+    @Transactional
+    public AntiqueResponse createResponse(AntiqueRequest request, Jwt jwt) {
+        return AntiqueResponse.from(create(request, jwt));
     }
 
 @Transactional
@@ -116,6 +127,11 @@ for (ReconstructionViewDto view : request.views()) {
     }
 
     return antiques.save(antique);
+}
+
+@Transactional
+public AntiqueResponse saveReconstructionResponse(UUID id, AntiqueReconstructionRequest request) {
+    return AntiqueResponse.from(saveReconstruction(id, request));
 }
 
 @Transactional(readOnly = true)

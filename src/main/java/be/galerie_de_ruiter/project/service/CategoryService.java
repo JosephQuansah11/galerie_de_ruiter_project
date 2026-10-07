@@ -1,6 +1,7 @@
 package be.galerie_de_ruiter.project.service;
 
 import be.galerie_de_ruiter.project.domain.Category;
+import be.galerie_de_ruiter.project.dto.CategoryResponse;
 import be.galerie_de_ruiter.project.dto.CategoryRequest;
 import be.galerie_de_ruiter.project.repository.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -38,6 +39,24 @@ public class CategoryService {
     @Transactional(readOnly = true)
     public List<Category> findAll() {
         return categories.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CategoryResponse> findVisibleResponses() {
+        return findVisible().stream().map(CategoryResponse::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CategoryResponse> findAllResponses() {
+        return categories.findAll().stream().map(CategoryResponse::from).toList();
+    }
+
+    public CategoryResponse createResponse(CategoryRequest request) {
+        return CategoryResponse.from(create(request));
+    }
+
+    public CategoryResponse updateResponse(UUID id, CategoryRequest request) {
+        return CategoryResponse.from(update(id, request));
     }
 
     public Category create(CategoryRequest request) {

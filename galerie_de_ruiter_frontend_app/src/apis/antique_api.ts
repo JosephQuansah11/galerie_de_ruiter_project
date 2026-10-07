@@ -1,5 +1,6 @@
 import type Antique from "@/models/antiques/Antique";
 import type { AntiqueForm } from "@/models/antiques/Antique";
+import { csrfHeaders } from "@/apis/client";
 import { axiosInstance, backendBaseURL } from "./backendClient";
 
 export async function getAllAntiques(): Promise<Antique[]> {
@@ -8,11 +9,17 @@ export async function getAllAntiques(): Promise<Antique[]> {
   return Array.isArray(payload) ? payload : payload.content ?? payload.antiques ?? payload.data ?? [];
 }
 export async function addAntique(antique: AntiqueForm): Promise<Antique> {
-  const response = await axiosInstance.post<Antique>(`${backendBaseURL}/api/antiques`, antique);
+  const response = await axiosInstance.post<Antique>(`${backendBaseURL}/api/antiques`, antique, {
+    timeout: 60000,
+    headers: await csrfHeaders(),
+  });
   return response.data;
 }
 export async function uploadAntiqueImage(id: string, image: File): Promise<void> {
   const body = new FormData();
   body.append("image", image);
-  await axiosInstance.put(`${backendBaseURL}/api/antiques/${id}/image`, body, { headers: { "Content-Type": undefined } });
+  await axiosInstance.put(`${backendBaseURL}/api/antiques/${id}/image`, body, {
+    timeout: 60000,
+    headers: { ...(await csrfHeaders()), "Content-Type": undefined },
+  });
 }

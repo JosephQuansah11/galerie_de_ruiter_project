@@ -6,6 +6,7 @@ from string import Template
 from urllib.request import Request, urlopen
 
 from .config import settings
+from .computer_vision import extract_foreground_views
 from .models import JobStatus, ReconstructionJob
 from .store import JobStore
 
@@ -64,8 +65,19 @@ class LocalEngine(ReconstructionEngine):
             return store.save(job)
 
         output_dir = store.output_dir(job.job_id)
+        try:
+            foreground_dir, masks_dir = await asyncio.to_thread(
+                extract_foreground_views, input_dir
+            )
+        except Exception as error:
+            job.status = JobStatus.failed
+            job.error = f"Computer-vision foreground extraction failed: {error}"
+            return store.save(job)
+
         command = Template(settings.local_engine_command).safe_substitute(
-            input_dir=str(input_dir.resolve()),
+            input_dir=str(foreground_dir.resolve()),
+            raw_input_dir=str(input_dir.resolve()),
+            mask_dir=str(masks_dir.resolve()),
             output_dir=str(output_dir.resolve()),
             job_id=job.job_id,
         )

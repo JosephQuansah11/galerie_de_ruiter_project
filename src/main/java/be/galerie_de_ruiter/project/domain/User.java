@@ -1,6 +1,7 @@
 package be.galerie_de_ruiter.project.domain;
 
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,6 +12,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Setter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,6 +36,14 @@ public class User {
 	private String displayName;
 	private String firstName;
     private String lastName;
+
+	@Column(columnDefinition = "bytea")
+	@JsonIgnore
+	private byte[] avatarImage;
+
+	@Column(length = 100)
+	@JsonIgnore
+	private String avatarContentType;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "app_user_roles", joinColumns = @JoinColumn(name = "user_id"))

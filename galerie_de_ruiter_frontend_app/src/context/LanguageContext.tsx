@@ -1,41 +1,16 @@
 import {
-  createContext,
-  useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import i18n from "@/i18n";
-import { useTranslation } from "react-i18next";
-
-// const languages = [
-//   { code: "en", label: "English" },
-//   { code: "fr", label: "French" },
-//   { code: "nl-NL", label: "Netherlands Dutch" },
-//   { code: "de", label: "German" },
-//   { code: "nl-BE", label: "Belgian Dutch" },
-// ] as const;
-
-export const languages = [
-  { code: "en", label: "English", locale: "en-BE" },
-  { code: "fr", label: "Français", locale: "fr-BE" },
-  { code: "nl-NL", label: "Nederlands (Nederland)", locale: "nl-NL" },
-  { code: "de", label: "Deutsch", locale: "de-DE" },
-  { code: "nl-BE", label: "Nederlands (België)", locale: "nl-BE" },
-] as const;
-
+import { languages } from "./languageOptions";
+import { LanguageContext } from "./languageContextCore";
+export { useLanguage } from "./languageContextCore";
+export { languages } from "./languageOptions";
+export { LanguageSwitcher } from "./LanguageSwitcher";
 type LanguageCode = (typeof languages)[number]["code"];
-type LanguageContextValue = {
-  language: LanguageCode;
-  locale: string;
-  setLanguage: (language: LanguageCode) => void;
-  t: (key: string, options?: Record<string, unknown>) => string;
-};
-
-const LanguageContext = createContext<LanguageContextValue | undefined>(
-  undefined,
-);
 
 export function LanguageProvider({
   children,
@@ -70,38 +45,4 @@ export function LanguageProvider({
       {children}
     </LanguageContext.Provider>
   );
-}
-
-function LanguageSwitcher() {
-  const { i18n } = useTranslation();
-  const { language, locale, setLanguage } = useLanguage();
-
-  const changeLanguage = (code: string) => {
-    const selected = languages.find((item) => item.code === code);
-    if (!selected) return;
-    setLanguage(selected.code);
-    void i18n.changeLanguage(selected.code);
-    document.documentElement.lang = selected.locale;
-  };
-
-  return (
-    <select
-      value={language}
-      onChange={(e) => changeLanguage(e.target.value)}
-      aria-label={i18n.t("language")}
-    >
-      {languages.map((lang) => (
-        <option key={lang.code} value={lang.code}>
-          {lang.label}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-export function useLanguage() {
-  const context = useContext(LanguageContext);
-  if (!context)
-    throw new Error("useLanguage must be used inside LanguageProvider");
-  return context;
 }

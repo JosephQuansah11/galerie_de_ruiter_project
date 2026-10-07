@@ -22,6 +22,18 @@ Content-Type: application/x-www-form-urlencoded
 
 grant_type=password&client_id={{keycloak_client_id}}&username={{keycloak_admin_username}}&password={{keycloak_admin_password}}
 
+
+### Create admin realm role
+# @name createAdminRole
+POST {{keycloak}}/admin/realms/{{keycloak_app_realm}}/roles
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "name": "Galerie-Admin",
+  "description": "Application administrator"
+}
+
 ### Create the application administrator (expect HTTP 201)
 # @name createRealmAdmin
 POST {{keycloak}}/admin/realms/{{keycloak_app_realm}}/users
@@ -41,6 +53,61 @@ Content-Type: application/json
     }
   ]
 }
+
+### Get admin realm role
+# @name applicationAdminRole
+GET {{keycloak}}/admin/realms/{{keycloak_app_realm}}/roles/Galerie-Admin
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+
+
+### Assign admin role to admin user
+POST {{keycloak}}/admin/realms/{{keycloak_app_realm}}/users/{{realm_admin_user_id}}/role-mappings/realm
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+Content-Type: application/json
+
+[
+  {
+    "id": "{{applicationAdminRole.response.body.$.id}}",
+    "name": "{{applicationAdminRole.response.body.$.name}}"
+  }
+]
+
+### Assign admin role to admin user
+POST {{keycloak}}/admin/realms/{{keycloak_app_realm}}/users/{{realm_admin_user_id}}/role-mappings/realm
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+Content-Type: application/json
+
+[
+  {
+    "id": "{{applicationAdminRole.response.body.$.id}}",
+    "name": "{{applicationAdminRole.response.body.$.name}}"
+  }
+]
+
+
+### Create admin client role
+# @name createClientAdminRole
+POST {{keycloak}}/admin/realms/{{keycloak_app_realm}}/clients/{{application_client_uuid}}/roles
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+Content-Type: application/json
+
+{
+  "name": "admin",
+  "description": "Administrator of movie_project_client"
+}
+
+
+### Assign client admin role to user
+POST {{keycloak}}/admin/realms/{{keycloak_app_realm}}/users/{{realm_admin_user_id}}/role-mappings/clients/{{application_client_uuid}}
+Authorization: Bearer {{keycloakAdminToken.response.body.$.access_token}}
+Content-Type: application/json
+
+[
+  {
+    "id": "{{createClientAdminRole.response.body.$.id}}",
+    "name": "{{createClientAdminRole.response.body.$.name}}"
+  }
+]
 
 ### Look up the new user's Keycloak ID
 # @name realmAdminUser

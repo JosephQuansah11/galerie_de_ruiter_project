@@ -20,9 +20,9 @@ public class AboutContentService {
 
             This pop-up is an invitation to discover a collection shaped by curiosity, travel and a genuine appreciation for beautiful objects.
 
-            Behind Galerie de Ruiter is **Dhirk Dhoey**, an antique dealer with a passion for discovering objects that have lived a life before they arrive here. His work takes him across borders and cultures, searching for antiques, vintage pieces, art, furniture and unusual objects that catch his eye.
+            Behind Galerie de Ruiter is **Dirk Dhoey**, an antique dealer with a passion for discovering objects that have lived a life before they arrive here. His work takes him across borders and cultures, searching for antiques, vintage pieces, art, furniture and unusual objects that catch his eye.
 
-            For Dhirk, collecting is not simply about finding something old.
+            For Dirk, collecting is not simply about finding something old.
 
             It is about **seeing beauty where others might overlook it**.
 
@@ -31,7 +31,7 @@ public class AboutContentService {
             ## The story behind Galerie de Ruiter
             Galerie de Ruiter has grown from a love of objects that carry something with them: a sense of history, craftsmanship, character or simply an unmistakable aesthetic.
 
-            Dhirk travels internationally to source pieces, meeting people, visiting collections and discovering objects in places where their stories have been developing for decades—or sometimes much longer.
+            Dirk travels internationally to source pieces, meeting people, visiting collections and discovering objects in places where their stories have been developing for decades—or sometimes much longer.
 
             Every acquisition begins with the same question:
 
@@ -47,9 +47,9 @@ public class AboutContentService {
 
             ---
 
-            # Dhirk Dhoey
+            # Dirk Dhoey
             ### Antique dealer • Collector • Discoverer
-            Dhirk Dhoey is an antique dealer driven by **curiosity and a personal appreciation for beauty**.
+            Dirk Dhoey is an antique dealer driven by **curiosity and a personal appreciation for beauty**.
 
             Rather than limiting himself to one period, style or category, he looks across the world of **antiques, art, vintage, design, furniture and decorative objects**.
 
@@ -108,7 +108,7 @@ public class AboutContentService {
             ---
 
             ## The art of discovering
-            For Dhirk, the search itself is part of the adventure.
+            For Dirk, the search itself is part of the adventure.
 
             Travelling around the world means encountering different cultures, different approaches to craftsmanship and different ideas about what makes an object valuable.
 

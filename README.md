@@ -54,8 +54,8 @@ Required variables include `POSTGRES_PASSWORD`, `KEYCLOAK_DB_PASSWORD`,
 `PUBLIC_KEYCLOAK_ISSUER_URI`, and the public frontend URLs used by the Vite
 build (`VITE_JAVA_API_URL`, `VITE_JAVA_BACKEND_URL`, `VITE_API_URL`,
 `VITE_KEYCLOAK_URL`, `VITE_RECONSTRUCTION_API_URL`, and `VITE_PYTHON_API_URL`).
-Set `STRIPE_SUCCESS_URL` and `STRIPE_CANCEL_URL` to public frontend routes even
-when Stripe payments are disabled.
+Set `OLLAMA_BASE_URL` to an Ollama service reachable by the Spring API and
+`OLLAMA_MODEL` to a model installed on that service.
 The Compose stack publishes web services on all interfaces by default; set
 `BIND_ADDRESS` only when an intentional host-interface restriction is needed.
 The app and Keycloak databases have separate containers and persistent volumes.
@@ -85,15 +85,11 @@ credentials and does not require production secrets. Render auto-deploys the
 blueprint independently of the Actions workflow, so runtime secrets must be
 entered in the corresponding Render service settings.
 
-## Stripe bank payments
+## Purchases
 
-Stripe Checkout supports cards and eligible European bank methods including
-iDEAL (bank selection), Bancontact, EPS and SEPA Direct Debit. Stripe filters
-the available methods according to the customer's location and the Stripe
-account's enabled payment methods. Enable the desired methods for both test
-and live mode in the Stripe Dashboard's payment-method settings. Configure
-`STRIPE_SECRET_KEY` and the checkout success/cancel URLs in the backend
-environment.
+The application does not process online payments. Contact the gallery to
+arrange purchases. The gallery chatbot uses Ollama; the configured model
+service must be reachable from the backend.
 
 ## About page
 

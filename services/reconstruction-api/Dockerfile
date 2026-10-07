@@ -4,7 +4,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 RUN mkdir -p /app/data/jobs /app/data/artifacts
-ENV RECONSTRUCTION_MODE=local
+ENV RECONSTRUCTION_MODE=disabled
 ENV DATA_DIR=/app/data
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log", "--log-level", "critical"]

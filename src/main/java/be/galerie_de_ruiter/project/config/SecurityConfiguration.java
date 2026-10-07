@@ -26,7 +26,9 @@ public class SecurityConfiguration {
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-			.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+			.csrf(csrf -> csrf
+				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+				.ignoringRequestMatchers("/api/chat"))
 			// .csrf(csrf->csrf.disable())
 			// .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(authorize -> authorize
@@ -40,7 +42,7 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/location").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/about").permitAll()
-				.requestMatchers(HttpMethod.POST, "/api/chat").authenticated()
+				.requestMatchers(HttpMethod.POST, "/api/chat").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/me").hasAnyRole("USER", "ADMIN")
 				.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
 				// .requestMatchers(HttpMethod.GET, "http://localhost:11434/api/chat").permitAll()

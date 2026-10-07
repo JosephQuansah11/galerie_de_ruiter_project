@@ -40,11 +40,10 @@ keycloak:
     first-name: ${KEYCLOAK_REALM_ADMIN_FIRST_NAME:}
     last-name: ${KEYCLOAK_REALM_ADMIN_LAST_NAME:}
     email: ${KEYCLOAK_REALM_ADMIN_EMAIL:}
-    password: ${KEYCLOAK_REALM_ADMIN_PASSWORD:}
+    password: ${KEYCLOAK_REALM_ADMIN_PASSWORD:admin}
 
-stripe:
-  secret-key: ${STRIPE_SECRET_KEY:}
-  success-url: ${STRIPE_SUCCESS_URL}
-  cancel-url: ${STRIPE_CANCEL_URL}
+ollama:
+  base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+  model: ${OLLAMA_MODEL:llama3.2:3b}
 
 FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}

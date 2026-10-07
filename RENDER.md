@@ -32,8 +32,12 @@ increases costs; review the current price in Render before syncing.
    creates or updates the user in the `movie_project_keycloak` realm and assigns
    the application `ADMIN` realm role. Its login is `de-ruiter` and its display
    name is `De Ruiter`. This is not a Keycloak master-realm superadmin account.
-   Set `STRIPE_SECRET_KEY` only when enabling payments.
-4. The Keycloak image imports the production realm and frontend client from
+4. Set `OLLAMA_BASE_URL` on `galerie-java-api` to the base URL of an Ollama API
+   reachable from the Java service, and ensure the configured model is
+   available there. The blueprint leaves this environment value for you to
+   supply because Render does not host the model runtime in this stack. The
+   default model is `llama3.2:3b`; set `OLLAMA_MODEL` if using another model.
+5. The Keycloak image imports the production realm and frontend client from
    `keycloak/realms/galerie-production-realm.json`, copied into the image using
    Keycloak's required `movie_project_keycloak-realm.json` import filename; no
    manual realm/client setup is required.
@@ -44,7 +48,7 @@ be configured separately in its dashboard.
 
 ## Important production values
 
-- Do not commit database passwords, Keycloak passwords, or Stripe keys.
+- Do not commit database passwords or Keycloak passwords.
 - `sync: false` variables in `render.yaml` must be populated in Render's
   dashboard. In particular, set `KC_BOOTSTRAP_ADMIN_USERNAME`,
   `KC_BOOTSTRAP_ADMIN_PASSWORD`, `KEYCLOAK_ADMIN_USERNAME`,
@@ -56,7 +60,11 @@ be configured separately in its dashboard.
   `VITE_KEYCLOAK_CLIENT_ID=movie_project_frontend_client`. They are public
   client configuration, not secrets. The Webpack build injects these values
   from Render's build environment; deploy the frontend after changing them.
-- `FRONTEND_ORIGIN`, Stripe success/cancel URLs, and Keycloak issuer URL must match the final Render service URLs.
+- `FRONTEND_ORIGIN` and the Keycloak issuer URL must match the final Render service URLs.
+- The chatbot sends requests through `galerie-java-api`. Set the `OLLAMA_BASE_URL`
+  secret/environment value to a running Ollama endpoint that the backend can
+  reach; ensure `OLLAMA_MODEL` is installed at that endpoint. The Render
+  blueprint cannot run the language model itself.
 - The Java API receives the `galerie-app-db` internal host, port, database, username, and password through the `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` variables. The Spring profile assembles these into a JDBC URL.
 - If you created a standalone Java web service instead of the `galerie-java-api` blueprint service, add those five variables and link each to the corresponding **internal** property of `galerie-app-db` in that service's environment. Alternatively, set `DATABASE_URL` to a valid JDBC URL beginning `jdbc:postgresql://`. Ensure the database and web service are in the same Render region.
 - The Java API listens on Render's `PORT`.
@@ -65,7 +73,7 @@ be configured separately in its dashboard.
   Keycloak, and `/actuator/health` for Spring Boot. Keycloak's health endpoints
   are served on its separate management port by default, so Render checks the
   realm metadata on the public HTTP port instead.
-- The frontend uses Nginx SPA fallback so React routes such as `/antiques/:id` and `/checkout/success` work after refresh.
+- The frontend uses SPA fallback so React routes such as `/antiques/:id` work after refresh.
 
 ## Local production-like compose
 

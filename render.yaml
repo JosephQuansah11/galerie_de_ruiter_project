@@ -23,7 +23,7 @@ services:
       sizeGB: 1
     envVars:
       - key: RECONSTRUCTION_MODE
-        value: local
+        value: disabled
       - key: CORS_ORIGINS
         value: https://galerie-frontend.onrender.com
       - key: DATA_DIR
@@ -132,12 +132,10 @@ services:
         value: ""
       - key: KEYCLOAK_REALM_ADMIN_PASSWORD
         sync: false
-      - key: STRIPE_SECRET_KEY
+      - key: OLLAMA_BASE_URL
         sync: false
-      - key: STRIPE_SUCCESS_URL
-        value: https://galerie-frontend.onrender.com/checkout/success
-      - key: STRIPE_CANCEL_URL
-        value: https://galerie-frontend.onrender.com/checkout/cancel
+      - key: OLLAMA_MODEL
+        value: llama3.2:3b
 
   - type: web
     name: galerie-frontend

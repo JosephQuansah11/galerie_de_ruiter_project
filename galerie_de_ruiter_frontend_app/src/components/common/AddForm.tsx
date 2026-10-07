@@ -1,5 +1,6 @@
 import React, {  useState } from "react";
 import { Form } from "react-bootstrap";
+import { Button } from "@/components/ReactButton";
 import { AntiqueForm } from "../../models/antiques/Antique";
 import { AddAntiqueItem } from "../../hooks/useAddAntiques";
 import { FormBaseEntity } from "../../types/types";
@@ -115,7 +116,7 @@ export function AddForm<T extends FormBaseEntity>({ items, onSubmit, buttonName 
             <Form action="" noValidate validated={validated} method="post" onSubmit={handleSubmit} style={{ width: '100%' }}>
                 {submissionError && <div className="alert alert-danger" role="alert">{t(submissionError)}</div>}
                 {generateFormFields(items)}
-                <button type="submit" style={{ width: '100%' }} className="btn btn-primary mt-3">{buttonName}</button>
+                <Button as="button" type="submit" style={{ width: '100%' }} className="btn btn-primary mt-3">{buttonName}</Button>
             </Form>
         </div>
     )

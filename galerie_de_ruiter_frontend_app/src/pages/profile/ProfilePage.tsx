@@ -14,7 +14,12 @@ export function ProfilePage() {
       <Sparkles size={22} />
       <span>{t("galerieMember")}</span>
       </div>
-      <Avatar name={name} size="large" />
+      <Avatar
+        name={name}
+        firstName={auth.profile?.firstName}
+        lastName={auth.profile?.lastName}
+        size="large"
+      />
       <div className="profile-hero-copy">
       <div className="eyebrow">{t("accountCentre")}</div>
       <h1>{name}</h1>

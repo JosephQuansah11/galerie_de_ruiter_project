@@ -1,10 +1,9 @@
+import { Button } from "@/components/ReactButton";
 import {
   Film,
   LayoutDashboard,
   LogIn,
   LogOut,
-  SlidersHorizontal,
-  UserRound,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
@@ -42,22 +41,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Film size={18} />
             {t("movieLibrary")}
           </NavLink>
-          <NavLink
-            to="/profile"
-            className={({ isActive }) => (isActive ? "active" : "")}
-          >
-            <UserRound size={18} />
-            {t("myProfile")}
-          </NavLink>
         </nav>
         <div className="sidebar-bottom">
-          <NavLink
-            to="/preferences"
-            className={({ isActive }) => (isActive ? "active" : "")}
-          >
-            <SlidersHorizontal size={18} />
-            {t("preferences")}
-          </NavLink>
           <div className="status">
             <span className="status-dot" />
             {t("apiConnected")}
@@ -79,17 +64,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </>
                 }
               >
-                <button className="menu-action" onClick={auth.logout}>
+                <Button as="button" className="menu-action" onClick={auth.logout}>
                   <LogOut size={15} />
                   {t("signOut")}
-                </button>
+                </Button>
               </DropdownPanel>
             ) : (
               <>
-                <button className="quiet-button" onClick={auth.login}>
+                <Button as="button" className="quiet-button" onClick={auth.login}>
                   <LogIn size={16} />
                   {t("signIn")}
-                </button>
+                </Button>
                 <NavLink className="primary-button" to="/register">
                   {t("createAccountButton")}
                 </NavLink>

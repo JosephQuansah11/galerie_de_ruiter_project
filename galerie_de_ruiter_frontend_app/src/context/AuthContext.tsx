@@ -191,7 +191,9 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       token,
       profile,
       roles,
-      isAdmin: roles.some((role) => role.toUpperCase() === "ADMIN"),
+      isAdmin: roles.some(
+        (role) => role.replace(/^ROLE_/i, "").toUpperCase() === "ADMIN",
+      ),
       login: () => keycloak.login({ redirectUri: `${window.location.origin}/dashboard` }),
       logout: () => keycloak.logout(),
       register,

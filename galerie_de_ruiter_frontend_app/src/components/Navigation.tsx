@@ -3,8 +3,9 @@ import Navbar from "react-bootstrap/Navbar";
 
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, LibraryBig, Map, Plus, Tags, MessageCircle, ShoppingBag, Heart, SlidersHorizontal, UserRound, BookOpen } from "lucide-react";
+import { LibraryBig, Map, MapPin, Plus, Tags, MessageCircle, ShoppingBag, BookOpen, Heart } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { Avatar } from "./UI";
 import { getVisibleCategories } from "@/apis/backend_api";
 import type { Category } from "@/models/antiques/Antique";
 import { useLanguage } from "@/context/LanguageContext";
@@ -16,7 +17,6 @@ export function CustomNav() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryError, setCategoryError] = useState(false);
-  const [expanded, setExpanded] = useState(() => localStorage.getItem("galerie-nav-expanded") !== "false");
 
   useEffect(() => {
     let active = true;
@@ -37,10 +37,6 @@ export function CustomNav() {
       unsubscribe();
     };
   }, []);
-  useEffect(() => {
-    document.documentElement.style.setProperty("--nav-width", expanded ? "14rem" : "4.5rem");
-  }, [expanded]);
-
   const navLinkList = [
     { href: "/wishlist", icon: Heart, title: t("wishlist") },
     { href: "/cart", icon: ShoppingBag, title: t("cart") },
@@ -58,13 +54,9 @@ export function CustomNav() {
     <Navbar
       id="Navbar"
       aria-label={t("navMain")}
-      className={expanded ? "navbar-expanded" : "navbar-collapsed"}
-      // d-flex flex-column justify-items-center align-items-center h-100
+      className="navbar-expanded"
     >
       <div className="navbar-brand-div">
-          <button className="navbar-toggle" type="button" aria-label={expanded ? t("navCollapse") : t("navExpand")} aria-expanded={expanded} aria-controls="main-navigation" onClick={() => { const next = !expanded; setExpanded(next); localStorage.setItem("galerie-nav-expanded", String(next)); }}>
-          {expanded ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-        </button>
         <NavLink
           to="/dashboard"
           // className="w-100 m-0 p-0 position-relative d-flex justify-content-center align-items-center"
@@ -84,7 +76,7 @@ export function CustomNav() {
             <OverlayTrigger placement="right" overlay={<Tooltip>{t("navAntiquesCategories")}</Tooltip>}>
               <NavLink to="/antiques" className="nav-item-link">
                 <LibraryBig className="nav-icon" aria-hidden="true" />
-                {expanded && <span>{t("antiques")}</span>}
+                <span>{t("antiques")}</span>
               </NavLink>
             </OverlayTrigger>
             <div className="nav-category-submenu" aria-label={t("navAntiquesCategories")}>
@@ -100,35 +92,21 @@ export function CustomNav() {
             >
               <NavLink to={link.href} className="nav-item-link">
                 <link.icon className="nav-icon" aria-hidden="true" />
-                {expanded && <span>{link.title}</span>}
+                <span>{link.title}</span>
               </NavLink>
             </OverlayTrigger>
           ))}
-          {auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("navAdminAntiques")}</Tooltip>}><NavLink to="/admin/antiques" className="nav-item-link"><LibraryBig className="nav-icon" />{expanded && <span>{t("navAdminAntiques")}</span>}</NavLink></OverlayTrigger>}
-          {auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("navAddAntique")}</Tooltip>}><NavLink to="/admin/antiques/new" className="nav-item-link"><Plus className="nav-icon" />{expanded && <span>{t("navAddAntique")}</span>}</NavLink></OverlayTrigger>}
-          {auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("categories")}</Tooltip>}><NavLink to="/admin/categories" className="nav-item-link"><Tags className="nav-icon" />{expanded && <span>{t("categories")}</span>}</NavLink></OverlayTrigger>}
-          {!auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("location")}</Tooltip>}><NavLink to="/map" className="nav-item-link"><Map className="nav-icon" />{expanded && <span>{t("location")}</span>}</NavLink></OverlayTrigger>}
-          {auth.isAdmin && <div className="nav-location-dropdown"><OverlayTrigger placement="right" overlay={<Tooltip>{t("navLocation")}</Tooltip>}><NavLink to="/map" className="nav-item-link"><Map className="nav-icon" />{expanded && <><span>{t("navLocation")}</span><ChevronDown className="nav-submenu-chevron" size={15} /></>}</NavLink></OverlayTrigger><div className="nav-admin-submenu"><NavLink to="/admin/location">{t("navEditLocation")}</NavLink></div></div>}
-          {auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("navEditAbout")}</Tooltip>}><NavLink to="/admin/about" className="nav-item-link"><BookOpen className="nav-icon" />{expanded && <span>{t("navEditAbout")}</span>}</NavLink></OverlayTrigger>}
+          {auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("navAdminAntiques")}</Tooltip>}><NavLink to="/admin/antiques" className="nav-item-link"><LibraryBig className="nav-icon" /><span>{t("navAdminAntiques")}</span></NavLink></OverlayTrigger>}
+          {auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("navAddAntique")}</Tooltip>}><NavLink to="/admin/antiques/new" className="nav-item-link"><Plus className="nav-icon" /><span>{t("navAddAntique")}</span></NavLink></OverlayTrigger>}
+          {auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("categories")}</Tooltip>}><NavLink to="/admin/categories" className="nav-item-link"><Tags className="nav-icon" /><span>{t("categories")}</span></NavLink></OverlayTrigger>}
+          {!auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("location")}</Tooltip>}><NavLink to="/map" className="nav-item-link"><Map className="nav-icon" /><span>{t("location")}</span></NavLink></OverlayTrigger>}
+          {auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("navLocation")}</Tooltip>}><NavLink to="/map" className="nav-item-link"><Map className="nav-icon" /><span>{t("navLocation")}</span></NavLink></OverlayTrigger>}
+          {auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("navEditLocation")}</Tooltip>}><NavLink to="/admin/location" className="nav-item-link"><MapPin className="nav-icon" /><span>{t("navEditLocation")}</span></NavLink></OverlayTrigger>}
+          {auth.isAdmin && <OverlayTrigger placement="right" overlay={<Tooltip>{t("navEditAbout")}</Tooltip>}><NavLink to="/admin/about" className="nav-item-link"><BookOpen className="nav-icon" /><span>{t("navEditAbout")}</span></NavLink></OverlayTrigger>}
         </div>
       </Nav>
-      {/* User Profile Section */}
       <div className="icons-list-user-profile">
-        <NavLink
-          to="/profile"
-          className={({ isActive }) => (isActive ? "active" : "")}
-        >
-          <UserRound size={18} />
-          {expanded && t("navProfile")}
-        </NavLink>
-        <NavLink
-          to="/preferences"
-          className={({ isActive }) => (isActive ? "active" : "")}
-        >
-          <SlidersHorizontal size={18} />
-          {expanded && t("navSettings")}
-        </NavLink>
-         <Dropdown drop="up">
+         <Dropdown drop="down">
                             <Dropdown.Toggle
                                 variant="link"
                                 className="text-light p-0 border-0 shadow-none"
@@ -136,12 +114,12 @@ export function CustomNav() {
                             >
                                 <OverlayTrigger placement="top" overlay={<Tooltip>{t("navProfileMenu")}</Tooltip>}>
                                     <div className="d-flex flex-column align-items-center">
-                                        <div
-                                          className="rounded-circle bg-primary d-flex align-items-center justify-content-center mb-1"
-                                          style={{ width: '40px', height: '40px' }}
-                                        >
-                                          <i className="bi bi-person-fill text-white fs-5"></i>
-                                        </div>
+                                        <Avatar
+                                          name={auth.profile?.username}
+                                          firstName={auth.profile?.firstName}
+                                          lastName={auth.profile?.lastName}
+                                          size="small"
+                                        />
                                         <small className="text-truncate" style={{ maxWidth: '60px', fontSize: '0.7rem' }}>
                                             {auth.profile?.username}
                                         </small>
@@ -152,7 +130,7 @@ export function CustomNav() {
                             <Dropdown.Menu>
                                 <Dropdown.Header>
                                     <div className="text-center">
-                                        <strong>{auth.profile?.username}</strong>
+                                        <strong>{[auth.profile?.firstName, auth.profile?.lastName].filter(Boolean).join(" ") || auth.profile?.username}</strong>
                                         <br />
                                         <small className="text-muted">{auth.profile?.username}</small>
                                     </div>

@@ -27,7 +27,6 @@ import LocationAdminPage from "./pages/admin/LocationAdminPage";
 import LocationPage from "./pages/LocationPage";
 import { LanguageProvider } from "./context/LanguageContext";
 import AntiqueAdminPage from "./pages/admin/AntiqueAdminPage";
-import CheckoutResultPage from "./pages/shopping/CheckoutResultPage";
 import ChatPage from "./pages/ChatPage";
 import AboutPage from "./pages/AboutPage";
 import AboutAdminPage from "./pages/admin/AboutAdminPage";
@@ -61,8 +60,6 @@ function ProtectedLayout() {
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/map" element={<LocationPage />} />
-          <Route path="/checkout/success" element={<CheckoutResultPage />} />
-          <Route path="/checkout/cancel" element={<CheckoutResultPage />} />
         </Routes>
       </main>
       </ShoppingProvider>

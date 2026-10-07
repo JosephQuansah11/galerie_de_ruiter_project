@@ -18,14 +18,6 @@
 .inventory-placeholder { display: grid; place-items: center; background: #e8dfda; color: var(--theme-primary); }
 .inventory-row > span:last-child { display: grid; gap: 0.3rem; }
 .inventory-row small { color: var(--theme-text-secondary); font-size: 0.92rem; }
-.reference-heading { display: flex; align-items: center; justify-content: space-between; margin: 2.5rem 0 1rem; }
-.reference-heading h2 { margin: 0.25rem 0 0; font: 1.7rem Georgia, serif; }
-.reference-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 0.8rem; }
-.reference-card { overflow: hidden; border: 1px solid rgba(60, 31, 37, 0.14); background: var(--theme-surface); }
-.reference-card-body { padding: 0.75rem; }
-.reference-card-body strong { display: block; font-family: Georgia, serif; }
-.reference-card-body span { color: var(--theme-text-secondary); font-size: 0.82rem; }
-.reference-card-body p { min-height: 3rem; margin: 0.5rem 0; color: var(--theme-text-secondary); font-size: 0.82rem; }
 .admin-form-page { width: min(70%, 56rem); max-width: none; margin: 0 auto; padding: 2rem 0 4rem; }
 .admin-form-page .card-header { display: flex; align-items: center; gap: 0.5rem; background: var(--theme-primary); color: var(--theme-on-primary); }
 .admin-form-page button { display: inline-flex; align-items: center; gap: 0.4rem; }

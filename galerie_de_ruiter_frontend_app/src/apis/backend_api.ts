@@ -230,13 +230,3 @@ export const updateStoreLocation = async (
   );
   return response.data;
 };
-
-export const createCheckoutSession = async (
-  items: Array<{ antiqueId: string; quantity: number }>,
-): Promise<string> => {
-  const response = await axiosInstance.post<{ checkoutUrl: string }>(
-    `${backendBaseURL}/api/checkout`,
-    { items },
-  );
-  return response.data.checkoutUrl;
-};

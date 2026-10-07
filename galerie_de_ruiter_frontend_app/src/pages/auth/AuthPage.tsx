@@ -1,3 +1,4 @@
+import { Button } from "@/components/ReactButton";
 import { useState } from "react";
 import { LogIn, UserPlus } from "lucide-react";
 import { DynamicForm } from "../../components/UI";
@@ -49,10 +50,10 @@ export function AuthPage() {
           submitLabel={t("createAccountButton")}
           onSubmit={submit}
         />
-        <button className="quiet-button auth-login" onClick={auth.login}>
+        <Button as="button" className="quiet-button auth-login" onClick={auth.login}>
           <LogIn size={16} />
           {t("alreadyHaveAccount")}
-        </button>
+        </Button>
       </div>
       <div className="auth-aside">
         <UserPlus size={28} />

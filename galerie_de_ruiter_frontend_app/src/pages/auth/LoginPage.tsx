@@ -2,6 +2,7 @@ import { LogIn, UserPlus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
+import { Button } from "@/components/ReactButton";
 
 export function LoginPage() {
   const auth = useAuth()
@@ -11,9 +12,9 @@ export function LoginPage() {
   <div className="eyebrow">{t("galleryName")}</div>
   <h1>{t("welcomeBack")}</h1>
   <p>{t("loginIntro")}</p>
-  <button className="primary-button" onClick={auth.login}>
+  <Button className="primary-button" onClick={auth.login}>
   <LogIn size={26} />{t("continueKeycloak")}
-  </button>
+  </Button>
   <Link className="quiet-button auth-login" to="/register">
   <UserPlus size={26} />{t("createAccount")}
   </Link>

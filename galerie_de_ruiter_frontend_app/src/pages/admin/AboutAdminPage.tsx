@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Alert, Card, Spinner } from "react-bootstrap";
+import { Button } from "@/components/ReactButton";
 import { Save } from "lucide-react";
 import { getAboutContent, updateAboutContent } from "@/apis/backend_api";
 import { useTranslation } from "react-i18next";
@@ -70,10 +71,10 @@ export default function AboutAdminPage() {
                 onChange={(event) => setContent(event.target.value)}
               />
             </div>
-            <button className="btn btn-primary" disabled={saving} type="submit">
+            <Button as="button" className="btn btn-primary" disabled={saving} type="submit">
               {saving ? <Spinner size="sm" /> : <Save size={16} />}
               {saving ? t("saving") : t("saveAboutPage")}
-            </button>
+            </Button>
           </form>
         </Card.Body>
       </Card>

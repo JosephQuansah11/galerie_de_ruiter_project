@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Alert, Form, Spinner } from "react-bootstrap";
+import { Button } from "@/components/ReactButton";
 import { Eye, EyeOff, ListTree, Plus, Trash2 } from "lucide-react";
 import {
   createCategory,
@@ -98,9 +99,9 @@ export default function CategoryAdminPage() {
             </option>
           ))}
         </Form.Select>
-        <button className="btn btn-primary" type="submit">
+        <Button as="button" className="btn btn-primary" type="submit">
           <Plus size={16} /> {t("addCategory")}
-        </button>
+        </Button>
       </Form>
       {createError && <Alert variant="warning">{t(createError)}</Alert>}
       {loading && (
@@ -138,14 +139,14 @@ export default function CategoryAdminPage() {
                   )
                 }
               />
-              <button
+              <Button as="button"
                 className="btn btn-link"
                 type="button"
                 aria-label={t("deleteCategoryNamed", { name: category.name })}
                 onClick={() => removeCategory(category.id)}
               >
                 <Trash2 size={16} />
-              </button>
+              </Button>
             </div>
           </div>
         ))}

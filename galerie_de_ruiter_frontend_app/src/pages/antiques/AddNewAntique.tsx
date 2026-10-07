@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Alert, Button, Card, Container, Form, Spinner } from "react-bootstrap";
+import { Alert, Card, Container, Form, Spinner } from "react-bootstrap";
+import { Button } from "@/components/ReactButton";
 import { Box, LibraryBig, Plus, Save, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -173,7 +174,7 @@ export default function AddNewAntique() {
               {designers.length > 0 && (
                 <div className="list-group mt-1">
                   {designers.map((designer) => (
-                    <button
+                    <Button as="button"
                       className="list-group-item list-group-item-action"
                       type="button"
                       key={designer.id}
@@ -186,7 +187,7 @@ export default function AddNewAntique() {
                       ]
                         .filter(Boolean)
                         .join(" ")}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               )}
@@ -233,7 +234,7 @@ export default function AddNewAntique() {
                   />
                 </div>
                 <div className="col-md-auto">
-                  <button
+                  <Button as="button"
                     type="button"
                     // variant="outline-secondary"
                     onClick={addArtist}
@@ -249,7 +250,7 @@ export default function AddNewAntique() {
                       <Plus size={16} />
                     )}{" "}
                     {t("addArtist")}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </fieldset>
@@ -318,7 +319,7 @@ export default function AddNewAntique() {
                 onChange={(event) => update("price", event.target.value)}
               />
             </Form.Group>
-            <button
+            <Button as="button"
               // size="sm"
               // variant="outline-dark"
                className="btn btn-outline-secondary"
@@ -326,7 +327,7 @@ export default function AddNewAntique() {
               disabled={saving}>
               {saveContent}
               {saving ? t("saving") : t("saveAntique")}
-            </button>
+            </Button>
           </Form>
         </Card.Body>
       </Card>

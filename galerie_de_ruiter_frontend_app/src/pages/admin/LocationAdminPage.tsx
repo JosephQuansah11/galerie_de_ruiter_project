@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Alert, Card, Form, Spinner } from "react-bootstrap";
+import { Button } from "@/components/ReactButton";
 import { Clock3, MapPin, Save } from "lucide-react";
 import {
   getStoreLocation,
@@ -110,13 +111,13 @@ export default function LocationAdminPage() {
                   value={form.address}
                   onChange={(event) => update("address", event.target.value)}
                 />
-                <button
+                <Button as="button"
                   className="btn btn-outline-secondary"
                   type="button"
                   onClick={lookupAddress}
                 >
                   {t("findCoordinates")}
-                </button>
+                </Button>
               </div>
               {lookupMessage && <Form.Text>{t(lookupMessage)}</Form.Text>}
             </Form.Group>
@@ -155,14 +156,14 @@ export default function LocationAdminPage() {
                 />
               </Form.Group>
             </div>
-            <button
+            <Button as="button"
               className="btn btn-primary"
               disabled={saving}
               type="submit"
             >
               {saving ? <Spinner size="sm" /> : <Save size={16} />}
               {saving ? t("saving") : t("saveLocation")}
-            </button>
+            </Button>
           </Form>
         </Card.Body>
       </Card>

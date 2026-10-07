@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Badge, Button, Form, Spinner } from "react-bootstrap";
+import { Alert, Badge, Form, Spinner } from "react-bootstrap";
+import { Button } from "@/components/ReactButton";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -305,13 +306,13 @@ export default function AntiqueDetailPage() {
 
   return (
     <section className="detail-page">
-      <button
+      <Button as="button"
         type="button"
         className="detail-back"
         onClick={handleBackClick}
       >
         <ArrowLeft size={17} /> {t("backToCollection")}
-      </button>
+      </Button>
       <div className="detail-banner">
         <div>
           <span>{t("galleryName")}</span>
@@ -340,7 +341,7 @@ export default function AntiqueDetailPage() {
               aria-label={t("additionalImages")}
             >
               {antiqueImageUrls.map((imageUrl, index) => (
-                <button
+                <Button as="button"
                   key={imageUrl}
                   className={
                     previewImageUrl === imageUrl ? "is-selected" : undefined
@@ -353,7 +354,7 @@ export default function AntiqueDetailPage() {
                     src={resolveAntiqueImageUrl(imageUrl)}
                     alt={`${antique.title}, ${index + 1}`}
                   />
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -405,14 +406,14 @@ export default function AntiqueDetailPage() {
                     activeView === position ? "dark" : "outline-secondary";
 
                   return (
-                    <button
+                    <Button as="button"
                     type="button"
                       key={position}
                       className={`btn btn-${variant}`}
                       onClick={() => handleViewChange(position)}
                     >
                       {t(`position${position[0].toUpperCase()}${position.slice(1)}`)}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -439,12 +440,12 @@ export default function AntiqueDetailPage() {
                 </div>
               ))}
               <small>{Object.keys(modelImages).length}/6 {t("viewsSelected")}</small>
-              <button
+              <Button as="button"
                 disabled={submitDisabled}
                 onClick={handleSubmit}
               >
                 {t("submitSixViews")}
-              </button>
+              </Button>
               {reconstructionJob && (
                 <small>
                   {t("status")}: {t(reconstructionStatusKeys[reconstructionJob.status] ?? reconstructionJob.status, { defaultValue: reconstructionJob.status })}{" "}
@@ -463,21 +464,21 @@ export default function AntiqueDetailPage() {
             <strong>{price}</strong>
           </div>
           <div className="detail-actions">
-            <button
+            <Button as="button"
               type="button"
               className="btn btn-dark"
               onClick={handleAddToCart}
             >
               <ShoppingBag size={17} /> {t("addToCart")}
-            </button>
-            <button
+            </Button>
+            <Button as="button"
               type="button"
               className={`btn btn-${wishlistButtonVariant}`}
               onClick={handleWishlistToggle}
             >
               <Heart size={17} fill={wishlisted ? "currentColor" : "none"} />{" "}
               {wishlisted ? t("saved") : t("savePiece")}
-            </button>
+            </Button>
           </div>
           <p className="detail-note">
             <UserRound size={16} /> {t("purchaseNote")}
@@ -497,20 +498,20 @@ export default function AntiqueDetailPage() {
               <h2 id="detail-related-title">{t("detailRelatedTitle")}</h2>
             </div>
             <div className="detail-related-controls">
-              <button
+              <Button as="button"
                 type="button"
                 aria-label={t("scrollCollectionLeft")}
                 onClick={() => scrollRelated(-1)}
               >
                 <ChevronLeft size={20} />
-              </button>
-              <button
+              </Button>
+              <Button as="button"
                 type="button"
                 aria-label={t("scrollCollectionRight")}
                 onClick={() => scrollRelated(1)}
               >
                 <ChevronRight size={20} />
-              </button>
+              </Button>
             </div>
           </div>
           <div
@@ -522,7 +523,7 @@ export default function AntiqueDetailPage() {
             {relatedAntiques.map((item) => {
               const itemImage = item.imageUrls?.[0] ?? item.imageUrl;
               return (
-                <button
+                <Button as="button"
                   className="detail-related-item"
                   key={item.id}
                   type="button"
@@ -545,7 +546,7 @@ export default function AntiqueDetailPage() {
                       ? t("priceOnRequest")
                       : formatEuroAmount(item.price, locale)}
                   </span>
-                </button>
+                </Button>
               );
             })}
           </div>

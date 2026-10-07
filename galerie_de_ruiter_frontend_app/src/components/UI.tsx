@@ -2,19 +2,32 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { ChevronDown, Search, Sparkles } from "lucide-react";
 import type { FormField, Antique } from "../types/types";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ReactButton";
 
 export function Avatar({
   name,
+  firstName,
+  lastName,
   size = "medium",
 }: {
   name?: string;
+  firstName?: string;
+  lastName?: string;
   size?: "small" | "medium" | "large";
 }) {
   const { t } = useTranslation();
-  const displayName = name ?? t("guest");
-  const initials = displayName
-    .split(" ")
-    .map((part) => part[0])
+  const namedInitials = [firstName, lastName]
+    .filter((part): part is string => Boolean(part?.trim()))
+    .map((part) => part.trim()[0]);
+  const displayName =
+    [firstName, lastName].filter((part) => part?.trim()).join(" ") ||
+    name ||
+    t("guest");
+  const initials = (
+    namedInitials.length
+      ? namedInitials
+      : displayName.split(/\s+/).map((part) => part[0])
+  )
     .join("")
     .slice(0, 2)
     .toUpperCase();
@@ -59,10 +72,10 @@ export function DropdownPanel({
   const [open, setOpen] = useState(false);
   return (
     <div className="dropdown">
-      <button className="quiet-button" onClick={() => setOpen(!open)}>
+      <Button as="button" className="quiet-button" onClick={() => setOpen(!open)}>
         {label}
         <ChevronDown size={16} />
-      </button>
+      </Button>
       {open && <div className="dropdown-panel">{children}</div>}
     </div>
   );
@@ -130,10 +143,10 @@ export function DynamicForm<T extends object>({
           )}
         </label>
       ))}
-      <button className="primary-button" type="submit">
+      <Button as="button" className="primary-button" type="submit">
         <Sparkles size={16} />
         {submitLabel}
-      </button>
+      </Button>
     </form>
   );
 }

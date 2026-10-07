@@ -1,3 +1,4 @@
+import { Button } from "@/components/ReactButton";
 import { Heart, ShoppingBag, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useShopping } from "@/context/ShoppingContext";
@@ -23,15 +24,15 @@ export default function WishlistPage() {
               <strong>{antique.price == null ? t("priceOnRequest") : formatEuroAmount(antique.price, locale)}</strong>
             </div>
             <div className="shopping-row-actions">
-              <button className="btn btn-dark btn-sm" type="button" onClick={() => addToCart(antique)}>
+              <Button as="button" className="btn btn-dark btn-sm" type="button" onClick={() => addToCart(antique)}>
                 <ShoppingBag size={15} /> {t("addToCartShort")}
-              </button>
-              <button className="btn btn-link" type="button" aria-label={t("removeFromWishlist", { title: antique.title })} onClick={() => toggleWishlist(antique)}>
+              </Button>
+              <Button as="button" className="btn btn-link" type="button" aria-label={t("removeFromWishlist", { title: antique.title })} onClick={() => toggleWishlist(antique)}>
                 <Trash2 size={17} />
-              </button>
-              <button className="btn btn-link" type="button" onClick={() => navigate(`/antiques/${antique.id}`)}>
+              </Button>
+              <Button as="button" className="btn btn-link" type="button" onClick={() => navigate(`/antiques/${antique.id}`)}>
                 {t("view")}
-              </button>
+              </Button>
             </div>
           </article>
         ))}

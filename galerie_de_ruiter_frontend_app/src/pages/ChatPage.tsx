@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Form, Spinner } from "react-bootstrap";
+import { Button } from "@/components/ReactButton";
 import { MessageCircle, Send, ExternalLink } from "lucide-react";
 import { sendChatMessage } from "@/apis/chat_api";
 import { useTranslation } from "react-i18next";
@@ -93,21 +94,22 @@ export default function ChatPage() {
           <span>{appointment}</span>
         </div>
       )}
-      <Form className="chat-composer" onSubmit={send}>
+      <form className="chat-composer" onSubmit={send}>
         <Form.Control
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t("writeMessage")}
           aria-label={t("chatMessage")}
         />
-        <button
+        <Button
           className="btn btn-dark"
           type="submit"
           disabled={sending || !draft.trim()}
+          aria-label={t("sendMessage")}
         >
           <Send size={17} />
-        </button>
-      </Form>
+        </Button>
+      </form>
     </section>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Badge, Col, Form, Row, Spinner } from "react-bootstrap";
+import { Alert, Badge, Col, Dropdown, Form, Row, Spinner } from "react-bootstrap";
+import { Button } from "@/components/ReactButton";
 import { Heart, Search, ShoppingBag } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAntiqueContent } from "@/hooks/useAddAntiques";
@@ -28,11 +29,25 @@ export default function AntiquesPage() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState(() => searchParams.get("category") ?? "");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState(false);
 
   useEffect(() => {
-    getVisibleCategories().then(setCategories).catch(() => setCategories([]));
+    let active = true;
+    getVisibleCategories()
+      .then((visibleCategories) => {
+        if (active) setCategories(visibleCategories);
+      })
+      .catch(() => {
+        if (active) setCategoriesError(true);
+      })
+      .finally(() => {
+        if (active) setCategoriesLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
-
   const allPiecesCategory = t("allPieces");
   useEffect(() => { setCategory(searchParams.get("category") ?? ""); }, [searchParams]);
 
@@ -66,21 +81,49 @@ export default function AntiquesPage() {
               <Search size={ 18 } aria-hidden="true" />
                 <Form.Control  aria-label={t("searchAntiques")} value = { query } onChange = {(event) => setQuery(event.target.value)} placeholder = { t("searchPlaceholder") } />
 
-                        <div className = "category-tabs" aria-label={t("collectionCategories")} >
-                            <button className={ `btn btn-sm ${!category || category === allPiecesCategory ? "btn-dark" : "btn-outline-secondary"}` } type = "button" onClick = {() => setCategory("")} >
-                            { t("allPieces") }
-                            </button>
-                            {
-                                categories.map((item) => (
-                                  <button key= { item.id } className = {`btn btn-sm ${category === item.name ? "btn-dark" : "btn-outline-secondary"}`} type = "button" onClick = {() => setCategory(item.name)} >
-                                      { item.name } 
-                                      <span className = "category-count" > { item.itemCount } </span>
-                                  </button>
-                                    )
-                                  )
-                            }
-                        </div>
+                        <Dropdown className="collection-filter-dropdown">
+                          <Dropdown.Toggle variant="outline-secondary" type="button">
+                            {category || t("allPieces")}
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu className="collection-dropdown-menu">
+                            <Dropdown.Item
+                              as="button"
+                              type="button"
+                              onClick={() => setCategory("")}
+                            >
+                              {t("allPieces")}
+                            </Dropdown.Item>
+                            <div className="collection-dropdown-grid">
+                              {categories.map((item) => (
+                                <div className="collection-dropdown-group" key={item.id}>
+                                  <Dropdown.Item
+                                    as="button"
+                                    type="button"
+                                    onClick={() => setCategory(item.name)}
+                                  >
+                                    {item.name}
+                                    <span>{item.itemCount}</span>
+                                  </Dropdown.Item>
+                                  {item.children?.map((child) => (
+                                    <Dropdown.Item
+                                      as="button"
+                                      className="collection-dropdown-child"
+                                      key={child.id}
+                                      type="button"
+                                      onClick={() => setCategory(child.name)}
+                                    >
+                                      {child.name}
+                                      <span>{child.itemCount}</span>
+                                    </Dropdown.Item>
+                                  ))}
+                                </div>
+                              ))}
+                            </div>
+                          </Dropdown.Menu>
+                        </Dropdown>
 
+                          { categoriesLoading && <div className="catalogue-state" ><Spinner animation="border" size = "sm" /> { t("loadingCategories") }</div> }
+                          { categoriesError && <Alert variant="danger" > {t("categoriesLoadError")}</Alert> }
                           { loading && <div className="catalogue-state" > <Spinner animation="border" size = "sm" /> { t("loadingCollection") } </div> }
                           { error && <Alert variant="danger" > {t("collectionLoadError")}</Alert> }
                           {
@@ -103,12 +146,12 @@ export default function AntiquesPage() {
                                           < div className = "catalogue-card-footer" > 
                                               <strong>{ priceLabel(antique.price, t("priceOnRequest"), locale) } </strong>
                                               <div className="catalogue-card-actions">
-                                                    <button className="btn btn-sm btn-outline-dark" type="button" onClick={(event) => { event.stopPropagation(); addToCart(antique); }}>
+                                                    <Button as="button" className="btn btn-sm btn-outline-dark" type="button" onClick={(event) => { event.stopPropagation(); addToCart(antique); }}>
                                                         <ShoppingBag size={15} / > { t("add") } 
-                                                    </button>
-                                                    <button className="btn btn-sm btn-link" type="button" aria-label={t("savePieceNamed", { title: antique.title })} onClick={(event) => { event.stopPropagation(); toggleWishlist(antique); }}>
+                                                    </Button>
+                                                    <Button as="button" className="btn btn-sm btn-link" type="button" aria-label={t("savePieceNamed", { title: antique.title })} onClick={(event) => { event.stopPropagation(); toggleWishlist(antique); }}>
                                                           <Heart size={18} fill={isWishlisted(antique.id) ? "currentColor" : "none"} / > 
-                                                    </button>
+                                                    </Button>
                                                     
                                               </div > 
                                             </div>

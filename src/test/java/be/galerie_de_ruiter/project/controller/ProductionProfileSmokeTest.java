@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import jakarta.servlet.http.Cookie;
 import be.galerie_de_ruiter.project.repository.AppointmentRepository;
+import be.galerie_de_ruiter.project.repository.AntiqueRepository;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -58,6 +59,9 @@ class ProductionProfileSmokeTest {
 
     @Autowired
     private AppointmentRepository appointments;
+
+    @Autowired
+    private AntiqueRepository antiqueRepository;
 
     @DynamicPropertySource
     static void productionProperties(DynamicPropertyRegistry properties) {
@@ -203,6 +207,19 @@ class ProductionProfileSmokeTest {
                 .andExpect(status().isOk())
                 .andExpect(content().bytes(imageBytes));
 
+        mvc.perform(put("/api/antiques/" + antiqueId)
+                        .with(admin)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Updated production smoke antique","description":"Updated smoke description","price":140.75}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Updated production smoke antique"))
+                .andExpect(jsonPath("$.description").value("Updated smoke description"))
+                .andExpect(jsonPath("$.price").value(140.75));
+
         mvc.perform(post("/api/chat")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -213,7 +230,7 @@ class ProductionProfileSmokeTest {
         assertThat(ollamaModel).hasValue("smoke-model");
         assertThat(ollamaSystemPrompt.get())
                 .contains("There are 7 visible categories:")
-                .contains("Production smoke antique")
+                .contains("Updated production smoke antique")
                 .contains("Smoke Artist");
 
         String appointmentSubject = "production-smoke-visitor";
@@ -228,6 +245,15 @@ class ProductionProfileSmokeTest {
                 .andExpect(jsonPath("$.appointmentType").value("VISIT"));
         assertThat(appointments.existsByKeycloakSubjectAndStartsAtAndType(
                 appointmentSubject, LocalDateTime.parse("2099-05-10T11:00:00"), "VISIT")).isTrue();
+
+        mvc.perform(delete("/api/antiques/" + antiqueId)
+                        .with(admin)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfToken))
+                .andExpect(status().isNoContent());
+        assertThat(antiqueRepository.existsById(java.util.UUID.fromString(antiqueId))).isFalse();
+        assertThat(mvc.perform(get("/api/antiques/" + antiqueId + "/image"))
+                .andReturn().getResponse().getStatus()).isEqualTo(404);
 
         mvc.perform(get("/api/categories/admin").with(admin))
                 .andExpect(status().isOk())

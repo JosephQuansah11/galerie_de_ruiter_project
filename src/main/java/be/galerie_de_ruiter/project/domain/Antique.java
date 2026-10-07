@@ -68,6 +68,10 @@ public class Antique {
         return title;
     }
 
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public Designer getArtist() {
         return artist;
     }
@@ -76,8 +80,16 @@ public class Antique {
         return description;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public BigDecimal getPrice() {
         return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 
     public Category getCategory() {

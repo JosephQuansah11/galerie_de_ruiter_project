@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.access.AccessDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,11 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ResponseStatusException.class)
 	ResponseEntity<ApiError> status(ResponseStatusException exception, HttpServletRequest request) {
 		return response(HttpStatus.valueOf(exception.getStatusCode().value()), exception.getReason(), request);
+	}
+
+	@ExceptionHandler(AccessDeniedException.class)
+	ResponseEntity<ApiError> accessDenied(AccessDeniedException exception, HttpServletRequest request) {
+		return response(HttpStatus.FORBIDDEN, "You do not have permission to perform this action", request);
 	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)

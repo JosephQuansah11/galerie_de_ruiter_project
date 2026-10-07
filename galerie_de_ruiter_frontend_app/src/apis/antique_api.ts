@@ -15,6 +15,17 @@ export async function addAntique(antique: AntiqueForm): Promise<Antique> {
   });
   return response.data;
 }
+export async function updateAntique(id: string, antique: Pick<AntiqueForm, "title" | "description" | "price">): Promise<Antique> {
+  const response = await axiosInstance.put<Antique>(`${backendBaseURL}/api/antiques/${id}`, antique, {
+    headers: { ...(await csrfHeaders()), "Content-Type": "application/json" },
+  });
+  return response.data;
+}
+export async function deleteAntique(id: string): Promise<void> {
+  await axiosInstance.delete(`${backendBaseURL}/api/antiques/${id}`, {
+    headers: await csrfHeaders(),
+  });
+}
 export async function uploadAntiqueImage(id: string, image: File): Promise<void> {
   const body = new FormData();
   body.append("image", image);

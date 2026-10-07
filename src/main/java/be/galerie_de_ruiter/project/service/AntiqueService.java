@@ -7,6 +7,7 @@ import be.galerie_de_ruiter.project.dto.AntiqueReconstructionRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueReconstructionRequest.ReconstructionViewDto;
 import be.galerie_de_ruiter.project.dto.AntiqueRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueResponse;
+import be.galerie_de_ruiter.project.dto.AntiqueUpdateRequest;
 import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueRepository;
 import be.galerie_de_ruiter.project.repository.DesignerRepository;
@@ -24,6 +25,8 @@ import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -73,6 +76,27 @@ public class AntiqueService {
     @Transactional
     public AntiqueResponse createResponse(AntiqueRequest request, Jwt jwt) {
         return AntiqueResponse.from(create(request, jwt));
+    }
+
+    @Transactional
+    public AntiqueResponse update(UUID id, AntiqueUpdateRequest request) {
+        Antique antique = findAntique(id);
+        antique.setTitle(request.title().trim());
+        antique.setDescription(request.description());
+        antique.setPrice(request.price());
+        return AntiqueResponse.from(antiques.save(antique));
+    }
+
+    @Transactional
+    public void delete(UUID id) {
+        Antique antique = findAntique(id);
+        antiqueImageRepository.deleteAllByAntiqueId(id);
+        antiques.delete(antique);
+    }
+
+    private Antique findAntique(UUID id) {
+        return antiques.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Antique not found: " + id));
     }
 
 @Transactional

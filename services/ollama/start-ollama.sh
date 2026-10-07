@@ -22,7 +22,14 @@ until ollama list >/dev/null 2>&1; do
 done
 
 if ! ollama show "$OLLAMA_MODEL" >/dev/null 2>&1; then
+  printf 'Downloading configured Ollama model: %s\n' "$OLLAMA_MODEL"
   ollama pull "$OLLAMA_MODEL"
 fi
 
+if ! ollama show "$OLLAMA_MODEL" >/dev/null 2>&1; then
+  printf 'Configured Ollama model is unavailable after download: %s\n' "$OLLAMA_MODEL" >&2
+  exit 1
+fi
+
+printf 'Configured Ollama model is ready: %s\n' "$OLLAMA_MODEL"
 wait "$server_pid"

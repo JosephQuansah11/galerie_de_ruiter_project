@@ -65,11 +65,11 @@ services:
     expose:
       - "11434"
     healthcheck:
-      test: ["CMD", "ollama", "list"]
+      test: ["CMD-SHELL", "ollama show \"$${OLLAMA_MODEL}\" >/dev/null 2>&1"]
       interval: 10s
       timeout: 5s
-      retries: 50
       start_period: 45s
+      retries: 50
 
   java-api:
     build:

@@ -8,12 +8,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 
 import be.galerie_de_ruiter.project.service.UserService;
 import be.galerie_de_ruiter.project.service.OllamaChatService;
+import be.galerie_de_ruiter.project.service.AntiqueService;
 import be.galerie_de_ruiter.project.dto.ChatRequest;
 import be.galerie_de_ruiter.project.dto.ChatResponse;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -39,6 +44,9 @@ class UserControllerSecurityTest {
 
     @MockitoBean
     private OllamaChatService chat;
+
+    @MockitoBean
+    private AntiqueService antiques;
 
     @MockitoBean
     private JwtDecoder jwtDecoder;
@@ -117,5 +125,21 @@ class UserControllerSecurityTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated integration category"))
                 .andExpect(jsonPath("$.itemCount").value(0));
+    }
+
+    @Test
+    void adminsCanCreateAntiquesWithCsrf() throws Exception {
+        String request = """
+                {"title":"Test antique","artistId":"11111111-1111-1111-1111-111111111111","price":10}
+                """;
+        doThrow(new ResponseStatusException(HttpStatus.CONFLICT))
+                .when(antiques).create(any(), any());
+        mvc.perform(post("/api/antiques")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isConflict());
+        verify(antiques).create(any(), any());
     }
 }

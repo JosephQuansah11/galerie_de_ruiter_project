@@ -55,8 +55,10 @@ Required variables include `POSTGRES_PASSWORD`, `KEYCLOAK_DB_PASSWORD`,
 build (`VITE_JAVA_API_URL`, `VITE_JAVA_BACKEND_URL`, `VITE_API_URL`,
 `VITE_KEYCLOAK_URL`, `VITE_RECONSTRUCTION_API_URL`, and `VITE_PYTHON_API_URL`).
 The Compose stack builds and runs Ollama as a container, pulls `llama3.2:3b`
-on first start, and keeps model files in a persistent volume. Set `OLLAMA_MODEL`
-to another model if needed; the Ollama service and Java API use the same value.
+on first start, and keeps model files in a persistent volume. The Ollama
+container is not considered healthy until the configured model is available,
+so the Java API waits for the model before starting. Set `OLLAMA_MODEL` to
+another model if needed; the Ollama service and Java API use the same value.
 The Compose stack publishes web services on all interfaces by default; set
 `BIND_ADDRESS` only when an intentional host-interface restriction is needed.
 The app and Keycloak databases have separate containers and persistent volumes.

@@ -17,10 +17,11 @@ export default function AntiqueAdminPage() {
   const [antiques, setAntiques] = useState<Antique[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   useEffect(() => {
     getAllAntiques()
-      .then(setAntiques)
-      .catch(() => undefined)
+      .then((items) => { setAntiques(items); setLoadError(false); })
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, []);
   const filtered = antiques.filter((antique) =>
@@ -46,11 +47,12 @@ export default function AntiqueAdminPage() {
           <Spinner animation="border" size="sm" /> {t("loadingInventory")}
         </div>
       )}
-      {!loading && filtered.length === 0 && (
+      {loadError && <Alert variant="danger">{t("antiquesCouldNotLoad")}</Alert>}
+      {!loading && !loadError && filtered.length === 0 && (
         <Alert variant="light">{t("noAntiquesFound")}</Alert>
       )}
-      <InventoryList antiques={filtered} onSelect={(item) => navigate(`/antiques/${item.id}`)}
-        uncategorized={t("uncategorized")} priceOnRequest={t("priceOnRequest")} locale={locale} />
+      {!loading && !loadError && <InventoryList antiques={filtered} onSelect={(item) => navigate(`/antiques/${item.id}`)}
+        uncategorized={t("uncategorized")} priceOnRequest={t("priceOnRequest")} locale={locale} />}
     </section>
   );
 }

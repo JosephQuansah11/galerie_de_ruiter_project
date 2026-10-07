@@ -133,13 +133,13 @@ class UserControllerSecurityTest {
                 {"title":"Test antique","artistId":"11111111-1111-1111-1111-111111111111","price":10}
                 """;
         doThrow(new ResponseStatusException(HttpStatus.CONFLICT))
-                .when(antiques).create(any(), any());
+                .when(antiques).createResponse(any(), any());
         mvc.perform(post("/api/antiques")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
                 .andExpect(status().isConflict());
-        verify(antiques).create(any(), any());
+        verify(antiques).createResponse(any(), any());
     }
 }

@@ -10,6 +10,7 @@ export async function getAllAntiques(): Promise<Antique[]> {
 }
 export async function addAntique(antique: AntiqueForm): Promise<Antique> {
   const response = await axiosInstance.post<Antique>(`${backendBaseURL}/api/antiques`, antique, {
+    timeout: 60000,
     headers: await csrfHeaders(),
   });
   return response.data;
@@ -18,6 +19,7 @@ export async function uploadAntiqueImage(id: string, image: File): Promise<void>
   const body = new FormData();
   body.append("image", image);
   await axiosInstance.put(`${backendBaseURL}/api/antiques/${id}/image`, body, {
+    timeout: 60000,
     headers: { ...(await csrfHeaders()), "Content-Type": undefined },
   });
 }

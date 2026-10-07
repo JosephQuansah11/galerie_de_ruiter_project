@@ -30,18 +30,21 @@ export default function AntiqueAdminPage() {
   return (
     <section className="admin-page">
       <InventoryHeading administration={t("administration")} title={t("antiqueInventory")} />
-      <div className="inventory-search">
-        <Search size={17} />
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={t("searchInventory")}
-          aria-label={t("searchInventory")}
-        /> 
-        <Button as="button" className="btn btn-outline-primary button-wide" onClick={() => navigate("/admin/antiques/new")}>
+      <div className="inventory-toolbar">
+        <div className="inventory-search" role="search">
+          <Search size={17} aria-hidden="true" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t("searchInventory")}
+            aria-label={t("searchInventory")}
+          />
+        </div>
+        <Button as="button" className="btn btn-primary inventory-add-button" onClick={() => navigate("/admin/antiques/new")}>
           <Plus size={16} /> {t("addAntique")}
         </Button>
       </div>
+      {!loading && !loadError && <p className="inventory-result-count">{filtered.length} / {antiques.length}</p>}
       {loading && (
         <div className="catalogue-state">
           <Spinner animation="border" size="sm" /> {t("loadingInventory")}

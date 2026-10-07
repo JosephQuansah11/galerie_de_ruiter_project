@@ -11,7 +11,7 @@ export async function getAllAntiques(): Promise<Antique[]> {
 export async function addAntique(antique: AntiqueForm): Promise<Antique> {
   const response = await axiosInstance.post<Antique>(`${backendBaseURL}/api/antiques`, antique, {
     timeout: 60000,
-    headers: await csrfHeaders(),
+    headers: await csrfHeaders().then((headers) => ({ ...headers, "Content-Type": "application/json" })),
   });
   return response.data;
 }

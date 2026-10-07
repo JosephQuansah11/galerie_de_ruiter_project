@@ -29,9 +29,11 @@
 .catalogue-heading p { margin: 0; color: var(--theme-text-secondary); }
 .catalogue-count { display: grid; text-align: right; color: var(--theme-text-secondary); }
 .catalogue-count strong { color: var(--theme-text); font-size: 2rem; }
-.catalogue-search { display: flex; flex-direction: column; align-items: stretch; gap: 0.7rem; max-width: 100%; margin-bottom: 2rem; padding: 0.35rem 0.9rem; border: 1px solid rgba(30, 32, 34, 0.2); background: rgba(255, 255, 255, 0.78); }
-.catalogue-search .form-control { border: 0; box-shadow: none; background: transparent; }
-.collection-filter-dropdown { position: relative; align-self: flex-start; margin-bottom: 1.3rem; }
+.catalogue-controls { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+.catalogue-search { display: flex; align-items: center; flex: 1 1 auto; gap: 0.7rem; min-width: 0; margin: 0; padding: 0.2rem 0.9rem; border: 1px solid rgba(30, 32, 34, 0.2); background: rgba(255, 255, 255, 0.78); }
+.catalogue-search .form-control { min-height: 2.4rem; border: 0; box-shadow: none; background: transparent; }
+.collection-filter-dropdown { position: relative; flex: 0 0 auto; }
+.collection-filter-dropdown .dropdown-toggle { min-height: 2.8rem; border-color: var(--theme-primary); color: var(--theme-primary); }
 .collection-dropdown-menu { width: min(48rem, calc(100vw - 2rem)); max-height: min(60vh, 32rem); overflow-y: auto; padding: 0.65rem; }
 .collection-dropdown-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.5rem; padding-top: 0.45rem; }
 .collection-dropdown-group { min-width: 0; padding: 0.25rem; border: 1px solid var(--theme-border); border-radius: 0.35rem; }
@@ -72,4 +74,4 @@
 .about-content p { margin: 0.65rem 0; white-space: pre-wrap; }
 .about-content hr { margin: 2rem 0; border-color: rgba(60, 31, 37, 0.2); }
 .model-admin-panel { display: grid; gap: 0.6rem; padding: 1rem; border: 1px solid rgba(60, 31, 37, 0.14); background: var(--theme-surface); }
-@media (max-width: 640px) { .catalogue-heading { align-items: start; flex-direction: column; } .catalogue-count { text-align: left; } .detail-layout { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .catalogue-heading { align-items: start; flex-direction: column; } .catalogue-count { text-align: left; } .catalogue-controls { align-items: stretch; flex-direction: column; } .collection-filter-dropdown { align-self: flex-start; } .detail-layout { grid-template-columns: 1fr; } }

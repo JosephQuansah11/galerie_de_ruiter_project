@@ -8,9 +8,11 @@ type Props = { antiques: Antique[]; onSelect: (antique: Antique) => void; uncate
 export function InventoryList({ antiques, onSelect, uncategorized, priceOnRequest, locale }: Props) {
   return <div className="inventory-list">{antiques.map((antique) =>
     <Button className="inventory-row" key={antique.id} type="button" onClick={() => onSelect(antique)}>
-      {antique.imageUrl ? <img src={resolveAntiqueImageUrl(antique.imageUrl)} alt="" />
-        : <span className="inventory-placeholder"><Image size={20} /></span>}
-      <span><strong>{antique.title}</strong><small>{antique.category ?? uncategorized} ·{" "}
+      <span className="inventory-thumb">
+        {antique.imageUrl ? <img src={resolveAntiqueImageUrl(antique.imageUrl)} alt="" />
+          : <span className="inventory-placeholder"><Image size={20} /></span>}
+      </span>
+      <span className="inventory-row-copy"><strong>{antique.title}</strong><small>{antique.category ?? uncategorized} ·{" "}
         {antique.price == null ? priceOnRequest : formatEuroAmount(antique.price, locale)}</small></span>
     </Button>)}</div>;
 }

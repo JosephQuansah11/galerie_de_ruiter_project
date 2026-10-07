@@ -25,11 +25,13 @@ export function CataloguePage(props: Props) {
   const { t } = useTranslation();
   return <section className="catalogue-page">
     <CatalogueHeading count={props.antiques.length} />
-    <Form className="catalogue-search" role="search">
-      <Search size={18} aria-hidden="true" />
-      <Form.Control aria-label={t("searchAntiques")} value={props.query} onChange={(event) => props.onQueryChange(event.target.value)} placeholder={t("searchPlaceholder")} />
+    <div className="catalogue-controls">
+      <Form className="catalogue-search" role="search">
+        <Search size={18} aria-hidden="true" />
+        <Form.Control aria-label={t("searchAntiques")} value={props.query} onChange={(event) => props.onQueryChange(event.target.value)} placeholder={t("searchPlaceholder")} />
+      </Form>
       <CollectionFilter categories={props.categories} category={props.category} onSelect={props.setCategory} />
-    </Form>
+    </div>
     <CatalogueStatus loading={props.loading} error={props.error} categoriesLoading={props.categoriesLoading} categoriesError={props.categoriesError} empty={!props.filteredAntiques.length} hasQuery={Boolean(props.query)} />
     {!props.loading && !props.error && <AntiqueGrid antiques={props.filteredAntiques} />}
   </section>;

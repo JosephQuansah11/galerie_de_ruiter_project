@@ -11,9 +11,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.server.ResponseStatusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+	private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	ResponseEntity<ApiError> validation(MethodArgumentNotValidException exception, HttpServletRequest request) {
 		String message = exception.getBindingResult().getFieldErrors().stream()
@@ -28,6 +32,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	ResponseEntity<ApiError> conflict(DataIntegrityViolationException exception, HttpServletRequest request) {
+		logger.error("Database constraint rejected request to {}", request.getRequestURI(), exception);
 		return response(HttpStatus.CONFLICT, "The request conflicts with existing data", request);
 	}
 

@@ -30,7 +30,9 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
     setFiles(selected); setMessage(undefined);
   };
   const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault(); setSaving(true); setMessage(undefined);
+    event.preventDefault();
+    setSaving(true);
+    setMessage(undefined);
     let antiqueId: string;
     try {
       if (createdId) {
@@ -41,7 +43,6 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
         setCreatedId(created.id);
       }
     } catch (error) {
-      console.error("Antique creation failed", error);
       setMessage(saveErrorKey(error));
       setSaving(false);
       return;
@@ -52,7 +53,6 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
         setUploadedFileCount(index + 1);
       }
     } catch (error) {
-      console.error("Antique image upload failed after creation", error);
       const errorKey = saveErrorKey(error);
       setMessage(errorKey === "antiqueSavePermissionError"
         ? errorKey

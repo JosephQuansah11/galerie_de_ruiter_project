@@ -99,7 +99,8 @@ public class OllamaChatService {
         }
         conversation.add(Map.of("role", "user", "content", request.message()));
 
-        Map<?, ?> response = RestClient.create(ollamaUrl)
+        String ollamaBaseUrl = ollamaUrl.contains("://") ? ollamaUrl : "http://" + ollamaUrl;
+        Map<?, ?> response = RestClient.create(ollamaBaseUrl)
                 .post()
                 .uri("/api/chat")
                 .contentType(MediaType.APPLICATION_JSON)

@@ -6,6 +6,7 @@ managed PostgreSQL databases:
 - `galerie-app-db`: application PostgreSQL database
 - `galerie-keycloak-db`: separate PostgreSQL database for Keycloak
 - `galerie-keycloak`: public Keycloak service
+- `galerie-ollama`: private Ollama model service
 - `galerie-reconstruction-api`: reconstruction API with a persistent data disk
 - `galerie-java-api`: Spring Boot API
 - `galerie-frontend`: static React frontend with SPA rewrites
@@ -32,11 +33,14 @@ increases costs; review the current price in Render before syncing.
    creates or updates the user in the `movie_project_keycloak` realm and assigns
    the application `ADMIN` realm role. Its login is `de-ruiter` and its display
    name is `De Ruiter`. This is not a Keycloak master-realm superadmin account.
-4. Set `OLLAMA_BASE_URL` on `galerie-java-api` to the base URL of an Ollama API
-   reachable from the Java service, and ensure the configured model is
-   available there. The blueprint leaves this environment value for you to
-   supply because Render does not host the model runtime in this stack. The
-   default model is `llama3.2:3b`; set `OLLAMA_MODEL` if using another model.
+4. The blueprint builds and runs Ollama as a private Docker service on the
+   `pro` plan and persists model files on its mounted disk. On first startup it
+   downloads `llama3.2:3b`; initial model download and warm-up can take several
+   minutes.    The Java API resolves the Ollama service's internal host and port from the
+   blueprint and connects over Render's private network. Review the
+   service and persistent-disk pricing before syncing the blueprint. If you
+   change `OLLAMA_MODEL`, update it on `galerie-ollama` and `galerie-java-api`
+   to the same model; allow enough disk space for the selected model.
 5. The Keycloak image imports the production realm and frontend client from
    `keycloak/realms/galerie-production-realm.json`, copied into the image using
    Keycloak's required `movie_project_keycloak-realm.json` import filename; no
@@ -61,10 +65,9 @@ be configured separately in its dashboard.
   client configuration, not secrets. The Webpack build injects these values
   from Render's build environment; deploy the frontend after changing them.
 - `FRONTEND_ORIGIN` and the Keycloak issuer URL must match the final Render service URLs.
-- The chatbot sends requests through `galerie-java-api`. Set the `OLLAMA_BASE_URL`
-  secret/environment value to a running Ollama endpoint that the backend can
-  reach; ensure `OLLAMA_MODEL` is installed at that endpoint. The Render
-  blueprint cannot run the language model itself.
+- The chatbot sends requests through `galerie-java-api`, which calls the
+  private `galerie-ollama` Docker service. Its model is downloaded at runtime
+  and retained on the service's persistent disk.
 - The Java API receives the `galerie-app-db` internal host, port, database, username, and password through the `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` variables. The Spring profile assembles these into a JDBC URL.
 - If you created a standalone Java web service instead of the `galerie-java-api` blueprint service, add those five variables and link each to the corresponding **internal** property of `galerie-app-db` in that service's environment. Alternatively, set `DATABASE_URL` to a valid JDBC URL beginning `jdbc:postgresql://`. Ensure the database and web service are in the same Render region.
 - The Java API listens on Render's `PORT`.

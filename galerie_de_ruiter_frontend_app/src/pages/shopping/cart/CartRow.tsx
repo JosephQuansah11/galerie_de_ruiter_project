@@ -4,12 +4,16 @@ import { Trash2 } from "lucide-react";
 import type Antique from "@/models/antiques/Antique";
 import { useLanguage } from "@/context/LanguageContext";
 import { formatEuroAmount } from "@/i18n";
+import { resolveAntiqueImageUrl } from "@/models/antiques/Antique";
 
 type Props = { antique: Antique; quantity: number; updateQuantity: (id: string, quantity: number) => void; removeFromCart: (id: string) => void };
 export function CartRow({ antique, quantity, updateQuantity, removeFromCart }: Props) {
   const { t, locale } = useLanguage();
+  const image = antique.imageUrl ?? antique.imageUrls?.[0];
   return <article className="shopping-row">
-    <div className="shopping-thumb">{antique.title.slice(0, 1)}</div>
+    <div className="shopping-thumb">{image
+      ? <img src={resolveAntiqueImageUrl(image)} alt="" loading="lazy" />
+      : antique.title.slice(0, 1)}</div>
     <div className="shopping-row-copy"><h2>{antique.title}</h2><strong>
       {antique.price == null ? t("priceOnRequest") : formatEuroAmount(antique.price, locale)}
     </strong></div>

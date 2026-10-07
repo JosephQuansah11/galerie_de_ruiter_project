@@ -71,6 +71,23 @@ services:
       - key: KC_BOOTSTRAP_ADMIN_PASSWORD
         sync: false
 
+  - type: pserv
+    name: galerie-ollama
+    runtime: docker
+    dockerfilePath: ./services/ollama/Dockerfile
+    dockerContext: ./services/ollama
+    plan: pro
+    autoDeploy: true
+    disk:
+      name: ollama-models
+      mountPath: /root/.ollama
+      sizeGB: 5
+    envVars:
+      - key: OLLAMA_HOST
+        value: 0.0.0.0:11434
+      - key: OLLAMA_MODEL
+        value: llama3.2:3b
+
   - type: web
     name: galerie-java-api
     runtime: docker
@@ -133,7 +150,10 @@ services:
       - key: KEYCLOAK_REALM_ADMIN_PASSWORD
         sync: false
       - key: OLLAMA_BASE_URL
-        sync: false
+        fromService:
+          type: pserv
+          name: galerie-ollama
+          property: hostport
       - key: OLLAMA_MODEL
         value: llama3.2:3b
 

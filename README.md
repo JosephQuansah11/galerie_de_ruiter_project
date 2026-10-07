@@ -38,8 +38,8 @@ persistent PostgreSQL service, such as the resources declared in `render.yaml`.
 
 ## Production Docker stack
 
-The production Compose file runs the frontend, Spring API, Keycloak, the
-reconstruction API, and two persistent PostgreSQL databases. Supply required
+The production Compose file runs the frontend, Spring API, Keycloak, Ollama,
+the reconstruction API, and two persistent PostgreSQL databases. Supply required
 credentials and public service URLs through the environment or an untracked
 `.env` file, then run:
 
@@ -54,8 +54,9 @@ Required variables include `POSTGRES_PASSWORD`, `KEYCLOAK_DB_PASSWORD`,
 `PUBLIC_KEYCLOAK_ISSUER_URI`, and the public frontend URLs used by the Vite
 build (`VITE_JAVA_API_URL`, `VITE_JAVA_BACKEND_URL`, `VITE_API_URL`,
 `VITE_KEYCLOAK_URL`, `VITE_RECONSTRUCTION_API_URL`, and `VITE_PYTHON_API_URL`).
-Set `OLLAMA_BASE_URL` to an Ollama service reachable by the Spring API and
-`OLLAMA_MODEL` to a model installed on that service.
+The Compose stack builds and runs Ollama as a container, pulls `llama3.2:3b`
+on first start, and keeps model files in a persistent volume. Set `OLLAMA_MODEL`
+to another model if needed; the Ollama service and Java API use the same value.
 The Compose stack publishes web services on all interfaces by default; set
 `BIND_ADDRESS` only when an intentional host-interface restriction is needed.
 The app and Keycloak databases have separate containers and persistent volumes.
@@ -88,8 +89,7 @@ entered in the corresponding Render service settings.
 ## Purchases
 
 The application does not process online payments. Contact the gallery to
-arrange purchases. The gallery chatbot uses Ollama; the configured model
-service must be reachable from the backend.
+arrange purchases. The gallery chatbot uses the Ollama container service.
 
 ## About page
 

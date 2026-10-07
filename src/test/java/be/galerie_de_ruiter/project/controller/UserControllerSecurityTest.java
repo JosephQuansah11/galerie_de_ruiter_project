@@ -2,7 +2,9 @@ package be.galerie_de_ruiter.project.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -11,9 +13,11 @@ import be.galerie_de_ruiter.project.service.UserService;
 import be.galerie_de_ruiter.project.service.OllamaChatService;
 import be.galerie_de_ruiter.project.dto.ChatRequest;
 import be.galerie_de_ruiter.project.dto.ChatResponse;
+import org.springframework.http.MediaType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -71,5 +75,47 @@ class UserControllerSecurityTest {
                         .contentType("application/json")
                         .content("{\"message\":\"Hello\",\"history\":[]}"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void visibleCategoriesLoadWithoutAuthentication() throws Exception {
+        mvc.perform(get("/api/categories"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].name").isString())
+                .andExpect(jsonPath("$[0].itemCount").isNumber());
+    }
+
+    @Test
+    void adminsCanLoadAllCategories() throws Exception {
+        mvc.perform(get("/api/categories/admin")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].name").isString());
+    }
+
+    @Test
+    void adminsCanCreateAndUpdateCategories() throws Exception {
+        String created = mvc.perform(post("/api/categories")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Integration category\",\"visible\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.itemCount").value(0))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String id = com.jayway.jsonpath.JsonPath.read(created, "$.id");
+
+        mvc.perform(put("/api/categories/" + id)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Updated integration category\",\"visible\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Updated integration category"))
+                .andExpect(jsonPath("$.itemCount").value(0));
     }
 }

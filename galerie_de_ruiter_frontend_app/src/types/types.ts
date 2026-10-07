@@ -9,6 +9,8 @@ export interface UserProfile {
   lastName?: string
 }
 
+export type UserProfileUpdate = Pick<UserProfile, 'email' | 'firstName' | 'lastName'>
+
 export interface FormField<T> {
   name: keyof T & string
   label: string

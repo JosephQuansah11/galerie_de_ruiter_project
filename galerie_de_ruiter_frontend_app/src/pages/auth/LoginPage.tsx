@@ -1,4 +1,4 @@
-import { LogIn, UserPlus } from 'lucide-react'
+import { LogIn, MessageCircle, UserPlus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
@@ -17,6 +17,9 @@ export function LoginPage() {
   </Button>
   <Link className="quiet-button auth-login" to="/register">
   <UserPlus size={26} />{t("createAccount")}
+  </Link>
+  <Link className="quiet-button auth-login" to="/chat">
+  <MessageCircle size={26} />{t("talkToGallery")}
   </Link>
   </div>
   <div className="auth-aside">

@@ -20,6 +20,6 @@ public class ChatController {
 
     @PostMapping
     public ChatResponse reply(@Valid @RequestBody ChatRequest request, @AuthenticationPrincipal Jwt jwt) {
-        return chat.reply(request, jwt == null ? "anonymous" : jwt.getSubject());
+        return chat.reply(request, jwt == null ? null : jwt.getSubject());
     }
 }

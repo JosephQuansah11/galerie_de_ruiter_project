@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Clock3, MapPin, Navigation } from "lucide-react";
+import { Clock3, MapPin } from "lucide-react";
 import { getStoreLocation, type StoreLocation } from "@/apis/backend_api";
 import { useLanguage } from "@/context/LanguageContext";
 import { subscribeToContentUpdates } from "@/services/contentUpdates";
+import { LocationMap } from "./location/LocationMap";
 
 export default function LocationPage() {
   const [location, setLocation] = useState<StoreLocation>();
@@ -23,8 +24,6 @@ export default function LocationPage() {
   }, []);
   if (!location)
     return <div className="catalogue-state">{t("loadingLocation")}</div>;
-  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${location.longitude - 0.025}%2C${location.latitude - 0.015}%2C${location.longitude + 0.025}%2C${location.latitude + 0.015}&layer=mapnik&marker=${location.latitude}%2C${location.longitude}`;
-  const externalMapUrl = `https://www.openstreetmap.org/?mlat=${location.latitude}&mlon=${location.longitude}#map=15/${location.latitude}/${location.longitude}`;
   return (
     <section className="location-page">
       <div className="location-copy">
@@ -50,12 +49,7 @@ export default function LocationPage() {
           </div>
         </div>
       </div>
-      <div className="map-frame">
-        <iframe id="galerie-de-ruiter-location-map" title={t("locationMapTitle")} src={mapUrl} />
-        <a href={externalMapUrl} target="_blank" rel="noreferrer">
-          <Navigation size={15} /> {t("openInMap")}
-        </a>
-      </div>
+      <LocationMap location={location} title={t("locationMapTitle")} linkText={t("openInMap")} />
     </section>
   );
 }

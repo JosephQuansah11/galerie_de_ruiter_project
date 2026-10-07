@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AntiqueRepository extends JpaRepository<Antique, UUID> {
     @Override
-    @EntityGraph(attributePaths = "images")
+    @EntityGraph(attributePaths = {"images", "artist", "category"})
     List<Antique> findAll();
 
     List<Antique> findByArtistId(UUID artistId);

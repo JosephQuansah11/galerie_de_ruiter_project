@@ -21,9 +21,13 @@ uvicorn app.main:app --reload --port 8000
 ```
 
 For a local Meshroom or COLMAP runner, set `RECONSTRUCTION_MODE=local` and configure
-`LOCAL_ENGINE_COMMAND`. The command is trusted local configuration and can use
-`${input_dir}`, `${output_dir}`, and `${job_id}` placeholders. It must write a
-`.glb` or `.gltf` file into `${output_dir}`.
+`LOCAL_ENGINE_COMMAND`. OpenCV first segments the foreground object in each of the
+six views using GrabCut and writes transparent PNGs to `${input_dir}` and binary
+masks to `${mask_dir}`. The trusted local command can use `${input_dir}`,
+`${raw_input_dir}`, `${mask_dir}`, `${output_dir}`, and `${job_id}` placeholders.
+Configure the runner to use the six segmented views/masks and write a `.glb` or
+`.gltf` file into `${output_dir}`. The API publishes that model URL for the
+frontend's interactive Three.js viewer.
 
 Example wrapper command:
 
@@ -42,7 +46,8 @@ Endpoints:
 - `POST /v1/reconstructions` with multipart `images` and optional `antique_id`
 - `GET /v1/reconstructions/{job_id}`
 
-The service accepts JPEG, PNG, and WEBP images. Six images are recommended for a future photogrammetry worker.
+The service accepts JPEG, PNG, and WEBP images. Six images from distinct angles
+are required for the current photogrammetry workflow.
 
 ## Production
 

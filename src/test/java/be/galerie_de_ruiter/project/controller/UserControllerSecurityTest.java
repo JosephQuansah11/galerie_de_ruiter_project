@@ -1,9 +1,16 @@
 package be.galerie_de_ruiter.project.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import be.galerie_de_ruiter.project.service.UserService;
+import be.galerie_de_ruiter.project.service.OllamaChatService;
+import be.galerie_de_ruiter.project.dto.ChatRequest;
+import be.galerie_de_ruiter.project.dto.ChatResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -25,6 +32,9 @@ class UserControllerSecurityTest {
 
     @MockitoBean
     private UserService users;
+
+    @MockitoBean
+    private OllamaChatService chat;
 
     @MockitoBean
     private JwtDecoder jwtDecoder;
@@ -49,6 +59,17 @@ class UserControllerSecurityTest {
                         .with(jwt().authorities(
                                 new SimpleGrantedAuthority("ROLE_ADMIN")
                         )))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void chatIsAvailableWithoutAuthentication() throws Exception {
+        when(chat.reply(any(ChatRequest.class), isNull()))
+                .thenReturn(new ChatResponse("Hello", null, null, false));
+
+        mvc.perform(post("/api/chat")
+                        .contentType("application/json")
+                        .content("{\"message\":\"Hello\",\"history\":[]}"))
                 .andExpect(status().isOk());
     }
 }

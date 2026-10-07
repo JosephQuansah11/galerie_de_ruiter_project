@@ -42,11 +42,7 @@ export type AntiqueForm = {
 };
 
 // imageUrl from the backend is relative (e.g. /api/antiques/{id}/image); resolve it against the API origin.
-export const resolveAntiqueImageUrl = (imageUrl?: string | null): string | undefined => {
-  if (!imageUrl) return undefined;
-  const backendBaseURL = import.meta.env.VITE_JAVA_BACKEND_URL ?? "http://localhost:8080";
-  return `${backendBaseURL}${imageUrl}`;
-};
+export { resolveAntiqueImageUrl } from "./antiqueImages";
 
 export const initialAntiqueForm: AntiqueForm = {
   title: "",

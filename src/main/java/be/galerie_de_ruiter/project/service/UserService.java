@@ -3,6 +3,7 @@ package be.galerie_de_ruiter.project.service;
 import be.galerie_de_ruiter.project.domain.User;
 import be.galerie_de_ruiter.project.domain.UserRole;
 import be.galerie_de_ruiter.project.dto.UserRegistrationRequest;
+import be.galerie_de_ruiter.project.dto.UserProfileUpdateRequest;
 import be.galerie_de_ruiter.project.repository.UserRepository;
 import java.util.List;
 
@@ -109,6 +110,30 @@ public class UserService implements UserServiceImplementation {
     @Transactional(readOnly = true)
     public User getByKeycloakSubject(String keycloakSubject) {
         return usersRepository.findByKeycloakSubject(keycloakSubject).orElse(null);
+    }
+
+    @Override
+    public User updateAvatar(String keycloakSubject, byte[] image, String contentType) {
+        User user = requireUser(keycloakSubject);
+        user.setAvatarImage(image);
+        user.setAvatarContentType(contentType);
+        return usersRepository.save(user);
+    }
+
+    @Override
+    public User updateProfile(String keycloakSubject, UserProfileUpdateRequest request) {
+        User user = requireUser(keycloakSubject);
+        UserRepresentation keycloakUser = keycloakAdminClient.realm(keycloakRealm)
+                .users().get(keycloakSubject).toRepresentation();
+        keycloakUser.setEmail(request.email());
+        keycloakUser.setFirstName(request.firstName());
+        keycloakUser.setLastName(request.lastName());
+        keycloakAdminClient.realm(keycloakRealm).users().get(keycloakSubject).update(keycloakUser);
+
+        user.setEmail(request.email());
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
+        return usersRepository.save(user);
     }
 
     @Override

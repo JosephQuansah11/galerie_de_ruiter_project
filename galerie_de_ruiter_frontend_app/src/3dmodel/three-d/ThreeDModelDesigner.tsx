@@ -1,10 +1,9 @@
 // src/components/three-d/ThreeDModelDesigner.tsx
 
-import { useEffect, useState } from "react";
-
 import type { ThreeDModelFactory } from "./types";
 import { ThreeDViewer } from "./ThreeDViewer";
 import { useTranslation } from "react-i18next";
+import { useModelPreviewUrl } from "./useModelPreviewUrl";
 
 interface ThreeDModelDesignerProps {
   frontImage?: File | string;
@@ -18,23 +17,7 @@ export function ThreeDModelDesigner({
   createModel,
 }: ThreeDModelDesignerProps) {
   const { t } = useTranslation();
-  const [previewUrl, setPreviewUrl] = useState<string>();
-
-  useEffect(() => {
-    if (!frontImage) {
-      setPreviewUrl(undefined);
-      return;
-    }
-
-    if (typeof frontImage !== "string") {
-      const imageFile = frontImage;
-      const url = URL.createObjectURL(imageFile);
-      setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-
-    setPreviewUrl(frontImage);
-  }, [frontImage, modelUrl]);
+  const previewUrl = useModelPreviewUrl(frontImage);
 
   if (!frontImage && !modelUrl) {
     return (

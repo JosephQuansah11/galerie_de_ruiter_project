@@ -81,11 +81,15 @@ managed databases are the production PostgreSQL services; the Docker Compose
 PostgreSQL containers are for deployments that use the Compose stack.
 
 GitHub Actions builds both the frontend and backend, runs backend tests, and
-executes a Docker-backed startup smoke test. Unit tests use an in-memory
-database; the smoke test starts the real PostgreSQL, Keycloak, and
-reconstruction containers. The smoke test generates temporary random
-credentials and does not require production secrets. Render auto-deploys the
-blueprint independently of the Actions workflow, so runtime secrets must be
+executes Docker-backed development and production-profile smoke tests. The
+production-profile test runs against an isolated PostgreSQL 17 service with
+Open Session in View disabled, exercises the public catalogue, admin category
+and antique writes, image persistence, CSRF/CORS behavior, chat context, and
+appointment persistence. It substitutes a local Ollama HTTP stub and does not
+connect to or write to production services. The development startup smoke test
+starts PostgreSQL, Keycloak, and the reconstruction containers with temporary
+credentials. Neither workflow requires production secrets. Render auto-deploys
+the blueprint independently of the Actions workflow, so runtime secrets must be
 entered in the corresponding Render service settings.
 
 ## Purchases

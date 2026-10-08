@@ -4,7 +4,7 @@ const reconstructionBaseUrl =
   import.meta.env.VITE_RECONSTRUCTION_API_URL ?? "http://localhost:8000";
 const reconstructionClient = axios.create({
   baseURL: reconstructionBaseUrl,
-  timeout: 30000,
+  timeout: 180000,
   withCredentials: false,
 });
 

@@ -15,6 +15,6 @@ export function ThreeDScene({ createModel, modelUrl, frontImageUrl }: {
     <directionalLight position={[-4, 2, -3]} intensity={0.8} />
     <Suspense fallback={<LoadingModel />}><Center>{modelUrl ? <LoadedModel modelUrl={modelUrl} /> : createModel ? <AntiqueModel createModel={createModel} frontImageUrl={frontImageUrl} /> : null}</Center><Environment preset="studio" /></Suspense>
     <ContactShadows position={[0, -1, 0]} opacity={0.35} scale={10} blur={2} />
-    <OrbitControls enableDamping dampingFactor={0.08} minDistance={1} maxDistance={10} />
+    <OrbitControls enableDamping dampingFactor={0.08} autoRotate autoRotateSpeed={1.5} minDistance={1} maxDistance={10} />
   </Canvas>;
 }

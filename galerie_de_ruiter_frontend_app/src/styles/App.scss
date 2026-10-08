@@ -423,7 +423,6 @@ main {
 .detail-image img {
   width: 100%;
   height: 100%;
-  max-height: 100%;
   object-fit: contain;
 }
 .inventory-row img {
@@ -500,8 +499,6 @@ main {
 .detail-image {
   display: grid;
   place-items: center;
-  height: min(30vh, 24rem);
-  max-height: 30vh;
   background: linear-gradient(135deg, #cfb89b, #7b6d5c);
   color: rgba(255, 255, 255, 0.8);
   font:
@@ -594,8 +591,6 @@ main {
   margin-top: 2rem;
 }
 .detail-image {
-  height: min(30vh, 24rem);
-  max-height: 30vh;
   background: var(--theme-surface);
   color: var(--theme-primary);
 }

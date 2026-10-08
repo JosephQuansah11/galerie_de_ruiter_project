@@ -33,6 +33,14 @@ export default function AntiqueDetailPage() {
     images.previews, gestures.activeView, reconstruction.job, t);
   const inProgress = ["queued", "running"].includes(reconstruction.job?.status ?? "");
   const allSelected = (["front", "back", "left", "right", "top", "bottom"] as Position[]).every((position) => images.images[position]);
+  const selectReconstructionImage = (position: Position, file?: File) => {
+    if (file && (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 6 * 1024 * 1024)) {
+      reconstruction.setMessage("reconstructionImageInvalid");
+      return;
+    }
+    reconstruction.setMessage("");
+    images.selectImage(position, file);
+  };
   return <AntiqueDetailContent antique={antique} images={data.imageUrls} selectedImage={data.preview}
     selectImageUrl={setSelectedImage} artist={data.artist} price={data.price}
     wishlisted={isWishlisted(antique.id)} addToCart={() => addToCart(antique)}
@@ -41,8 +49,8 @@ export default function AntiqueDetailPage() {
     viewsAvailable={data.views.size > 0 || Object.keys(images.previews).length > 0}
     startDrag={gestures.startDrag} endDrag={gestures.endDrag} selectView={gestures.setActiveView}
     isAdmin={auth.isAdmin} modelImages={images.images} job={reconstruction.job}
-    reconstructionMessage={reconstruction.message} submitDisabled={!allSelected || inProgress}
-    selectModelImage={images.selectImage} submitReconstruction={() => void reconstruction.submit()}
+    reconstructionMessage={reconstruction.message} submitDisabled={!allSelected || inProgress || reconstruction.submitting}
+    selectModelImage={selectReconstructionImage} submitReconstruction={() => void reconstruction.submit()}
     related={data.related} locale={locale} back={() => navigate(-1)}
     openAntique={(itemId) => navigate(`/antiques/${itemId}`)} t={t} />;
 }

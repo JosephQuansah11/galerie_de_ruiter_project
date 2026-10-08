@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public record AntiqueResponse(UUID id, String title, DesignerResponse artist, String description, BigDecimal price,
                               String category, String modelUrl, String imageUrl, List<String> imageUrls,
-                              List<AntiqueReconstructionRequest.ReconstructionViewDto> sixViewImages) {
+                              List<SixViewImageResponse> sixViewImages) {
 
     public static AntiqueResponse from(Antique antique) {
         return new AntiqueResponse(
@@ -28,14 +28,25 @@ public record AntiqueResponse(UUID id, String title, DesignerResponse artist, St
 
     private static List<String> imageUrls(Antique antique) {
         return antique.getImages().stream()
-                .filter(image -> image.getDisplayOrder() == null)
+                .filter(image -> !isSixViewPosition(image.getPosition()))
                 .map(AntiqueImage::getId)
                 .map(imageId -> "/api/antiques/" + antique.getId() + "/image/" + imageId)
                 .toList();
     }
 
-    private static List<AntiqueReconstructionRequest.ReconstructionViewDto> parseSixViewImages(Antique antique) {
-        return antique.getImages().stream().filter(image -> image.getDisplayOrder() != null)
-                .map(image -> new AntiqueReconstructionRequest.ReconstructionViewDto(image.getDisplayOrder(), image.getData(), image.getContentType())).toList();
+    private static List<SixViewImageResponse> parseSixViewImages(Antique antique) {
+        return antique.getImages().stream()
+                .filter(image -> isSixViewPosition(image.getPosition()))
+                .map(image -> new SixViewImageResponse(
+                        image.getPosition(),
+                        "/api/antiques/" + antique.getId() + "/image/" + image.getId()))
+                .toList();
+    }
+
+    private static boolean isSixViewPosition(String position) {
+        return List.of("front", "back", "left", "right", "top", "bottom").contains(position);
+    }
+
+    public record SixViewImageResponse(String position, String url) {
     }
 }

@@ -12,7 +12,7 @@ type Props = { title: string; modelUrl?: string; frontImage?: string | File; act
 export function DetailPreview(props: Props) {
   const hasPreview = Boolean(props.modelUrl || props.frontImage);
   return <div className="model-preview">
-    {hasPreview && <ThreeDModelDesigner frontImage={props.frontImage} modelUrl={props.modelUrl} createModel={createAntiqueModel} />}
+    {hasPreview && <ThreeDModelDesigner title={props.title} frontImage={props.frontImage} modelUrl={props.modelUrl} createModel={createAntiqueModel} />}
     {!hasPreview && props.activeImage && <CubeView activeImage={props.activeImage} activeView={props.activeView}
       title={props.title} startDrag={props.startDrag} endDrag={props.endDrag} t={props.t} />}
     {!hasPreview && !props.activeImage && <><span>{props.t("threeDPreview")}</span><strong>{props.t("modelComingSoon")}</strong><p>{props.t("modelDescription")}</p></>}

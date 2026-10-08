@@ -23,7 +23,7 @@ export async function saveAntiqueReconstruction(id: string, views: { position: s
   }, { headers: await csrfHeaders() });
   return response.data;
 }
-export async function getAntiqueReconstructionImages(id: string): Promise<{ position: string; imageData: string; contentType: string }[]> {
-  const response = await axiosInstance.get<{ position: string; imageData: string; contentType: string }[]>(`${backendBaseURL}/api/antiques/${id}/reconstruction`);
+export async function getAntiqueReconstructionImages(id: string): Promise<{ position: string; url: string }[]> {
+  const response = await axiosInstance.get<{ position: string; url: string }[]>(`${backendBaseURL}/api/antiques/${id}/reconstruction`);
   return response.data;
 }

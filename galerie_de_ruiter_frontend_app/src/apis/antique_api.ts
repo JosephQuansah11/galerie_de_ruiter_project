@@ -34,3 +34,12 @@ export async function uploadAntiqueImage(id: string, image: File): Promise<void>
     headers: { ...(await csrfHeaders()), "Content-Type": undefined },
   });
 }
+export async function uploadAntiqueModel(id: string, model: File): Promise<Antique> {
+  const body = new FormData();
+  body.append("model", model);
+  const response = await axiosInstance.put<Antique>(`${backendBaseURL}/api/antiques/${id}/model`, body, {
+    timeout: 60000,
+    headers: { ...(await csrfHeaders()), "Content-Type": undefined },
+  });
+  return response.data;
+}

@@ -17,8 +17,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import jakarta.servlet.http.Cookie;
@@ -207,6 +210,53 @@ class ProductionProfileSmokeTest {
                 .andExpect(status().isOk())
                 .andExpect(content().bytes(imageBytes));
 
+        byte[] modelBytes = minimalGlb();
+        MockMultipartFile model = new MockMultipartFile("model", "smoke.glb", "model/gltf-binary", modelBytes);
+        mvc.perform(multipart("/api/antiques/" + antiqueId + "/model")
+                        .file(model)
+                        .with(admin)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfToken)
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.modelUrl").value("/api/antiques/" + antiqueId + "/model"));
+        mvc.perform(get("/api/antiques/" + antiqueId + "/model"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("model/gltf-binary"))
+                .andExpect(content().bytes(modelBytes));
+
+        var sixViews = java.util.List.of("front", "back", "left", "right", "top", "bottom").stream()
+                .map(position -> Map.of(
+                        "position", position,
+                        "imageData", Base64.getEncoder().encodeToString(new byte[]{1, 2, 3}),
+                        "contentType", "image/png"))
+                .toList();
+        MvcResult reconstructionSaved = mvc.perform(put("/api/antiques/" + antiqueId + "/reconstruction")
+                        .with(admin)
+                        .cookie(csrfCookie)
+                        .header("X-XSRF-TOKEN", csrfToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSON.writeValueAsString(Map.of(
+                                "modelUrl", "/v1/reconstructions/production-smoke/model.glb",
+                                "views", sixViews))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sixViewImages.length()").value(6))
+                .andExpect(jsonPath("$.sixViewImages[0].url").isString())
+                .andExpect(jsonPath("$.imageUrls.length()").value(1))
+                .andReturn();
+        String viewUrl = JSON.readTree(reconstructionSaved.getResponse().getContentAsString())
+                .path("sixViewImages").get(0).path("url").asText();
+        mvc.perform(get(viewUrl))
+                .andExpect(status().isOk())
+                .andExpect(content().bytes(new byte[]{1, 2, 3}));
+        mvc.perform(get("/api/antiques/" + antiqueId + "/reconstruction"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(6))
+                .andExpect(jsonPath("$[0].url").isString());
+
         mvc.perform(put("/api/antiques/" + antiqueId)
                         .with(admin)
                         .cookie(csrfCookie)
@@ -254,6 +304,8 @@ class ProductionProfileSmokeTest {
         assertThat(antiqueRepository.existsById(java.util.UUID.fromString(antiqueId))).isFalse();
         assertThat(mvc.perform(get("/api/antiques/" + antiqueId + "/image"))
                 .andReturn().getResponse().getStatus()).isEqualTo(404);
+        assertThat(mvc.perform(get("/api/antiques/" + antiqueId + "/model"))
+                .andReturn().getResponse().getStatus()).isEqualTo(404);
 
         mvc.perform(get("/api/categories/admin").with(admin))
                 .andExpect(status().isOk())
@@ -266,6 +318,20 @@ class ProductionProfileSmokeTest {
             throw new IllegalStateException("Set " + name + " to an isolated production-smoke PostgreSQL database.");
         }
         return value;
+    }
+
+    private static byte[] minimalGlb() {
+        byte[] json = "{\"asset\":{\"version\":\"2.0\"},\"scene\":0,\"scenes\":[{\"nodes\":[]}]}".getBytes(StandardCharsets.UTF_8);
+        int paddedJsonLength = (json.length + 3) & ~3;
+        ByteBuffer glb = ByteBuffer.allocate(12 + 8 + paddedJsonLength).order(ByteOrder.LITTLE_ENDIAN);
+        glb.putInt(0x46546c67);
+        glb.putInt(2);
+        glb.putInt(glb.capacity());
+        glb.putInt(paddedJsonLength);
+        glb.putInt(0x4e4f534a);
+        glb.put(json);
+        while (glb.position() < glb.capacity()) glb.put((byte) ' ');
+        return glb.array();
     }
 
     private static synchronized String startOllamaStub() {

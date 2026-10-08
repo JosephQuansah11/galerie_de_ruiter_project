@@ -24,12 +24,14 @@ export function AddAntiqueForm({ draft, lookups, selectArtist }: { draft: Draft;
         <DesignerCreator newArtist={lookups.newArtist} setNewArtist={lookups.setNewArtist}
           creating={lookups.creating} addArtist={lookups.addArtist} />
         <AntiqueIdentityFields form={draft.form} update={draft.update} categories={lookups.categories} />
-        <AntiqueMediaFields form={draft.form} update={draft.update} fileNames={draft.fileNames} selectImages={draft.selectImages} />
+        <AntiqueMediaFields form={draft.form} update={draft.update} fileNames={draft.fileNames}
+          modelFileName={draft.modelFileName} selectImages={draft.selectImages} selectModelFile={draft.selectModelFile}
+          updateModelUrl={(value) => { draft.update("modelUrl", value); if (value) draft.selectModelFile(null); }} />
         <AntiqueDescriptionFields form={draft.form} update={draft.update} />
       </fieldset>
-      <Button className="btn btn-outline-secondary" type="submit" disabled={draft.saving}>
+      <Button className="btn btn-outline-secondary" type="submit" disabled={draft.saving || draft.modelFileInvalid}>
         {draft.saving ? <Spinner size="sm" /> : <Save size={16} />}
-        {draft.saving ? t("saving") : t(draft.createdId ? "retryImageUpload" : "saveAntique")}
+        {draft.saving ? t("saving") : t(draft.createdId ? "retryUploads" : "saveAntique")}
       </Button>
     </Form>
   </>;

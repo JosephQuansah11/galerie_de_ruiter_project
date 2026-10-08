@@ -1,6 +1,6 @@
 package be.galerie_de_ruiter.project.controller;
 
-import be.galerie_de_ruiter.project.domain.AntiqueImage;
+import be.galerie_de_ruiter.project.dto.AntiqueResponse.SixViewImageResponse;
 import be.galerie_de_ruiter.project.dto.AntiqueReconstructionRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueResponse;
 import be.galerie_de_ruiter.project.service.AntiqueService;
@@ -37,7 +37,7 @@ public class AntiqueReconstructionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AntiqueImage>> getAntiqueReconstructionImages(@PathVariable UUID id) {
+    public ResponseEntity<List<SixViewImageResponse>> getAntiqueReconstructionImages(@PathVariable UUID id) {
         return ResponseEntity.ok(antiques.getReconstructionImages(id));
     }
     

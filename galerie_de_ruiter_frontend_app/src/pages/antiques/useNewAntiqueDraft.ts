@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import axios from "axios";
-import { addAntique, uploadAntiqueImage } from "@/apis/backend_api";
+import { addAntique, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
 import type { AntiqueForm } from "@/models/antiques/Antique";
 import { publishContentUpdate } from "@/services/contentUpdates";
 
@@ -19,6 +19,9 @@ function saveErrorKey(error: unknown): string {
 export function useNewAntiqueDraft(openAntique: (id: string) => void) {
   const [form, setForm] = useState(empty);
   const [files, setFiles] = useState<File[]>([]);
+  const [modelFile, setModelFile] = useState<File>();
+  const [modelFileInvalid, setModelFileInvalid] = useState(false);
+  const [modelUploaded, setModelUploaded] = useState(false);
   const [createdId, setCreatedId] = useState<string>();
   const [uploadedFileCount, setUploadedFileCount] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -29,6 +32,18 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
     if (selected.some((file) => !file.type.startsWith("image/"))) return setMessage("pleaseChooseImage");
     setFiles(selected); setMessage(undefined);
   };
+  const selectModelFile = (input: FileList | null) => {
+    const selected = input?.[0];
+    if (selected && (!selected.name.toLowerCase().endsWith(".glb") || selected.size > 25 * 1024 * 1024)) {
+      setModelFileInvalid(true);
+      setMessage("glbUploadInvalid");
+      return;
+    }
+    setModelFileInvalid(false);
+    setModelFile(selected);
+    if (selected) update("modelUrl", "");
+    setMessage(undefined);
+  };
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
@@ -38,7 +53,7 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
       if (createdId) {
         antiqueId = createdId;
       } else {
-        const created = await addAntique({ ...form, price: Number(form.price), categoryId: form.categoryId || undefined, modelUrl: form.modelUrl || undefined });
+        const created = await addAntique({ ...form, price: Number(form.price), categoryId: form.categoryId || undefined, modelUrl: modelFile ? undefined : form.modelUrl || undefined });
         antiqueId = created.id;
         setCreatedId(created.id);
       }
@@ -63,9 +78,28 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
       publishContentUpdate("antiques");
       return;
     }
+    if (modelFile && !modelUploaded) {
+      try {
+        await uploadAntiqueModel(antiqueId, modelFile);
+        setModelUploaded(true);
+      } catch (error) {
+        const errorKey = saveErrorKey(error);
+        setMessage(errorKey === "antiqueSavePermissionError"
+          ? errorKey
+          : errorKey === "antiqueSaveConnectionError"
+            ? "antiqueModelConnectionError"
+            : errorKey === "antiqueSaveValidationError"
+              ? "glbUploadInvalid"
+              : "antiqueModelUploadFailed");
+        setSaving(false);
+        publishContentUpdate("antiques");
+        return;
+      }
+    }
     publishContentUpdate("antiques");
     openAntique(antiqueId);
     setSaving(false);
   };
-  return { form, update, files, fileNames: files.map((file) => file.name), createdId, saving, message, setMessage, selectImages, submit };
+  return { form, update, files, fileNames: files.map((file) => file.name), modelFileName: modelFile?.name,
+    modelFileInvalid, createdId, saving, message, setMessage, selectImages, selectModelFile, submit };
 }

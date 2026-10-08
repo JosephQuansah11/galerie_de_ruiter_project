@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import re
 from pathlib import Path
 from string import Template
 from urllib.request import Request, urlopen
@@ -87,14 +88,24 @@ class LocalEngine(ReconstructionEngine):
         try:
             process = await asyncio.create_subprocess_shell(
                 command,
-                cwd=str(input_dir.parent.parent),
+                cwd=str(Path(__file__).resolve().parents[1]),
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
                 env=os.environ.copy(),
             )
-            _, stderr = await process.communicate()
+            output_tail = []
+            while line := await process.stdout.readline():
+                text = line.decode(errors="replace").strip()
+                progress = re.match(r"PROGRESS:(\d+)", text)
+                if progress:
+                    job.progress = min(max(int(progress.group(1)), job.progress), 99)
+                    store.save(job)
+                elif text:
+                    output_tail.append(text)
+                    output_tail = output_tail[-30:]
+            await process.wait()
             if process.returncode != 0:
-                detail = stderr.decode(errors="replace").strip()
+                detail = "\n".join(output_tail).strip()
                 raise RuntimeError(
                     detail
                     or f"Local reconstruction exited with code {process.returncode}."

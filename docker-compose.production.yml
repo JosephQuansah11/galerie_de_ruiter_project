@@ -114,7 +114,9 @@ services:
     ports:
       - "${BIND_ADDRESS:-0.0.0.0}:8000:8000"
     environment:
-      RECONSTRUCTION_MODE: ${RECONSTRUCTION_MODE:-disabled}
+      RECONSTRUCTION_MODE: ${RECONSTRUCTION_MODE:-local}
+      LOCAL_ENGINE_COMMAND: "${LOCAL_ENGINE_COMMAND:-python -m app.colmap_engine --input $${raw_input_dir} --output $${output_dir}}"
+      EXTERNAL_WORKER_URL: ${EXTERNAL_WORKER_URL:-}
       DATA_DIR: /app/data
       CORS_ORIGINS: ${PUBLIC_FRONTEND_ORIGIN:?Set PUBLIC_FRONTEND_ORIGIN}
     volumes:

@@ -2,13 +2,16 @@ package be.galerie_de_ruiter.project.service;
 
 import be.galerie_de_ruiter.project.domain.Antique;
 import be.galerie_de_ruiter.project.domain.AntiqueImage;
+import be.galerie_de_ruiter.project.domain.AntiqueModel;
 import be.galerie_de_ruiter.project.domain.Designer;
 import be.galerie_de_ruiter.project.dto.AntiqueReconstructionRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueReconstructionRequest.ReconstructionViewDto;
 import be.galerie_de_ruiter.project.dto.AntiqueRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueResponse;
+import be.galerie_de_ruiter.project.dto.AntiqueResponse.SixViewImageResponse;
 import be.galerie_de_ruiter.project.dto.AntiqueUpdateRequest;
 import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
+import be.galerie_de_ruiter.project.repository.AntiqueModelRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueRepository;
 import be.galerie_de_ruiter.project.repository.DesignerRepository;
 import jakarta.validation.Valid;
@@ -34,6 +37,7 @@ public class AntiqueService {
     private final AntiqueRepository antiques;
     private final DesignerRepository designerRepository;
     private final AntiqueImageRepository antiqueImageRepository;
+    private final AntiqueModelRepository antiqueModelRepository;
     private final UserService users;
     private final CategoryRepository categoryRepository;
 
@@ -88,9 +92,28 @@ public class AntiqueService {
     }
 
     @Transactional
+    public AntiqueResponse saveModel(UUID id, byte[] modelData) {
+        Antique antique = findAntique(id);
+        AntiqueModel model = antiqueModelRepository.findByAntiqueId(id)
+                .orElseGet(() -> new AntiqueModel(antique, modelData));
+        model.setData(modelData);
+        antiqueModelRepository.save(model);
+        antique.setModelUrl("/api/antiques/" + id + "/model");
+        return AntiqueResponse.from(antiques.save(antique));
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] getModel(UUID id) {
+        return antiqueModelRepository.findByAntiqueId(id)
+                .map(AntiqueModel::getData)
+                .orElse(null);
+    }
+
+    @Transactional
     public void delete(UUID id) {
         Antique antique = findAntique(id);
         antiqueImageRepository.deleteAllByAntiqueId(id);
+        antiqueModelRepository.deleteByAntiqueId(id);
         antiques.delete(antique);
     }
 
@@ -142,7 +165,10 @@ for (ReconstructionViewDto view : request.views()) {
     image.setImageData(view.imageData());
     image.setContentType(view.contentType());
 
-    antiqueImageRepository.save(image);
+    AntiqueImage savedImage = antiqueImageRepository.save(image);
+    if (!antique.getImages().contains(savedImage)) {
+        antique.getImages().add(savedImage);
+    }
 }
 
 
@@ -159,9 +185,13 @@ public AntiqueResponse saveReconstructionResponse(UUID id, AntiqueReconstruction
 }
 
 @Transactional(readOnly = true)
-public List<AntiqueImage> getReconstructionImages(UUID antiqueId) {
-    return antiqueImageRepository.findAllByAntiqueId(antiqueId).stream().filter(image->
-      !Number.class.isInstance(image.getPosition()) && antiqueId.equals(image.getAntique().getId())
-    ).collect(Collectors.toList());
+public List<SixViewImageResponse> getReconstructionImages(UUID antiqueId) {
+    return antiqueImageRepository.findAllByAntiqueId(antiqueId).stream()
+            .filter(image -> List.of("front", "back", "left", "right", "top", "bottom")
+                    .contains(image.getPosition()))
+            .map(image -> new SixViewImageResponse(
+                    image.getPosition(),
+                    "/api/antiques/" + antiqueId + "/image/" + image.getId()))
+            .toList();
 }
 }

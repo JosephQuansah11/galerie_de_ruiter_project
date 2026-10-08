@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -22,12 +23,30 @@ public class SecurityConfiguration {
 	@Value("${FRONTEND_ORIGIN:http://localhost:5173}")
 	private String frontendOrigin;
 
+	/**
+	 * When the deployed frontend and API run on different origins the CSRF cookie must
+	 * be sent with cross-site requests, otherwise every write (profile details, avatar
+	 * uploads) is rejected with 403 in production.
+	 */
+	@Value("${app.security.cross-site-csrf-cookies:false}")
+	private boolean crossSiteCsrfCookies;
+
+	@Bean
+	CsrfTokenRepository csrfTokenRepository() {
+		CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+		repository.setCookiePath("/");
+		if (crossSiteCsrfCookies) {
+			repository.setCookieCustomizer(cookie -> cookie.sameSite("None").secure(true));
+		}
+		return repository;
+	}
+
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 			.csrf(csrf -> csrf
-				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+				.csrfTokenRepository(csrfTokenRepository())
 				.ignoringRequestMatchers("/api/chat"))
 			// .csrf(csrf->csrf.disable())
 			// .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -46,6 +65,7 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.GET, "/api/location").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/about").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/chat").permitAll()
+				.requestMatchers(HttpMethod.GET, "/api/chat/status").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/me").hasAnyRole("USER", "ADMIN")
 				.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
 				// .requestMatchers(HttpMethod.GET, "http://localhost:11434/api/chat").permitAll()

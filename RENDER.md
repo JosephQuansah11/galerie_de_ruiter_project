@@ -67,7 +67,14 @@ be configured separately in its dashboard.
 - `FRONTEND_ORIGIN` and the Keycloak issuer URL must match the final Render service URLs.
 - The chatbot sends requests through `galerie-java-api`, which calls the
   private `galerie-ollama` Docker service. Its model is downloaded at runtime
-  and retained on the service's persistent disk.
+  and retained on the service's persistent disk. `GET /api/chat/status` reports
+  whether the model connection is established; the chat interface waits for a
+  ready status before it accepts a prompt, so a cold model never receives a
+  request it cannot answer.
+- `CROSS_SITE_CSRF_COOKIES` (default `true` in the `prod` profile) marks the
+  `XSRF-TOKEN` cookie as `SameSite=None; Secure`. The Render frontend and API are
+  different origins, so without it the browser drops the cookie and every
+  authenticated write (profile details, avatar and image uploads) fails with 403.
 - The Java API receives the `galerie-app-db` internal host, port, database, username, and password through the `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` variables. The Spring profile assembles these into a JDBC URL.
 - If you created a standalone Java web service instead of the `galerie-java-api` blueprint service, add those five variables and link each to the corresponding **internal** property of `galerie-app-db` in that service's environment. Alternatively, set `DATABASE_URL` to a valid JDBC URL beginning `jdbc:postgresql://`. Ensure the database and web service are in the same Render region.
 - The Java API listens on Render's `PORT`.

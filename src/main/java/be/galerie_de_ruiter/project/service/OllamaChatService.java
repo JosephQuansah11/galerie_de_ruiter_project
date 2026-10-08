@@ -3,17 +3,25 @@ package be.galerie_de_ruiter.project.service;
 import be.galerie_de_ruiter.project.domain.Appointment;
 import be.galerie_de_ruiter.project.domain.Category;
 import be.galerie_de_ruiter.project.dto.ChatAppointmentSelection;
+import be.galerie_de_ruiter.project.dto.ChatConnectionStatus;
 import be.galerie_de_ruiter.project.dto.ChatRequest;
 import be.galerie_de_ruiter.project.dto.ChatResponse;
 import be.galerie_de_ruiter.project.repository.AppointmentRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -26,9 +34,21 @@ import org.springframework.web.client.RestClient;
 @RequiredArgsConstructor
 public class OllamaChatService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final Duration PROBE_TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration READY_CACHE = Duration.ofSeconds(20);
+    private static final String READY_DETAIL = "The gallery assistant model is ready.";
+    private static final String NOT_REACHABLE_DETAIL =
+            "The gallery assistant model service is not reachable yet. Please try again in a moment.";
+    private static final HttpClient HTTP = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
 
     private final AppointmentRepository appointments;
     private final ChatKnowledgeRetriever knowledge;
+
+    /** Cache so the readiness probe runs at most once per {@link #READY_CACHE} window. */
+    private final AtomicReference<Instant> readinessCheckedAt = new AtomicReference<>(Instant.EPOCH);
+    private final AtomicReference<String> readinessFailure = new AtomicReference<>(NOT_REACHABLE_DETAIL);
 
     @Value("${ollama.base-url:http://localhost:11434}")
     private String ollamaUrl;
@@ -56,6 +76,8 @@ public class OllamaChatService {
                     false,
                     List.of());
         }
+
+        requireReadyConnection();
 
         ChatKnowledgeRetriever.RetrievedKnowledge retrieved = knowledge.retrieve(request.message());
 
@@ -87,8 +109,7 @@ public class OllamaChatService {
         }
         conversation.add(Map.of("role", "user", "content", request.message()));
 
-        String ollamaBaseUrl = ollamaUrl.contains("://") ? ollamaUrl : "http://" + ollamaUrl;
-        Map<?, ?> response = RestClient.create(ollamaBaseUrl)
+        Map<?, ?> response = RestClient.create(baseUrl())
                 .post()
                 .uri("/api/chat")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -127,6 +148,65 @@ public class OllamaChatService {
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("The gallery assistant returned an invalid response.", exception);
         }
+    }
+
+    /**
+     * Reports whether the configured chat model is loaded and reachable. The frontend
+     * polls this before it accepts a prompt.
+     */
+    public ChatConnectionStatus connectionStatus() {
+        boolean ready = isModelReady();
+        return new ChatConnectionStatus(ready, model, ready ? READY_DETAIL : readinessFailure.get());
+    }
+
+    /**
+     * Establishes the model connection before a prompt is forwarded. A cold or
+     * unreachable production model now fails fast with a retryable status instead of
+     * receiving a request that cannot succeed.
+     */
+    void requireReadyConnection() {
+        if (!isModelReady()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, readinessFailure.get());
+        }
+    }
+
+    private boolean isModelReady() {
+        if (readinessFailure.get() == null && readinessCheckedAt.get().plus(READY_CACHE).isAfter(Instant.now())) {
+            return true;
+        }
+        String failure = probeModel();
+        readinessFailure.set(failure);
+        readinessCheckedAt.set(Instant.now());
+        return failure == null;
+    }
+
+    private String probeModel() {
+        try {
+            HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl() + "/api/tags"))
+                    .timeout(PROBE_TIMEOUT)
+                    .header("Accept", "application/json")
+                    .GET()
+                    .build();
+            HttpResponse<String> response = HTTP.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                return "The gallery assistant model service answered with status %d. Please try again in a moment."
+                        .formatted(response.statusCode());
+            }
+            for (JsonNode item : OBJECT_MAPPER.readTree(response.body()).path("models")) {
+                String name = item.path("name").asText("");
+                if (name.equals(model) || name.startsWith(model + ":")) return null;
+            }
+            return "The gallery assistant model '%s' is not loaded yet. Please try again in a moment.".formatted(model);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            return NOT_REACHABLE_DETAIL;
+        } catch (Exception exception) {
+            return NOT_REACHABLE_DETAIL;
+        }
+    }
+
+    private String baseUrl() {
+        return ollamaUrl.contains("://") ? ollamaUrl : "http://" + ollamaUrl;
     }
 
     private static boolean isAppointmentConfirmationClaim(String reply) {

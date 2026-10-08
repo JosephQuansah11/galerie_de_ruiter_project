@@ -270,6 +270,12 @@ class ProductionProfileSmokeTest {
                 .andExpect(jsonPath("$.description").value("Updated smoke description"))
                 .andExpect(jsonPath("$.price").value(140.75));
 
+        // The chat interface confirms the model connection before it sends a prompt.
+        mvc.perform(get("/api/chat/status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ready").value(true))
+                .andExpect(jsonPath("$.model").value("smoke-model"));
+
         mvc.perform(post("/api/chat")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -374,6 +380,21 @@ class ProductionProfileSmokeTest {
         if (ollama == null) {
             try {
                 ollama = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+                ollama.createContext("/api/tags", exchange -> {
+                    try {
+                        byte[] response = JSON.writeValueAsBytes(Map.of(
+                                "models", java.util.List.of(Map.of("name", "smoke-model"))));
+                        exchange.getResponseHeaders().set("Content-Type", "application/json");
+                        exchange.sendResponseHeaders(200, response.length);
+                        exchange.getResponseBody().write(response);
+                    } catch (Exception exception) {
+                        byte[] response = exception.getMessage().getBytes(StandardCharsets.UTF_8);
+                        exchange.sendResponseHeaders(500, response.length);
+                        exchange.getResponseBody().write(response);
+                    } finally {
+                        exchange.close();
+                    }
+                });
                 ollama.createContext("/api/chat", exchange -> {
                     try {
                         JsonNode request = JSON.readTree(exchange.getRequestBody());

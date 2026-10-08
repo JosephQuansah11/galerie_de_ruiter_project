@@ -1,0 +1,920 @@
+// ==========================================================================
+// Galerie de Ruiter — antique-shop design layer
+// --------------------------------------------------------------------------
+// Imported last from App.scss so it refines (never restructures) the existing
+// layout: parchment surfaces, hairline frames, gilded accents, serif display
+// type and refined controls.
+// ==========================================================================
+
+:root {
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-ui: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --theme-gold: #b08a4a;
+  --theme-gold-soft: rgba(176, 138, 74, 0.38);
+  --theme-hairline: rgba(60, 31, 37, 0.16);
+  --theme-parchment: #fdfaf6;
+
+  --theme-radius-sm: 4px;
+  --theme-radius: 6px;
+  --theme-radius-lg: 10px;
+
+  --theme-shadow-sm: 0 1px 2px rgba(43, 33, 28, 0.05), 0 6px 14px rgba(43, 33, 28, 0.06);
+  --theme-shadow: 0 2px 4px rgba(43, 33, 28, 0.07), 0 16px 32px rgba(43, 33, 28, 0.11);
+
+  --theme-frame: inset 0 0 0 1px rgba(60, 31, 37, 0.1), inset 0 0 0 6px rgba(255, 253, 250, 0.9),
+    inset 0 0 0 7px var(--theme-gold-soft);
+}
+
+.theme-dark {
+  --theme-gold: #d8b476;
+  --theme-gold-soft: rgba(216, 180, 118, 0.42);
+  --theme-hairline: rgba(255, 248, 244, 0.18);
+  --theme-parchment: #3f2a2e;
+  --theme-shadow-sm: 0 1px 2px rgba(10, 4, 6, 0.4), 0 8px 18px rgba(10, 4, 6, 0.35);
+  --theme-shadow: 0 2px 6px rgba(10, 4, 6, 0.45), 0 18px 36px rgba(10, 4, 6, 0.45);
+  --theme-frame: inset 0 0 0 1px rgba(255, 248, 244, 0.14), inset 0 0 0 6px rgba(0, 0, 0, 0.16),
+    inset 0 0 0 7px var(--theme-gold-soft);
+}
+
+// --------------------------------------------------------------------------
+// Paper backdrop — a warm vignette and a whisper of laid-paper texture
+// --------------------------------------------------------------------------
+body:not(.theme-dark),
+body:not(.theme-dark) .app-main,
+body:not(.theme-dark) .main-content {
+  background-image:
+    radial-gradient(circle at 12% -10%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 46%),
+    radial-gradient(circle at 92% 4%, rgba(176, 138, 74, 0.08), rgba(176, 138, 74, 0) 40%),
+    repeating-linear-gradient(0deg, rgba(60, 31, 37, 0.016) 0 1px, rgba(0, 0, 0, 0) 1px 3px);
+  background-attachment: fixed;
+}
+
+// --------------------------------------------------------------------------
+// Typography — gallery display serif for headings, crisp UI sans elsewhere
+// --------------------------------------------------------------------------
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.004em;
+  line-height: 1.14;
+}
+
+.catalogue-heading h1,
+.shopping-heading h1,
+.profile-hero h1,
+.chat-header h1,
+.location-copy h1,
+.settings-page .page-heading h1,
+.add-antique-intro h1,
+.auth-page .auth-panel h1,
+.welcome-hero h1,
+.about-content h1,
+.about-content h2,
+.about-content h3,
+.catalogue-card h2,
+.shopping-row h2,
+.cart-total strong,
+.catalogue-count strong,
+.profile-details-panel h2,
+.security-card h3,
+.settings-page .preference-heading h2,
+.welcome-story h2,
+.welcome-grid h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.006em;
+}
+
+.catalogue-heading h1,
+.shopping-heading h1,
+.welcome-hero h1,
+.auth-page .auth-panel h1 {
+  font-weight: 400;
+}
+
+// Small-caps gilded labels with a drawn rule, used above every section title.
+.eyebrow,
+.catalogue-artist,
+.catalogue-kicker,
+.workspace-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--theme-gold);
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before,
+.catalogue-artist::before,
+.catalogue-kicker::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.65;
+}
+
+// Section rules: a gilded hairline instead of a bare border.
+.profile-access-summary,
+.security-line,
+.settings-page .page-heading,
+.settings-page .preference-heading,
+.profile-hero,
+.add-antique-intro,
+.chat-header {
+  border-color: var(--theme-hairline);
+}
+
+hr,
+.about-content hr {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, var(--theme-gold-soft), var(--theme-hairline) 40%, rgba(0, 0, 0, 0));
+}
+
+// Badges read as engraved plaques.
+.badge {
+  border-radius: var(--theme-radius-sm);
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.35em 0.65em;
+}
+
+.badge.catalogue-kicker {
+  border: 1px solid var(--theme-gold-soft);
+  background-color: transparent;
+  color: var(--theme-gold);
+}
+
+.badge.catalogue-kicker::before {
+  display: none;
+}
+
+// --------------------------------------------------------------------------
+// Buttons — engraved gallery labels: squared, letterspaced, gilded on hover
+// --------------------------------------------------------------------------
+.btn,
+.primary-button,
+.quiet-button,
+.menu-action,
+.chat-option,
+.chat-status-retry,
+.catalogue-search-submit,
+.inventory-search-submit,
+.theme-option {
+  --bs-btn-border-radius: var(--theme-radius);
+  border-radius: var(--theme-radius);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  letter-spacing: 0.085em;
+  text-transform: uppercase;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease,
+    box-shadow 160ms ease, transform 160ms ease;
+}
+
+.btn {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  padding: 0.62rem 1.1rem;
+}
+
+.btn-sm {
+  font-size: 0.72rem;
+  padding: 0.45rem 0.8rem;
+  letter-spacing: 0.07em;
+}
+
+.btn-lg {
+  font-size: 0.85rem;
+  padding: 0.8rem 1.5rem;
+}
+
+.btn:focus-visible,
+.primary-button:focus-visible,
+.quiet-button:focus-visible,
+.chat-option:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 2px var(--theme-surface), 0 0 0 4px var(--theme-gold-soft);
+}
+
+// Primary — deep bordeaux with an inner gilded hairline.
+.btn.btn-primary,
+.primary-button {
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+  box-shadow: inset 0 0 0 1px rgba(255, 250, 247, 0.18), var(--theme-shadow-sm);
+}
+
+.btn.btn-primary:hover,
+.btn.btn-primary:focus-visible,
+.primary-button:hover,
+.primary-button:focus-visible {
+  border-color: var(--theme-gold);
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+  box-shadow: inset 0 0 0 1px rgba(255, 250, 247, 0.3), inset 0 0 0 3px var(--theme-gold-soft), var(--theme-shadow);
+  transform: translateY(-1px);
+}
+
+.btn.btn-primary:disabled,
+.primary-button:disabled {
+  border-color: var(--theme-hairline);
+  background: var(--theme-border);
+  color: var(--theme-text-secondary);
+  box-shadow: none;
+  transform: none;
+}
+
+// Dark — espresso lacquer.
+.btn.btn-dark {
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  background: #2b211c;
+  color: #fbf7f1;
+  box-shadow: inset 0 0 0 1px rgba(255, 250, 247, 0.14), var(--theme-shadow-sm);
+}
+
+.btn.btn-dark:hover,
+.btn.btn-dark:focus-visible {
+  border-color: var(--theme-gold);
+  background: #3a2d26;
+  color: #fffaf3;
+  box-shadow: inset 0 0 0 3px var(--theme-gold-soft), var(--theme-shadow);
+  transform: translateY(-1px);
+}
+
+// Outline — hairline frames that fill with the theme colour on hover.
+.btn-outline-dark,
+.btn-outline-secondary,
+.btn-outline-primary,
+.admin-form-page .address-lookup .btn-outline-secondary {
+  border: 1px solid var(--theme-hairline);
+  background: transparent;
+  color: var(--theme-text);
+  box-shadow: none;
+}
+
+.btn-outline-dark:hover,
+.btn-outline-dark:focus-visible,
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus-visible,
+.btn-outline-primary:hover,
+.btn-outline-primary:focus-visible {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+}
+
+.admin-page .inventory-row-actions .btn-outline-primary {
+  border-color: var(--theme-hairline);
+  color: var(--theme-primary);
+}
+
+.admin-page .inventory-row-actions .btn-outline-danger {
+  border-color: var(--theme-hairline);
+  color: #8f2c2c;
+}
+
+.btn-outline-danger:hover,
+.btn-outline-danger:focus-visible {
+  border-color: #8f2c2c;
+  background: #8f2c2c;
+  color: #fff;
+}
+
+// Text buttons — gilded underlined links.
+.btn.btn-link,
+.btn-link {
+  border: 0;
+  background: transparent;
+  color: var(--theme-primary);
+  padding: 0.4rem 0.35rem;
+  box-shadow: none;
+  text-decoration: underline;
+  text-decoration-color: var(--theme-gold-soft);
+  text-underline-offset: 0.3em;
+}
+
+.btn.btn-link:hover,
+.btn.btn-link:focus-visible {
+  color: var(--theme-gold);
+  text-decoration-color: currentColor;
+}
+
+.quiet-button,
+.menu-action {
+  border: 1px solid var(--theme-hairline);
+  background: transparent;
+  color: var(--theme-text);
+  font-size: 0.75rem;
+  padding: 0.55rem 0.95rem;
+}
+
+.quiet-button:hover,
+.quiet-button:focus-visible,
+.menu-action:hover,
+.menu-action:focus-visible {
+  border-color: var(--theme-gold);
+  background: rgba(176, 138, 74, 0.1);
+  color: var(--theme-text);
+}
+
+// Navigation links stay readable: no letterspaced capitals in the sidebar rail.
+.nav-item-link,
+.chat-whatsapp,
+.auth-page .auth-panel .auth-login {
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+// --------------------------------------------------------------------------
+// Containers — parchment panels with a hairline frame and a soft cast shadow
+// --------------------------------------------------------------------------
+.form-panel,
+.preference-panel,
+.security-card,
+.profile-details-panel,
+.model-admin-panel,
+.category-create-form,
+.chat-appointment-picker,
+.appointment-summary,
+.map-frame,
+.auth-page .auth-panel,
+.catalogue-card,
+.shopping-row,
+.admin-row,
+.inventory-row {
+  border-radius: var(--theme-radius-lg);
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+.add-antique-page .card {
+  border-radius: var(--theme-radius-lg);
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow);
+}
+
+.catalogue-card:hover {
+  border-color: var(--theme-gold-soft);
+  box-shadow: var(--theme-shadow), inset 0 0 0 1px var(--theme-gold-soft);
+}
+
+.admin-page .inventory-row:hover,
+.admin-page .inventory-row:focus-visible {
+  border-color: var(--theme-gold-soft);
+}
+
+// Mounted pieces: a double mat frame instead of a flat image box.
+.catalogue-card-image,
+.detail-image {
+  border-radius: var(--theme-radius-sm);
+  background-image: linear-gradient(160deg, #fcf9f4, #efe3d7);
+  box-shadow: var(--theme-frame);
+}
+
+.inventory-thumb,
+.shopping-thumb,
+.detail-image-gallery button {
+  border-radius: var(--theme-radius-sm);
+  box-shadow: var(--theme-frame);
+}
+
+.catalogue-card-image img,
+.detail-image img,
+.inventory-thumb img,
+.shopping-thumb img {
+  border-radius: var(--theme-radius-sm);
+}
+
+// --------------------------------------------------------------------------
+// Forms — ruled parchment fields with a gilded focus ring
+// --------------------------------------------------------------------------
+.form-control,
+.form-select,
+textarea.form-control {
+  border: 1px solid var(--theme-hairline);
+  border-radius: var(--theme-radius);
+  background: var(--theme-parchment);
+  color: var(--theme-text);
+  font-family: var(--font-ui);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea.form-control:focus {
+  border-color: var(--theme-gold);
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--theme-gold-soft);
+}
+
+.form-label,
+label {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--theme-text-secondary);
+  text-transform: uppercase;
+}
+
+.form-label::after {
+  content: none;
+}
+
+// Search controls sit on the parchment shelf as squared, framed fields.
+.catalogue-search,
+.admin-page .inventory-search {
+  border-radius: var(--theme-radius);
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+.catalogue-search:focus-within,
+.admin-page .inventory-search:focus-within {
+  border-color: var(--theme-gold);
+  box-shadow: 0 0 0 3px var(--theme-gold-soft);
+}
+
+.catalogue-search .catalogue-search-icon,
+.inventory-search .inventory-search-icon {
+  border-radius: var(--theme-radius-sm);
+  background: rgba(176, 138, 74, 0.14);
+  color: var(--theme-gold);
+}
+
+.catalogue-search-submit,
+.inventory-search-submit {
+  border-radius: var(--theme-radius);
+  border-color: rgba(0, 0, 0, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 250, 247, 0.18);
+}
+
+.catalogue-search-submit:hover,
+.catalogue-search-submit:focus-visible,
+.inventory-search-submit:hover,
+.inventory-search-submit:focus-visible {
+  border-color: var(--theme-gold);
+  box-shadow: inset 0 0 0 3px var(--theme-gold-soft);
+  transform: translateY(-1px);
+}
+
+.catalogue-search-clear:hover,
+.catalogue-search-clear:focus-visible,
+.inventory-search-clear:hover,
+.inventory-search-clear:focus-visible {
+  background: rgba(176, 138, 74, 0.16);
+  color: var(--theme-text);
+}
+
+// --------------------------------------------------------------------------
+// Chat, menus and messages
+// --------------------------------------------------------------------------
+.chat-bubble {
+  border-radius: var(--theme-radius-lg);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+.chat-assistant {
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+}
+
+.chat-user {
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 250, 247, 0.18), var(--theme-shadow-sm);
+}
+
+.chat-option {
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+  color: var(--theme-text);
+}
+
+.chat-option:hover:not(:disabled),
+.chat-option:focus-visible {
+  border-color: var(--theme-gold);
+  background: rgba(176, 138, 74, 0.12);
+  color: var(--theme-text);
+}
+
+.chat-icon {
+  box-shadow: inset 0 0 0 1px rgba(255, 250, 247, 0.25);
+}
+
+.chat-header,
+.chat-composer {
+  border-color: var(--theme-hairline);
+}
+
+.chat-sources {
+  border-top-color: var(--theme-hairline);
+}
+
+.chat-sources a {
+  color: var(--theme-primary);
+  text-decoration-color: var(--theme-gold-soft);
+  text-underline-offset: 0.25em;
+}
+
+.dropdown-menu {
+  border-radius: var(--theme-radius-lg);
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow);
+  padding: 0.4rem;
+}
+
+.dropdown-item {
+  border-radius: var(--theme-radius-sm);
+  font-family: var(--font-ui);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background: rgba(176, 138, 74, 0.14);
+  color: var(--theme-text);
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+}
+
+.dropdown-divider {
+  border-top-color: var(--theme-hairline);
+}
+
+.dropdown-header {
+  color: var(--theme-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+// Notices and dialogs sit on the parchment too.
+.alert {
+  border: 1px solid var(--theme-hairline);
+  border-left-width: 3px;
+  border-radius: var(--theme-radius);
+  background: var(--theme-parchment);
+  color: var(--theme-text);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+}
+
+.alert-danger { border-left-color: #8f2c2c; }
+.alert-success { border-left-color: #3f7d68; }
+.alert-warning { border-left-color: var(--theme-gold); }
+.alert-light { background: var(--theme-parchment); color: var(--theme-text); }
+
+.modal-content {
+  border-radius: var(--theme-radius-lg);
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow);
+}
+
+.modal-header,
+.modal-footer {
+  border-color: var(--theme-hairline);
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 500;
+}
+
+.modal-backdrop.show {
+  opacity: 0.5;
+}
+
+// Preference swatches read as paint chips on a display card.
+.settings-page .theme-option {
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+}
+
+.settings-page .theme-option.selected {
+  border-color: var(--theme-gold);
+  box-shadow: 0 0 0 3px var(--theme-gold-soft);
+}
+
+.theme-swatch {
+  border-radius: var(--theme-radius-sm);
+}
+
+// Totals and counters
+.cart-total {
+  border-top: 1px solid var(--theme-hairline);
+}
+
+.catalogue-count strong,
+.cart-total strong {
+  color: var(--theme-primary);
+}
+
+.welcome-hero {
+  border-bottom: 1px solid var(--theme-hairline);
+}
+
+.welcome-grid article {
+  border-radius: var(--theme-radius-lg);
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+// Narrow screens: keep letterspaced labels from overflowing.
+@media (max-width: 640px) {
+  .btn {
+    font-size: 0.72rem;
+    padding: 0.55rem 0.85rem;
+    letter-spacing: 0.06em;
+  }
+
+  .eyebrow,
+  .catalogue-artist,
+  .catalogue-kicker {
+    letter-spacing: 0.16em;
+  }
+
+  .eyebrow::before,
+  .catalogue-artist::before,
+  .catalogue-kicker::before {
+    width: 1rem;
+  }
+}
+
+// --------------------------------------------------------------------------
+// Breathing room — every block container keeps its size and gains 0.5rem
+// --------------------------------------------------------------------------
+// `:where()` keeps the specificity at zero, so any padding a component already
+// declared still wins longhand by longhand (heroes, panels, grid gutters, the
+// search fields). Containers that never declared padding now sit on a 0.5rem mat
+// instead of touching their frame. Layout-critical wrappers are excluded: the app
+// shell would shift, Bootstrap rows would fight their negative gutters, and modal
+// and dropdown chrome must stay flush.
+:where(
+  div:not(.app-shell):not(.row):not(.modal-dialog):not(.modal-content):not(.dropdown-menu):not(.eyebrow):not(.catalogue-artist):not(.topbar),
+  section,
+  article,
+  aside,
+  figure,
+  fieldset,
+  header,
+  footer
+) {
+  padding: 0.5rem;
+}
+
+// Pictures hang on a mat: the mount keeps its size and the image is inset 0.5rem.
+// (Avatars are round portraits and keep their full bleed.)
+.catalogue-card-image,
+.detail-image,
+.inventory-thumb,
+.shopping-thumb,
+.detail-image-gallery button,
+.model-preview-grid img {
+  padding: 0.5rem;
+}
+
+// --------------------------------------------------------------------------
+// Settings — a curated display shelf for the reading language and the palette
+// --------------------------------------------------------------------------
+.settings-page {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 76rem;
+}
+
+.settings-page .page-heading {
+  align-items: end;
+  margin: 0;
+  padding: 0.5rem 0.5rem 1.5rem;
+  border-bottom: 1px solid var(--theme-hairline);
+  background: linear-gradient(180deg, rgba(176, 138, 74, 0.08), rgba(176, 138, 74, 0));
+}
+
+.settings-page .page-heading h1 {
+  margin: 0.5rem 0 0.4rem;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+}
+
+.settings-page .page-heading p {
+  max-width: 38rem;
+  line-height: 1.7;
+}
+
+.settings-page .settings-card {
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  border: 1px solid var(--theme-hairline);
+  border-radius: var(--theme-radius-lg);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+.settings-page .settings-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--theme-hairline);
+}
+
+.settings-page .settings-card-title {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.settings-page .settings-card-title label,
+.settings-page .settings-card-title h2 {
+  margin: 0;
+  color: var(--theme-text);
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.6vw, 2.05rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.settings-page .settings-card-title p {
+  margin: 0;
+  max-width: 34rem;
+  line-height: 1.65;
+}
+
+.settings-page .settings-card-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 1px solid var(--theme-gold-soft);
+  border-radius: 999px;
+  color: var(--theme-gold);
+}
+
+.settings-page .language-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+}
+
+.settings-page .language-row label {
+  margin: 0;
+}
+
+.settings-page .language-row select {
+  min-width: 17rem;
+  min-height: 2.9rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+// Theme choices read as paint chips with a mounted sample and palette dots.
+.settings-page .theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+  gap: 0.9rem;
+  margin-top: 1.15rem;
+  padding: 0;
+}
+
+.settings-page .theme-option {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "swatch swatch"
+    "copy check";
+  align-items: end;
+  gap: 0.75rem 0.5rem;
+  min-height: 11rem;
+  padding: 0.75rem;
+  border: 1px solid var(--theme-hairline);
+  border-radius: var(--theme-radius-lg);
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+
+.settings-page .theme-option:hover,
+.settings-page .theme-option:focus-visible {
+  border-color: var(--theme-gold-soft);
+  box-shadow: var(--theme-shadow-sm);
+  transform: translateY(-2px);
+}
+
+.settings-page .theme-option.selected {
+  border-color: var(--theme-gold);
+  box-shadow: 0 0 0 3px var(--theme-gold-soft), var(--theme-shadow-sm);
+}
+
+.settings-page .theme-swatch {
+  grid-area: swatch;
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 3.6rem;
+  border: 1px solid var(--theme-hairline);
+  border-radius: var(--theme-radius);
+  overflow: hidden;
+}
+
+.settings-page .theme-swatch-dots {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.4rem;
+  display: flex;
+  gap: 0.28rem;
+}
+
+.settings-page .theme-swatch-dots > span {
+  display: block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+}
+
+.settings-page .theme-copy {
+  grid-area: copy;
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.settings-page .theme-copy strong {
+  color: var(--theme-text);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 500;
+  text-transform: none;
+}
+
+.settings-page .theme-copy small {
+  color: var(--theme-text-secondary);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.settings-page .theme-check {
+  grid-area: check;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--theme-gold-soft);
+  border-radius: 999px;
+  color: var(--theme-gold);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@media (max-width: 650px) {
+  .settings-page .settings-card-head {
+    align-items: stretch;
+  }
+
+  .settings-page .language-row select {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+
+
+
+
+

@@ -1,5 +1,5 @@
 import { Form, Badge } from "react-bootstrap";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type Antique from "@/models/antiques/Antique";
 import type { Category } from "@/models/antiques/Antique";
@@ -23,12 +23,19 @@ type Props = {
 
 export function CataloguePage(props: Props) {
   const { t } = useTranslation();
+  const hasQuery = props.query.length > 0;
   return <section className="catalogue-page">
     <CatalogueHeading count={props.antiques.length} />
     <div className="catalogue-controls">
-      <Form className="catalogue-search" role="search">
-        <Search size={18} aria-hidden="true" />
+      <Form className="catalogue-search" role="search" onSubmit={(event) => event.preventDefault()}>
+        <span className="catalogue-search-icon" aria-hidden="true"><Search size={18} /></span>
         <Form.Control aria-label={t("searchAntiques")} value={props.query} onChange={(event) => props.onQueryChange(event.target.value)} placeholder={t("searchPlaceholder")} />
+        {hasQuery && <button type="button" className="catalogue-search-clear" aria-label={t("clearSearch")} onClick={() => props.onQueryChange("")}>
+          <X size={16} aria-hidden="true" />
+        </button>}
+        <button type="submit" className="catalogue-search-submit">
+          <Search size={16} aria-hidden="true" /><span>{t("search")}</span>
+        </button>
       </Form>
       <CollectionFilter categories={props.categories} category={props.category} onSelect={props.setCategory} />
     </div>

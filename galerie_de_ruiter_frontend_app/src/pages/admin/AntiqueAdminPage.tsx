@@ -82,15 +82,22 @@ export default function AntiqueAdminPage() {
     <section className="admin-page">
       <InventoryHeading administration={t("administration")} title={t("antiqueInventory")} />
       <div className="inventory-toolbar">
-        <div className="inventory-search" role="search">
-          <Search size={17} aria-hidden="true" />
+        <form className="inventory-search" role="search" onSubmit={(event) => event.preventDefault()}>
+          <span className="inventory-search-icon" aria-hidden="true"><Search size={17} /></span>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("searchInventory")}
             aria-label={t("searchInventory")}
           />
-        </div>
+          {query.length > 0 && <button type="button" className="inventory-search-clear" aria-label={t("clearSearch")}
+            onClick={() => setQuery("")}>
+            <X size={16} aria-hidden="true" />
+          </button>}
+          <button type="submit" className="inventory-search-submit">
+            <Search size={16} aria-hidden="true" /><span>{t("search")}</span>
+          </button>
+        </form>
         <Button as="button" className="btn btn-primary inventory-add-button" onClick={() => navigate("/admin/antiques/new")}>
           <Plus size={16} /> {t("addAntique")}
         </Button>

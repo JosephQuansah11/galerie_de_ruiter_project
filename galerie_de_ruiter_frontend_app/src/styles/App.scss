@@ -370,21 +370,7 @@ main {
   color: var(--theme-text);
   font-size: 2rem;
 }
-.catalogue-search {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  max-width: 80rem;
-  margin-bottom: 2rem;
-  padding: 0.35rem 0.9rem;
-  border: 1px solid rgba(30, 32, 34, 0.2);
-  background: rgba(255, 255, 255, 0.78);
-}
-.catalogue-search .form-control {
-  border: 0;
-  box-shadow: none;
-  background: transparent;
-}
+// The catalogue search control is styled in the shared _antique-pages partial.
 .catalogue-card {
   height: 100%;
   overflow: hidden;
@@ -1927,3 +1913,142 @@ button{
 .button-wide{
   width: auto;
 }
+
+// --------------------------------------------------
+// Collapsed (small screen) navigation
+// Below the navbar's xl breakpoint the navigation collapses into a compact top bar
+// with a single dropdown panel instead of a full-height column.
+// --------------------------------------------------
+@media (max-width: 1199.98px) {
+  #Navbar {
+    inset: 0 0 auto 0;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    min-height: 4.25rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.45rem 0.9rem;
+    z-index: 1040;
+    box-shadow: 0 0.6rem 1.6rem rgba(35, 16, 20, 0.3);
+  }
+
+  #Navbar .navbar-brand-div {
+    width: auto;
+    min-height: 0;
+    padding: 0;
+    margin-right: auto;
+  }
+  #Navbar .navbar-brand-div .navbar-logo {
+    width: 6.5rem;
+    max-height: 3rem;
+  }
+
+  #Navbar .navbar-toggler {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 1px solid rgba(255, 250, 247, 0.42);
+    border-radius: 0.6rem;
+    background: rgba(255, 250, 247, 0.1);
+    box-shadow: none;
+    transition: background 160ms ease, border-color 160ms ease;
+  }
+  #Navbar .navbar-toggler:hover,
+  #Navbar .navbar-toggler:focus-visible {
+    border-color: rgba(255, 250, 247, 0.8);
+    background: rgba(255, 250, 247, 0.22);
+  }
+  #Navbar .navbar-toggler:focus-visible {
+    outline: 2px solid rgba(255, 250, 247, 0.65);
+    outline-offset: 2px;
+  }
+
+  #Navbar .navbar-collapse {
+    flex-basis: 100%;
+    margin-top: 0.45rem;
+    padding: 0.85rem 0.85rem 1rem;
+    max-height: calc(100dvh - 5rem);
+    overflow-y: auto;
+    border: 1px solid rgba(255, 250, 247, 0.16);
+    border-radius: 0.75rem;
+    background: linear-gradient(165deg, rgba(38, 10, 15, 0.98), rgba(66, 15, 23, 0.98));
+    box-shadow: 0 1.1rem 2.4rem rgba(18, 6, 9, 0.45);
+  }
+  #Navbar .navbar-nav {
+    height: auto;
+    justify-content: flex-start;
+  }
+  #Navbar .icons-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: 0.3rem;
+    padding: 0;
+  }
+  #Navbar .nav-item-link {
+    padding: 0.6rem 0.7rem;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+  }
+  #Navbar .nav-item-link.active {
+    background: rgba(255, 250, 247, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(255, 250, 247, 0.25);
+  }
+  #Navbar .icons-list-user-profile {
+    width: 100%;
+    margin-top: 0.75rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(255, 250, 247, 0.16);
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  #Navbar .icons-list-user-profile .dropdown-menu {
+    right: 0;
+    left: auto;
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    padding-top: 4.5rem;
+  }
+  main {
+    padding: 0.75rem 1rem 2rem;
+  }
+  .chat-page,
+  .profile-page,
+  .catalogue-page,
+  .admin-page,
+  .detail-page,
+  .about-page {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+// --------------------------------------------------
+// Gallery assistant connection state
+// --------------------------------------------------
+.chat-status { display: flex; flex-direction: row; align-items: center; gap: 0.75rem; margin: 1rem 0 0; padding: 0.75rem 1rem; border: 1px solid var(--theme-border); border-left: 3px solid var(--theme-accent); border-radius: 0.5rem; background: var(--theme-surface); color: var(--theme-text); }
+.chat-status-copy { display: grid; gap: 0.15rem; min-width: 0; }
+.chat-status-copy strong { font-size: 0.95rem; }
+.chat-status-copy span { color: var(--theme-text-secondary); font-size: 0.85rem; }
+.chat-status-retry { display: inline-flex; flex-direction: row; align-items: center; gap: 0.3rem; flex: 0 0 auto; margin-left: auto; padding: 0.45rem 0.85rem; border: 1px solid var(--theme-primary); border-radius: 999px; background: var(--theme-surface); color: var(--theme-primary); font: inherit; font-size: 0.85rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.chat-status-retry:hover, .chat-status-retry:focus-visible { background: var(--theme-primary); color: var(--theme-on-primary); }
+.chat-composer .form-control:disabled { background: var(--theme-background); color: var(--theme-text-secondary); }
+.chat-composer button:disabled { opacity: 0.55; cursor: not-allowed; }
+.profile-upload-alert { margin: 0.35rem 0 0; font-size: 0.85rem; }
+
+// The antique-shop design layer refines the rules above (surfaces, buttons,
+// typography and controls) and must stay last so it wins the cascade.
+@import "antique-theme";
+

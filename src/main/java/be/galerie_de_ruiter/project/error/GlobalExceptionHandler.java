@@ -59,6 +59,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	ResponseEntity<ApiError> unexpected(Exception exception, HttpServletRequest request) {
+		logger.error("Unhandled error for {} {}", request.getMethod(), request.getRequestURI(), exception);
 		return response(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request);
 	}
 

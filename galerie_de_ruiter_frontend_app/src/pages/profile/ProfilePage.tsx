@@ -7,6 +7,7 @@ import { ProfileSecurity } from './ProfileSecurity'
 import { ShieldCheck, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { ProfileAvatarUpload } from './ProfileAvatarUpload'
+import { describeApiError } from '../../apis/apiError'
 
 export function ProfilePage() {
   const auth = useAuth(); const { t } = useTranslation(); const name = auth.profile?.username ?? t("guestVisitor")
@@ -17,11 +18,22 @@ export function ProfilePage() {
     if (saving) return
     setSaving(true)
     setSaveMessage('')
+    const details = {
+      firstName: (value.firstName ?? '').trim(),
+      lastName: (value.lastName ?? '').trim(),
+      email: (value.email ?? '').trim(),
+    }
+    if (!details.firstName || !details.lastName || !details.email) {
+      setSaveMessage(t('profileUpdateRequiredFields'))
+      setSaving(false)
+      return
+    }
     try {
-      await auth.updateProfile({ firstName: value.firstName, lastName: value.lastName, email: value.email })
+      await auth.updateProfile(details)
       setSaveMessage(t('profileUpdateSucceeded'))
-    } catch {
-      setSaveMessage(t('profileUpdateFailed'))
+    } catch (thrown) {
+      // Show the API reason (session, CSRF or validation) instead of a generic failure.
+      setSaveMessage(describeApiError(thrown, t('profileUpdateFailed')))
     } finally {
       setSaving(false)
     }

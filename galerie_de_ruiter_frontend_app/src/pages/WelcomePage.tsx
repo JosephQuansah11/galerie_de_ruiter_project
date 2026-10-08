@@ -5,7 +5,7 @@ import { WelcomeStory } from "./welcome/WelcomeStory";
 export default function WelcomePage() {
   return <section className="welcome-page">
     <WelcomeHero />
-    <WelcomeHighlights shareUrl={window.location.origin} />
+    <WelcomeHighlights />
     <WelcomeStory />
   </section>;
 }

@@ -785,16 +785,6 @@ main {
   color: var(--theme-text-secondary);
   line-height: 1.6;
 }
-.share-card {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-}
-.share-card img {
-  width: 8rem;
-  height: 8rem;
-  background: #fff;
-}
 .welcome-story {
   margin-top: 3rem;
   padding-top: 2rem;
@@ -1583,12 +1573,14 @@ body.theme-dark .form-control::placeholder {
 }
 
 #Navbar .icons-list-user-profile .dropdown-menu {
-  // z-index: 1061;
   right: 0;
   left: auto;
   min-width: 12rem;
+  max-height: min(70dvh, 24rem);
+  overflow-y: auto;
   color: var(--theme-text);
   text-align: left;
+  z-index: 2000;
 }
 
 #Navbar .nav-item-link {
@@ -1655,6 +1647,10 @@ body.theme-dark .form-control::placeholder {
     margin: 0 -0.75rem -0.35rem;
     overflow-y: auto;
     background: linear-gradient(165deg, var(--theme-nav-start), var(--theme-nav-end));
+  }
+
+  #Navbar .navbar-collapse:has(.icons-list-user-profile .dropdown-menu.show) {
+    overflow: visible;
   }
 
   #Navbar .navbar-collapse > .navbar-nav {
@@ -1863,6 +1859,21 @@ body.theme-dark .form-control::placeholder {
 .chat-bubble { max-width: 78%; padding: 0.8rem 1rem; border-radius: 0.8rem; line-height: 1.5; }
 .chat-user { justify-self: end; background: var(--theme-primary); color: var(--theme-on-primary); }
 .chat-assistant { justify-self: start; background: var(--theme-surface); border: 1px solid rgba(60, 31, 37, 0.14); }
+.chat-quick-options { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 1rem; }
+.chat-option { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; min-height: 2.5rem; padding: 0.55rem 0.8rem; border: 1px solid rgba(107, 36, 50, 0.3); border-radius: 0.45rem; background: var(--theme-surface); color: var(--theme-primary); font: inherit; font-weight: 600; cursor: pointer; }
+.chat-option:hover:not(:disabled), .chat-option:focus-visible { border-color: var(--theme-primary); background: rgba(107, 36, 50, 0.08); }
+.chat-option:disabled { cursor: not-allowed; opacity: 0.6; }
+.chat-option-primary { border-color: var(--theme-primary); background: var(--theme-primary); color: var(--theme-on-primary); }
+.chat-option-primary:hover:not(:disabled), .chat-option-primary:focus-visible { background: #571c28; color: #fff; }
+.chat-appointment-picker { display: grid; gap: 0.85rem; margin: 0 0 1rem; padding: 1rem; border: 1px solid var(--theme-border); border-radius: 0.65rem; background: var(--theme-surface); }
+.chat-appointment-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.75rem; }
+.chat-appointment-fields label { display: grid; gap: 0.35rem; color: var(--theme-text); font-size: 0.9rem; font-weight: 600; }
+.chat-appointment-fields input, .chat-appointment-fields select { width: 100%; min-height: 2.6rem; padding: 0.4rem 0.55rem; border: 1px solid var(--theme-border); border-radius: 0.35rem; background: var(--theme-background); color: var(--theme-text); font: inherit; }
+.chat-appointment-note, .chat-appointment-error { margin: 0; color: var(--theme-text-secondary); font-size: 0.9rem; }
+.chat-appointment-error { color: var(--theme-primary); font-weight: 600; }
+.chat-appointment-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
+.chat-sources { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 0.65rem; margin-top: 0.65rem; padding-top: 0.5rem; border-top: 1px solid var(--theme-border); font-size: 0.84rem; }
+.chat-sources a { color: var(--theme-primary); }
 .chat-composer { display: flex; flex-direction: row; gap: 0.6rem; padding-top: 1rem; border-top: 1px solid rgba(60, 31, 37, 0.14); }
 .chat-composer button { display: grid; place-items: center; width: 3rem; }
 .appointment-summary { display: grid; gap: 0.2rem; margin-bottom: 1rem; padding: 0.8rem 1rem; border-left: 3px solid var(--theme-accent); background: var(--theme-surface); }

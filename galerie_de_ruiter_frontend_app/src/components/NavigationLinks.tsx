@@ -12,7 +12,7 @@ import { subscribeToContentUpdates } from "@/services/contentUpdates";
 
 type LinkItem = { href: string; icon: LucideIcon; translationKey: string };
 
-export function NavigationLinks() {
+export function NavigationLinks({ onNavigate }: { onNavigate: () => void }) {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
     const [categories, setCategories] = useState<Category[]>([]);
@@ -44,8 +44,8 @@ export function NavigationLinks() {
   }, []);
 
   return <div className="icons-list">
-    <NavCategoryLinks categories={categories} hasError={categoryError} />
-    {[...publicLinks, ...adminLinks].map((item) => <Nav.Link as={NavLink} key={item.href} to={item.href} className="nav-item-link">
+    <NavCategoryLinks categories={categories} hasError={categoryError} onNavigate={onNavigate} />
+    {[...publicLinks, ...adminLinks].map((item) => <Nav.Link as={NavLink} key={item.href} to={item.href} className="nav-item-link" onClick={onNavigate}>
       <item.icon className="nav-icon" aria-hidden="true" /><span>{t(item.translationKey)}</span>
     </Nav.Link>)}
   </div>;

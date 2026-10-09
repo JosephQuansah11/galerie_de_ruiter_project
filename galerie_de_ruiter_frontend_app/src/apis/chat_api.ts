@@ -23,6 +23,16 @@ export async function fetchChatStatus(): Promise<ChatStatus> {
   return response.data;
 }
 
+/**
+ * Loads the model into memory for the current session when the visitor opens the chat
+ * page. The backend keeps it resident, so the connection lasts as long as the visitor
+ * stays on the page instead of being rebuilt on every prompt.
+ */
+export async function warmUpChat(): Promise<ChatStatus> {
+  const response = await axiosInstance.post<ChatStatus>(`${apiBaseUrl}/api/chat/warmup`, undefined, { timeout: 60000 });
+  return response.data;
+}
+
 export async function sendChatMessage(
   message: string,
   history: ChatHistoryMessage[] = [],

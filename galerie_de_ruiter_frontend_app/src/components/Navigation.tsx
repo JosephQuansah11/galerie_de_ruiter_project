@@ -17,9 +17,9 @@ export function CustomNav() {
 
   return <Navbar id="Navbar" aria-label={t("navMain")} className="navbar-dark navbar-expanded" expand="xl" fixed="top" expanded={expanded} onToggle={setExpanded}>
     <Navbar.Brand as={NavLink} to="/dashboard" className="navbar-brand-div" onClick={() => setExpanded(false)}>
-      <img src="/images/galerie_de_ruiter.png" alt="Galerie de Ruiter" className="navbar-logo" />
+      <span className="navbar-wordmark">{t("galleryName")}</span>
     </Navbar.Brand>
-    <Navbar.Toggle aria-controls="main-navigation" aria-label={t("navMain")} />
+    <Navbar.Toggle aria-controls="main-navigation" aria-expanded={expanded} aria-label={t("navMain")} label={t("navMain")} />
     <Navbar.Collapse id="main-navigation">
       <Nav className="main-navbar-links">
         <NavigationLinks onNavigate={() => setExpanded(false)} />

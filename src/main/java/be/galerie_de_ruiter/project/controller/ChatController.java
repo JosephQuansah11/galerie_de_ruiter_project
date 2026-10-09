@@ -28,6 +28,15 @@ public class ChatController {
         return chat.connectionStatus();
     }
 
+    /**
+     * Establishes the model connection for the current session when the visitor opens
+     * the chat page, so the first prompt is not answered by a cold model.
+     */
+    @PostMapping("/warmup")
+    public ChatConnectionStatus warmUp() {
+        return chat.warmUp();
+    }
+
     @PostMapping
     public ChatResponse reply(@Valid @RequestBody ChatRequest request, @AuthenticationPrincipal Jwt jwt) {
         return chat.reply(request, jwt == null ? null : jwt.getSubject());

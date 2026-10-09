@@ -1639,33 +1639,9 @@ body.theme-dark .form-control::placeholder {
     overflow: visible;
   }
 
-  #Navbar .navbar-collapse > .navbar-nav {
-    width: 100%;
-    height: auto;
-    flex-direction: column;
-    align-items: stretch;
-    padding: 0.5rem 0.75rem;
-  }
-
-
-
-  #Navbar .nav-category-dropdown > .nav-link,
-  #Navbar .nav-item-link {
-    width: 100%;
-  }
-
-  #Navbar .icons-list-user-profile {
-    width: 100%;
-    justify-content: flex-start;
-    margin: 0;
-    padding: 0.5rem 0.75rem 0.75rem;
-  }
-
-  #Navbar .nav-category-dropdown .dropdown-menu {
-    position: static;
-    width: 100%;
-    margin: 0.25rem 0 0.5rem;
-  }
+  // The collapsed menu itself — every list, list entry and drop-down inside it — is
+  // owned by the single "Collapsed (small screen) navigation" block further down, so
+  // the full-width panel contract only exists in one place.
 }
 
 .welcome-collections {
@@ -1921,20 +1897,21 @@ button{
 // --------------------------------------------------
 @media (max-width: 1199.98px) {
   #Navbar {
-    inset: 0 0 auto 0;
+    inset: 0 0 auto;
     width: 100%;
     min-width: 0;
     max-width: none;
     height: auto;
-    min-height: 4.25rem;
+    min-height: var(--top-nav-height);
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.45rem 0.9rem;
+    row-gap: 0.35rem;
+    /* The collapsed panel cancels this inline padding so the menu spans the
+       navigation bar edge to edge. */
+    padding: 0.35rem 0.75rem;
     z-index: 1040;
-    box-shadow: 0 0.6rem 1.6rem rgba(35, 16, 20, 0.3);
   }
 
   #Navbar .navbar-brand-div {
@@ -1972,58 +1949,125 @@ button{
     outline-offset: 2px;
   }
 
+  // The collapsed panel spans the whole bar: it cancels the bar's inline padding and
+  // hangs to its bottom edge, so the navigation list covers the navigation bar.
   #Navbar .navbar-collapse {
-    flex-basis: 100%;
-    margin-top: 0.45rem;
-    padding: 0.85rem 0.85rem 1rem;
-    max-height: calc(100dvh - 5rem);
+    flex: 0 0 calc(100% + 1.5rem);
+    width: calc(100% + 1.5rem);
+    max-width: none;
+    align-self: stretch;
+    margin: 0.35rem -0.75rem -0.35rem;
+    padding: 0.9rem 0.75rem 1rem;
+    max-height: calc(100dvh - var(--top-nav-height));
     overflow-y: auto;
-    border: 1px solid rgba(255, 250, 247, 0.16);
-    border-radius: 0.75rem;
+    border: 0;
+    border-top: 1px solid rgba(255, 250, 247, 0.18);
+    border-radius: 0;
     background: linear-gradient(165deg, rgba(38, 10, 15, 0.98), rgba(66, 15, 23, 0.98));
     box-shadow: 0 1.1rem 2.4rem rgba(18, 6, 9, 0.45);
   }
+  #Navbar .navbar-collapse.show {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #Navbar .main-navbar-links,
   #Navbar .navbar-nav {
+    width: 100%;
+    max-width: none;
     height: auto;
+    margin: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
     justify-content: flex-start;
   }
-  #Navbar .icons-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+
+  // Every navigation list is a single full-width column inside the panel.
+  #Navbar .icons-list,
+  #Navbar .category-links {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: none;
     gap: 0.3rem;
+    margin: 0;
     padding: 0;
   }
-  #Navbar .nav-item-link {
-    padding: 0.6rem 0.7rem;
+
+  // …and every entry in those lists covers the full width of the bar.
+  #Navbar .icons-list > *,
+  #Navbar .category-links > *,
+  #Navbar .nav-item,
+  #Navbar .nav-category-dropdown,
+  #Navbar .nav-item-link,
+  #Navbar .nav-category-dropdown > .nav-link,
+  #Navbar .nav-category-dropdown .dropdown-toggle {
+    width: 100%;
+    max-width: none;
+  }
+
+  #Navbar .nav-item-link,
+  #Navbar .nav-category-dropdown > .nav-link,
+  #Navbar .nav-category-dropdown .dropdown-toggle {
+    padding: 0.6rem 0.75rem;
     border-radius: 0.5rem;
     font-size: 0.95rem;
+    min-height: 2.6rem;
+    white-space: normal;
+    justify-content: flex-start;
+    text-align: left;
   }
-  #Navbar .nav-item-link.active {
+  #Navbar .nav-item-link.active,
+  #Navbar .nav-category-dropdown .dropdown-toggle.active {
     background: rgba(255, 250, 247, 0.2);
     box-shadow: inset 0 0 0 1px rgba(255, 250, 247, 0.25);
   }
+
   #Navbar .icons-list-user-profile {
     width: 100%;
-    margin-top: 0.75rem;
-    padding-top: 0.85rem;
+    margin: 0.75rem 0 0;
+    padding: 0.85rem 0 0;
     border-top: 1px solid rgba(255, 250, 247, 0.16);
     flex-direction: row;
     justify-content: space-between;
+    align-items: stretch;
     gap: 0.75rem;
   }
-  #Navbar .icons-list-user-profile .dropdown-menu {
-    right: 0;
-    left: auto;
+  #Navbar .icons-list-user-profile > *,
+  #Navbar .icons-list-user-profile .dropdown,
+  #Navbar .icons-list-user-profile .dropdown > .btn {
+    width: 100%;
+    max-width: none;
+  }
+  #Navbar .icons-list-user-profile .dropdown > .btn {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
   }
 
-  .main-content {
-    margin-left: 0;
+  // Menus opened from the collapsed panel flow in place at the panel width instead
+  // of floating beside it, so the whole drop-down covers the navigation bar too.
+  #Navbar .navbar-nav .dropdown-menu,
+  #Navbar .icons-list-user-profile .dropdown-menu {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
     width: 100%;
-    padding-top: 4.5rem;
+    min-width: 0;
+    margin: 0.3rem 0 0;
+    box-shadow: none;
   }
-  main {
-    padding: 0.75rem 1rem 2rem;
+  #Navbar .navbar-nav .dropdown-menu .dropdown-item,
+  #Navbar .category-dropdown-grid {
+    width: 100%;
   }
+
   .chat-page,
   .profile-page,
   .catalogue-page,

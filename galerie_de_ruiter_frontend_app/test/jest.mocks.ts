@@ -20,3 +20,22 @@ jest.mock("@/context/keycloakClient", () => {
   };
   return { keycloak };
 });
+
+/**
+ * The dashboard copy is fetched by the welcome page. Tests always start from "nothing
+ * written yet", which is what makes the translated defaults show up.
+ */
+jest.mock("@/apis/home_api", () => ({
+  getHomeContent: jest.fn().mockResolvedValue({
+    heroTitle: null,
+    heroIntro: null,
+    philosophyText: null,
+    visitText: null,
+    storyParagraphs: null,
+  }),
+  updateHomeContent: jest.fn(),
+  getHomeImages: jest.fn().mockResolvedValue([]),
+  uploadHomeImage: jest.fn(),
+  deleteHomeImage: jest.fn(),
+  resolveHomeImageUrl: (url: string) => url,
+}));

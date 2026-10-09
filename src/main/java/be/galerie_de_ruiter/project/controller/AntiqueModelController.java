@@ -25,7 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/antiques/{id}/model")
 @RequiredArgsConstructor
 public class AntiqueModelController {
-    private static final long MAX_MODEL_BYTES = 25L * 1024 * 1024;
+    private static final long MAX_MODEL_BYTES = 250L * 1024 * 1024;
     private static final byte[] GLB_MAGIC = "glTF".getBytes(StandardCharsets.US_ASCII);
 
     private final AntiqueService antiques;
@@ -37,7 +37,7 @@ public class AntiqueModelController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A GLB model is required.");
         }
         if (model.getSize() > MAX_MODEL_BYTES) {
-            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "GLB models must be 25 MB or smaller.");
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "GLB models must be 250 MB or smaller.");
         }
         if (model.getOriginalFilename() == null || !model.getOriginalFilename().toLowerCase().endsWith(".glb")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only .glb models are supported.");

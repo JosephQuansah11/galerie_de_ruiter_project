@@ -34,7 +34,7 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
   };
   const selectModelFile = (input: FileList | null) => {
     const selected = input?.[0];
-    if (selected && (!selected.name.toLowerCase().endsWith(".glb") || selected.size > 25 * 1024 * 1024)) {
+    if (selected && (!selected.name.toLowerCase().endsWith(".glb") || selected.size > 250 * 1024 * 1024)) {
       setModelFileInvalid(true);
       setMessage("glbUploadInvalid");
       return;
@@ -87,7 +87,9 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
         setMessage(errorKey === "antiqueSavePermissionError"
           ? errorKey
           : errorKey === "antiqueSaveConnectionError"
-            ? "antiqueModelConnectionError"
+            // The model is stored by the gallery API itself, so a network failure is an
+            // upload failure - not a separate "model service" being unreachable.
+            ? "antiqueModelUploadFailed"
             : errorKey === "antiqueSaveValidationError"
               ? "glbUploadInvalid"
               : "antiqueModelUploadFailed");

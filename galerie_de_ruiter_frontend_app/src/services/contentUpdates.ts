@@ -2,6 +2,7 @@ export type ContentUpdateTopic =
   | "antiques"
   | "about"
   | "categories"
+  | "home"
   | "location";
 
 const updateEventName = "galerie-content-updated";

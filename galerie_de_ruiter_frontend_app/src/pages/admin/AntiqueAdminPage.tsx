@@ -9,6 +9,8 @@ import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/context/LanguageContext";
 import { InventoryList } from "./antiques/InventoryList";
 import { InventoryHeading } from "./antiques/InventoryHeading";
+import { DescriptionLimitHint } from "../antiques/DescriptionLimitHint";
+import { ANTIQUE_DESCRIPTION_MAX_LENGTH } from "../antiques/descriptionLimits";
 
 export default function AntiqueAdminPage() {
   const { t } = useTranslation();
@@ -45,6 +47,7 @@ export default function AntiqueAdminPage() {
     setModelFileInvalid(false);
     setActionError(false);
   };
+  const descriptionTooLong = editDescription.length > ANTIQUE_DESCRIPTION_MAX_LENGTH;
   const saveEdit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!editing) return;
@@ -129,14 +132,15 @@ export default function AntiqueAdminPage() {
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>{t("description")}</Form.Label>
-              <Form.Control as="textarea" rows={4} value={editDescription} onChange={(event) => setEditDescription(event.target.value)} />
+              <Form.Control as="textarea" rows={6} value={editDescription} onChange={(event) => setEditDescription(event.target.value)} />
+              <DescriptionLimitHint value={editDescription} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>{t("uploadGlbModel")}</Form.Label>
               <Form.Control type="file" accept=".glb,model/gltf-binary" onChange={(event) => {
                 const input = event.currentTarget as HTMLInputElement;
                 const file = input.files?.[0];
-                if (file && (!file.name.toLowerCase().endsWith(".glb") || file.size > 25 * 1024 * 1024)) {
+                if (file && (!file.name.toLowerCase().endsWith(".glb") || file.size > 250 * 1024 * 1024)) {
                   setModelFileInvalid(true);
                   setEditModelFile(undefined);
                   input.value = "";
@@ -156,7 +160,7 @@ export default function AntiqueAdminPage() {
             <Button className="btn btn-outline-secondary" type="button" disabled={savingEdit} onClick={() => setEditing(undefined)}>
               <X size={16} />{t("cancel")}
             </Button>
-            <Button className="btn btn-primary" type="submit" disabled={savingEdit || modelFileInvalid}>
+            <Button className="btn btn-primary" type="submit" disabled={savingEdit || modelFileInvalid || descriptionTooLong}>
               {savingEdit ? <Spinner size="sm" /> : <Check size={16} />}{t("saveAntique")}
             </Button>
           </Modal.Footer>

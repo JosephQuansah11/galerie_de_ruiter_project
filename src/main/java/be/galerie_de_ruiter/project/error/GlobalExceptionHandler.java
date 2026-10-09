@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.access.AccessDeniedException;
 import org.slf4j.Logger;
@@ -45,6 +46,17 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(HttpMessageNotReadableException.class)
 	ResponseEntity<ApiError> unreadable(HttpMessageNotReadableException exception, HttpServletRequest request) {
 		return response(HttpStatus.BAD_REQUEST, "Malformed JSON request body", request);
+	}
+
+	/**
+	 * A model or photo larger than the configured multipart limit used to surface as a
+	 * generic 500, which looked like a connection failure in the admin screens.
+	 */
+	@ExceptionHandler(MaxUploadSizeExceededException.class)
+	ResponseEntity<ApiError> uploadTooLarge(MaxUploadSizeExceededException exception, HttpServletRequest request) {
+		logger.warn("Rejected an oversized upload for {}: {}", request.getRequestURI(), exception.getMessage());
+		return response(HttpStatus.PAYLOAD_TOO_LARGE,
+				"The uploaded file is larger than the server accepts. Upload a smaller file.", request);
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)

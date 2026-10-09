@@ -28,8 +28,10 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 25MB
-      max-request-size: 26MB
+      # .glb models are far larger than photographs; the limit matches the model
+      # upload validation in AntiqueModelController (250 MB).
+      max-file-size: 300MB
+      max-request-size: 310MB
 
   security:
     oauth2:
@@ -56,3 +58,5 @@ keycloak:
 ollama:
   base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
   model: ${OLLAMA_MODEL:llama3.2:3b}
+  # Keep the model resident for the whole chat session instead of reloading per prompt.
+  keep-alive: ${OLLAMA_KEEP_ALIVE:30m}

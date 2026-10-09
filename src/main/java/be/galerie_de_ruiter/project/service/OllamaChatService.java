@@ -6,6 +6,7 @@ import be.galerie_de_ruiter.project.dto.ChatAppointmentSelection;
 import be.galerie_de_ruiter.project.dto.ChatConnectionStatus;
 import be.galerie_de_ruiter.project.dto.ChatRequest;
 import be.galerie_de_ruiter.project.dto.ChatResponse;
+import be.galerie_de_ruiter.project.dto.ChatSource;
 import be.galerie_de_ruiter.project.repository.AppointmentRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -43,6 +44,10 @@ public class OllamaChatService {
             .connectTimeout(Duration.ofSeconds(5))
             .build();
 
+    /** Public gallery WhatsApp number used when a question has to be handed over. */
+    static final String WHATSAPP_URL = "https://wa.me/32493357568";
+    private static final String WHATSAPP_SOURCE_TITLE = "WhatsApp";
+
     private final AppointmentRepository appointments;
     private final ChatKnowledgeRetriever knowledge;
 
@@ -55,6 +60,13 @@ public class OllamaChatService {
 
     @Value("${ollama.model:llama3.2:3b}")
     private String model;
+
+    /**
+     * How long Ollama keeps the model resident after a reply. The chat page warms the
+     * model up on entry and this keeps the connection alive for the whole session.
+     */
+    @Value("${ollama.keep-alive:30m}")
+    private String keepAlive;
 
     public ChatResponse reply(ChatRequest request, String subject) {
         ChatAppointmentSelection selection = request.appointmentSelection();
@@ -74,7 +86,7 @@ public class OllamaChatService {
                     selection.type(),
                     false,
                     false,
-                    List.of());
+                    List.of(whatsappSource()));
         }
 
         requireReadyConnection();
@@ -117,7 +129,8 @@ public class OllamaChatService {
                         "model", model,
                         "stream", false,
                         "format", "json",
-                        "messages", conversation))
+                        "messages", conversation,
+                        "keep_alive", keepAlive))
                 .retrieve()
                 .body(Map.class);
 
@@ -144,10 +157,60 @@ public class OllamaChatService {
                     null,
                     false,
                     appointmentHandoffRequired,
-                    retrieved.sources());
+                    withWhatsAppContact(retrieved.sources(), reply));
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("The gallery assistant returned an invalid response.", exception);
         }
+    }
+
+    /**
+     * Whenever the assistant points the visitor at WhatsApp, the reply carries the
+     * link so the chat can offer a tappable conversation instead of a phone number.
+     */
+    static List<ChatSource> withWhatsAppContact(List<ChatSource> sources, String reply) {
+        if (!mentionsWhatsApp(reply)) return sources;
+        if (sources.stream().anyMatch(source -> WHATSAPP_URL.equals(source.url()))) return sources;
+        List<ChatSource> combined = new ArrayList<>(sources);
+        combined.add(whatsappSource());
+        return List.copyOf(combined);
+    }
+
+    static boolean mentionsWhatsApp(String reply) {
+        if (reply == null) return false;
+        String normalized = reply.toLowerCase(java.util.Locale.ROOT);
+        return normalized.contains("whatsapp") || normalized.contains("contact the gallery")
+                || normalized.contains("call the gallery") || normalized.contains("bel de galerie")
+                || normalized.contains("contactez la galerie") || normalized.contains("galerie kontaktieren");
+    }
+
+    static ChatSource whatsappSource() {
+        return new ChatSource(WHATSAPP_SOURCE_TITLE, WHATSAPP_URL);
+    }
+
+    /**
+     * Loads the model into memory when the visitor opens the chat page. With
+     * {@code keep_alive} the connection then stays up for the whole session instead of
+     * being rebuilt on every prompt.
+     */
+    public ChatConnectionStatus warmUp() {
+        if (!isModelReady()) return connectionStatus();
+        try {
+            RestClient.create(baseUrl())
+                    .post()
+                    .uri("/api/generate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of(
+                            "model", model,
+                            "prompt", "",
+                            "stream", false,
+                            "keep_alive", keepAlive))
+                    .retrieve()
+                    .body(Map.class);
+        } catch (RuntimeException exception) {
+            readinessFailure.set(NOT_REACHABLE_DETAIL);
+            readinessCheckedAt.set(Instant.EPOCH);
+        }
+        return connectionStatus();
     }
 
     /**

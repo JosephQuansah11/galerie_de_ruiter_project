@@ -37,8 +37,10 @@ export async function uploadAntiqueImage(id: string, image: File): Promise<void>
 export async function uploadAntiqueModel(id: string, model: File): Promise<Antique> {
   const body = new FormData();
   body.append("model", model);
+  // GLB models are large binaries: give the upload a long window so a slow connection
+  // does not look like an unreachable service.
   const response = await axiosInstance.put<Antique>(`${backendBaseURL}/api/antiques/${id}/model`, body, {
-    timeout: 60000,
+    timeout: 900000,
     headers: { ...(await csrfHeaders()), "Content-Type": undefined },
   });
   return response.data;

@@ -25,6 +25,9 @@ public class Antique {
     private String title;
     @ManyToOne(optional = false)
     private Designer artist;
+    // Long gallery notes (condition, provenance, stories) do not fit in the default
+    // varchar(255); the column is `text` so a full description can be stored.
+    @Column(columnDefinition = "text")
     private String description;
     private BigDecimal price;
     @JdbcTypeCode(SqlTypes.LONGVARBINARY)

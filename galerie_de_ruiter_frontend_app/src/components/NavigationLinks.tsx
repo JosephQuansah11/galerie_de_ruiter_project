@@ -1,4 +1,4 @@
-import { BookOpen, Heart, LibraryBig, Map, MapPin, MessageCircle, Plus, ShoppingBag, Tags } from "lucide-react";
+import { BookOpen, Heart, Home, LibraryBig, Map, MapPin, MessageCircle, Plus, ShoppingBag, Tags } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Nav } from "react-bootstrap";
 import { NavLink } from "react-router-dom";
@@ -29,6 +29,7 @@ export function NavigationLinks({ onNavigate }: { onNavigate: () => void }) {
         { href: "/admin/antiques/new", icon: Plus, translationKey: "navAddAntique" },
         { href: "/admin/categories", icon: Tags, translationKey: "categories" },
         { href: "/admin/location", icon: MapPin, translationKey: "navEditLocation" },
+        { href: "/admin/home", icon: Home, translationKey: "navEditHome" },
         { href: "/admin/about", icon: BookOpen, translationKey: "navEditAbout" },
       ]
     : [{ href: "/map", icon: Map, translationKey: "location" }];

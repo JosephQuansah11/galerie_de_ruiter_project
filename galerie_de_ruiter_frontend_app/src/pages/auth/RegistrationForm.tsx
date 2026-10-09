@@ -26,6 +26,6 @@ export function RegistrationForm() {
     <div className="eyebrow">{t("accountSetup")}</div><h1>{t("createFableAccount")}</h1><p>{t("registerIntro")}</p>
     {error && <div className="notice">{t(error)}</div>}
     <DynamicForm fields={fields} initialValue={{ username: "", email: "", firstName: "", lastName: "", password: "" }} submitLabel={t("createAccountButton")} onSubmit={submit} />
-    <Button className="quiet-button auth-login" onClick={auth.login} text={<><LogIn size={16} />{t("alreadyHaveAccount")}</>} />
+    <Button className="quiet-button auth-login" onClick={() => auth.login()} text={<><LogIn size={16} />{t("alreadyHaveAccount")}</>} />
   </>;
 }

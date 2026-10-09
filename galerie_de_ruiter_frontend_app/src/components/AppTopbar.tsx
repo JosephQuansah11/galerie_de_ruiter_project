@@ -14,7 +14,7 @@ export function AppTopbar() {
     <div className="topbar-actions">{auth.authenticated ? <DropdownPanel label={<><Avatar name={auth.profile?.username} imageUrl={auth.avatarUrl} size="small" />{auth.profile?.username ?? t("member")}</>}>
       <Button className="menu-action" onClick={auth.logout} text={<><LogOut size={15} />{t("signOut")}</>} />
     </DropdownPanel> : <>
-      <Button className="quiet-button" onClick={auth.login} text={<><LogIn size={16} />{t("signIn")}</>} />
+      <Button className="quiet-button" onClick={() => auth.login()} text={<><LogIn size={16} />{t("signIn")}</>} />
       <NavLink className="primary-button" to="/register">{t("createAccountButton")}</NavLink>
     </>}</div>
   </header>;

@@ -31,6 +31,22 @@ Stop the dependencies with `.\gradlew.bat stopDevServices` (or
 containers and local data, run `docker compose -f docker-compose.dev.yml down
 -v`.
 
+### Local chat model
+
+The Spring API talks to the Ollama service at `OLLAMA_BASE_URL` (default
+`http://localhost:11434`) and always uses the single model named by
+`OLLAMA_MODEL` (default `llama3.2:3b`) for both the warm-up and every prompt of
+a session. When that model is not installed yet, the API downloads it once in
+the background the first time the chat page asks for it and reports progress on
+`GET /api/chat/status`, so a fresh machine never needs a manual `ollama pull`.
+The downloaded model stays in Ollama's own model store and is reused by later
+sessions. `OLLAMA_KEEP_ALIVE` (default `30m`) keeps the loaded model resident
+between prompts, and `OLLAMA_TOUCH_INTERVAL` (default `10m`) refreshes that
+while the chat page stays open, so a visitor keeps talking to the same loaded
+model instead of paying a cold start again. Set `OLLAMA_AUTO_PULL=false` to
+disable the automatic download, and `OLLAMA_PULL_RETRY` (default `60s`) to
+change how long a failed download waits before it is retried.
+
 This flow can also run on Docker-enabled GitHub Actions runners and GitHub
 Codespaces. GitHub repository hosting itself does not keep Docker containers or
 databases running; public production deployments need a container host and

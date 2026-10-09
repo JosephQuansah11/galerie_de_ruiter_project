@@ -1,6 +1,7 @@
 import type Antique from "@/models/antiques/Antique";
 import type { AntiqueForm } from "@/models/antiques/Antique";
 import { csrfHeaders } from "@/apis/client";
+import { visitorId } from "@/services/visitorId";
 import { axiosInstance, backendBaseURL } from "./backendClient";
 
 export async function getAllAntiques(): Promise<Antique[]> {
@@ -26,6 +27,45 @@ export async function deleteAntique(id: string): Promise<void> {
     headers: await csrfHeaders(),
   });
 }
+export type AntiqueEngagement = { antiqueId: string; viewCount: number; likeCount: number; liked: boolean };
+
+/**
+ * Headers for the public counters. The visitor id lets the API count one view and one like
+ * per person. The CSRF token is sent when it is available, but the counters stay usable
+ * without it: they are exempt on the API side, so a failed token handshake must not stop
+ * the gallery from seeing who looked at a piece.
+ */
+async function engagementHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {};
+  try {
+    Object.assign(headers, await csrfHeaders());
+  } catch {
+    // Fall through: the counter endpoints do not require a CSRF token.
+  }
+  const id = visitorId();
+  if (id) headers["X-Visitor-Id"] = id;
+  return headers;
+}
+
+/**
+ * Counts the visitor as someone who has seen this piece. The API counts each visitor once,
+ * so reopening a page does not inflate the gallery's numbers.
+ */
+export async function registerAntiqueView(id: string): Promise<AntiqueEngagement> {
+  const response = await axiosInstance.post<AntiqueEngagement>(`${backendBaseURL}/api/antiques/${id}/views`,
+    undefined, { headers: await engagementHeaders() });
+  return response.data;
+}
+
+/** Adds or removes this visitor's like and returns the public counters. */
+export async function setAntiqueLike(id: string, liked: boolean): Promise<AntiqueEngagement> {
+  const config = { headers: await engagementHeaders() };
+  const response = liked
+    ? await axiosInstance.post<AntiqueEngagement>(`${backendBaseURL}/api/antiques/${id}/likes`, undefined, config)
+    : await axiosInstance.delete<AntiqueEngagement>(`${backendBaseURL}/api/antiques/${id}/likes`, config);
+  return response.data;
+}
+
 export async function uploadAntiqueImage(id: string, image: File): Promise<void> {
   const body = new FormData();
   body.append("image", image);

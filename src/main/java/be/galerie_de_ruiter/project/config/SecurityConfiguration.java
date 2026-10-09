@@ -47,7 +47,14 @@ public class SecurityConfiguration {
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 			.csrf(csrf -> csrf
 				.csrfTokenRepository(csrfTokenRepository())
-				.ignoringRequestMatchers("/api/chat"))
+				// The chat endpoints are public and are called before a session exists, so they
+				// cannot carry the cookie-based CSRF token. When only "/api/chat" was exempted,
+				// warming the model up answered 401 and the chat page stayed "not ready"
+				// forever even though the model was loaded.
+				// The public engagement counters are also exempt: they are open to anonymous
+				// visitors, so a browser without a CSRF token must still be able to like a
+				// piece or register that it was seen.
+				.ignoringRequestMatchers("/api/chat", "/api/chat/**", "/api/antiques/*/views", "/api/antiques/*/likes"))
 			// .csrf(csrf->csrf.disable())
 			// .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(authorize -> authorize
@@ -60,6 +67,11 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.GET, "/api/antiques/*/image/*").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/antiques/{id}/image/{imageId}").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/antiques/*/model").permitAll()
+				// The public counters are open to anonymous visitors on purpose: the gallery
+				// wants everyone to see how many people viewed and liked a piece.
+				.requestMatchers(HttpMethod.POST, "/api/antiques/*/views").permitAll()
+				.requestMatchers(HttpMethod.POST, "/api/antiques/*/likes").permitAll()
+				.requestMatchers(HttpMethod.DELETE, "/api/antiques/*/likes").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/antiques/*/reconstruction").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/location").permitAll()

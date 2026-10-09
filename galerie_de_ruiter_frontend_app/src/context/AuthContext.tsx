@@ -28,7 +28,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const value = useMemo(() => ({
     authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles,
     isAdmin: roles.some((role) => role.replace(/^ROLE_/i, "").toUpperCase() === "ADMIN"),
-    login: () => keycloak.login({ redirectUri: `${window.location.origin}/dashboard` }),
+    login: (from?: string) => keycloak.login({ redirectUri: `${window.location.origin}${from ?? "/dashboard"}` }),
     logout: () => keycloak.logout(), register, updateProfile,
   }), [authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

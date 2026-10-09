@@ -9,7 +9,7 @@ export interface AuthContextValue {
   profile?: UserProfile;
   roles: string[];
   isAdmin: boolean;
-  login: () => void;
+  login: (from?: string) => void;
   logout: () => void;
   updateProfile: (profile: UserProfileUpdate) => Promise<void>;
   register: (profile: UserProfile & { password: string }) => Promise<void>;

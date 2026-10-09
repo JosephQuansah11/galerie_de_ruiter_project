@@ -37,6 +37,17 @@ public class Antique {
     @OneToMany(mappedBy = "antique")
     private List<AntiqueImage> images = new ArrayList<>();
     private String modelUrl;
+
+    /**
+     * How many distinct visitors have seen this piece. The column is created with a default
+     * so existing rows keep working when the schema is updated.
+     */
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    private long viewCount;
+
+    /** How many distinct visitors liked this piece. */
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    private long likeCount;
     // // JSON array of {position, url} produced by the reconstruction service, persisted so every user sees the same six views.
     // @Column(columnDefinition = "bytea")
     // private List<byte[]> sixViewImages;
@@ -125,6 +136,29 @@ public class Antique {
 
     public void setModelUrl(String modelUrl) {
         this.modelUrl = modelUrl;
+    }
+
+    public long getViewCount() {
+        return viewCount;
+    }
+
+    public long getLikeCount() {
+        return likeCount;
+    }
+
+    /** Counts one more distinct visitor for this piece. */
+    public void addViewer() {
+        this.viewCount++;
+    }
+
+    /** Counts one more distinct visitor who liked this piece. */
+    public void addLiker() {
+        this.likeCount++;
+    }
+
+    /** Removes a like again; the count never drops below zero. */
+    public void removeLiker() {
+        this.likeCount = Math.max(0L, this.likeCount - 1);
     }
 
     // public List<byte[]> getSixViewImages() {

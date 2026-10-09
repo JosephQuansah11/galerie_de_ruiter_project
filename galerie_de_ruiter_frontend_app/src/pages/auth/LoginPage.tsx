@@ -1,5 +1,5 @@
 import { LogIn, MessageCircle, UserPlus } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { Button } from "@/components/ReactButton";
@@ -7,12 +7,14 @@ import { Button } from "@/components/ReactButton";
 export function LoginPage() {
   const auth = useAuth()
   const { t } = useLanguage()
+  // The guard sends the visitor here with the page they wanted, so sign-in returns to it.
+  const requestedPath = (useLocation().state as { from?: string } | null)?.from
   return <div className="page auth-page">
   <div className="auth-panel">
   <div className="eyebrow">{t("galleryName")}</div>
   <h1>{t("welcomeBack")}</h1>
   <p>{t("loginIntro")}</p>
-  <Button className="primary-button" onClick={auth.login}>
+  <Button className="primary-button" onClick={() => auth.login(requestedPath)}>
   <LogIn size={26} />{t("continueKeycloak")}
   </Button>
   <Link className="quiet-button auth-login" to="/register">

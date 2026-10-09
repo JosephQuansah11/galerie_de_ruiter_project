@@ -17,8 +17,14 @@ export function useAuthInitialization({ setAuthenticated, setLoading, setProfile
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
+    /**
+     * The silent sign-in round trip returns to the redirect URI, so it has to be the page the
+     * visitor asked for. A reload on a deep link (for example the inventory or the categories
+     * screen) used to land on the dashboard instead, which looked like the page had vanished.
+     */
+    const requestedPath = `${window.location.pathname}${window.location.search}`;
     keycloak.init({ onLoad: "check-sso", pkceMethod: "S256", checkLoginIframe: false,
-      redirectUri: `${window.location.origin}/dashboard` }).then((isAuthenticated) => {
+      redirectUri: `${window.location.origin}${requestedPath === "/login" ? "/dashboard" : requestedPath}` }).then((isAuthenticated) => {
       setAuthenticated(isAuthenticated); syncToken(keycloak.token);
       if (!isAuthenticated) return;
       const data = keycloak.tokenParsed as { preferred_username?: string; email?: string;

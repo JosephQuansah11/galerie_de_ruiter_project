@@ -6,8 +6,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,10 +28,19 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/antiques/{id}/model")
 @RequiredArgsConstructor
 public class AntiqueModelController {
-    private static final long MAX_MODEL_BYTES = 250L * 1024 * 1024;
     private static final byte[] GLB_MAGIC = "glTF".getBytes(StandardCharsets.US_ASCII);
 
     private final AntiqueService antiques;
+
+    /**
+     * Largest accepted GLB. It is configurable because a {@code byte[]} model costs roughly
+     * three times its size in memory while it is parsed, validated and stored, and the
+     * production instance is much smaller than a developer machine. The same value drives
+     * {@code spring.servlet.multipart.max-file-size}, so development and production reject
+     * the same files.
+     */
+    @Value("${app.models.max-size-mb:250}")
+    private long maxModelSizeMb;
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
@@ -36,8 +48,9 @@ public class AntiqueModelController {
         if (model.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A GLB model is required.");
         }
-        if (model.getSize() > MAX_MODEL_BYTES) {
-            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "GLB models must be 250 MB or smaller.");
+        if (model.getSize() > maxModelBytes()) {
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,
+                    "GLB models must be %d MB or smaller.".formatted(maxModelSizeMb));
         }
         if (model.getOriginalFilename() == null || !model.getOriginalFilename().toLowerCase().endsWith(".glb")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only .glb models are supported.");
@@ -57,7 +70,14 @@ public class AntiqueModelController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("model/gltf-binary"))
                 .contentLength(model.length)
+                // Models are large, so a visitor who reopens the page reuses the downloaded
+                // copy instead of pulling the whole file again in production.
+                .cacheControl(CacheControl.maxAge(Duration.ofMinutes(10)).cachePublic())
                 .body(model);
+    }
+
+    private long maxModelBytes() {
+        return maxModelSizeMb * 1024L * 1024L;
     }
 
     private void validateGlb(byte[] bytes) {

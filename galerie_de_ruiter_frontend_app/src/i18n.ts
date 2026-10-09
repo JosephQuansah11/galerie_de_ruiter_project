@@ -2063,6 +2063,24 @@ const resources = {
   },
 };
 
+/**
+ * Public engagement labels for every antique: how many people saw it and how many liked
+ * it. They are merged into the language blocks above from one place so all languages stay
+ * in step; a language without its own copy falls back to English.
+ */
+const engagementLabels: Record<string, Record<string, string>> = {
+  en: { viewsCountLabel: "Views: {{count}}", likesCountLabel: "Likes: {{count}}", likePiece: "Like this piece", likedPiece: "Liked" },
+  fr: { viewsCountLabel: "Vues : {{count}}", likesCountLabel: "J'aime : {{count}}", likePiece: "Aimer cette pièce", likedPiece: "Aimé" },
+  nl: { viewsCountLabel: "Weergaven: {{count}}", likesCountLabel: "Likes: {{count}}", likePiece: "Dit stuk leuk vinden", likedPiece: "Geliked" },
+  de: { viewsCountLabel: "Aufrufe: {{count}}", likesCountLabel: "Gefällt mir: {{count}}", likePiece: "Dieses Stück liken", likedPiece: "Geliked" },
+  es: { viewsCountLabel: "Vistas: {{count}}", likesCountLabel: "Me gusta: {{count}}", likePiece: "Me gusta esta pieza", likedPiece: "Te gusta" },
+  pt: { viewsCountLabel: "Visualizações: {{count}}", likesCountLabel: "Gostos: {{count}}", likePiece: "Gostar desta peça", likedPiece: "Gostado" },
+};
+
+Object.entries(resources).forEach(([language, resource]) => {
+  Object.assign(resource.translation, engagementLabels[language] ?? engagementLabels.en);
+});
+
 void i18n
   .use(initReactI18next)
   .init({

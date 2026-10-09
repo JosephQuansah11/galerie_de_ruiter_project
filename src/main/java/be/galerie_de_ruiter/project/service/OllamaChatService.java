@@ -11,6 +11,7 @@ import be.galerie_de_ruiter.project.repository.AppointmentRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -22,7 +23,9 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -55,6 +58,15 @@ public class OllamaChatService {
     private final AtomicReference<Instant> readinessCheckedAt = new AtomicReference<>(Instant.EPOCH);
     private final AtomicReference<String> readinessFailure = new AtomicReference<>(NOT_REACHABLE_DETAIL);
 
+    /** Guards the download so the polled status endpoint installs the model exactly once. */
+    private final AtomicBoolean downloadInProgress = new AtomicBoolean(false);
+    private final AtomicReference<String> downloadDetail = new AtomicReference<>();
+    private final AtomicReference<Instant> downloadFinishedAt = new AtomicReference<>(Instant.EPOCH);
+    private final AtomicBoolean downloadFailed = new AtomicBoolean(false);
+
+    /** When the model was last (re)loaded, so the session heartbeat can keep it resident. */
+    private final AtomicReference<Instant> modelTouchedAt = new AtomicReference<>(Instant.EPOCH);
+
     @Value("${ollama.base-url:http://localhost:11434}")
     private String ollamaUrl;
 
@@ -67,6 +79,30 @@ public class OllamaChatService {
      */
     @Value("${ollama.keep-alive:30m}")
     private String keepAlive;
+
+    /**
+     * Downloads the configured model the first time the chat page needs it, so a fresh
+     * installation never has to run {@code ollama pull} by hand. The same model then stays
+     * pinned for the whole session.
+     */
+    @Value("${ollama.auto-pull:true}")
+    private boolean autoPull;
+
+    /** A failed download is left alone for this long before it is tried again. */
+    @Value("${ollama.pull-retry:60s}")
+    private Duration pullRetry;
+
+    /** Installing a multi-gigabyte model takes time, so the download is not rushed. */
+    @Value("${ollama.pull-timeout:30m}")
+    private Duration pullTimeout;
+
+    /**
+     * How long a loaded model may sit idle before the session heartbeat touches it again.
+     * Well below {@link #keepAlive} so the model a visitor started chatting with is still
+     * the model that answers later in the same session.
+     */
+    @Value("${ollama.touch-interval:10m}")
+    private Duration touchInterval;
 
     public ChatResponse reply(ChatRequest request, String subject) {
         ChatAppointmentSelection selection = request.appointmentSelection();
@@ -195,17 +231,8 @@ public class OllamaChatService {
     public ChatConnectionStatus warmUp() {
         if (!isModelReady()) return connectionStatus();
         try {
-            RestClient.create(baseUrl())
-                    .post()
-                    .uri("/api/generate")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of(
-                            "model", model,
-                            "prompt", "",
-                            "stream", false,
-                            "keep_alive", keepAlive))
-                    .retrieve()
-                    .body(Map.class);
+            loadModel();
+            modelTouchedAt.set(Instant.now());
         } catch (RuntimeException exception) {
             readinessFailure.set(NOT_REACHABLE_DETAIL);
             readinessCheckedAt.set(Instant.EPOCH);
@@ -214,12 +241,47 @@ public class OllamaChatService {
     }
 
     /**
+     * Loads the configured model into memory. Every prompt in a session is answered by this
+     * same pinned model, and {@code keep_alive} keeps it resident between prompts.
+     */
+    private void loadModel() {
+        RestClient.create(baseUrl())
+                .post()
+                .uri("/api/generate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of(
+                        "model", model,
+                        "prompt", "",
+                        "stream", false,
+                        "keep_alive", keepAlive))
+                .retrieve()
+                .body(Map.class);
+    }
+
+    /**
      * Reports whether the configured chat model is loaded and reachable. The frontend
      * polls this before it accepts a prompt.
      */
     public ChatConnectionStatus connectionStatus() {
         boolean ready = isModelReady();
+        if (ready) keepModelResident();
         return new ChatConnectionStatus(ready, model, ready ? READY_DETAIL : readinessFailure.get());
+    }
+
+    /**
+     * The chat page heartbeats this status while a visitor stays on it. Touching the model
+     * now and then resets Ollama's residence timer, so one session keeps talking to the same
+     * loaded model instead of silently reloading it between prompts.
+     */
+    private void keepModelResident() {
+        Instant now = Instant.now();
+        if (modelTouchedAt.get().plus(touchInterval).isAfter(now)) return;
+        modelTouchedAt.set(now);
+        try {
+            loadModel();
+        } catch (RuntimeException ignored) {
+            // A transient outage is reported by the next probe; a failed touch is not fatal.
+        }
     }
 
     /**
@@ -234,7 +296,10 @@ public class OllamaChatService {
     }
 
     private boolean isModelReady() {
-        if (readinessFailure.get() == null && readinessCheckedAt.get().plus(READY_CACHE).isAfter(Instant.now())) {
+        // While a download runs every poll probes again, so the chat page shows live progress
+        // instead of a cached message.
+        if (!downloadInProgress.get() && readinessFailure.get() == null
+                && readinessCheckedAt.get().plus(READY_CACHE).isAfter(Instant.now())) {
             return true;
         }
         String failure = probeModel();
@@ -259,7 +324,7 @@ public class OllamaChatService {
                 String name = item.path("name").asText("");
                 if (name.equals(model) || name.startsWith(model + ":")) return null;
             }
-            return "The gallery assistant model '%s' is not loaded yet. Please try again in a moment.".formatted(model);
+            return autoPull ? ensureModelDownloaded() : notLoadedDetail();
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             return NOT_REACHABLE_DETAIL;
@@ -270,6 +335,104 @@ public class OllamaChatService {
 
     private String baseUrl() {
         return ollamaUrl.contains("://") ? ollamaUrl : "http://" + ollamaUrl;
+    }
+
+    private String notLoadedDetail() {
+        return "The gallery assistant model '%s' is not loaded yet. Please try again in a moment.".formatted(model);
+    }
+
+    /**
+     * Makes sure the configured model is installed. The chat page polls the status every few
+     * seconds, so the download is started at most once and the polled detail reports how far
+     * it has progressed. Once the model is present that same model answers every prompt of
+     * the session.
+     */
+    private String ensureModelDownloaded() {
+        if (downloadInProgress.get()) return downloadDetail.get();
+        if (downloadFailed.get() && downloadFinishedAt.get().plus(pullRetry).isAfter(Instant.now())) {
+            return downloadDetail.get();
+        }
+        if (downloadInProgress.compareAndSet(false, true)) {
+            downloadFailed.set(false);
+            downloadDetail.set(downloadProgress(model, "", 0, 0));
+            Thread.ofVirtual().name("ollama-model-download").start(this::downloadModelInBackground);
+        }
+        return downloadDetail.get();
+    }
+
+    private void downloadModelInBackground() {
+        try {
+            downloadModel();
+            downloadDetail.set("The gallery assistant model '%s' is downloaded and ready to load.".formatted(model));
+            // The next probe finds the model in /api/tags and marks the connection ready.
+            readinessCheckedAt.set(Instant.EPOCH);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            downloadFailed.set(true);
+            downloadDetail.set(downloadFailure(model, NOT_REACHABLE_DETAIL));
+        } catch (Exception exception) {
+            downloadFailed.set(true);
+            downloadDetail.set(downloadFailure(model, failureReason(exception)));
+        } finally {
+            downloadFinishedAt.set(Instant.now());
+            downloadInProgress.set(false);
+        }
+    }
+
+    /**
+     * Streams {@code POST /api/pull} so the download can be reported while it runs. Ollama
+     * answers with one JSON progress object per line.
+     */
+    private void downloadModel() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl() + "/api/pull"))
+                .timeout(pullTimeout)
+                .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                .header("Accept", "application/x-ndjson")
+                .POST(HttpRequest.BodyPublishers.ofString(
+                        OBJECT_MAPPER.writeValueAsString(Map.of("model", model, "stream", true))))
+                .build();
+        HttpResponse<Stream<String>> response = HTTP.send(request, HttpResponse.BodyHandlers.ofLines());
+        try (Stream<String> progress = response.body()) {
+            if (response.statusCode() != 200) {
+                throw new IllegalStateException(
+                        "the model service answered with status %d".formatted(response.statusCode()));
+            }
+            progress.forEach(this::readProgressLine);
+        }
+    }
+
+    private void readProgressLine(String line) {
+        if (line == null || line.isBlank()) return;
+        try {
+            JsonNode progress = OBJECT_MAPPER.readTree(line);
+            String error = progress.path("error").asText("");
+            if (!error.isBlank()) throw new IllegalStateException(error);
+            downloadDetail.set(downloadProgress(model, progress.path("status").asText(""),
+                    progress.path("completed").asLong(0), progress.path("total").asLong(0)));
+        } catch (JsonProcessingException ignored) {
+            // A malformed progress line must never abort an otherwise healthy download.
+        }
+    }
+
+    private static String failureReason(Exception exception) {
+        String message = exception.getMessage();
+        return message == null || message.isBlank() ? exception.getClass().getSimpleName() : message;
+    }
+
+    /** Download text the chat page shows while the model is being installed. */
+    static String downloadProgress(String model, String status, long completed, long total) {
+        String phase = status == null || status.isBlank() ? "starting" : status;
+        if (total > 0) {
+            long percent = Math.min(100, Math.max(0, completed * 100 / total));
+            return "Downloading the gallery assistant model '%s' (%d%%): %s.".formatted(model, percent, phase);
+        }
+        return "Downloading the gallery assistant model '%s': %s.".formatted(model, phase);
+    }
+
+    /** Download text the chat page shows after a failed attempt. */
+    static String downloadFailure(String model, String reason) {
+        return "The gallery assistant model '%s' could not be downloaded: %s It is retried automatically."
+                .formatted(model, reason);
     }
 
     private static boolean isAppointmentConfirmationClaim(String reply) {

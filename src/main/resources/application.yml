@@ -28,10 +28,11 @@ spring:
 
   servlet:
     multipart:
-      # .glb models are far larger than photographs; the limit matches the model
-      # upload validation in AntiqueModelController (250 MB).
-      max-file-size: 300MB
-      max-request-size: 310MB
+      # .glb models are far larger than photographs. Both limits and the validation in
+      # AntiqueModelController follow MODELS_MAX_SIZE_MB, so development and production
+      # reject the same oversized files instead of failing inside the multipart parser.
+      max-file-size: ${MODELS_MAX_SIZE_MB:250}MB
+      max-request-size: ${MODELS_REQUEST_MAX_SIZE_MB:310}MB
 
   security:
     oauth2:
@@ -60,3 +61,10 @@ ollama:
   model: ${OLLAMA_MODEL:llama3.2:3b}
   # Keep the model resident for the whole chat session instead of reloading per prompt.
   keep-alive: ${OLLAMA_KEEP_ALIVE:30m}
+  # Download the configured model the first time the chat page asks for it, so a fresh
+  # installation never needs a manual "ollama pull". That same model is then pinned for the
+  # whole session and kept resident by the chat page heartbeat.
+  auto-pull: ${OLLAMA_AUTO_PULL:true}
+  pull-retry: ${OLLAMA_PULL_RETRY:60s}
+  pull-timeout: ${OLLAMA_PULL_TIMEOUT:30m}
+  touch-interval: ${OLLAMA_TOUCH_INTERVAL:10m}

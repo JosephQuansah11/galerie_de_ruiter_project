@@ -13,6 +13,10 @@ type Antique = {
   } | null;
   description?: string | null;
   price?: number | null;
+  /** Distinct visitors who have seen this piece. */
+  viewCount?: number;
+  /** Distinct visitors who liked this piece. */
+  likeCount?: number;
 };
 
 export type Category = {

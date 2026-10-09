@@ -10,6 +10,7 @@ import AntiqueAdminPage from "./pages/admin/AntiqueAdminPage";
 import CategoryAdminPage from "./pages/admin/CategoryAdminPage";
 import LocationAdminPage from "./pages/admin/LocationAdminPage";
 import AboutAdminPage from "./pages/admin/AboutAdminPage";
+import HomeAdminPage from "./pages/admin/HomeAdminPage";
 import WishlistPage from "./pages/shopping/WishlistPage";
 import CartPage from "./pages/shopping/CartPage";
 import LocationPage from "./pages/LocationPage";
@@ -27,6 +28,7 @@ export function ProtectedRoutes() {
     <Route path="/admin/categories" element={<CategoryAdminPage />} />
     <Route path="/admin/location" element={<LocationAdminPage />} />
     <Route path="/admin/about" element={<AboutAdminPage />} />
+    <Route path="/admin/home" element={<HomeAdminPage />} />
     <Route path="/wishlist" element={<WishlistPage />} />
     <Route path="/cart" element={<CartPage />} />
     <Route path="/map" element={<LocationPage />} />

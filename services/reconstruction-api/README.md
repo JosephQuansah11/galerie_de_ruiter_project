@@ -4,8 +4,8 @@ Standalone FastAPI service for image-to-3D reconstruction jobs.
 
 ## Modes
 
-- `disabled` (default): accepts and records jobs, then reports that processing is unavailable. Recommended for Render web services without GPU workers.
-- `local`: runs a configured Meshroom/COLMAP command and serves its `.glb`/`.gltf` output.
+- `local` (default): runs the bundled CPU COLMAP pipeline, converts the sparse point cloud into a GLB mesh, and serves the artifact.
+- `disabled`: rejects new jobs with HTTP 503 and reports processing as unavailable.
 - `external`: submits the six images to a separately managed GPU worker and stores the returned model URL.
 
 The API intentionally does not embed a paid reconstruction provider or credentials.
@@ -16,18 +16,24 @@ The API intentionally does not embed a paid reconstruction provider or credentia
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements-dev.txt
-$env:RECONSTRUCTION_MODE = "disabled"
+$env:RECONSTRUCTION_MODE = "local"
 uvicorn app.main:app --reload --port 8000
 ```
 
-For a local Meshroom or COLMAP runner, set `RECONSTRUCTION_MODE=local` and configure
-`LOCAL_ENGINE_COMMAND`. OpenCV first segments the foreground object in each of the
-six views using GrabCut and writes transparent PNGs to `${input_dir}` and binary
-masks to `${mask_dir}`. The trusted local command can use `${input_dir}`,
-`${raw_input_dir}`, `${mask_dir}`, `${output_dir}`, and `${job_id}` placeholders.
-Configure the runner to use the six segmented views/masks and write a `.glb` or
-`.gltf` file into `${output_dir}`. The API publishes that model URL for the
-frontend's interactive Three.js viewer.
+Native execution also requires the COLMAP command-line tools installed on `PATH`.
+For a preconfigured local engine, build and start the Docker service from the
+repository root with `docker compose -f docker-compose.dev.yml up -d --build reconstruction-api`.
+The Docker image includes COLMAP and Open3D. Its CPU photogrammetry workflow
+converts a sparse reconstruction into an untextured, low-detail GLB mesh in the
+job output directory. Six clear, sharp images with overlapping visual features are
+required; smooth or reflective objects may not provide enough feature matches.
+The local mode needs substantial CPU and memory, and the data volume must persist
+between restarts so submitted images and generated models remain available.
+
+To run a custom local runner, set `RECONSTRUCTION_MODE=local` and override
+`LOCAL_ENGINE_COMMAND`. The command can use `${input_dir}`, `${raw_input_dir}`,
+`${mask_dir}`, `${output_dir}`, and `${job_id}` placeholders, and must write a
+`.glb` or `.gltf` artifact into `${output_dir}`.
 
 Example wrapper command:
 
@@ -51,4 +57,9 @@ are required for the current photogrammetry workflow.
 
 ## Production
 
-Render should run this API in `disabled` or `external` mode. Do not run Meshroom/COLMAP inside a normal Render web service. Use a GPU worker and object storage for production artifacts.
+For production, provision enough CPU, memory, and persistent storage for local
+reconstruction, or set `RECONSTRUCTION_MODE=external` and configure
+`EXTERNAL_WORKER_URL` for a GPU worker. Keep `disabled` only when model generation
+is intentionally unavailable. The browser viewer loads the completed GLB from the
+reconstruction API, while the Java API stores its URL and six source views with the
+antique.

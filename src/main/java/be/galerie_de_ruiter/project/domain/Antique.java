@@ -7,9 +7,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -25,6 +25,9 @@ public class Antique {
     private String title;
     @ManyToOne(optional = false)
     private Designer artist;
+    // Long gallery notes (condition, provenance, stories) do not fit in the default
+    // varchar(255); the column is `text` so a full description can be stored.
+    @Column(columnDefinition = "text")
     private String description;
     private BigDecimal price;
     @JdbcTypeCode(SqlTypes.LONGVARBINARY)
@@ -68,6 +71,10 @@ public class Antique {
         return title;
     }
 
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public Designer getArtist() {
         return artist;
     }
@@ -76,8 +83,16 @@ public class Antique {
         return description;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public BigDecimal getPrice() {
         return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
     }
 
     public Category getCategory() {

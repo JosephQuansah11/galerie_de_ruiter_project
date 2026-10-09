@@ -17,4 +17,6 @@ public interface AntiqueImageRepository extends JpaRepository<AntiqueImage, UUID
     Optional<AntiqueImage> findByAntiqueIdAndPosition(UUID id, String position);
 
     List<AntiqueImage> findAllByAntiqueId(UUID id);
+
+    void deleteAllByAntiqueId(UUID antiqueId);
 }

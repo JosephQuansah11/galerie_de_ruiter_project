@@ -8,9 +8,11 @@ import { CategoryDropdownGrid } from "./CategoryDropdownGrid";
 export function NavCategoryLinks({
   categories,
   hasError,
+  onNavigate,
 }: {
   categories: Category[];
   hasError: boolean;
+  onNavigate: () => void;
 }) {
   const { t } = useLanguage();
   return (
@@ -25,7 +27,7 @@ export function NavCategoryLinks({
       className="nav-category-dropdown"
       aria-label={t("navAntiquesCategories")}
     >
-      <NavDropdown.Item as={Link} to="/antiques">
+      <NavDropdown.Item as={Link} to="/antiques" onClick={onNavigate}>
         {t("catalogueNavigation")}
       </NavDropdown.Item>
       {hasError && (
@@ -33,7 +35,7 @@ export function NavCategoryLinks({
           {t("navCategoriesUnavailable")}
         </NavDropdown.ItemText>
       )}
-      <CategoryDropdownGrid categories={categories} />
+      <CategoryDropdownGrid categories={categories} onNavigate={onNavigate} />
     </NavDropdown>
   );
 }

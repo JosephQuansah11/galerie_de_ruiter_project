@@ -45,5 +45,13 @@ keycloak:
 ollama:
   base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
   model: ${OLLAMA_MODEL:llama3.2:3b}
+  # Keep the model resident for the whole chat session instead of reloading per prompt.
+  keep-alive: ${OLLAMA_KEEP_ALIVE:30m}
+
+app:
+  security:
+    # The Render frontend and API are served from different origins, so the CSRF
+    # cookie must be readable and sendable across sites.
+    cross-site-csrf-cookies: ${CROSS_SITE_CSRF_COOKIES:true}
 
 FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}

@@ -31,3 +31,19 @@ SELECT gen_random_uuid(), id, 0, image_data, COALESCE(image_content_type, 'appli
 FROM antiques
 WHERE image_data IS NOT NULL
     AND NOT EXISTS (SELECT 1 FROM antique_images WHERE antique_images.antique_id = antiques.id);
+
+-- Long gallery notes (condition, provenance, stories) do not fit in the original
+-- varchar(255) description column. Widen it to text. Safe to run repeatedly.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'antiques'
+          AND column_name = 'description'
+          AND data_type <> 'text'
+    ) THEN
+        ALTER TABLE antiques ALTER COLUMN description TYPE text;
+    END IF;
+END $$@@@@;

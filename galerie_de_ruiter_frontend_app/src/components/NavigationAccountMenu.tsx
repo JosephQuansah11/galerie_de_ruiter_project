@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Avatar } from "./Avatar";
 
-export function NavigationAccountMenu() {
+export function NavigationAccountMenu({ onNavigate }: { onNavigate: () => void }) {
   const auth = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -21,10 +21,10 @@ export function NavigationAccountMenu() {
     <Dropdown.Menu>
       <Dropdown.Header><strong>{displayName}</strong></Dropdown.Header>
       <Dropdown.Divider />
-      <Dropdown.Item onClick={() => navigate("/profile")}>{t("navProfile")}</Dropdown.Item>
-      <Dropdown.Item onClick={() => navigate("/preferences")}>{t("navSettings")}</Dropdown.Item>
+      <Dropdown.Item onClick={() => { onNavigate(); navigate("/profile"); }}>{t("navProfile")}</Dropdown.Item>
+      <Dropdown.Item onClick={() => { onNavigate(); navigate("/preferences"); }}>{t("navSettings")}</Dropdown.Item>
       <Dropdown.Divider />
-      <Dropdown.Item className="text-danger" onClick={auth.logout}>{t("navLogout")}</Dropdown.Item>
+      <Dropdown.Item className="text-danger" onClick={() => { onNavigate(); auth.logout(); }}>{t("navLogout")}</Dropdown.Item>
     </Dropdown.Menu>
   </Dropdown></div>;
 }

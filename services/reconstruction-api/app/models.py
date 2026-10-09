@@ -16,13 +16,14 @@ class ReconstructionJob(BaseModel):
     progress: int = Field(ge=0, le=100)
     error: str | None = None
     model_url: str | None = None
-    image_urls: list[str] = []
-    image_views: list[dict[str, str]] = []
+    image_urls: list[str] = Field(default_factory=list)
+    image_views: list[dict[str, str]] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class Capabilities(BaseModel):
     engine_mode: str
+    processing_available: bool = False
     accepts_multipart: bool = True
-    supported_input: dict[str, int] = {'min_images': 1, 'recommended_images': 6, 'max_images': 12}
+    supported_input: dict[str, int] = {'min_images': 6, 'recommended_images': 6, 'max_images': 6}
     output: dict[str, str | None] = {'format': 'glb', 'model_url': None}

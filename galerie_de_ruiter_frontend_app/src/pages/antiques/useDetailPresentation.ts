@@ -1,25 +1,38 @@
 import type Antique from "@/models/antiques/Antique";
-import { resolveAntiqueImageUrl } from "@/models/antiques/Antique";
 import { formatEuroAmount } from "@/i18n";
-import type { Position, Translate } from "./detailTypes";
-import type { ReconstructionJob } from "@/apis/reconstruction_api";
+import type { Translate } from "./detailTypes";
+import { backendBaseURL } from "@/apis/backendClient";
 
+/**
+ * Presentation data for one antique: artist, price, gallery images and the GLB model.
+ * Only GLB/GLTF models are resolved, because the canvas viewer renders those.
+ */
 export function getDetailPresentation(antique: Antique, antiques: Antique[], locale: string,
-  selectedImage: string | undefined, images: Partial<Record<Position, File>>,
-  previews: Partial<Record<Position, string>>, activeView: Position, job: ReconstructionJob | undefined, t: Translate) {
-  const tArtist = antique.artist?.displayName ?? antique.artist?.name ?? t("galerieDeRuiterCollection");
+  selectedImage: string | undefined, t: Translate) {
+  const artist = antique.artist?.displayName ?? antique.artist?.name ?? t("galerieDeRuiterCollection");
   const price = antique.price == null ? t("priceOnRequest") : formatEuroAmount(antique.price, locale);
   const related = antiques.filter((item) => item.id !== antique.id).sort((a, b) =>
     Number(b.category === antique.category) - Number(a.category === antique.category));
-  const baseUrl = import.meta.env.VITE_RECONSTRUCTION_API_URL ?? "http://localhost:8000";
-  const views = new Map<Position, string>();
-  (antique.sixViewImages ?? []).forEach((view) => views.set(view.position as Position, view.url));
-  (job?.image_views ?? []).forEach((view) => views.set(view.position as Position, `${baseUrl}${view.url}`));
   const imageUrls = antique.imageUrls?.length ? antique.imageUrls : antique.imageUrl ? [antique.imageUrl] : [];
   const preview = selectedImage ?? imageUrls[0];
-  const model = job?.model_url ?? antique.modelUrl;
-  const modelUrl = model?.startsWith("http") ? model : model ? `${baseUrl}${model}` : undefined;
-  const activeImage = views.get(activeView) ?? previews[activeView];
-  const frontImage = images.front ?? (preview ? resolveAntiqueImageUrl(preview) : undefined) ?? activeImage;
-  return { artist: tArtist, price, related, baseUrl, views, imageUrls, preview, modelUrl, activeImage, frontImage };
+  const modelUrl = isViewableModelUrl(antique.modelUrl) ? resolveModelUrl(antique.modelUrl!.trim()) : undefined;
+  return { artist, price, related, imageUrls, preview, modelUrl };
 }
+
+/**
+ * The canvas viewer only accepts GLB/GLTF models: a model served from the API model
+ * endpoint, or an uploaded `.glb`/`.gltf`/`.webl` file.
+ */
+export function isViewableModelUrl(modelUrl?: string | null): boolean {
+  if (!modelUrl || !modelUrl.trim()) return false;
+  const value = modelUrl.trim();
+  if (/^\/api\/antiques\/[^/]+\/model$/i.test(value)) return true;
+  return /\.(glb|gltf|webl)(\?.*)?$/i.test(value);
+}
+
+function resolveModelUrl(modelUrl: string): string {
+  if (/^https?:\/\//i.test(modelUrl)) return modelUrl;
+  const path = modelUrl.startsWith("/") ? modelUrl : `/${modelUrl}`;
+  return `${backendBaseURL}${path}`;
+}
+

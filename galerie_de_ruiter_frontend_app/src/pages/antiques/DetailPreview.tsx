@@ -1,21 +1,19 @@
-import { ThreeDModelDesigner } from "@/3dmodel/three-d/ThreeDModelDesigner";
-import { createAntiqueModel } from "@/3dmodel/three-d/generated/createAntiqueModel";
-import type { ReconstructionJob } from "@/apis/reconstruction_api";
-import type { Position, Translate } from "./detailTypes";
-import { CubeView } from "./CubeView";
-import { PositionControls } from "./PositionControls";
+import { useTranslation } from "react-i18next";
+import { ThreeDScene } from "@/3dmodel/three-d/ThreeDScene";
 
-type Props = { title: string; modelUrl?: string; frontImage?: string | File; activeImage?: string; activeView: Position;
-  viewsAvailable: boolean; positions: Position[]; t: Translate;
-  startDrag: React.PointerEventHandler; endDrag: React.PointerEventHandler;
-  selectView: (position: Position) => void };
-export function DetailPreview(props: Props) {
-  const hasPreview = Boolean(props.modelUrl || props.frontImage);
+/**
+ * Shows the antique in the 3D canvas. Only GLB/GLTF models are rendered; pieces without
+ * a published model show a note, and their photographs come from DetailMedia.
+ */
+export function DetailPreview({ title, modelUrl }: { title: string; modelUrl?: string }) {
+  const { t } = useTranslation();
+  if (!modelUrl) return <div className="model-preview">
+    <span>{t("threeDPreview")}</span><strong>{t("modelComingSoon")}</strong>
+  </div>;
   return <div className="model-preview">
-    {hasPreview && <ThreeDModelDesigner frontImage={props.frontImage} modelUrl={props.modelUrl} createModel={createAntiqueModel} />}
-    {!hasPreview && props.activeImage && <CubeView activeImage={props.activeImage} activeView={props.activeView}
-      title={props.title} startDrag={props.startDrag} endDrag={props.endDrag} t={props.t} />}
-    {!hasPreview && !props.activeImage && <><span>{props.t("threeDPreview")}</span><strong>{props.t("modelComingSoon")}</strong><p>{props.t("modelDescription")}</p></>}
-    {!hasPreview && props.viewsAvailable && <PositionControls positions={props.positions} activeView={props.activeView} select={props.selectView} t={props.t} />}
+    <div className="three-d-viewer" aria-label={t("model3DAlt", { title })}>
+      <ThreeDScene modelUrl={modelUrl} />
+    </div>
   </div>;
 }
+

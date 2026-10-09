@@ -2,6 +2,8 @@ package be.galerie_de_ruiter.project.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -141,5 +143,39 @@ class UserControllerSecurityTest {
                         .content(request))
                 .andExpect(status().isConflict());
         verify(antiques).createResponse(any(), any());
+    }
+
+    @Test
+    void regularUsersCannotEditOrDeleteAntiques() throws Exception {
+        var user = jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"));
+        String id = "11111111-1111-1111-1111-111111111111";
+
+        mvc.perform(put("/api/antiques/" + id)
+                        .with(user)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Updated antique","description":"Updated description","price":12.50}
+                                """))
+                .andExpect(status().isForbidden());
+        mvc.perform(delete("/api/antiques/" + id)
+                        .with(user)
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void regularUsersCannotUploadAntiqueModels() throws Exception {
+        var user = jwt().authorities(new SimpleGrantedAuthority("ROLE_USER"));
+        mvc.perform(multipart("/api/antiques/11111111-1111-1111-1111-111111111111/model")
+                        .file(new org.springframework.mock.web.MockMultipartFile(
+                                "model", "model.glb", "model/gltf-binary", new byte[12]))
+                        .with(user)
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        })
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
     }
 }

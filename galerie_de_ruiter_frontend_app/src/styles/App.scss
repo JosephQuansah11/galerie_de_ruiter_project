@@ -370,21 +370,7 @@ main {
   color: var(--theme-text);
   font-size: 2rem;
 }
-.catalogue-search {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  max-width: 80rem;
-  margin-bottom: 2rem;
-  padding: 0.35rem 0.9rem;
-  border: 1px solid rgba(30, 32, 34, 0.2);
-  background: rgba(255, 255, 255, 0.78);
-}
-.catalogue-search .form-control {
-  border: 0;
-  box-shadow: none;
-  background: transparent;
-}
+// The catalogue search control is styled in the shared _antique-pages partial.
 .catalogue-card {
   height: 100%;
   overflow: hidden;
@@ -423,7 +409,6 @@ main {
 .detail-image img {
   width: 100%;
   height: 100%;
-  max-height: 100%;
   object-fit: contain;
 }
 .inventory-row img {
@@ -500,8 +485,6 @@ main {
 .detail-image {
   display: grid;
   place-items: center;
-  height: min(30vh, 24rem);
-  max-height: 30vh;
   background: linear-gradient(135deg, #cfb89b, #7b6d5c);
   color: rgba(255, 255, 255, 0.8);
   font:
@@ -594,8 +577,6 @@ main {
   margin-top: 2rem;
 }
 .detail-image {
-  height: min(30vh, 24rem);
-  max-height: 30vh;
   background: var(--theme-surface);
   color: var(--theme-primary);
 }
@@ -789,16 +770,6 @@ main {
   max-width: 30rem;
   color: var(--theme-text-secondary);
   line-height: 1.6;
-}
-.share-card {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-}
-.share-card img {
-  width: 8rem;
-  height: 8rem;
-  background: #fff;
 }
 .welcome-story {
   margin-top: 3rem;
@@ -1588,12 +1559,14 @@ body.theme-dark .form-control::placeholder {
 }
 
 #Navbar .icons-list-user-profile .dropdown-menu {
-  // z-index: 1061;
   right: 0;
   left: auto;
   min-width: 12rem;
+  max-height: min(70dvh, 24rem);
+  overflow-y: auto;
   color: var(--theme-text);
   text-align: left;
+  z-index: 2000;
 }
 
 #Navbar .nav-item-link {
@@ -1662,33 +1635,13 @@ body.theme-dark .form-control::placeholder {
     background: linear-gradient(165deg, var(--theme-nav-start), var(--theme-nav-end));
   }
 
-  #Navbar .navbar-collapse > .navbar-nav {
-    width: 100%;
-    height: auto;
-    flex-direction: column;
-    align-items: stretch;
-    padding: 0.5rem 0.75rem;
+  #Navbar .navbar-collapse:has(.icons-list-user-profile .dropdown-menu.show) {
+    overflow: visible;
   }
 
-
-
-  #Navbar .nav-category-dropdown > .nav-link,
-  #Navbar .nav-item-link {
-    width: 100%;
-  }
-
-  #Navbar .icons-list-user-profile {
-    width: 100%;
-    justify-content: flex-start;
-    margin: 0;
-    padding: 0.5rem 0.75rem 0.75rem;
-  }
-
-  #Navbar .nav-category-dropdown .dropdown-menu {
-    position: static;
-    width: 100%;
-    margin: 0.25rem 0 0.5rem;
-  }
+  // The collapsed menu itself — every list, list entry and drop-down inside it — is
+  // owned by the single "Collapsed (small screen) navigation" block further down, so
+  // the full-width panel contract only exists in one place.
 }
 
 .welcome-collections {
@@ -1868,6 +1821,21 @@ body.theme-dark .form-control::placeholder {
 .chat-bubble { max-width: 78%; padding: 0.8rem 1rem; border-radius: 0.8rem; line-height: 1.5; }
 .chat-user { justify-self: end; background: var(--theme-primary); color: var(--theme-on-primary); }
 .chat-assistant { justify-self: start; background: var(--theme-surface); border: 1px solid rgba(60, 31, 37, 0.14); }
+.chat-quick-options { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 1rem; }
+.chat-option { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; min-height: 2.5rem; padding: 0.55rem 0.8rem; border: 1px solid rgba(107, 36, 50, 0.3); border-radius: 0.45rem; background: var(--theme-surface); color: var(--theme-primary); font: inherit; font-weight: 600; cursor: pointer; }
+.chat-option:hover:not(:disabled), .chat-option:focus-visible { border-color: var(--theme-primary); background: rgba(107, 36, 50, 0.08); }
+.chat-option:disabled { cursor: not-allowed; opacity: 0.6; }
+.chat-option-primary { border-color: var(--theme-primary); background: var(--theme-primary); color: var(--theme-on-primary); }
+.chat-option-primary:hover:not(:disabled), .chat-option-primary:focus-visible { background: #571c28; color: #fff; }
+.chat-appointment-picker { display: grid; gap: 0.85rem; margin: 0 0 1rem; padding: 1rem; border: 1px solid var(--theme-border); border-radius: 0.65rem; background: var(--theme-surface); }
+.chat-appointment-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.75rem; }
+.chat-appointment-fields label { display: grid; gap: 0.35rem; color: var(--theme-text); font-size: 0.9rem; font-weight: 600; }
+.chat-appointment-fields input, .chat-appointment-fields select { width: 100%; min-height: 2.6rem; padding: 0.4rem 0.55rem; border: 1px solid var(--theme-border); border-radius: 0.35rem; background: var(--theme-background); color: var(--theme-text); font: inherit; }
+.chat-appointment-note, .chat-appointment-error { margin: 0; color: var(--theme-text-secondary); font-size: 0.9rem; }
+.chat-appointment-error { color: var(--theme-primary); font-weight: 600; }
+.chat-appointment-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
+.chat-sources { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 0.65rem; margin-top: 0.65rem; padding-top: 0.5rem; border-top: 1px solid var(--theme-border); font-size: 0.84rem; }
+.chat-sources a { color: var(--theme-primary); }
 .chat-composer { display: flex; flex-direction: row; gap: 0.6rem; padding-top: 1rem; border-top: 1px solid rgba(60, 31, 37, 0.14); }
 .chat-composer button { display: grid; place-items: center; width: 3rem; }
 .appointment-summary { display: grid; gap: 0.2rem; margin-bottom: 1rem; padding: 0.8rem 1rem; border-left: 3px solid var(--theme-accent); background: var(--theme-surface); }
@@ -1921,3 +1889,210 @@ button{
 .button-wide{
   width: auto;
 }
+
+// --------------------------------------------------
+// Collapsed (small screen) navigation
+// Below the navbar's xl breakpoint the navigation collapses into a compact top bar
+// with a single dropdown panel instead of a full-height column.
+// --------------------------------------------------
+@media (max-width: 1199.98px) {
+  #Navbar {
+    inset: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    min-height: var(--top-nav-height);
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    row-gap: 0.35rem;
+    /* The collapsed panel cancels this inline padding so the menu spans the
+       navigation bar edge to edge. */
+    padding: 0.35rem 0.75rem;
+    z-index: 1040;
+  }
+
+  #Navbar .navbar-brand-div {
+    width: auto;
+    min-height: 0;
+    padding: 0;
+    margin-right: auto;
+  }
+  #Navbar .navbar-brand-div .navbar-logo {
+    width: 6.5rem;
+    max-height: 3rem;
+  }
+
+  #Navbar .navbar-toggler {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 1px solid rgba(255, 250, 247, 0.42);
+    border-radius: 0.6rem;
+    background: rgba(255, 250, 247, 0.1);
+    box-shadow: none;
+    transition: background 160ms ease, border-color 160ms ease;
+  }
+  #Navbar .navbar-toggler:hover,
+  #Navbar .navbar-toggler:focus-visible {
+    border-color: rgba(255, 250, 247, 0.8);
+    background: rgba(255, 250, 247, 0.22);
+  }
+  #Navbar .navbar-toggler:focus-visible {
+    outline: 2px solid rgba(255, 250, 247, 0.65);
+    outline-offset: 2px;
+  }
+
+  // The collapsed panel spans the whole bar: it cancels the bar's inline padding and
+  // hangs to its bottom edge, so the navigation list covers the navigation bar.
+  #Navbar .navbar-collapse {
+    flex: 0 0 calc(100% + 1.5rem);
+    width: calc(100% + 1.5rem);
+    max-width: none;
+    align-self: stretch;
+    margin: 0.35rem -0.75rem -0.35rem;
+    padding: 0.9rem 0.75rem 1rem;
+    max-height: calc(100dvh - var(--top-nav-height));
+    overflow-y: auto;
+    border: 0;
+    border-top: 1px solid rgba(255, 250, 247, 0.18);
+    border-radius: 0;
+    background: linear-gradient(165deg, rgba(38, 10, 15, 0.98), rgba(66, 15, 23, 0.98));
+    box-shadow: 0 1.1rem 2.4rem rgba(18, 6, 9, 0.45);
+  }
+  #Navbar .navbar-collapse.show {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #Navbar .main-navbar-links,
+  #Navbar .navbar-nav {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    margin: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  // Every navigation list is a single full-width column inside the panel.
+  #Navbar .icons-list,
+  #Navbar .category-links {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: none;
+    gap: 0.3rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  // …and every entry in those lists covers the full width of the bar.
+  #Navbar .icons-list > *,
+  #Navbar .category-links > *,
+  #Navbar .nav-item,
+  #Navbar .nav-category-dropdown,
+  #Navbar .nav-item-link,
+  #Navbar .nav-category-dropdown > .nav-link,
+  #Navbar .nav-category-dropdown .dropdown-toggle {
+    width: 100%;
+    max-width: none;
+  }
+
+  #Navbar .nav-item-link,
+  #Navbar .nav-category-dropdown > .nav-link,
+  #Navbar .nav-category-dropdown .dropdown-toggle {
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    min-height: 2.6rem;
+    white-space: normal;
+    justify-content: flex-start;
+    text-align: left;
+  }
+  #Navbar .nav-item-link.active,
+  #Navbar .nav-category-dropdown .dropdown-toggle.active {
+    background: rgba(255, 250, 247, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(255, 250, 247, 0.25);
+  }
+
+  #Navbar .icons-list-user-profile {
+    width: 100%;
+    margin: 0.75rem 0 0;
+    padding: 0.85rem 0 0;
+    border-top: 1px solid rgba(255, 250, 247, 0.16);
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  #Navbar .icons-list-user-profile > *,
+  #Navbar .icons-list-user-profile .dropdown,
+  #Navbar .icons-list-user-profile .dropdown > .btn {
+    width: 100%;
+    max-width: none;
+  }
+  #Navbar .icons-list-user-profile .dropdown > .btn {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  // Menus opened from the collapsed panel flow in place at the panel width instead
+  // of floating beside it, so the whole drop-down covers the navigation bar too.
+  #Navbar .navbar-nav .dropdown-menu,
+  #Navbar .icons-list-user-profile .dropdown-menu {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    width: 100%;
+    min-width: 0;
+    margin: 0.3rem 0 0;
+    box-shadow: none;
+  }
+  #Navbar .navbar-nav .dropdown-menu .dropdown-item,
+  #Navbar .category-dropdown-grid {
+    width: 100%;
+  }
+
+  .chat-page,
+  .profile-page,
+  .catalogue-page,
+  .admin-page,
+  .detail-page,
+  .about-page {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+// --------------------------------------------------
+// Gallery assistant connection state
+// --------------------------------------------------
+.chat-status { display: flex; flex-direction: row; align-items: center; gap: 0.75rem; margin: 1rem 0 0; padding: 0.75rem 1rem; border: 1px solid var(--theme-border); border-left: 3px solid var(--theme-accent); border-radius: 0.5rem; background: var(--theme-surface); color: var(--theme-text); }
+.chat-status-copy { display: grid; gap: 0.15rem; min-width: 0; }
+.chat-status-copy strong { font-size: 0.95rem; }
+.chat-status-copy span { color: var(--theme-text-secondary); font-size: 0.85rem; }
+.chat-status-retry { display: inline-flex; flex-direction: row; align-items: center; gap: 0.3rem; flex: 0 0 auto; margin-left: auto; padding: 0.45rem 0.85rem; border: 1px solid var(--theme-primary); border-radius: 999px; background: var(--theme-surface); color: var(--theme-primary); font: inherit; font-size: 0.85rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.chat-status-retry:hover, .chat-status-retry:focus-visible { background: var(--theme-primary); color: var(--theme-on-primary); }
+.chat-composer .form-control:disabled { background: var(--theme-background); color: var(--theme-text-secondary); }
+.chat-composer button:disabled { opacity: 0.55; cursor: not-allowed; }
+.profile-upload-alert { margin: 0.35rem 0 0; font-size: 0.85rem; }
+
+// The antique-shop design layer refines the rules above (surfaces, buttons,
+// typography and controls) and must stay last so it wins the cascade.
+@import "antique-theme";
+

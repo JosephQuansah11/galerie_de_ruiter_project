@@ -11,9 +11,20 @@ export async function getAllAntiques(): Promise<Antique[]> {
 export async function addAntique(antique: AntiqueForm): Promise<Antique> {
   const response = await axiosInstance.post<Antique>(`${backendBaseURL}/api/antiques`, antique, {
     timeout: 60000,
-    headers: await csrfHeaders(),
+    headers: await csrfHeaders().then((headers) => ({ ...headers, "Content-Type": "application/json" })),
   });
   return response.data;
+}
+export async function updateAntique(id: string, antique: Pick<AntiqueForm, "title" | "description" | "price">): Promise<Antique> {
+  const response = await axiosInstance.put<Antique>(`${backendBaseURL}/api/antiques/${id}`, antique, {
+    headers: { ...(await csrfHeaders()), "Content-Type": "application/json" },
+  });
+  return response.data;
+}
+export async function deleteAntique(id: string): Promise<void> {
+  await axiosInstance.delete(`${backendBaseURL}/api/antiques/${id}`, {
+    headers: await csrfHeaders(),
+  });
 }
 export async function uploadAntiqueImage(id: string, image: File): Promise<void> {
   const body = new FormData();
@@ -22,4 +33,15 @@ export async function uploadAntiqueImage(id: string, image: File): Promise<void>
     timeout: 60000,
     headers: { ...(await csrfHeaders()), "Content-Type": undefined },
   });
+}
+export async function uploadAntiqueModel(id: string, model: File): Promise<Antique> {
+  const body = new FormData();
+  body.append("model", model);
+  // GLB models are large binaries: give the upload a long window so a slow connection
+  // does not look like an unreachable service.
+  const response = await axiosInstance.put<Antique>(`${backendBaseURL}/api/antiques/${id}/model`, body, {
+    timeout: 900000,
+    headers: { ...(await csrfHeaders()), "Content-Type": undefined },
+  });
+  return response.data;
 }

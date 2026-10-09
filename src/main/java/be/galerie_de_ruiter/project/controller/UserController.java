@@ -49,6 +49,11 @@ public class UserController {
         if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
             return ResponseEntity.status(401).build();
         }
+        // A signed-in visitor can reach the profile before the local row is created
+        // (for example when the first /api/me call failed). Bootstrap it so that
+        // updating profile details never fails with "User not found".
+        userService.findOrCreate(jwt.getSubject(), jwt.getClaimAsString("preferred_username"),
+                jwt.getClaimAsString("email"));
         return ResponseEntity.ok(userService.updateProfile(jwt.getSubject(), request));
     }
 

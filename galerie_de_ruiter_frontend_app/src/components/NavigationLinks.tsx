@@ -1,4 +1,4 @@
-import { BookOpen, Heart, LibraryBig, Map, MapPin, MessageCircle, Plus, ShoppingBag, Tags } from "lucide-react";
+import { BookOpen, Heart, Home, LibraryBig, Map, MapPin, MessageCircle, Plus, ShoppingBag, Tags } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Nav } from "react-bootstrap";
 import { NavLink } from "react-router-dom";
@@ -12,7 +12,7 @@ import { subscribeToContentUpdates } from "@/services/contentUpdates";
 
 type LinkItem = { href: string; icon: LucideIcon; translationKey: string };
 
-export function NavigationLinks() {
+export function NavigationLinks({ onNavigate }: { onNavigate: () => void }) {
   const { t } = useLanguage();
   const { isAdmin } = useAuth();
     const [categories, setCategories] = useState<Category[]>([]);
@@ -29,6 +29,7 @@ export function NavigationLinks() {
         { href: "/admin/antiques/new", icon: Plus, translationKey: "navAddAntique" },
         { href: "/admin/categories", icon: Tags, translationKey: "categories" },
         { href: "/admin/location", icon: MapPin, translationKey: "navEditLocation" },
+        { href: "/admin/home", icon: Home, translationKey: "navEditHome" },
         { href: "/admin/about", icon: BookOpen, translationKey: "navEditAbout" },
       ]
     : [{ href: "/map", icon: Map, translationKey: "location" }];
@@ -44,8 +45,8 @@ export function NavigationLinks() {
   }, []);
 
   return <div className="icons-list">
-    <NavCategoryLinks categories={categories} hasError={categoryError} />
-    {[...publicLinks, ...adminLinks].map((item) => <Nav.Link as={NavLink} key={item.href} to={item.href} className="nav-item-link">
+    <NavCategoryLinks categories={categories} hasError={categoryError} onNavigate={onNavigate} />
+    {[...publicLinks, ...adminLinks].map((item) => <Nav.Link as={NavLink} key={item.href} to={item.href} className="nav-item-link" onClick={onNavigate}>
       <item.icon className="nav-icon" aria-hidden="true" /><span>{t(item.translationKey)}</span>
     </Nav.Link>)}
   </div>;

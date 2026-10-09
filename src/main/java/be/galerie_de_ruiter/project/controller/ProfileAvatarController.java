@@ -27,6 +27,9 @@ public class ProfileAvatarController {
             throws IOException {
         var subject = requireSubject(jwt);
         var avatar = ProfileAvatarImage.read(file);
+        // Bootstrap the local row so an avatar upload cannot fail just because the
+        // signed-in visitor has no profile row yet.
+        users.findOrCreate(subject, jwt.getClaimAsString("preferred_username"), jwt.getClaimAsString("email"));
         users.updateAvatar(subject, avatar.bytes(), avatar.contentType());
         return ResponseEntity.noContent().build();
     }

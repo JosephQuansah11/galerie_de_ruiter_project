@@ -101,7 +101,14 @@ public class SecurityConfiguration {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(List.of(frontendOrigin, "http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:11434"));
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-		configuration.setAllowedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE, "X-XSRF-TOKEN"));
+		// X-Visitor-Id carries the anonymous visitor's stable id for the public view/like
+		// counters. Without it in this list the browser blocks the preflight for those
+		// calls, so the requests never reach the API from the frontend origin.
+		configuration.setAllowedHeaders(List.of(
+				HttpHeaders.AUTHORIZATION,
+				HttpHeaders.CONTENT_TYPE,
+				"X-XSRF-TOKEN",
+				"X-Visitor-Id"));
 		configuration.setAllowCredentials(true);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -41,3 +41,9 @@ out/
 .env.*
 !.env.example
 node_modules
+
+# Locally uploaded 3D models (app.models.storage-dir default).
+/data/
+
+/replay_pid*.log
+/hs_err

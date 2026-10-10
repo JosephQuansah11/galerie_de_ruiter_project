@@ -95,6 +95,13 @@ services:
     dockerContext: .
     plan: starter
     healthCheckPath: /actuator/health
+    # 3D models are written to a persistent disk instead of a database column: a .glb is far
+    # larger than the rest of the catalogue, and PostgreSQL on a small plan could not take it.
+    # A disk pins the service to a single instance. Size it for the models you keep.
+    disk:
+      name: galerie-models
+      mountPath: /app/data/models
+      sizeGB: 5
     autoDeploy: true
     envVars:
       - key: SPRING_PROFILES_ACTIVE
@@ -103,6 +110,8 @@ services:
         value: update
       - key: PORT
         value: "8080"
+      - key: MODELS_STORAGE_DIR
+        value: /app/data/models
       - key: DATABASE_HOST
         fromDatabase:
           name: galerie-app-db

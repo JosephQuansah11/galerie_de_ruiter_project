@@ -3,13 +3,16 @@ package be.galerie_de_ruiter.project.controller;
 import be.galerie_de_ruiter.project.dto.AntiqueResponse;
 import be.galerie_de_ruiter.project.service.AntiqueService;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,15 +32,15 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class AntiqueModelController {
     private static final byte[] GLB_MAGIC = "glTF".getBytes(StandardCharsets.US_ASCII);
+    private static final MediaType GLB_MEDIA_TYPE = MediaType.parseMediaType("model/gltf-binary");
 
     private final AntiqueService antiques;
 
     /**
-     * Largest accepted GLB. It is configurable because a {@code byte[]} model costs roughly
-     * three times its size in memory while it is parsed, validated and stored, and the
-     * production instance is much smaller than a developer machine. The same value drives
-     * {@code spring.servlet.multipart.max-file-size}, so development and production reject
-     * the same files.
+     * Largest accepted GLB. The upload is streamed straight to the gallery disk instead of
+     * being buffered in the heap, so the ceiling is about the storage and the transfer, not
+     * the instance memory. The same value drives {@code spring.servlet.multipart.max-file-size},
+     * so development and production reject the same files.
      */
     @Value("${app.models.max-size-mb:250}")
     private long maxModelSizeMb;
@@ -56,41 +59,54 @@ public class AntiqueModelController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only .glb models are supported.");
         }
 
-        byte[] bytes = model.getBytes();
-        validateGlb(bytes);
-        return antiques.saveModel(id, bytes);
+        validateGlb(model);
+        return antiques.saveModel(id, model);
     }
 
     @GetMapping(produces = "model/gltf-binary")
-    public ResponseEntity<byte[]> get(@PathVariable UUID id) {
-        byte[] model = antiques.getModel(id);
+    public ResponseEntity<Resource> get(@PathVariable UUID id) {
+        var model = antiques.readModel(id).orElse(null);
         if (model == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("model/gltf-binary"))
-                .contentLength(model.length)
+                .contentType(GLB_MEDIA_TYPE)
+                .contentLength(model.size())
                 // Models are large, so a visitor who reopens the page reuses the downloaded
                 // copy instead of pulling the whole file again in production.
                 .cacheControl(CacheControl.maxAge(Duration.ofMinutes(10)).cachePublic())
-                .body(model);
+                .body(model.content());
     }
 
     private long maxModelBytes() {
         return maxModelSizeMb * 1024L * 1024L;
     }
 
-    private void validateGlb(byte[] bytes) {
-        if (bytes.length < 12
-                || !java.util.Arrays.equals(java.util.Arrays.copyOf(bytes, GLB_MAGIC.length), GLB_MAGIC)) {
+    /**
+     * Checks the GLB header without reading the whole file: only the first twelve bytes ever
+     * reach the JVM heap, and the length the file declares must match what the client sent.
+     */
+    private void validateGlb(MultipartFile model) throws IOException {
+        byte[] header = readHeader(model);
+        boolean magic = Arrays.equals(Arrays.copyOf(header, GLB_MAGIC.length), GLB_MAGIC);
+        int version = ByteBuffer.wrap(header, 4, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
+        long declaredLength = Integer.toUnsignedLong(
+                ByteBuffer.wrap(header, 8, 4).order(ByteOrder.LITTLE_ENDIAN).getInt());
+        if (!magic || version != 2) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The selected file is not a valid GLB model.");
         }
-        ByteBuffer header = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
-        header.position(4);
-        int version = header.getInt();
-        long declaredLength = Integer.toUnsignedLong(header.getInt());
-        if (version != 2 || declaredLength != bytes.length) {
+        if (declaredLength != model.getSize()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The selected file is not a valid GLB 2.0 model.");
         }
+    }
+
+    private byte[] readHeader(MultipartFile model) throws IOException {
+        byte[] header = new byte[12];
+        try (InputStream content = model.getInputStream()) {
+            if (content.readNBytes(header, 0, header.length) < header.length) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The selected file is not a valid GLB model.");
+            }
+        }
+        return header;
     }
 }

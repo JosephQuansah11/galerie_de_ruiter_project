@@ -99,6 +99,9 @@ services:
       KEYCLOAK_REALM_ADMIN_PASSWORD: ${KEYCLOAK_REALM_ADMIN_PASSWORD:?Set KEYCLOAK_REALM_ADMIN_PASSWORD}
       OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+      MODELS_STORAGE_DIR: /app/data/models
+    volumes:
+      - models-data:/app/data/models
     depends_on:
       database:
         condition: service_healthy
@@ -146,3 +149,4 @@ volumes:
   keycloak-postgres-data:
   reconstruction-data:
   ollama-models:
+  models-data:

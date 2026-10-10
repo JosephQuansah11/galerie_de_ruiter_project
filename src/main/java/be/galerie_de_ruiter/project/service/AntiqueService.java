@@ -2,7 +2,6 @@ package be.galerie_de_ruiter.project.service;
 
 import be.galerie_de_ruiter.project.domain.Antique;
 import be.galerie_de_ruiter.project.domain.AntiqueImage;
-import be.galerie_de_ruiter.project.domain.AntiqueModel;
 import be.galerie_de_ruiter.project.domain.Designer;
 import be.galerie_de_ruiter.project.dto.AntiqueReconstructionRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueReconstructionRequest.ReconstructionViewDto;
@@ -22,15 +21,23 @@ import be.galerie_de_ruiter.project.repository.CategoryRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -42,6 +49,7 @@ public class AntiqueService {
     private final AntiqueModelRepository antiqueModelRepository;
     private final AntiqueLikeRepository antiqueLikeRepository;
     private final AntiqueViewRepository antiqueViewRepository;
+    private final AntiqueModelStorage modelStorage;
     private final UserService users;
     private final CategoryRepository categoryRepository;
 
@@ -95,22 +103,44 @@ public class AntiqueService {
         return AntiqueResponse.from(antiques.save(antique));
     }
 
+    /**
+     * Stores the uploaded model on the gallery disk. The database copy is dropped: the file is
+     * authoritative now, and removing the row is what reclaims the storage that made uploads
+     * fail on a small production database.
+     */
     @Transactional
-    public AntiqueResponse saveModel(UUID id, byte[] modelData) {
+    public AntiqueResponse saveModel(UUID id, MultipartFile model) {
         Antique antique = findAntique(id);
-        AntiqueModel model = antiqueModelRepository.findByAntiqueId(id)
-                .orElseGet(() -> new AntiqueModel(antique, modelData));
-        model.setData(modelData);
-        antiqueModelRepository.save(model);
+        modelStorage.store(id, model);
+        antiqueModelRepository.deleteByAntiqueId(id);
         antique.setModelUrl("/api/antiques/" + id + "/model");
         return AntiqueResponse.from(antiques.save(antique));
     }
 
+    /**
+     * The stored model, streamed from the gallery disk. An antique that was uploaded before
+     * models moved out of the database still serves its model from the old row, so nothing is
+     * lost by the move; models uploaded from now on live on the disk only.
+     */
     @Transactional(readOnly = true)
-    public byte[] getModel(UUID id) {
-        return antiqueModelRepository.findByAntiqueId(id)
-                .map(AntiqueModel::getData)
-                .orElse(null);
+    public Optional<StoredAntiqueModel> readModel(UUID id) {
+        Optional<Path> stored = modelStorage.locate(id);
+        if (stored.isPresent()) {
+            Path file = stored.get();
+            try {
+                return Optional.of(new StoredAntiqueModel(new FileSystemResource(file), Files.size(file)));
+            } catch (IOException exception) {
+                throw new IllegalStateException("The stored model could not be read.", exception);
+            }
+        }
+        return antiqueModelRepository.findByAntiqueId(id).map(model -> {
+            byte[] data = model.getData();
+            return new StoredAntiqueModel(new ByteArrayResource(data), data.length);
+        });
+    }
+
+    /** A model ready to be streamed back to the client, wherever it is stored. */
+    public record StoredAntiqueModel(Resource content, long size) {
     }
 
     @Transactional
@@ -118,6 +148,7 @@ public class AntiqueService {
         Antique antique = findAntique(id);
         antiqueImageRepository.deleteAllByAntiqueId(id);
         antiqueModelRepository.deleteByAntiqueId(id);
+        modelStorage.delete(id);
         // The public counters keep their own rows. They must go with the antique, or they
         // would be left pointing at a piece that no longer exists - and a schema that
         // carries the foreign key would reject the delete outright.

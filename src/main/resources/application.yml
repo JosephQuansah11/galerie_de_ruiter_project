@@ -68,3 +68,11 @@ ollama:
   pull-retry: ${OLLAMA_PULL_RETRY:60s}
   pull-timeout: ${OLLAMA_PULL_TIMEOUT:30m}
   touch-interval: ${OLLAMA_TOUCH_INTERVAL:10m}
+
+app:
+  models:
+    # 3D models are stored as files, not database rows: a .glb is far larger than a
+    # photograph, so keeping it in a bytea column pushed every upload and download through
+    # the JVM heap and through PostgreSQL. In production this points at a persistent disk
+    # (see render.yaml); locally it defaults to ./data/models inside the project.
+    storage-dir: ${MODELS_STORAGE_DIR:./data/models}

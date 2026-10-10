@@ -31,3 +31,8 @@ keycloak:
   admin-client-id: admin-cli
   admin-username: ${KEYCLOAK_ADMIN_USERNAME:test-admin}
   admin-password: ${KEYCLOAK_ADMIN_PASSWORD:}
+
+app:
+  models:
+    # Test runs keep uploaded models inside the ignored build directory, not the project tree.
+    storage-dir: build/test-models

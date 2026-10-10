@@ -11,6 +11,8 @@ import { InventoryList } from "./antiques/InventoryList";
 import { InventoryHeading } from "./antiques/InventoryHeading";
 import { DescriptionLimitHint } from "../antiques/DescriptionLimitHint";
 import { ANTIQUE_DESCRIPTION_MAX_LENGTH } from "../antiques/descriptionLimits";
+import { MODEL_MAX_SIZE_MB, isUploadableModel } from "../antiques/modelUploadLimits";
+import { logRequestFailure, managementErrorKey, modelUploadErrorKey } from "../antiques/antiqueSaveErrors";
 
 export default function AntiqueAdminPage() {
   const { t } = useTranslation();
@@ -28,7 +30,7 @@ export default function AntiqueAdminPage() {
   const [modelFileInvalid, setModelFileInvalid] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [deletingId, setDeletingId] = useState<string>();
-  const [actionError, setActionError] = useState(false);
+  const [actionError, setActionError] = useState<string>();
   useEffect(() => {
     getAllAntiques()
       .then((items) => { setAntiques(items); setLoadError(false); })
@@ -45,25 +47,36 @@ export default function AntiqueAdminPage() {
     setEditPrice(antique.price == null ? "" : String(antique.price));
     setEditModelFile(undefined);
     setModelFileInvalid(false);
-    setActionError(false);
+    setActionError(undefined);
   };
   const descriptionTooLong = editDescription.length > ANTIQUE_DESCRIPTION_MAX_LENGTH;
   const saveEdit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!editing) return;
     setSavingEdit(true);
-    setActionError(false);
+    setActionError(undefined);
     try {
       let updated = await updateAntiqueRequest(editing.id, {
         title: editTitle.trim(),
         description: editDescription,
         price: Number(editPrice),
       });
-      if (editModelFile) updated = await uploadAntiqueModel(editing.id, editModelFile);
+      if (editModelFile) {
+        try {
+          updated = await uploadAntiqueModel(editing.id, editModelFile);
+        } catch (error) {
+          // The details were saved and only the model is missing. Claiming "the antique
+          // could not be updated" here is what made the old message so misleading.
+          logRequestFailure(`3D model upload ${editModelFile.name}`, error);
+          setActionError(modelUploadErrorKey(error));
+          return;
+        }
+      }
       setAntiques((current) => current.map((antique) => antique.id === updated.id ? updated : antique));
       setEditing(undefined);
-    } catch {
-      setActionError(true);
+    } catch (error) {
+      logRequestFailure("antique update", error);
+      setActionError(managementErrorKey(error));
     } finally {
       setSavingEdit(false);
     }
@@ -71,12 +84,13 @@ export default function AntiqueAdminPage() {
   const removeAntique = async (antique: Antique) => {
     if (!window.confirm(t("confirmDeleteAntique", { name: antique.title }))) return;
     setDeletingId(antique.id);
-    setActionError(false);
+    setActionError(undefined);
     try {
       await deleteAntiqueRequest(antique.id);
       setAntiques((current) => current.filter((item) => item.id !== antique.id));
-    } catch {
-      setActionError(true);
+    } catch (error) {
+      logRequestFailure("antique delete", error);
+      setActionError(managementErrorKey(error));
     } finally {
       setDeletingId(undefined);
     }
@@ -105,7 +119,7 @@ export default function AntiqueAdminPage() {
           <Plus size={16} /> {t("addAntique")}
         </Button>
       </div>
-      {actionError && <Alert variant="danger">{t("antiqueManagementActionFailed")}</Alert>}
+      {actionError && <Alert variant="danger">{t(actionError, { max: MODEL_MAX_SIZE_MB })}</Alert>}
       {!loading && !loadError && <p className="inventory-result-count">{filtered.length} / {antiques.length}</p>}
       {loading && (
         <div className="catalogue-state">
@@ -125,7 +139,7 @@ export default function AntiqueAdminPage() {
             <Modal.Title>{t("editAntique")}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            {actionError && <Alert variant="danger">{t("antiqueManagementActionFailed")}</Alert>}
+            {actionError && <Alert variant="danger">{t(actionError, { max: MODEL_MAX_SIZE_MB })}</Alert>}
             <Form.Group className="mb-3">
               <Form.Label>{t("title")}</Form.Label>
               <Form.Control required value={editTitle} onChange={(event) => setEditTitle(event.target.value)} />
@@ -140,7 +154,7 @@ export default function AntiqueAdminPage() {
               <Form.Control type="file" accept=".glb,model/gltf-binary" onChange={(event) => {
                 const input = event.currentTarget as HTMLInputElement;
                 const file = input.files?.[0];
-                if (file && (!file.name.toLowerCase().endsWith(".glb") || file.size > 250 * 1024 * 1024)) {
+                if (file && !isUploadableModel(file)) {
                   setModelFileInvalid(true);
                   setEditModelFile(undefined);
                   input.value = "";
@@ -149,7 +163,7 @@ export default function AntiqueAdminPage() {
                 setModelFileInvalid(false);
                 setEditModelFile(file);
               }} />
-              <Form.Text>{modelFileInvalid ? t("glbUploadInvalid") : editModelFile?.name ?? t("chooseGlbModel")}</Form.Text>
+              <Form.Text>{modelFileInvalid ? t("glbUploadInvalid", { max: MODEL_MAX_SIZE_MB }) : editModelFile?.name ?? t("chooseGlbModel", { max: MODEL_MAX_SIZE_MB })}</Form.Text>
             </Form.Group>
             <Form.Group>
               <Form.Label>{t("priceEur")}</Form.Label>

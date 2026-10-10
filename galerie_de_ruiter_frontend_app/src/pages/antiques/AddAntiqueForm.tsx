@@ -10,13 +10,14 @@ import { DesignerCreator } from "./DesignerCreator";
 import { AntiqueIdentityFields } from "./AntiqueIdentityFields";
 import { AntiqueMediaFields } from "./AntiqueMediaFields";
 import { AntiqueDescriptionFields } from "./AntiqueDescriptionFields";
+import { MODEL_MAX_SIZE_MB } from "./modelUploadLimits";
 
 type Draft = ReturnType<typeof useNewAntiqueDraft>;
 type Lookups = ReturnType<typeof useAntiqueLookups>;
 export function AddAntiqueForm({ draft, lookups, selectArtist }: { draft: Draft; lookups: Lookups; selectArtist: (designer: Designer) => void }) {
   const { t } = useTranslation();
   return <>
-    {(draft.message || lookups.error) && <Alert variant="danger">{t(draft.message ?? lookups.error!)}</Alert>}
+    {(draft.message || lookups.error) && <Alert variant="danger">{t(draft.message ?? lookups.error!, { max: MODEL_MAX_SIZE_MB })}</Alert>}
     <Form onSubmit={draft.submit}>
       <fieldset disabled={Boolean(draft.createdId)} className="border-0 p-0">
         <ArtistSearch query={lookups.query} setQuery={(value) => { lookups.setQuery(value); draft.update("artistId", ""); }}

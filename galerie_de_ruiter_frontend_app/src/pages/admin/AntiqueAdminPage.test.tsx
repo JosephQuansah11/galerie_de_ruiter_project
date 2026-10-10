@@ -15,6 +15,14 @@ jest.mock("@/apis/backend_api", () => ({
 const mockedAntiques = getAllAntiques as jest.Mock;
 const mockedDelete = deleteAntique as jest.Mock;
 
+/** Mirrors an axios HTTP failure so the page's status handling can be exercised. */
+function httpError(status: number) {
+  return Object.assign(new Error(`HTTP ${status}`), {
+    isAxiosError: true,
+    response: { status, data: { detail: "rejected by the server" } },
+  });
+}
+
 const inventory: Antique[] = [
   { id: "1", title: "Carved walnut mirror", category: "Mirrors", description: "Late 19th century", price: 480 },
   { id: "2", title: "Brass reading lamp", category: null, description: "Art deco", price: null },
@@ -24,6 +32,7 @@ beforeEach(() => {
   mockedAntiques.mockResolvedValue(inventory);
   mockedDelete.mockResolvedValue(undefined);
   jest.spyOn(window, "confirm").mockReturnValue(true);
+  jest.spyOn(console, "error").mockImplementation(() => undefined);
 });
 
 describe("Antique administration page", () => {
@@ -88,5 +97,17 @@ describe("Antique administration page", () => {
     renderPage(<AntiqueAdminPage />);
 
     expect(await screen.findByText(i18n.t("antiquesCouldNotLoad"))).toBeInTheDocument();
+  });
+
+  it("names a refused delete instead of blaming the whole action", async () => {
+    mockedDelete.mockRejectedValueOnce(httpError(403));
+
+    renderPage(<AntiqueAdminPage />);
+    await screen.findByText("Carved walnut mirror");
+
+    fireEvent.click(screen.getByRole("button", { name: `${i18n.t("deleteAntique")}: Carved walnut mirror` }));
+
+    expect(await screen.findByText(i18n.t("antiqueSavePermissionError"))).toBeInTheDocument();
+    expect(screen.getByText("Carved walnut mirror")).toBeInTheDocument();
   });
 });

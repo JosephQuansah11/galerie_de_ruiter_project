@@ -11,8 +11,10 @@ import be.galerie_de_ruiter.project.dto.AntiqueResponse;
 import be.galerie_de_ruiter.project.dto.AntiqueResponse.SixViewImageResponse;
 import be.galerie_de_ruiter.project.dto.AntiqueUpdateRequest;
 import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
+import be.galerie_de_ruiter.project.repository.AntiqueLikeRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueModelRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueRepository;
+import be.galerie_de_ruiter.project.repository.AntiqueViewRepository;
 import be.galerie_de_ruiter.project.repository.DesignerRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -38,6 +40,8 @@ public class AntiqueService {
     private final DesignerRepository designerRepository;
     private final AntiqueImageRepository antiqueImageRepository;
     private final AntiqueModelRepository antiqueModelRepository;
+    private final AntiqueLikeRepository antiqueLikeRepository;
+    private final AntiqueViewRepository antiqueViewRepository;
     private final UserService users;
     private final CategoryRepository categoryRepository;
 
@@ -114,6 +118,11 @@ public class AntiqueService {
         Antique antique = findAntique(id);
         antiqueImageRepository.deleteAllByAntiqueId(id);
         antiqueModelRepository.deleteByAntiqueId(id);
+        // The public counters keep their own rows. They must go with the antique, or they
+        // would be left pointing at a piece that no longer exists - and a schema that
+        // carries the foreign key would reject the delete outright.
+        antiqueViewRepository.deleteAllByAntiqueId(id);
+        antiqueLikeRepository.deleteAllByAntiqueId(id);
         antiques.delete(antique);
     }
 

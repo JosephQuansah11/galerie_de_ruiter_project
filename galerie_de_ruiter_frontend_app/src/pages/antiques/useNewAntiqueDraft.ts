@@ -1,20 +1,12 @@
 import { useState, type FormEvent } from "react";
-import axios from "axios";
 import { addAntique, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
 import type { AntiqueForm } from "@/models/antiques/Antique";
 import { publishContentUpdate } from "@/services/contentUpdates";
+import { logRequestFailure, modelUploadErrorKey, saveErrorKey } from "./antiqueSaveErrors";
+import { isUploadableModel } from "./modelUploadLimits";
 
 type Draft = Omit<AntiqueForm, "price"> & { price: string };
 const empty: Draft = { title: "", artistId: "", description: "", price: "", categoryId: "", modelUrl: "" };
-
-function saveErrorKey(error: unknown): string {
-  if (!axios.isAxiosError(error)) return "antiqueCouldNotSave";
-  const status = error.response?.status;
-  if (status === 401 || status === 403) return "antiqueSavePermissionError";
-  if (status === 400 || status === 422) return "antiqueSaveValidationError";
-  if (!error.response) return "antiqueSaveConnectionError";
-  return "antiqueCouldNotSave";
-}
 
 export function useNewAntiqueDraft(openAntique: (id: string) => void) {
   const [form, setForm] = useState(empty);
@@ -34,7 +26,7 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
   };
   const selectModelFile = (input: FileList | null) => {
     const selected = input?.[0];
-    if (selected && (!selected.name.toLowerCase().endsWith(".glb") || selected.size > 250 * 1024 * 1024)) {
+    if (selected && !isUploadableModel(selected)) {
       setModelFileInvalid(true);
       setMessage("glbUploadInvalid");
       return;
@@ -83,16 +75,10 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
         await uploadAntiqueModel(antiqueId, modelFile);
         setModelUploaded(true);
       } catch (error) {
-        const errorKey = saveErrorKey(error);
-        setMessage(errorKey === "antiqueSavePermissionError"
-          ? errorKey
-          : errorKey === "antiqueSaveConnectionError"
-            // The model is stored by the gallery API itself, so a network failure is an
-            // upload failure - not a separate "model service" being unreachable.
-            ? "antiqueModelUploadFailed"
-            : errorKey === "antiqueSaveValidationError"
-              ? "glbUploadInvalid"
-              : "antiqueModelUploadFailed");
+        logRequestFailure(`3D model upload ${modelFile.name}`, error);
+        // The model is stored by the gallery API itself, so a network failure is an upload
+        // failure - not a separate "model service" being unreachable.
+        setMessage(modelUploadErrorKey(error));
         setSaving(false);
         publishContentUpdate("antiques");
         return;

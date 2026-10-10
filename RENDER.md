@@ -75,6 +75,14 @@ be configured separately in its dashboard.
   `XSRF-TOKEN` cookie as `SameSite=None; Secure`. The Render frontend and API are
   different origins, so without it the browser drops the cookie and every
   authenticated write (profile details, avatar and image uploads) fails with 403.
+- The 3D model upload is the heaviest request in the app. `galerie-java-api` runs on the
+  `starter` plan (512 MiB), and the API holds each uploaded `.glb` roughly three times in
+  memory (multipart buffer, `byte[]`, JDBC binding) before it reaches PostgreSQL, so a
+  large model can exhaust the instance and make the upload fail with `502`. Keep
+  `MODELS_MAX_SIZE_MB` within what that instance can hold, or move the service to a larger
+  plan (for example `standard`, 2 GiB) before raising it. The frontend build value
+  `VITE_MODELS_MAX_SIZE_MB` must match `MODELS_MAX_SIZE_MB`, so the form rejects the same
+  files the API does instead of failing after the antique has been saved.
 - The Java API receives the `galerie-app-db` internal host, port, database, username, and password through the `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` variables. The Spring profile assembles these into a JDBC URL.
 - If you created a standalone Java web service instead of the `galerie-java-api` blueprint service, add those five variables and link each to the corresponding **internal** property of `galerie-app-db` in that service's environment. Alternatively, set `DATABASE_URL` to a valid JDBC URL beginning `jdbc:postgresql://`. Ensure the database and web service are in the same Render region.
 - The Java API listens on Render's `PORT`.

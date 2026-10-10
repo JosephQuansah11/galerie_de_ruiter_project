@@ -1,9 +1,14 @@
-import { ExternalLink, MessageCircle } from "lucide-react";
+import { ExternalLink, LogIn, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import type { ChatAppointment } from "./useGalleryChat";
+
+const WHATSAPP_NUMBER = "32493357568";
 
 export function ChatHeader({ appointment }: { appointment?: ChatAppointment }) {
   const { t, i18n } = useTranslation();
+  const { authenticated } = useAuth();
   const selectedDate = appointment ? new Date(`${appointment.at}:00Z`) : undefined;
   const appointmentDetails = appointment
     ? t("chatAppointmentWhatsappDetails", {
@@ -18,8 +23,14 @@ export function ChatHeader({ appointment }: { appointment?: ChatAppointment }) {
   return <header className="chat-header">
     <div className="chat-icon"><MessageCircle size={24} /></div>
     <div><span className="catalogue-artist">{t("galerieConcierge")}</span><h1>{t("talkToGallery")}</h1><p>{t("chatIntro")}</p></div>
-    <a className="chat-whatsapp" href={`https://wa.me/32493357568?text=${encodeURIComponent(whatsappMessage)}`} target="_blank" rel="noreferrer">
-      <ExternalLink size={15} /> {t("messageOnWhatsApp")}
-    </a>
+    {/* Talking to the gallery on WhatsApp needs an account, so a visitor is offered sign-in
+        instead of a link that would take them straight out of the app. */}
+    {authenticated
+      ? <a className="chat-whatsapp" href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`} target="_blank" rel="noreferrer">
+          <ExternalLink size={15} /> {t("messageOnWhatsApp")}
+        </a>
+      : <Link className="chat-whatsapp" to="/login" state={{ from: "/dashboard/chat" }}>
+          <LogIn size={15} /> {t("chatWhatsappSignIn")}
+        </Link>}
   </header>;
 }

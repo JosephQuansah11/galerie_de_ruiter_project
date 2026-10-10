@@ -1,8 +1,10 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { renderPage } from "../../test/renderPage";
 import i18n from "../i18n";
 import ChatPage from "./ChatPage";
 import { fetchChatStatus, sendChatMessage, warmUpChat } from "@/apis/chat_api";
+import { useAuth } from "@/context/AuthContext";
 
 jest.mock("@/apis/chat_api", () => ({
   fetchChatStatus: jest.fn(),
@@ -10,9 +12,21 @@ jest.mock("@/apis/chat_api", () => ({
   warmUpChat: jest.fn(),
 }));
 
+// The chat header and the assistant's sources both ask who is signed in, so the page can be
+// driven as a visitor and as a member without a Keycloak round trip.
+jest.mock("@/context/AuthContext", () => ({
+  useAuth: jest.fn(),
+  AuthProvider: ({ children }: { children?: ReactNode }) => children,
+}));
+
 const mockedStatus = fetchChatStatus as jest.Mock;
 const mockedWarmUp = warmUpChat as jest.Mock;
 const mockedSend = sendChatMessage as jest.Mock;
+const mockedAuth = useAuth as jest.Mock;
+
+beforeEach(() => {
+  mockedAuth.mockReturnValue({ authenticated: false });
+});
 
 describe("Gallery chat page", () => {
   it("confirms the model connection before the visitor can type", async () => {
@@ -78,7 +92,31 @@ describe("Gallery chat page", () => {
     expect(screen.getByText("How many categories?")).toBeInTheDocument();
   });
 
-  it("offers the WhatsApp conversation when the assistant hands the visitor over", async () => {
+  it("keeps a visitor away from WhatsApp when the assistant offers a hand-off", async () => {
+    mockedWarmUp.mockResolvedValue({ ready: true, model: "llama3.2:3b", detail: "ready" });
+    mockedSend.mockResolvedValue({
+      message: "Please contact the gallery on WhatsApp.",
+      appointmentConfirmed: false,
+      appointmentHandoffRequired: false,
+      sources: [{ title: "WhatsApp", url: "https://wa.me/32493357568" }],
+    });
+
+    renderPage(<ChatPage />);
+
+    const composer = await screen.findByLabelText(i18n.t("chatMessage"));
+    await waitFor(() => expect(composer).toBeEnabled());
+    fireEvent.change(composer, { target: { value: "Can I book a visit?" } });
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("sendMessage") }));
+
+    // The header button and the assistant's source both point at sign-in instead of WhatsApp.
+    const signInLinks = await screen.findAllByRole("link", { name: i18n.t("chatWhatsappSignIn") });
+    expect(signInLinks.length).toBeGreaterThan(0);
+    signInLinks.forEach((link) => expect(link).toHaveAttribute("href", "/login"));
+    expect(document.querySelector('a[href*="wa.me"]')).toBeNull();
+  });
+
+  it("offers the WhatsApp conversation once the visitor has signed in", async () => {
+    mockedAuth.mockReturnValue({ authenticated: true });
     mockedWarmUp.mockResolvedValue({ ready: true, model: "llama3.2:3b", detail: "ready" });
     mockedSend.mockResolvedValue({
       message: "Please contact the gallery on WhatsApp.",
@@ -97,6 +135,7 @@ describe("Gallery chat page", () => {
     const whatsapp = await screen.findByRole("link", { name: new RegExp(i18n.t("whatsappContact"), "i") });
     expect(whatsapp).toHaveAttribute("href", "https://wa.me/32493357568");
     expect(whatsapp).toHaveAttribute("target", "_blank");
+    expect(screen.getByRole("link", { name: i18n.t("messageOnWhatsApp") })).toHaveAttribute("href", expect.stringContaining("wa.me"));
   });
 
   it("explains a failed assistant request", async () => {

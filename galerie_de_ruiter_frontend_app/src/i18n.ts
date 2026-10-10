@@ -2087,8 +2087,22 @@ const engagementLabels: Record<string, Record<string, string>> = {
   pt: { viewsCountLabel: "Visualizações: {{count}}", likesCountLabel: "Gostos: {{count}}", likePiece: "Gostar desta peça", likedPiece: "Gostado" },
 };
 
+/**
+ * Who may reach the gallery and how. A visitor without an account can chat with the concierge
+ * but can not take the conversation to WhatsApp, so the sign-in wording is merged from one
+ * place like the engagement labels above and every language stays in step.
+ */
+const chatAccessLabels: Record<string, Record<string, string>> = {
+  en: { navSignIn: "Sign in", chatWhatsappSignIn: "Sign in to message the gallery on WhatsApp" },
+  fr: { navSignIn: "Se connecter", chatWhatsappSignIn: "Connectez-vous pour écrire à la galerie sur WhatsApp" },
+  "nl-NL": { navSignIn: "Inloggen", chatWhatsappSignIn: "Log in om de galerie via WhatsApp te berichten" },
+  "nl-BE": { navSignIn: "Inloggen", chatWhatsappSignIn: "Log in om de galerie via WhatsApp te berichten" },
+  de: { navSignIn: "Anmelden", chatWhatsappSignIn: "Melden Sie sich an, um der Galerie über WhatsApp zu schreiben" },
+};
+
 Object.entries(resources).forEach(([language, resource]) => {
   Object.assign(resource.translation, engagementLabels[language] ?? engagementLabels.en);
+  Object.assign(resource.translation, chatAccessLabels[language] ?? chatAccessLabels.en);
 });
 
 void i18n

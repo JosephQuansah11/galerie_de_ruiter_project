@@ -14,14 +14,19 @@ type LinkItem = { href: string; icon: LucideIcon; translationKey: string };
 
 export function NavigationLinks({ onNavigate }: { onNavigate: () => void }) {
   const { t } = useLanguage();
-  const { isAdmin } = useAuth();
+  const { isAdmin, authenticated } = useAuth();
     const [categories, setCategories] = useState<Category[]>([]);
     const [categoryError, setCategoryError] = useState(false);
-  const publicLinks: LinkItem[] = [
-    { href: "/wishlist", icon: Heart, translationKey: "wishlist" },
-    { href: "/cart", icon: ShoppingBag, translationKey: "cart" },
+  // A visitor can reach the concierge chat and the gallery story without an account.
+  const visitorLinks: LinkItem[] = [
     { href: "/dashboard/chat", icon: MessageCircle, translationKey: "navGalleryChat" },
     { href: "/about", icon: BookOpen, translationKey: "navAbout" },
+  ];
+  // Everything else is behind an account, so a visitor is not shown a link that only bounces
+  // them to the sign-in page.
+  const memberLinks: LinkItem[] = [
+    { href: "/wishlist", icon: Heart, translationKey: "wishlist" },
+    { href: "/cart", icon: ShoppingBag, translationKey: "cart" },
   ];
   const adminLinks: LinkItem[] = isAdmin
     ? [
@@ -32,9 +37,12 @@ export function NavigationLinks({ onNavigate }: { onNavigate: () => void }) {
         { href: "/admin/home", icon: Home, translationKey: "navEditHome" },
         { href: "/admin/about", icon: BookOpen, translationKey: "navEditAbout" },
       ]
-    : [{ href: "/map", icon: Map, translationKey: "location" }];
+    : authenticated
+      ? [{ href: "/map", icon: Map, translationKey: "location" }]
+      : [];
 
   useEffect(() => {
+    if (!authenticated) return;
     let active = true;
     const load = () => getVisibleCategories().then((items) => {
       if (active) { setCategories(items); setCategoryError(false); }
@@ -42,11 +50,11 @@ export function NavigationLinks({ onNavigate }: { onNavigate: () => void }) {
     void load();
     const unsubscribe = subscribeToContentUpdates("categories", load);
     return () => { active = false; unsubscribe(); };
-  }, []);
+  }, [authenticated]);
 
   return <div className="icons-list">
-    <NavCategoryLinks categories={categories} hasError={categoryError} onNavigate={onNavigate} />
-    {[...publicLinks, ...adminLinks].map((item) => <Nav.Link as={NavLink} key={item.href} to={item.href} className="nav-item-link" onClick={onNavigate}>
+    {authenticated && <NavCategoryLinks categories={categories} hasError={categoryError} onNavigate={onNavigate} />}
+    {[...visitorLinks, ...(authenticated ? memberLinks : []), ...adminLinks].map((item) => <Nav.Link as={NavLink} key={item.href} to={item.href} className="nav-item-link" onClick={onNavigate}>
       <item.icon className="nav-icon" aria-hidden="true" /><span>{t(item.translationKey)}</span>
     </Nav.Link>)}
   </div>;

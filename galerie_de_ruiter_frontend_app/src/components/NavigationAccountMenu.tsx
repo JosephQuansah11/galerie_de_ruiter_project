@@ -1,5 +1,6 @@
-import { useNavigate } from "react-router-dom";
-import { Dropdown, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { NavLink, useNavigate } from "react-router-dom";
+import { Dropdown, Nav, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { LogIn } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Avatar } from "./Avatar";
@@ -8,6 +9,14 @@ export function NavigationAccountMenu({ onNavigate }: { onNavigate: () => void }
   const auth = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  // A visitor without an account gets a sign-in link instead of an empty profile menu.
+  if (!auth.authenticated) {
+    return <div className="icons-list-user-profile">
+      <Nav.Link as={NavLink} to="/login" className="nav-item-link" onClick={onNavigate}>
+        <LogIn className="nav-icon" aria-hidden="true" /><span>{t("navSignIn")}</span>
+      </Nav.Link>
+    </div>;
+  }
   const displayName = [auth.profile?.firstName, auth.profile?.lastName].filter(Boolean).join(" ") || auth.profile?.username;
   return <div className="icons-list-user-profile"><Dropdown drop="down">
     <Dropdown.Toggle variant="link" className="text-light p-0 border-0 shadow-none" style={{ background: "none" }}>

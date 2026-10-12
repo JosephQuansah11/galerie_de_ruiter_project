@@ -34,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.client.RestClient;
@@ -111,6 +112,13 @@ public class OllamaChatService {
     @Value("${ollama.touch-interval:10m}")
     private Duration touchInterval;
 
+    /**
+     * Upper bound for a single model reply. A stalled model then fails with a clear error instead of
+     * holding the HTTP request open until the browser or proxy gives up on it.
+     */
+    @Value("${ollama.reply-timeout:3m}")
+    private Duration replyTimeout;
+
     public ChatResponse reply(ChatRequest request, String subject, String requesterName) {
         ChatAppointmentSelection selection = request.appointmentSelection();
         if (selection != null) {
@@ -166,7 +174,7 @@ public class OllamaChatService {
         }
         conversation.add(Map.of("role", "user", "content", request.message()));
 
-        Map<?, ?> response = RestClient.create(baseUrl())
+        Map<?, ?> response = ollamaClient()
                 .post()
                 .uri("/api/chat")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -291,7 +299,7 @@ public class OllamaChatService {
      * same pinned model, and {@code keep_alive} keeps it resident between prompts.
      */
     private void loadModel() {
-        RestClient.create(baseUrl())
+        ollamaClient()
                 .post()
                 .uri("/api/generate")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -381,6 +389,21 @@ public class OllamaChatService {
 
     private String baseUrl() {
         return ollamaUrl.contains("://") ? ollamaUrl : "http://" + ollamaUrl;
+    }
+
+    /**
+     * An Ollama client with bounded connect and read timeouts. Without a read timeout a stalled
+     * model would hold the request open indefinitely, which the browser reports as a cancelled
+     * request rather than a clear failure.
+     */
+    private RestClient ollamaClient() {
+        Duration timeout = replyTimeout == null ? Duration.ofMinutes(3) : replyTimeout;
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(
+                java.net.http.HttpClient.newBuilder()
+                        .connectTimeout(Duration.ofSeconds(5))
+                        .build());
+        factory.setReadTimeout(timeout);
+        return RestClient.builder().baseUrl(baseUrl()).requestFactory(factory).build();
     }
 
     private String notLoadedDetail() {

@@ -177,6 +177,7 @@ class OllamaChatServiceTest {
         ReflectionTestUtils.setField(service, "pullRetry", Duration.ofSeconds(5));
         ReflectionTestUtils.setField(service, "pullTimeout", Duration.ofSeconds(30));
         ReflectionTestUtils.setField(service, "touchInterval", Duration.ofMinutes(10));
+        ReflectionTestUtils.setField(service, "replyTimeout", Duration.ofSeconds(30));
         return service;
     }
 

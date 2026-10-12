@@ -22,6 +22,16 @@ export async function updateAntique(id: string, antique: Pick<AntiqueForm, "titl
   });
   return response.data;
 }
+/**
+ * Records that the client and the gallery have agreed on payment. {@code sold: true} marks
+ * the piece as sold (it is no longer offered for purchase); {@code false} puts it back on offer.
+ */
+export async function setAntiqueSold(id: string, sold: boolean): Promise<Antique> {
+  const response = await axiosInstance.put<Antique>(`${backendBaseURL}/api/antiques/${id}/sold`, { sold }, {
+    headers: { ...(await csrfHeaders()), "Content-Type": "application/json" },
+  });
+  return response.data;
+}
 export async function deleteAntique(id: string): Promise<void> {
   await axiosInstance.delete(`${backendBaseURL}/api/antiques/${id}`, {
     headers: await csrfHeaders(),

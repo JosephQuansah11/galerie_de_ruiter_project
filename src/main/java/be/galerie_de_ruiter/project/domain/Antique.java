@@ -48,6 +48,14 @@ public class Antique {
     /** How many distinct visitors liked this piece. */
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private long likeCount;
+
+    /**
+     * Set by an administrator once the client and the gallery have agreed on payment, so the
+     * catalogue can show the piece as sold and stop offering it for purchase. The column
+     * carries a default so existing rows keep working when the schema is updated.
+     */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean sold = false;
     // // JSON array of {position, url} produced by the reconstruction service, persisted so every user sees the same six views.
     // @Column(columnDefinition = "bytea")
     // private List<byte[]> sixViewImages;
@@ -159,6 +167,15 @@ public class Antique {
     /** Removes a like again; the count never drops below zero. */
     public void removeLiker() {
         this.likeCount = Math.max(0L, this.likeCount - 1);
+    }
+
+    /** Whether the piece has been sold and must no longer be offered for purchase. */
+    public boolean isSold() {
+        return sold;
+    }
+
+    public void setSold(boolean sold) {
+        this.sold = sold;
     }
 
     // public List<byte[]> getSixViewImages() {

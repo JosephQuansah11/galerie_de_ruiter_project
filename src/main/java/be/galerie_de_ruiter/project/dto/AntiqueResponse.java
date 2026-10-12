@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public record AntiqueResponse(UUID id, String title, DesignerResponse artist, String description, BigDecimal price,
                               String category, String modelUrl, String imageUrl, List<String> imageUrls,
-                              List<SixViewImageResponse> sixViewImages, long viewCount, long likeCount) {
+                              List<SixViewImageResponse> sixViewImages, long viewCount, long likeCount, boolean sold) {
 
     public static AntiqueResponse from(Antique antique) {
         return new AntiqueResponse(
@@ -24,7 +24,8 @@ public record AntiqueResponse(UUID id, String title, DesignerResponse artist, St
                 imageUrls(antique),
                 parseSixViewImages(antique),
                 antique.getViewCount(),
-                antique.getLikeCount()
+                antique.getLikeCount(),
+                antique.isSold()
         );
     }
 

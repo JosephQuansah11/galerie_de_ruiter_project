@@ -94,7 +94,7 @@ export function useGalleryChat() {
         .slice(-30);
       const response = await sendChatMessage(message, history, appointmentSelection);
       setMessages((current) => [...current, appointmentSelection
-        ? { role: "assistant", text: "", translationKey: "chatAppointmentSubmitted" }
+        ? { role: "assistant", text: "", translationKey: "chatAppointmentSubmitted", sources: response.sources }
         : response.appointmentHandoffRequired
           ? { role: "assistant", text: "", translationKey: "chatAppointmentConfirmationRequired" }
         : { role: "assistant", text: response.message, sources: response.sources }]);

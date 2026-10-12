@@ -3,7 +3,7 @@ import { Alert, Form, Modal, Spinner } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
 import { Check, Plus, Search, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { deleteAntique as deleteAntiqueRequest, getAllAntiques, updateAntique as updateAntiqueRequest, uploadAntiqueModel } from "@/apis/backend_api";
+import { deleteAntique as deleteAntiqueRequest, getAllAntiques, setAntiqueSold as setAntiqueSoldRequest, updateAntique as updateAntiqueRequest, uploadAntiqueModel } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/context/LanguageContext";
@@ -30,6 +30,7 @@ export default function AntiqueAdminPage() {
   const [modelFileInvalid, setModelFileInvalid] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [deletingId, setDeletingId] = useState<string>();
+  const [soldSavingId, setSoldSavingId] = useState<string>();
   const [actionError, setActionError] = useState<string>();
   useEffect(() => {
     getAllAntiques()
@@ -95,6 +96,19 @@ export default function AntiqueAdminPage() {
       setDeletingId(undefined);
     }
   };
+  const toggleSold = async (antique: Antique) => {
+    setSoldSavingId(antique.id);
+    setActionError(undefined);
+    try {
+      const updated = await setAntiqueSoldRequest(antique.id, !antique.sold);
+      setAntiques((current) => current.map((item) => item.id === updated.id ? updated : item));
+    } catch (error) {
+      logRequestFailure("antique sold update", error);
+      setActionError(managementErrorKey(error));
+    } finally {
+      setSoldSavingId(undefined);
+    }
+  };
   return (
     <section className="admin-page">
       <InventoryHeading administration={t("administration")} title={t("antiqueInventory")} />
@@ -131,8 +145,10 @@ export default function AntiqueAdminPage() {
         <Alert variant="light">{t("noAntiquesFound")}</Alert>
       )}
       {!loading && !loadError && <InventoryList antiques={filtered} onEdit={openEdit} onDelete={removeAntique}
-        deletingId={deletingId} uncategorized={t("uncategorized")} priceOnRequest={t("priceOnRequest")}
-        locale={locale} editLabel={t("editAntique")} deleteLabel={t("deleteAntique")} />}
+        onToggleSold={toggleSold} deletingId={deletingId} soldSavingId={soldSavingId}
+        uncategorized={t("uncategorized")} priceOnRequest={t("priceOnRequest")}
+        locale={locale} editLabel={t("editAntique")} deleteLabel={t("deleteAntique")}
+        soldLabel={t("sold")} markSoldLabel={t("markSold")} markAvailableLabel={t("markAvailable")} />}
       <Modal show={Boolean(editing)} onHide={() => !savingEdit && setEditing(undefined)} centered>
         <Form onSubmit={saveEdit}>
           <Modal.Header closeButton={!savingEdit}>

@@ -2100,9 +2100,30 @@ const chatAccessLabels: Record<string, Record<string, string>> = {
   de: { navSignIn: "Anmelden", chatWhatsappSignIn: "Melden Sie sich an, um der Galerie über WhatsApp zu schreiben" },
 };
 
+/**
+ * Availability (a piece agreed as sold) and assistant-status labels shown to administrators and
+ * visitors. They are merged from one place like the blocks above so every language stays in step;
+ * a language without its own copy falls back to English.
+ */
+const availabilityLabels: Record<string, Record<string, string>> = {
+  en: { sold: "Sold", markSold: "Mark as sold", markAvailable: "Mark as available", detailSoldNote: "This piece has been sold.",
+    chatStatusOnline: "Assistant online", chatStatusChecking: "Checking the assistant…", chatStatusOffline: "Assistant offline" },
+  fr: { sold: "Vendu", markSold: "Marquer comme vendu", markAvailable: "Remettre en vente", detailSoldNote: "Cette pièce a été vendue.",
+    chatStatusOnline: "Assistant en ligne", chatStatusChecking: "Vérification de l'assistant…", chatStatusOffline: "Assistant hors ligne" },
+  nl: { sold: "Verkocht", markSold: "Markeer als verkocht", markAvailable: "Weer te koop aanbieden", detailSoldNote: "Dit stuk is verkocht.",
+    chatStatusOnline: "Assistent online", chatStatusChecking: "Assistent controleren…", chatStatusOffline: "Assistent offline" },
+  de: { sold: "Verkauft", markSold: "Als verkauft markieren", markAvailable: "Wieder anbieten", detailSoldNote: "Dieses Stück wurde verkauft.",
+    chatStatusOnline: "Assistent online", chatStatusChecking: "Assistent wird geprüft…", chatStatusOffline: "Assistent offline" },
+  es: { sold: "Vendido", markSold: "Marcar como vendido", markAvailable: "Volver a poner en venta", detailSoldNote: "Esta pieza se ha vendido.",
+    chatStatusOnline: "Asistente en línea", chatStatusChecking: "Comprobando el asistente…", chatStatusOffline: "Asistente desconectado" },
+  pt: { sold: "Vendido", markSold: "Marcar como vendido", markAvailable: "Voltar a colocar à venda", detailSoldNote: "Esta peça foi vendida.",
+    chatStatusOnline: "Assistente online", chatStatusChecking: "A verificar o assistente…", chatStatusOffline: "Assistente offline" },
+};
+
 Object.entries(resources).forEach(([language, resource]) => {
   Object.assign(resource.translation, engagementLabels[language] ?? engagementLabels.en);
   Object.assign(resource.translation, chatAccessLabels[language] ?? chatAccessLabels.en);
+  Object.assign(resource.translation, availabilityLabels[language] ?? availabilityLabels.en);
 });
 
 void i18n

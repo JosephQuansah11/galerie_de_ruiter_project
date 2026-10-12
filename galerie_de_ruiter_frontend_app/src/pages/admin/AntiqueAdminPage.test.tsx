@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
 import AntiqueAdminPage from "./AntiqueAdminPage";
-import { deleteAntique, getAllAntiques } from "@/apis/backend_api";
+import { deleteAntique, getAllAntiques, setAntiqueSold } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 
 jest.mock("@/apis/backend_api", () => ({
@@ -10,10 +10,12 @@ jest.mock("@/apis/backend_api", () => ({
   updateAntique: jest.fn(),
   deleteAntique: jest.fn(),
   uploadAntiqueModel: jest.fn(),
+  setAntiqueSold: jest.fn(),
 }));
 
 const mockedAntiques = getAllAntiques as jest.Mock;
 const mockedDelete = deleteAntique as jest.Mock;
+const mockedSold = setAntiqueSold as jest.Mock;
 
 /** Mirrors an axios HTTP failure so the page's status handling can be exercised. */
 function httpError(status: number) {
@@ -109,5 +111,29 @@ describe("Antique administration page", () => {
 
     expect(await screen.findByText(i18n.t("antiqueSavePermissionError"))).toBeInTheDocument();
     expect(screen.getByText("Carved walnut mirror")).toBeInTheDocument();
+  });
+
+  it("records a piece as sold once the payment is agreed", async () => {
+    mockedSold.mockResolvedValue({ ...inventory[0], sold: true });
+
+    renderPage(<AntiqueAdminPage />);
+    await screen.findByText("Carved walnut mirror");
+
+    fireEvent.click(screen.getByRole("button", { name: `${i18n.t("markSold")}: Carved walnut mirror` }));
+
+    await waitFor(() => expect(mockedSold).toHaveBeenCalledWith("1", true));
+    expect(await screen.findByText(i18n.t("sold"))).toBeInTheDocument();
+  });
+
+  it("puts a sold piece back on offer", async () => {
+    mockedAntiques.mockResolvedValueOnce([{ ...inventory[0], sold: true }]);
+    mockedSold.mockResolvedValue({ ...inventory[0], sold: false });
+
+    renderPage(<AntiqueAdminPage />);
+    await screen.findByText("Carved walnut mirror");
+
+    fireEvent.click(screen.getByRole("button", { name: `${i18n.t("markAvailable")}: Carved walnut mirror` }));
+
+    await waitFor(() => expect(mockedSold).toHaveBeenCalledWith("1", false));
   });
 });

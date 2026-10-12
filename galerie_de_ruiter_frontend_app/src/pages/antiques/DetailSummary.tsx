@@ -10,12 +10,13 @@ type Props = { antique: Antique; artist: string; price: string; wishlisted: bool
 export function DetailSummary({ antique, artist, price, wishlisted, addToCart, toggleWishlist, t }: Props) {
   const engagement = useAntiqueEngagement(antique);
   return <><Badge bg="dark" className="catalogue-kicker">OBJECT / {antique.id.slice(0, 8)}</Badge>
+    {antique.sold && <Badge bg="dark" className="detail-sold-badge">{t("sold")}</Badge>}
     <span className="catalogue-artist">{artist}</span><h1>{antique.title}</h1>
     <p className="detail-description">{antique.description || t("consideredPiece")}</p>
-    <div className="detail-facts"><span>{t("condition")}</span><strong>{t("availableToDiscuss")}</strong>
+    <div className="detail-facts"><span>{t("condition")}</span><strong>{antique.sold ? t("sold") : t("availableToDiscuss")}</strong>
       <span>{t("ownership")}</span><strong>{t("galerieDeRuiter")}</strong><span>{t("price")}</span><strong>{price}</strong></div>
     <div className="detail-actions">
-      <Button className="btn btn-dark" type="button" onClick={addToCart}><ShoppingBag size={17} /> {t("addToCart")}</Button>
+      <Button className={`btn ${antique.sold ? "btn-secondary" : "btn-dark"}`} type="button" onClick={addToCart} disabled={antique.sold}><ShoppingBag size={17} /> {antique.sold ? t("sold") : t("addToCart")}</Button>
       <Button className={`btn btn-${wishlisted ? "danger" : "outline-dark"}`} type="button" onClick={toggleWishlist}>
         <Heart size={17} fill={wishlisted ? "currentColor" : "none"} /> {wishlisted ? t("saved") : t("savePiece")}</Button>
       <Button className={`btn btn-${engagement.liked ? "danger" : "outline-dark"}`} type="button" disabled={engagement.busy}

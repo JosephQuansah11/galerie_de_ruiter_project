@@ -22,7 +22,8 @@ public interface AntiqueRepository extends JpaRepository<Antique, UUID> {
                    d.lastName as artistLastName,
                    a.description as description,
                    a.price as price,
-                   c.name as category
+                   c.name as category,
+                   a.sold as sold
             from Antique a
             left join a.artist d
             left join a.category c

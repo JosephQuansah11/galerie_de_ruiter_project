@@ -104,6 +104,17 @@ public class AntiqueService {
     }
 
     /**
+     * Marks a piece as sold (or back on offer). An administrator flips this once the client
+     * and the gallery have agreed on payment, so the catalogue stops offering it for purchase.
+     */
+    @Transactional
+    public AntiqueResponse setSold(UUID id, boolean sold) {
+        Antique antique = findAntique(id);
+        antique.setSold(sold);
+        return AntiqueResponse.from(antiques.save(antique));
+    }
+
+    /**
      * Stores the uploaded model on the gallery disk. The database copy is dropped: the file is
      * authoritative now, and removing the row is what reclaims the storage that made uploads
      * fail on a small production database.

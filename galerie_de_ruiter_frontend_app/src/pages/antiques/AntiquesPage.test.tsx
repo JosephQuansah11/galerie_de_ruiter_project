@@ -83,4 +83,17 @@ describe("Catalogue page", () => {
 
     expect(await screen.findByText(i18n.t("collectionLoadError"))).toBeInTheDocument();
   });
+
+  it("marks a sold piece and takes it off the shelf", async () => {
+    mockedAntiques.mockResolvedValueOnce([
+      { id: "9", title: "Gilded console", category: null, description: "Sold to a private collection", price: 1200, sold: true },
+    ]);
+
+    renderPage(<AntiquesPage />, { shopping: true });
+
+    expect(await screen.findByText("Gilded console")).toBeInTheDocument();
+    // Both the image overlay and the footer pill announce the piece as sold.
+    expect(screen.getAllByText(i18n.t("sold")).length).toBeGreaterThan(1);
+    expect(screen.queryByText(i18n.t("add"))).not.toBeInTheDocument();
+  });
 });

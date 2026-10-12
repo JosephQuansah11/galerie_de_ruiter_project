@@ -17,6 +17,8 @@ type Antique = {
   viewCount?: number;
   /** Distinct visitors who liked this piece. */
   likeCount?: number;
+  /** True once the client and the gallery have agreed on payment; the piece is no longer for sale. */
+  sold?: boolean;
 };
 
 export type Category = {

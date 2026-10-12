@@ -78,7 +78,7 @@ class UserControllerSecurityTest {
 
     @Test
     void chatIsAvailableWithoutAuthentication() throws Exception {
-        when(chat.reply(any(ChatRequest.class), isNull()))
+        when(chat.reply(any(ChatRequest.class), isNull(), isNull()))
                 .thenReturn(new ChatResponse("Hello", null, null, false));
 
         mvc.perform(post("/api/chat")

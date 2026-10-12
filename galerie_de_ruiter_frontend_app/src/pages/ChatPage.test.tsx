@@ -151,4 +151,53 @@ describe("Gallery chat page", () => {
 
     expect(await screen.findByText(i18n.t("chatUnavailable"))).toBeInTheDocument();
   });
+
+  it("shows a status dot that proves the model service is running", async () => {
+    mockedWarmUp.mockResolvedValue({ ready: true, model: "llama3.2:3b", detail: "ready" });
+
+    renderPage(<ChatPage />);
+
+    expect(await screen.findByText(i18n.t("chatStatusOnline"))).toBeInTheDocument();
+    expect(document.querySelector(".chat-assistant-status.is-online .chat-status-dot")).not.toBeNull();
+  });
+
+  it("shows an offline status dot when the model service cannot be reached", async () => {
+    mockedWarmUp.mockResolvedValue({ ready: false, model: "llama3.2:3b", detail: "" });
+
+    renderPage(<ChatPage />);
+
+    expect(await screen.findByText(i18n.t("chatStatusOffline"))).toBeInTheDocument();
+    expect(document.querySelector(".chat-assistant-status.is-offline .chat-status-dot")).not.toBeNull();
+  });
+
+  it("closes an appointment request with a WhatsApp link that carries the slot", async () => {
+    mockedAuth.mockReturnValue({ authenticated: true });
+    mockedWarmUp.mockResolvedValue({ ready: true, model: "llama3.2:3b", detail: "ready" });
+    mockedSend.mockResolvedValue({
+      message: "Appointment request for a gallery visit (Saturday 1 November 2030 at 10:00) by the visitor is ready to send.",
+      appointmentAt: "2030-11-01T10:00",
+      appointmentType: "VISIT",
+      appointmentConfirmed: false,
+      appointmentHandoffRequired: false,
+      sources: [{
+        title: "WhatsApp",
+        url: "https://wa.me/32493357568?text=Hello%20Galerie%20de%20Ruiter%2C%20I%20would%20like%20to%20request%20a%20gallery%20visit%20on%20Saturday%201%20November%202030%20at%2010%3A00",
+      }],
+    });
+
+    renderPage(<ChatPage />);
+    const composer = await screen.findByLabelText(i18n.t("chatMessage"));
+    await waitFor(() => expect(composer).toBeEnabled());
+
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("chatOptionAppointment"), "i") }));
+    fireEvent.change(screen.getByLabelText(i18n.t("chatAppointmentDate")), { target: { value: "2030-11-01" } });
+    fireEvent.change(screen.getByLabelText(i18n.t("chatAppointmentTime")), { target: { value: "10:00" } });
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("chatAppointmentRequest") }));
+
+    // The closing reply carries the WhatsApp hand-off, pre-filled with the requested slot.
+    const whatsapp = await screen.findByRole("link", { name: i18n.t("whatsappContact") });
+    expect(whatsapp).toHaveAttribute("href", expect.stringContaining("wa.me/32493357568"));
+    expect(whatsapp).toHaveAttribute("href", expect.stringContaining("text="));
+    expect(screen.getByText(i18n.t("chatAppointmentSubmitted"))).toBeInTheDocument();
+  });
 });

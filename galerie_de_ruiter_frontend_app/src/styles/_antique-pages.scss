@@ -4,6 +4,14 @@
   display: block;
 }
 
+// Sold markers: a piece the client and the gallery have agreed on is shown as gone and is no
+// longer offered for purchase.
+.catalogue-card-image { position: relative; }
+.catalogue-card.is-sold .catalogue-card-image img { filter: grayscale(0.55); }
+.catalogue-sold-badge { position: absolute; top: 0.6rem; left: 0.6rem; padding: 0.22rem 0.65rem; border-radius: 999px; background: rgba(60, 31, 37, 0.86); color: #fffaf7; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.catalogue-sold-pill { display: inline-flex; align-items: center; gap: 0.35rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.detail-sold-badge { margin-left: 0.5rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
 .model-preview iframe {
   display: block;
   width: 100%;

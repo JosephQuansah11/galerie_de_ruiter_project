@@ -40,6 +40,12 @@
 .admin-page .inventory-row-actions .btn-outline-danger { border-color: #a12b36; background: var(--theme-surface); color: #a12b36; }
 .admin-page .inventory-row-actions .btn-outline-danger:hover, .admin-page .inventory-row-actions .btn-outline-danger:focus-visible { background: #a12b36; color: #fff; }
 .inventory-row small { color: var(--theme-text-secondary); font-size: 0.92rem; }
+.inventory-row.is-sold .inventory-thumb, .inventory-row.is-sold .inventory-row-copy { opacity: 0.72; }
+.inventory-sold-badge { margin-left: 0.5rem; vertical-align: middle; letter-spacing: 0.06em; text-transform: uppercase; }
+.admin-page .inventory-row-actions .btn-outline-success { border-color: #1f9d55; background: var(--theme-surface); color: #1f9d55; }
+.admin-page .inventory-row-actions .btn-outline-success:hover, .admin-page .inventory-row-actions .btn-outline-success:focus-visible { background: #1f9d55; color: #fff; }
+.admin-page .inventory-row-actions .btn-outline-secondary { border-color: var(--theme-border); background: var(--theme-surface); color: var(--theme-text-secondary); }
+.admin-page .inventory-row-actions .btn-outline-secondary:hover, .admin-page .inventory-row-actions .btn-outline-secondary:focus-visible { background: var(--theme-text-secondary); color: var(--theme-surface); }
 .admin-form-page { width: min(100%, 56rem); max-width: none; margin: 0 auto; padding: 2rem clamp(0.5rem, 3vw, 1rem) 4rem; }
 .admin-form-page .card-header { display: flex; align-items: center; gap: 0.5rem; background: var(--theme-primary); color: var(--theme-on-primary); }
 .admin-form-page button { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--theme-on-primary); }

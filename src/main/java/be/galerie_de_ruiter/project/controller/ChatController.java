@@ -39,6 +39,24 @@ public class ChatController {
 
     @PostMapping
     public ChatResponse reply(@Valid @RequestBody ChatRequest request, @AuthenticationPrincipal Jwt jwt) {
-        return chat.reply(request, jwt == null ? null : jwt.getSubject());
+        return chat.reply(request, jwt == null ? null : jwt.getSubject(), requesterName(jwt));
+    }
+
+    /**
+     * The signed-in visitor's name, used to pre-fill the appointment hand-off on WhatsApp. Keycloak
+     * carries it as the {@code name} claim or as separate given/family name claims; an anonymous
+     * visitor has none, and the appointment is then sent without a name.
+     */
+    private static String requesterName(Jwt jwt) {
+        if (jwt == null) return null;
+        String name = jwt.getClaimAsString("name");
+        if (name != null && !name.isBlank()) return name.trim();
+        String combined = java.util.stream.Stream.of(
+                        jwt.getClaimAsString("given_name"), jwt.getClaimAsString("family_name"))
+                .filter(value -> value != null && !value.isBlank())
+                .collect(java.util.stream.Collectors.joining(" "));
+        if (!combined.isBlank()) return combined;
+        String username = jwt.getClaimAsString("preferred_username");
+        return username == null || username.isBlank() ? null : username.trim();
     }
 }

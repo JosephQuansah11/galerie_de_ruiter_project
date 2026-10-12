@@ -13,8 +13,15 @@ export default function ChatPage() {
   const { t, i18n } = useTranslation();
   const chat = useGalleryChat();
   const [showAppointmentPicker, setShowAppointmentPicker] = useState(false);
+  // A colour-coded dot that always shows whether the assistant service (Ollama) is reachable,
+  // so the visitor can tell "starting up" from "running" at a glance.
+  const assistantStatus = chat.checkingConnection ? "checking" : chat.ready ? "online" : "offline";
   return <section className="chat-page">
     <ChatHeader appointment={chat.appointment} />
+    <div className={`chat-assistant-status is-${assistantStatus}`} role="status" aria-live="polite">
+      <span className="chat-status-dot" aria-hidden="true" />
+      <span>{t(assistantStatus === "online" ? "chatStatusOnline" : assistantStatus === "checking" ? "chatStatusChecking" : "chatStatusOffline")}</span>
+    </div>
     {!chat.ready && <div className="chat-status" role="status" aria-live="polite">
       <Spinner animation="border" size="sm" />
       <div className="chat-status-copy">

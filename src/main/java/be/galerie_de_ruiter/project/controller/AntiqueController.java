@@ -2,6 +2,7 @@ package be.galerie_de_ruiter.project.controller;
 
 import be.galerie_de_ruiter.project.dto.AntiqueRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueResponse;
+import be.galerie_de_ruiter.project.dto.AntiqueSoldRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueUpdateRequest;
 import be.galerie_de_ruiter.project.service.AntiqueService;
 import jakarta.validation.Valid;
@@ -40,6 +41,16 @@ public class AntiqueController {
 	@PreAuthorize("hasRole('ADMIN')")
 	public AntiqueResponse update(@PathVariable UUID id, @Valid @RequestBody AntiqueUpdateRequest request) {
 		return antiques.update(id, request);
+	}
+
+	/**
+	 * Records that the client and the gallery have agreed on payment: the piece is sold and no
+	 * longer offered for purchase. Sending {@code {"sold": false}} puts it back on offer.
+	 */
+	@PutMapping("/{id}/sold")
+	@PreAuthorize("hasRole('ADMIN')")
+	public AntiqueResponse setSold(@PathVariable UUID id, @Valid @RequestBody AntiqueSoldRequest request) {
+		return antiques.setSold(id, request.sold());
 	}
 
 	@DeleteMapping("/{id}")

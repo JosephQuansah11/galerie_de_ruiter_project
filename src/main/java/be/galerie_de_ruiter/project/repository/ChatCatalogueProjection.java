@@ -12,4 +12,5 @@ public interface ChatCatalogueProjection {
     BigDecimal getPrice();
     String getCategory();
     UUID getId();
+    boolean getSold();
 }

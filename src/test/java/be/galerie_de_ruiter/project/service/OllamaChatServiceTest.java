@@ -3,7 +3,9 @@ package be.galerie_de_ruiter.project.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import be.galerie_de_ruiter.project.domain.Category;
+import be.galerie_de_ruiter.project.dto.ChatAppointmentSelection;
 import be.galerie_de_ruiter.project.dto.ChatConnectionStatus;
+import be.galerie_de_ruiter.project.dto.ChatSource;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.ByteArrayOutputStream;
@@ -11,9 +13,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -56,6 +60,43 @@ class OllamaChatServiceTest {
     void failedDownloadTextNamesTheModelAndReason() {
         assertThat(OllamaChatService.downloadFailure(MODEL, "the model service answered with status 500"))
                 .contains("'llama3.2:3b'", "status 500", "retried automatically");
+    }
+
+    @Test
+    void appointmentReplyNamesTheSlotAndRequester() {
+        ChatAppointmentSelection selection = new ChatAppointmentSelection(
+                LocalDateTime.of(2030, 11, 1, 10, 0), "VISIT");
+
+        assertThat(OllamaChatService.appointmentMessage(selection, "Alice Vermeulen"))
+                .contains("a gallery visit", "November 2030", "at 10:00", "Alice Vermeulen");
+    }
+
+    @Test
+    void appointmentWhatsappLinkCarriesTheSlotAndRequester() {
+        ChatAppointmentSelection selection = new ChatAppointmentSelection(
+                LocalDateTime.of(2030, 11, 1, 14, 30), "ONLINE");
+
+        ChatSource source = OllamaChatService.appointmentWhatsAppSource(selection, "Bob De Smet");
+
+        assertThat(source.title()).isEqualTo("WhatsApp");
+        assertThat(source.url()).startsWith("https://wa.me/32493357568?text=");
+        assertThat(decodedMessage(source))
+                .contains("an online consultation", "at 14:30", "Bob De Smet", "confirm availability");
+    }
+
+    @Test
+    void appointmentWhatsappLinkOmitsTheNameWhenTheVisitorIsAnonymous() {
+        ChatAppointmentSelection selection = new ChatAppointmentSelection(
+                LocalDateTime.of(2030, 11, 1, 9, 0), "VISIT");
+
+        String decoded = decodedMessage(OllamaChatService.appointmentWhatsAppSource(selection, null));
+
+        assertThat(decoded).contains("a gallery visit", "at 09:00").doesNotContain("My name is");
+    }
+
+    private static String decodedMessage(ChatSource source) {
+        String url = source.url();
+        return URLDecoder.decode(url.substring(url.indexOf("text=") + "text=".length()), StandardCharsets.UTF_8);
     }
 
     /** A fresh installation has no model, so the first status call has to install it once. */

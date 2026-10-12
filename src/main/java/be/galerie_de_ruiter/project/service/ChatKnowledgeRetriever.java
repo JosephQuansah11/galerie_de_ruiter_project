@@ -101,13 +101,14 @@ public class ChatKnowledgeRetriever {
         for (ChatCatalogueProjection entry : entries) {
             String artist = Stream.of(entry.getArtistFirstName(), entry.getArtistMiddleName(), entry.getArtistLastName())
                     .filter(name -> name != null && !name.isBlank()).collect(Collectors.joining(" "));
-            String contents = "Item: %s. Artist: %s. Category: %s. Description: %s. Price: %s."
+            String contents = "Item: %s. Artist: %s. Category: %s. Description: %s. Price: %s. Availability: %s."
                     .formatted(
                             safe(entry.getTitle()),
                             artist.isBlank() ? "Not provided" : safe(artist),
                             safe(entry.getCategory()),
                             safe(entry.getDescription()),
-                            entry.getPrice() == null ? "On request" : entry.getPrice().toPlainString());
+                            entry.getPrice() == null ? "On request" : entry.getPrice().toPlainString(),
+                            entry.getSold() ? "Sold" : "Available");
             documents.add(new KnowledgeDocument(
                     "Catalogue item: " + safe(entry.getTitle()),
                     contents,

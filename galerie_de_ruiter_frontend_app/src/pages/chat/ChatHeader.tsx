@@ -8,7 +8,11 @@ const WHATSAPP_NUMBER = "32493357568";
 
 export function ChatHeader({ appointment }: { appointment?: ChatAppointment }) {
   const { t, i18n } = useTranslation();
-  const { authenticated } = useAuth();
+  const { authenticated, profile } = useAuth();
+  const requester = [profile?.firstName, profile?.lastName]
+    .filter((part) => part && part.trim())
+    .join(" ")
+    .trim() || profile?.username || "";
   const selectedDate = appointment ? new Date(`${appointment.at}:00Z`) : undefined;
   const appointmentDetails = appointment
     ? t("chatAppointmentWhatsappDetails", {
@@ -17,8 +21,10 @@ export function ChatHeader({ appointment }: { appointment?: ChatAppointment }) {
         time: new Intl.DateTimeFormat(i18n.language, { timeStyle: "short", timeZone: "UTC" }).format(selectedDate),
       })
     : "";
+  // The signed-in visitor's name travels with the request so the gallery knows who is asking.
+  const nameSuffix = requester ? ` My name is ${requester}.` : "";
   const whatsappMessage = appointmentDetails
-    ? `Hello Galerie de Ruiter, ${appointmentDetails}`
+    ? `Hello Galerie de Ruiter, ${appointmentDetails}${nameSuffix}`
     : "Hello Galerie de Ruiter";
   return <header className="chat-header">
     <div className="chat-icon"><MessageCircle size={24} /></div>

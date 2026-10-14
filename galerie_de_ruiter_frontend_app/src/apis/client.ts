@@ -1,13 +1,8 @@
 import axios, { type AxiosInstance } from 'axios'
-import { apiBaseUrl, pythonApiBaseUrl } from './apiConfig'
+import { apiBaseUrl } from './apiConfig'
 
 export const javaApi = axios.create({
   baseURL: apiBaseUrl,
-  withCredentials: true,
-})
-
-export const pythonApi = axios.create({
-  baseURL: pythonApiBaseUrl,
   withCredentials: true,
 })
 

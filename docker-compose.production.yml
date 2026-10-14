@@ -140,6 +140,12 @@ services:
     restart: unless-stopped
     ports:
       - "${BIND_ADDRESS:-0.0.0.0}:3000:80"
+    environment:
+      # The origins the Content-Security-Policy allows. They mirror the build arguments above, so
+      # the policy and the bundle agree; override them if the browser-facing origins differ from
+      # the ones the frontend was built against.
+      CSP_API_ORIGIN: ${VITE_JAVA_API_URL:?Set VITE_JAVA_API_URL}
+      CSP_KEYCLOAK_ORIGIN: ${VITE_KEYCLOAK_URL:?Set VITE_KEYCLOAK_URL}
     depends_on:
       - java-api
       - keycloak

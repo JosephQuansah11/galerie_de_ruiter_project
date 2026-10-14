@@ -1,6 +1,10 @@
 import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Center, ContactShadows, Environment, OrbitControls } from "@react-three/drei";
+// Filters the three.js console notice the Canvas mount triggers. It lives here rather than with
+// the entry module so three.js travels with the viewer: importing it at start-up fetched the
+// whole library on every page, even for visitors who never open a model.
+import "@/services/suppressThreeClockWarning";
 import { LoadedModel, LoadingModel } from "./ViewerModel";
 
 /**

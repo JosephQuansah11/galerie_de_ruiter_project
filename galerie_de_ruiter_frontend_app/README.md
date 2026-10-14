@@ -71,7 +71,68 @@ When the collection opens to visitors, remove the `/antiques` and `/about` lines
 `robots.txt` and add the pieces to `publicPages` in the sitemap script (the API's
 `GET /api/antiques` lists them, so the script can fetch them at build time).
 
+## Security headers
+
+`nginx.conf` sends these on every response (the container deployment; see below for the static
+one):
+
+| Header | Value |
+|---|---|
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: <API>; connect-src 'self' <API> <Keycloak> https://nominatim.openstreetmap.org; frame-src https://www.openstreetmap.org <Keycloak>; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'` |
+| `Content-Security-Policy-Report-Only` | `require-trusted-types-for 'script'; trusted-types default` |
+| `Strict-Transport-Security` | `max-age=31536000` |
+| `X-Frame-Options` | `DENY` |
+| `Cross-Origin-Opener-Policy` | `same-origin` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+
+`script-src 'self'` — no `'unsafe-inline'`, no `'unsafe-eval'` — is what makes the policy worth
+having: the app ships no inline script and no `eval`. The one inline handler the page used to
+have (the `onload` that flipped the font stylesheet from `media="print"`) is now done by the
+bundle in `src/index.tsx`.
+
+**The API and Keycloak origins come from the environment**, so the policy always matches the
+bundle: the image sets `CSP_API_ORIGIN` and `CSP_KEYCLOAK_ORIGIN` from the same build arguments
+the frontend was built with, and `docker-compose.production.yml` passes them explicitly. Override
+them if the browser-facing origins differ from the ones the frontend was built against.
+
+### The static deployment (Render)
+
+`render.yaml` publishes the frontend as a Render **static site**, which does not run nginx, so
+the headers above have to be set there — Render's dashboard, under *Headers* for the service.
+Use the same values with `https://galerie-java-api.onrender.com` as `<API>` and
+`https://galerie-keycloak.onrender.com` as `<Keycloak>`. HSTS is added by Render on its own
+domains.
+
+### Trusted Types is staged in report-only mode
+
+`require-trusted-types-for 'script'` would currently break the app, and the report-only policy is
+how that was established rather than guessed: loading the built site with the enforced policy
+above and a `report-uri` collector reports exactly one violation, from webpack's own chunk
+loader:
+
+```
+require-trusted-types-for <- trusted-types-sink
+  script-sample: "HTMLScriptElement src|/js/437.3e9055e85ae60a2cddd6.js"
+```
+
+That is `script.src = …` for a lazily loaded route, which every navigation needs. To enforce it:
+
+1. add `output.trustedTypes: { policyName: "galerie" }` to `webpack.config.js`, so webpack
+   creates and uses a policy for the script elements it adds;
+2. put `require-trusted-types-for 'script'; trusted-types 'default' galerie` into the enforced
+   `Content-Security-Policy` in `nginx.conf`;
+3. re-run the collector against the built site on the landing page **and** on a lazy route
+   (`/login`), plus a page that mounts the 3D viewer, and only then remove the report-only header.
+
+### Rolling out HSTS
+
+`max-age=31536000` is what the audit wants. If you are not certain every subdomain of the domain
+can serve HTTPS, start with a low value (for example `max-age=300`), raise it once you are sure,
+and add `includeSubDomains` only when all subdomains are ready.
+
 ## Learn More
+
 
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 

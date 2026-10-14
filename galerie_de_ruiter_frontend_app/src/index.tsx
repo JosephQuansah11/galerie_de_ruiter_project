@@ -1,6 +1,3 @@
-// Must run before any <Canvas> mounts: it filters the three.js console output that
-// @react-three/fiber triggers on its own. See the file header for the removal condition.
-import "@/services/suppressThreeClockWarning";
 import i18n, { ensureLanguage } from "./i18n";
 import { createRoot } from "react-dom/client";
 import App from "./App";
@@ -13,6 +10,10 @@ import "@/styles/index.css";
  * seeing the fallback language for a moment.
  */
 const storedLanguage = localStorage.getItem("galerie-language") ?? "nl-BE";
+
+// The font stylesheet sits in index.html with media="print" so it never blocks the first paint.
+// Flipping it here applies it, without the inline handler a Content-Security-Policy would block.
+document.getElementById("gallery-fonts")?.setAttribute("media", "all");
 
 void ensureLanguage(storedLanguage)
   .then(() => i18n.changeLanguage(storedLanguage))

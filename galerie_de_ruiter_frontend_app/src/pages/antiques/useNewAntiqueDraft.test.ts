@@ -2,6 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import type { FormEvent } from "react";
 import { addAntique, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
+import { fileListOf, imageFile } from "../../../test/fileList";
 import { useNewAntiqueDraft } from "./useNewAntiqueDraft";
 import { MODEL_MAX_SIZE_BYTES } from "./modelUploadLimits";
 
@@ -27,22 +28,6 @@ function glbFile(sizeBytes: number, name = "model.glb"): File {
 }
 
 const fileList = (file: File) => ({ 0: file, length: 1, item: () => file }) as unknown as FileList;
-
-/** An image file for the multi-image selection. */
-function imageFile(name: string): File {
-  return new File([new Uint8Array(1)], name, { type: "image/jpeg" });
-}
-
-/** A FileList the picker would hand over for several chosen files. */
-function fileListOf(...files: File[]): FileList {
-  const list: { length: number; item: (index: number) => File | null; [Symbol.iterator]: () => Iterator<File>; [index: number]: File } = {
-    length: files.length,
-    item: (index: number) => files[index] ?? null,
-    [Symbol.iterator]: () => files[Symbol.iterator](),
-  };
-  files.forEach((file, index) => { list[index] = file; });
-  return list as unknown as FileList;
-}
 
 /** Mirrors an axios HTTP failure so the hook's status handling can be exercised. */
 function httpError(status: number) {

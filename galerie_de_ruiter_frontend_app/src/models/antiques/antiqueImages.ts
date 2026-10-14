@@ -14,3 +14,10 @@ export const resolveAntiqueImageUrl = (imageUrl?: string | null): string | undef
   return `${apiBaseUrl}${path}`;
 };
 
+/**
+ * The image id at the end of an antique image path (`/api/antiques/{id}/image/{imageId}`).
+ * The admin edit screen uses it to remove one photograph without refetching the piece.
+ */
+export const antiqueImageIdFromUrl = (imageUrl?: string | null): string | undefined =>
+  imageUrl?.match(/\/image\/([^/?#]+)$/)?.[1];
+

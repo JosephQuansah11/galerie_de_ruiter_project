@@ -3,15 +3,17 @@ import { Alert, Form, Modal, Spinner } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
 import { Check, Plus, Search, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { deleteAntique as deleteAntiqueRequest, getAllAntiques, setAntiqueSold as setAntiqueSoldRequest, updateAntique as updateAntiqueRequest, uploadAntiqueModel } from "@/apis/backend_api";
+import { deleteAntique as deleteAntiqueRequest, deleteAntiqueImage, getAllAntiques, setAntiqueSold as setAntiqueSoldRequest, updateAntique as updateAntiqueRequest, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/context/LanguageContext";
 import { InventoryList } from "./antiques/InventoryList";
 import { InventoryHeading } from "./antiques/InventoryHeading";
+import { AntiqueImageEditor } from "./antiques/AntiqueImageEditor";
 import { DescriptionLimitHint } from "../antiques/DescriptionLimitHint";
 import { ANTIQUE_DESCRIPTION_MAX_LENGTH } from "../antiques/descriptionLimits";
 import { MODEL_MAX_SIZE_MB, isUploadableModel } from "../antiques/modelUploadLimits";
+import { useImageSelection } from "../antiques/useImageSelection";
 import { logRequestFailure, managementErrorKey, modelUploadErrorKey } from "../antiques/antiqueSaveErrors";
 
 export default function AntiqueAdminPage() {
@@ -28,10 +30,13 @@ export default function AntiqueAdminPage() {
   const [editPrice, setEditPrice] = useState("");
   const [editModelFile, setEditModelFile] = useState<File>();
   const [modelFileInvalid, setModelFileInvalid] = useState(false);
+  const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
   const [deletingId, setDeletingId] = useState<string>();
   const [soldSavingId, setSoldSavingId] = useState<string>();
   const [actionError, setActionError] = useState<string>();
+  // Photographs picked in the edit dialog and not uploaded yet, with their previews.
+  const newImages = useImageSelection(() => setActionError("pleaseChooseImage"));
   useEffect(() => {
     getAllAntiques()
       .then((items) => { setAntiques(items); setLoadError(false); })
@@ -48,6 +53,8 @@ export default function AntiqueAdminPage() {
     setEditPrice(antique.price == null ? "" : String(antique.price));
     setEditModelFile(undefined);
     setModelFileInvalid(false);
+    setRemovedImageIds([]);
+    newImages.clear();
     setActionError(undefined);
   };
   const descriptionTooLong = editDescription.length > ANTIQUE_DESCRIPTION_MAX_LENGTH;
@@ -73,8 +80,19 @@ export default function AntiqueAdminPage() {
           return;
         }
       }
+      // Photographs: remove the ones the admin deleted, then upload the newly picked ones.
+      try {
+        for (const imageId of removedImageIds) await deleteAntiqueImage(editing.id, imageId);
+        for (const image of newImages.images) await uploadAntiqueImage(editing.id, image.file);
+      } catch (error) {
+        logRequestFailure("antique image update", error);
+        setActionError(managementErrorKey(error));
+        return;
+      }
       setAntiques((current) => current.map((antique) => antique.id === updated.id ? updated : antique));
       setEditing(undefined);
+      // Reload so the list shows the photographs that were just added or removed.
+      void getAllAntiques().then((items) => setAntiques(items)).catch(() => undefined);
     } catch (error) {
       logRequestFailure("antique update", error);
       setActionError(managementErrorKey(error));
@@ -165,6 +183,15 @@ export default function AntiqueAdminPage() {
               <Form.Control as="textarea" rows={6} value={editDescription} onChange={(event) => setEditDescription(event.target.value)} />
               <DescriptionLimitHint value={editDescription} />
             </Form.Group>
+            <AntiqueImageEditor
+              existingUrls={editing?.imageUrls ?? []}
+              removedIds={removedImageIds}
+              onRemoveExisting={(imageId) => setRemovedImageIds((current) => current.includes(imageId) ? current : [...current, imageId])}
+              newImages={newImages.images}
+              onAddImages={(files) => { if (newImages.add(files)) setActionError(undefined); }}
+              onRemoveNew={newImages.remove}
+              disabled={savingEdit}
+            />
             <Form.Group className="mb-3">
               <Form.Label>{t("uploadGlbModel")}</Form.Label>
               <Form.Control type="file" accept=".glb,model/gltf-binary" onChange={(event) => {

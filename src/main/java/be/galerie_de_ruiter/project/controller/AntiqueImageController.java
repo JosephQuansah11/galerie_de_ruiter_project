@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -52,6 +53,24 @@ public class AntiqueImageController {
         Antique antique = antiques.findById(id).orElseThrow();
         images.save(new AntiqueImage(antique, String.valueOf(images.countByAntiqueId(id)), image.getBytes(), image.getContentType()));
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Removes one photograph from a piece. The gallery can correct a wrong picture without
+     * deleting and recreating the whole antique; the remaining images keep their order and
+     * the next one becomes the primary image.
+     */
+    @DeleteMapping("/{imageId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public ResponseEntity<Void> delete(@PathVariable UUID id, @PathVariable UUID imageId) {
+        return images.findById(imageId)
+                .filter(image -> image.getAntique().getId().equals(id))
+                .map(image -> {
+                    images.delete(image);
+                    return ResponseEntity.noContent().<Void>build();
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     private ResponseEntity<byte[]> imageResponse(AntiqueImage image) {

@@ -2130,22 +2130,37 @@ const imageUploadLabels: Record<string, Record<string, string>> = {
   en: {
     selectedImageCount: "{{count}} image(s) ready to upload",
     removeImage: "Remove {{name}}",
+    removeImageNumber: "Remove image {{number}}",
+    editAntiqueImages: "Photos",
+    newPhoto: "New",
   },
   fr: {
     selectedImageCount: "{{count}} image(s) prête(s) à téléverser",
     removeImage: "Supprimer {{name}}",
+    removeImageNumber: "Supprimer l'image {{number}}",
+    editAntiqueImages: "Photos",
+    newPhoto: "Nouveau",
   },
   "nl-NL": {
     selectedImageCount: "{{count}} afbeelding(en) klaar om te uploaden",
     removeImage: "{{name}} verwijderen",
+    removeImageNumber: "Afbeelding {{number}} verwijderen",
+    editAntiqueImages: "Foto's",
+    newPhoto: "Nieuw",
   },
   "nl-BE": {
     selectedImageCount: "{{count}} afbeelding(en) klaar om te uploaden",
     removeImage: "{{name}} verwijderen",
+    removeImageNumber: "Afbeelding {{number}} verwijderen",
+    editAntiqueImages: "Foto's",
+    newPhoto: "Nieuw",
   },
   de: {
     selectedImageCount: "{{count}} Bild(er) bereit zum Hochladen",
     removeImage: "{{name}} entfernen",
+    removeImageNumber: "Bild {{number}} entfernen",
+    editAntiqueImages: "Fotos",
+    newPhoto: "Neu",
   },
 };
 

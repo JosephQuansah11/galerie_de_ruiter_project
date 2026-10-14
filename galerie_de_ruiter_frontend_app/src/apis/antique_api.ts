@@ -92,6 +92,16 @@ export async function uploadAntiqueImage(id: string, image: File): Promise<void>
   });
   invalidateCache("antiques");
 }
+/**
+ * Removes one photograph from a piece so the gallery can correct a wrong image without
+ * deleting the whole antique.
+ */
+export async function deleteAntiqueImage(id: string, imageId: string): Promise<void> {
+  await axiosInstance.delete(`${backendBaseURL}/api/antiques/${id}/image/${imageId}`, {
+    headers: await csrfHeaders(),
+  });
+  invalidateCache("antiques");
+}
 export async function uploadAntiqueModel(id: string, model: File): Promise<Antique> {
   const body = new FormData();
   body.append("model", model);

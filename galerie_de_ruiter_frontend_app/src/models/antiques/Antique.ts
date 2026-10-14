@@ -48,7 +48,7 @@ export type AntiqueForm = {
 };
 
 // imageUrl from the backend is relative (e.g. /api/antiques/{id}/image); resolve it against the API origin.
-export { resolveAntiqueImageUrl } from "./antiqueImages";
+export { resolveAntiqueImageUrl, antiqueImageIdFromUrl } from "./antiqueImages";
 
 export const initialAntiqueForm: AntiqueForm = {
   title: "",

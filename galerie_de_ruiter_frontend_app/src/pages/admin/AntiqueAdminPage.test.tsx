@@ -2,13 +2,15 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
 import AntiqueAdminPage from "./AntiqueAdminPage";
-import { deleteAntique, getAllAntiques, setAntiqueSold } from "@/apis/backend_api";
+import { deleteAntique, deleteAntiqueImage, getAllAntiques, setAntiqueSold, updateAntique } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 
 jest.mock("@/apis/backend_api", () => ({
   getAllAntiques: jest.fn(),
   updateAntique: jest.fn(),
   deleteAntique: jest.fn(),
+  deleteAntiqueImage: jest.fn(),
+  uploadAntiqueImage: jest.fn(),
   uploadAntiqueModel: jest.fn(),
   setAntiqueSold: jest.fn(),
 }));
@@ -16,6 +18,8 @@ jest.mock("@/apis/backend_api", () => ({
 const mockedAntiques = getAllAntiques as jest.Mock;
 const mockedDelete = deleteAntique as jest.Mock;
 const mockedSold = setAntiqueSold as jest.Mock;
+const mockedUpdate = updateAntique as jest.Mock;
+const mockedDeleteImage = deleteAntiqueImage as jest.Mock;
 
 /** Mirrors an axios HTTP failure so the page's status handling can be exercised. */
 function httpError(status: number) {
@@ -33,6 +37,8 @@ const inventory: Antique[] = [
 beforeEach(() => {
   mockedAntiques.mockResolvedValue(inventory);
   mockedDelete.mockResolvedValue(undefined);
+  mockedUpdate.mockResolvedValue(inventory[0]);
+  mockedDeleteImage.mockResolvedValue(undefined);
   jest.spyOn(window, "confirm").mockReturnValue(true);
   jest.spyOn(console, "error").mockImplementation(() => undefined);
 });
@@ -135,5 +141,19 @@ describe("Antique administration page", () => {
     fireEvent.click(screen.getByRole("button", { name: `${i18n.t("markAvailable")}: Carved walnut mirror` }));
 
     await waitFor(() => expect(mockedSold).toHaveBeenCalledWith("1", false));
+  });
+
+  it("removes a photograph from a piece when the editor saves", async () => {
+    mockedAntiques.mockResolvedValueOnce([{ ...inventory[0], imageUrls: ["/api/antiques/1/image/aaa"] }]);
+
+    renderPage(<AntiqueAdminPage />);
+    await screen.findByText("Carved walnut mirror");
+
+    fireEvent.click(screen.getByRole("button", { name: `${i18n.t("editAntique")}: Carved walnut mirror` }));
+    // The stored photograph appears in the dialog and can be dropped before saving.
+    fireEvent.click(await screen.findByRole("button", { name: i18n.t("removeImageNumber", { number: 1 }) }));
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("saveAntique") }));
+
+    await waitFor(() => expect(mockedDeleteImage).toHaveBeenCalledWith("1", "aaa"));
   });
 });

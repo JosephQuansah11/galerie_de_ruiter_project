@@ -60,27 +60,7 @@ h1, h2, h3, h4, h5 {
   line-height: 1.14;
 }
 
-.catalogue-heading h1,
-.shopping-heading h1,
-.profile-hero h1,
-.chat-header h1,
-.location-copy h1,
-.settings-page .page-heading h1,
-.add-antique-intro h1,
-.auth-page .auth-panel h1,
-.welcome-hero h1,
-.about-content h1,
-.about-content h2,
-.about-content h3,
-.catalogue-card h2,
-.shopping-row h2,
-.cart-total strong,
-.catalogue-count strong,
-.profile-details-panel h2,
-.security-card h3,
-.settings-page .preference-heading h2,
-.welcome-story h2,
-.welcome-grid h2 {
+.catalogue-heading h1, .shopping-heading h1, .profile-hero h1, .chat-header h1, .location-copy h1, .settings-page .page-heading h1, .add-antique-intro h1, .auth-page .auth-panel h1, .welcome-hero h1, .about-content h1, .about-content h2, .about-content h3, .catalogue-card h2, .shopping-row h2, .cart-total strong, .catalogue-count strong, .profile-details-panel h2, .security-card h3, .welcome-story h2, .welcome-grid h2 {
   font-family: var(--font-display);
   font-weight: 500;
   letter-spacing: 0.006em;
@@ -94,10 +74,7 @@ h1, h2, h3, h4, h5 {
 }
 
 // Small-caps gilded labels with a drawn rule, used above every section title.
-.eyebrow,
-.catalogue-artist,
-.catalogue-kicker,
-.workspace-label {
+.eyebrow, .catalogue-artist, .catalogue-kicker {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -121,13 +98,7 @@ h1, h2, h3, h4, h5 {
 }
 
 // Section rules: a gilded hairline instead of a bare border.
-.profile-access-summary,
-.security-line,
-.settings-page .page-heading,
-.settings-page .preference-heading,
-.profile-hero,
-.add-antique-intro,
-.chat-header {
+.profile-access-summary, .security-line, .settings-page .page-heading, .profile-hero, .add-antique-intro, .chat-header {
   border-color: var(--theme-hairline);
 }
 
@@ -162,15 +133,7 @@ hr,
 // --------------------------------------------------------------------------
 // Buttons — engraved gallery labels: squared, letterspaced, gilded on hover
 // --------------------------------------------------------------------------
-.btn,
-.primary-button,
-.quiet-button,
-.menu-action,
-.chat-option,
-.chat-status-retry,
-.catalogue-search-submit,
-.inventory-search-submit,
-.theme-option {
+.btn, .primary-button, .quiet-button, .chat-option, .chat-status-retry, .catalogue-search-submit, .inventory-search-submit, .theme-option {
   --bs-btn-border-radius: var(--theme-radius);
   border-radius: var(--theme-radius);
   font-family: var(--font-ui);
@@ -310,8 +273,7 @@ hr,
   text-decoration-color: currentColor;
 }
 
-.quiet-button,
-.menu-action {
+.quiet-button {
   border: 1px solid var(--theme-hairline);
   background: transparent;
   color: var(--theme-text);
@@ -319,10 +281,7 @@ hr,
   padding: 0.55rem 0.95rem;
 }
 
-.quiet-button:hover,
-.quiet-button:focus-visible,
-.menu-action:hover,
-.menu-action:focus-visible {
+.quiet-button:hover, .quiet-button:focus-visible {
   border-color: var(--theme-gold);
   background: rgba(176, 138, 74, 0.1);
   color: var(--theme-text);
@@ -339,20 +298,7 @@ hr,
 // --------------------------------------------------------------------------
 // Containers — parchment panels with a hairline frame and a soft cast shadow
 // --------------------------------------------------------------------------
-.form-panel,
-.preference-panel,
-.security-card,
-.profile-details-panel,
-.model-admin-panel,
-.category-create-form,
-.chat-appointment-picker,
-.appointment-summary,
-.map-frame,
-.auth-page .auth-panel,
-.catalogue-card,
-.shopping-row,
-.admin-row,
-.inventory-row {
+.form-panel, .security-card, .profile-details-panel, .category-create-form, .chat-appointment-picker, .appointment-summary, .map-frame, .auth-page .auth-panel, .catalogue-card, .shopping-row, .admin-row, .inventory-row {
   border-radius: var(--theme-radius-lg);
   border: 1px solid var(--theme-hairline);
   background: var(--theme-parchment);
@@ -1165,6 +1111,9 @@ label {
   display: block;
   width: clamp(12rem, 30vw, 26rem);
   max-width: 100%;
+  // `height: auto` keeps the logo's own ratio: without it the height the img element declares
+  // would win over the width set here and stretch the logo.
+  height: auto;
   max-height: 26rem;
   object-fit: contain;
   border-radius: 0;
@@ -1375,10 +1324,3 @@ label {
     flex-direction: column;
   }
 }
-
-
-
-
-
-
-

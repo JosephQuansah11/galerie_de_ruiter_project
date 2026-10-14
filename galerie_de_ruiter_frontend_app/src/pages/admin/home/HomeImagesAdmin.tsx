@@ -34,7 +34,7 @@ export function HomeImagesAdmin() {
     </div>
     {images.length > 0 && <ul className="home-images-list">
       {images.map((image) => <li key={image.id}>
-        <img src={resolveHomeImageUrl(image.url)} alt={image.caption?.trim() || t("welcomeImages")} />
+        <img src={resolveHomeImageUrl(image.url)} alt={image.caption?.trim() || t("welcomeImages")} width={400} height={300} />
         <span>{image.caption?.trim() || ""}</span>
         <Button className="btn btn-outline-danger btn-sm" type="button" disabled={busy}
           onClick={() => void remove(image.id)} aria-label={t("removeWelcomeImage")} text={<Trash2 size={15} />} />

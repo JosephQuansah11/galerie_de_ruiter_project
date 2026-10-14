@@ -60,8 +60,6 @@
 .add-antique-intro h1 { margin: 0.4rem 0; font: 400 clamp(2rem, 4vw, 3.25rem) Georgia, serif; }
 .add-antique-intro p { margin: 0; color: var(--theme-text-secondary); }
 .admin-coordinate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
-.language-setting { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
-.language-setting select { min-width: 14rem; padding: 0.5rem 0.7rem; border: 1px solid var(--theme-border); background: var(--theme-surface); color: var(--theme-text); }
 
 // About page editor: a formatting toolbar above the Markdown textarea with a live preview of
 // the story beside it. The tools are named in `aboutEditorLabels` for every language.

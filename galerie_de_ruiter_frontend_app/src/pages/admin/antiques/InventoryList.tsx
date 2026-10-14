@@ -26,7 +26,7 @@ export function InventoryList({ antiques, onEdit, onDelete, onToggleSold, deleti
   return <div className="inventory-list">{antiques.map((antique) =>
     <article className={`inventory-row${antique.sold ? " is-sold" : ""}`} key={antique.id}>
       <span className="inventory-thumb">
-        {antique.imageUrl ? <img src={resolveAntiqueImageUrl(antique.imageUrl)} alt="" />
+        {antique.imageUrl ? <img src={resolveAntiqueImageUrl(antique.imageUrl)} alt="" width={400} height={300} />
           : <span className="inventory-placeholder"><Image size={20} /></span>}
       </span>
       <span className="inventory-row-copy">

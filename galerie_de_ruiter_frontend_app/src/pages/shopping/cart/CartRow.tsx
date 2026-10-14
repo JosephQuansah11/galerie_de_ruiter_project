@@ -12,7 +12,7 @@ export function CartRow({ antique, quantity, updateQuantity, removeFromCart }: P
   const image = antique.imageUrl ?? antique.imageUrls?.[0];
   return <article className="shopping-row">
     <div className="shopping-thumb">{image
-      ? <img src={resolveAntiqueImageUrl(image)} alt="" loading="lazy" />
+      ? <img src={resolveAntiqueImageUrl(image)} alt="" loading="lazy" width={400} height={400} />
       : antique.title.slice(0, 1)}</div>
     <div className="shopping-row-copy"><h2>{antique.title}</h2><strong>
       {antique.price == null ? t("priceOnRequest") : formatEuroAmount(antique.price, locale)}

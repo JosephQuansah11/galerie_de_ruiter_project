@@ -14,7 +14,7 @@ export function WelcomeSlider({ images }: { images: HomeImage[] }) {
     <Carousel interval={6000} indicators={multiple} controls={multiple} pause="hover">
       {images.map((image) => <Carousel.Item key={image.id}>
         <img className="welcome-slide-image" src={resolveHomeImageUrl(image.url)}
-          alt={image.caption?.trim() || t("welcomeImages")} loading="lazy" />
+          alt={image.caption?.trim() || t("welcomeImages")} loading="lazy" width={1280} height={720} />
         {image.caption?.trim() ? <Carousel.Caption><p>{image.caption}</p></Carousel.Caption> : null}
       </Carousel.Item>)}
     </Carousel>

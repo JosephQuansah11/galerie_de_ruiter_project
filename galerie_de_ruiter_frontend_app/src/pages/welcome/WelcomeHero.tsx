@@ -9,7 +9,8 @@ export function WelcomeHero() {
   return <div className="welcome-hero">
     {/* The gallery logo lives with the welcome message, large, next to the copy. */}
     <figure className="welcome-hero-logo">
-      <img src="/images/galerie_de_ruiter.png" alt="Galerie de Ruiter" className="welcome-logo" />
+      {/* The logo's own 276x578 pixels are declared so the box is reserved before it loads. */}
+      <img src="/images/galerie_de_ruiter.png" alt="Galerie de Ruiter" className="welcome-logo" width={276} height={578} />
     </figure>
     <div className="welcome-hero-copy">
       <span className="catalogue-artist">{t("galleryName")}</span>

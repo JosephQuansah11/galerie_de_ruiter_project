@@ -29,7 +29,7 @@ export function Avatar({
       className={`avatar avatar-${size}`}
       aria-label={t("profileNamed", { name: displayName })}
     >
-      {imageUrl ? <img src={imageUrl} alt="" /> : initials}
+      {imageUrl ? <img src={imageUrl} alt="" width={80} height={80} /> : initials}
     </span>
   );
 }

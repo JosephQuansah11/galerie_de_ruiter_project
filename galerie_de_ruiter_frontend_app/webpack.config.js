@@ -100,7 +100,7 @@ export default {
           from: path.resolve(__dirname, "public"),
           to: ".",
           globOptions: {
-            ignore: ["**/index.html", "**/galerie_de_ruiter_admin.png"],
+            ignore: ["**/index.html"],
           },
         },
       ],

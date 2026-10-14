@@ -15,15 +15,3 @@
 #Navbar .nav-item-link {
   padding: var(--nav-item-padding);
 }
-
-#Navbar .nav-category-submenu,
-#Navbar .nav-admin-submenu {
-  border-radius: 0.35rem;
-}
-
-@media (max-width: 640px) {
-  #Navbar .nav-category-submenu,
-  #Navbar .nav-admin-submenu {
-    max-width: calc(100vw - 5rem);
-  }
-}

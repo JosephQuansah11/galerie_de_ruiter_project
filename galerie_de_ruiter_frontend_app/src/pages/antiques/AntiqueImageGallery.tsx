@@ -25,14 +25,14 @@ export function AntiqueImageGallery({ images, onMove, onRemove, isNew }: Props) 
   const [main] = images;
   return <div className="antique-gallery">
     <div className="antique-gallery-main">
-      <img src={main.url} alt={main.alt ?? ""} />
+      <img src={main.url} alt={main.alt ?? ""} width={800} height={600} />
       {images.length > 1 && <span className="antique-gallery-count">{t("imageNumber", { number: 1, total: images.length })}</span>}
     </div>
     <ul className="antique-gallery-strip">
       {images.map((image, index) => <li key={image.id}
         className={`antique-gallery-item${index === 0 ? " is-main" : ""}${isNew?.(image.id) ? " is-new" : ""}`}>
         <span className="antique-gallery-thumb">
-          <img src={image.url} alt={image.alt ?? ""} />
+          <img src={image.url} alt={image.alt ?? ""} width={400} height={400} />
         </span>
         <span className="antique-gallery-position" aria-hidden="true">{index + 1}</span>
         {isNew?.(image.id) && <span className="antique-image-new-badge">{t("newPhoto")}</span>}

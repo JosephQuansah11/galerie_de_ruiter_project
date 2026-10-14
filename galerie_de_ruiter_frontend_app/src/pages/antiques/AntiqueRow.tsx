@@ -23,7 +23,7 @@ export function AntiqueRow({ antique }: { antique: Antique }) {
   const description = summarizeDescription(antique.description);
   const imageUrl = antique.imageUrl ?? antique.imageUrls?.[0];
   return <article className={`catalogue-card catalogue-row${antique.sold ? " is-sold" : ""}`} onClick={() => navigate(`/antiques/${antique.id}`)}>
-    <div className="catalogue-card-image" aria-hidden="true">{imageUrl ? <img src={resolveAntiqueImageUrl(imageUrl)} alt="" /> : antique.title.slice(0, 1).toUpperCase()}
+    <div className="catalogue-card-image" aria-hidden="true">{imageUrl ? <img src={resolveAntiqueImageUrl(imageUrl)} alt="" width={800} height={600} /> : antique.title.slice(0, 1).toUpperCase()}
       {antique.sold && <span className="catalogue-sold-badge">{t("sold")}</span>}</div>
     <div className="catalogue-card-content">
       <span className="catalogue-artist">{artist}</span>

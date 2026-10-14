@@ -17,7 +17,7 @@ export default function WishlistPage() {
         {wishlist.map((antique) => (
           <article className="shopping-row" key={antique.id}>
             <div className="shopping-thumb">{(antique.imageUrl ?? antique.imageUrls?.[0])
-              ? <img src={resolveAntiqueImageUrl(antique.imageUrl ?? antique.imageUrls?.[0])} alt="" loading="lazy" />
+              ? <img src={resolveAntiqueImageUrl(antique.imageUrl ?? antique.imageUrls?.[0])} alt="" loading="lazy" width={400} height={400} />
               : antique.title.slice(0, 1)}</div>
             <div className="shopping-row-copy">
               <span className="catalogue-artist">

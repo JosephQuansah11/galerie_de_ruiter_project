@@ -9,8 +9,8 @@ type Props = Pick<ReturnType<typeof useCategoryAdmin>, "name" | "setName" | "par
 export function CategoryCreateForm({ name, setName, parentId, setParentId, addCategory, categories }: Props) {
   const { t } = useTranslation();
   return <Form className="category-create-form" onSubmit={addCategory}>
-    <Form.Control required value={name} onChange={(event) => setName(event.target.value)} placeholder={t("newCategoryName")} />
-    <Form.Select value={parentId} onChange={(event) => setParentId(event.target.value)}>
+    <Form.Control required value={name} onChange={(event) => setName(event.target.value)} placeholder={t("newCategoryName")} aria-label={t("newCategoryName")} />
+    <Form.Select value={parentId} onChange={(event) => setParentId(event.target.value)} aria-label={t("categories")}>
       <option value="">{t("topLevelCategory")}</option>
       {categories.map((category) => <option key={category.id} value={category.id}>{t("subcategoryOf")} {category.name}</option>)}
     </Form.Select>

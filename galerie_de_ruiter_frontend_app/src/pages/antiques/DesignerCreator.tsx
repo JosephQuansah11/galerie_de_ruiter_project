@@ -8,7 +8,8 @@ type Props = Pick<ReturnType<typeof useAntiqueLookups>, "newArtist" | "setNewArt
 export function DesignerCreator({ newArtist, setNewArtist, creating, addArtist }: Props) {
   const { t } = useTranslation();
   const field = (name: keyof typeof newArtist, label: string) => <Form.Control value={newArtist[name]}
-    onChange={(event) => setNewArtist((artist) => ({ ...artist, [name]: event.target.value }))} placeholder={t(label)} />;
+    onChange={(event) => setNewArtist((artist) => ({ ...artist, [name]: event.target.value }))} placeholder={t(label)}
+    aria-label={t(label)} />;
   return <fieldset className="border rounded p-3 mb-3"><legend className="float-none w-auto px-2 fs-6">{t("addArtist")}</legend>
     <div className="row g-2"><div className="col-md">{field("firstName", "firstName")}</div>
       <div className="col-md">{field("middleName", "middleName")}</div><div className="col-md">{field("lastName", "lastName")}</div>

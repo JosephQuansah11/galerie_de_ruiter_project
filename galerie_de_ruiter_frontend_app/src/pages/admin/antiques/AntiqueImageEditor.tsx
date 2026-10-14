@@ -19,7 +19,7 @@ type Props = {
 export function AntiqueImageEditor({ images, onAddImages, onMove, onRemove, disabled }: Props) {
   const { t } = useTranslation();
   const newKeys = new Set(images.filter((image) => image.file).map((image) => image.key));
-  return <Form.Group className="mb-3">
+  return <Form.Group className="mb-3" controlId="antique-image-editor-images">
     <Form.Label>{t("editAntiqueImages")}</Form.Label>
     <Form.Control type="file" accept="image/*" multiple disabled={disabled} onChange={(event) => {
       const input = event.currentTarget as HTMLInputElement;

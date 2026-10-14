@@ -11,6 +11,9 @@
   --font-ui: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --theme-gold: #b08a4a;
+  // The same brass, dark enough to read as text: the label above a section title is set in it,
+  // and the ornament gold above is only 3:1 on parchment, where a text label needs 4.5:1.
+  --theme-gold-ink: #8a5f27;
   --theme-gold-soft: rgba(176, 138, 74, 0.38);
   --theme-hairline: rgba(60, 31, 37, 0.16);
   --theme-parchment: #fdfaf6;
@@ -28,6 +31,7 @@
 
 .theme-dark {
   --theme-gold: #d8b476;
+  --theme-gold-ink: #dfbf84;
   --theme-gold-soft: rgba(216, 180, 118, 0.42);
   --theme-hairline: rgba(255, 248, 244, 0.18);
   --theme-parchment: #3f2a2e;

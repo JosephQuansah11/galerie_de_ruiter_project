@@ -182,11 +182,11 @@ export default function AntiqueAdminPage() {
           </Modal.Header>
           <Modal.Body>
             {actionError && <Alert variant="danger">{t(actionError, { max: MODEL_MAX_SIZE_MB })}</Alert>}
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-3" controlId="edit-antique-title">
               <Form.Label>{t("title")}</Form.Label>
               <Form.Control required value={editTitle} onChange={(event) => setEditTitle(event.target.value)} />
             </Form.Group>
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-3" controlId="edit-antique-description">
               <Form.Label>{t("description")}</Form.Label>
               <Form.Control as="textarea" rows={6} value={editDescription} onChange={(event) => setEditDescription(event.target.value)} />
               <DescriptionLimitHint value={editDescription} />
@@ -198,7 +198,7 @@ export default function AntiqueAdminPage() {
               onRemove={editingImages.remove}
               disabled={savingEdit}
             />
-            <Form.Group className="mb-3">
+            <Form.Group className="mb-3" controlId="edit-antique-model">
               <Form.Label>{t("uploadGlbModel")}</Form.Label>
               <Form.Control type="file" accept=".glb,model/gltf-binary" onChange={(event) => {
                 const input = event.currentTarget as HTMLInputElement;
@@ -214,7 +214,7 @@ export default function AntiqueAdminPage() {
               }} />
               <Form.Text>{modelFileInvalid ? t("glbUploadInvalid", { max: MODEL_MAX_SIZE_MB }) : editModelFile?.name ?? t("chooseGlbModel", { max: MODEL_MAX_SIZE_MB })}</Form.Text>
             </Form.Group>
-            <Form.Group>
+            <Form.Group controlId="edit-antique-price">
               <Form.Label>{t("priceEur")}</Form.Label>
               <Form.Control required type="number" min="0" step="0.01" value={editPrice} onChange={(event) => setEditPrice(event.target.value)} />
             </Form.Group>

@@ -7,7 +7,7 @@ import { MODEL_MAX_SIZE_MB } from "./modelUploadLimits";
 type Draft = ReturnType<typeof useNewAntiqueDraft>;
 export function AntiqueMediaFields({ form, update, updateModelUrl, images, modelFileName, selectImages, removeImage, moveImage, selectModelFile }: Pick<Draft, "form" | "update" | "images" | "modelFileName" | "selectImages" | "removeImage" | "moveImage" | "selectModelFile"> & { updateModelUrl: (value: string) => void }) {
   const { t } = useTranslation();
-  return <><Form.Group className="mb-3"><Form.Label>{t("uploadLocalImages")}</Form.Label>
+  return <><Form.Group className="mb-3" controlId="antique-images"><Form.Label>{t("uploadLocalImages")}</Form.Label>
     <Form.Control type="file" accept="image/*" multiple onChange={(event) => {
       const input = event.currentTarget as HTMLInputElement;
       selectImages(input.files);
@@ -18,10 +18,10 @@ export function AntiqueMediaFields({ form, update, updateModelUrl, images, model
     {/* The first photograph is the one the catalogue shows large; the arrows move one forward. */}
     <AntiqueImageGallery images={images.map((image) => ({ id: image.id, url: image.url, alt: image.file.name }))}
       onMove={moveImage} onRemove={removeImage} /></Form.Group>
-    <Form.Group className="mb-3"><Form.Label>{t("uploadGlbModel")}</Form.Label>
+    <Form.Group className="mb-3" controlId="antique-model"><Form.Label>{t("uploadGlbModel")}</Form.Label>
       <Form.Control type="file" accept=".glb,model/gltf-binary" onChange={(event) => selectModelFile((event.currentTarget as HTMLInputElement).files)} />
       <Form.Text>{modelFileName ? modelFileName : t("chooseGlbModel", { max: MODEL_MAX_SIZE_MB })}</Form.Text></Form.Group>
-    <Form.Group className="mb-3"><Form.Label>{t("modelUrl")}</Form.Label>
+    <Form.Group className="mb-3" controlId="antique-model-url"><Form.Label>{t("modelUrl")}</Form.Label>
       <Form.Control type="url" value={form.modelUrl} onChange={(event) => updateModelUrl(event.target.value)} placeholder={t("modelUrlPlaceholder")} /></Form.Group>
   </>;
 }

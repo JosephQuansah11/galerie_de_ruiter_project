@@ -8,6 +8,10 @@ ARG VITE_KEYCLOAK_REALM=movie_project_keycloak
 ARG VITE_KEYCLOAK_CLIENT_ID=movie_project_frontend_client
 ARG VITE_RECONSTRUCTION_API_URL=http://localhost:8000
 ARG VITE_PYTHON_API_URL=http://localhost:8000
+# The site's public origin: it becomes the URLs in sitemap.xml, robots.txt and the social
+# preview tags. Pass the real origin when building for a server, e.g.
+# --build-arg SITE_URL=https://www.example.be
+ARG SITE_URL=http://localhost:3000
 ENV VITE_JAVA_API_URL=$VITE_JAVA_API_URL \
     VITE_JAVA_BACKEND_URL=$VITE_JAVA_BACKEND_URL \
     VITE_API_URL=$VITE_API_URL \
@@ -15,7 +19,8 @@ ENV VITE_JAVA_API_URL=$VITE_JAVA_API_URL \
     VITE_KEYCLOAK_REALM=$VITE_KEYCLOAK_REALM \
     VITE_KEYCLOAK_CLIENT_ID=$VITE_KEYCLOAK_CLIENT_ID \
     VITE_RECONSTRUCTION_API_URL=$VITE_RECONSTRUCTION_API_URL \
-    VITE_PYTHON_API_URL=$VITE_PYTHON_API_URL
+    VITE_PYTHON_API_URL=$VITE_PYTHON_API_URL \
+    SITE_URL=$SITE_URL
 COPY package*.json ./
 RUN npm ci
 COPY . .

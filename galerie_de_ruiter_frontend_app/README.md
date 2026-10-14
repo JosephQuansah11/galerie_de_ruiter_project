@@ -39,6 +39,38 @@ Instead, it will copy all the configuration files and the transitive dependencie
 
 You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
 
+## Search engines
+
+The app is one HTML page, so what a crawler can reach is decided in three places:
+
+- **`src/hooks/usePageMeta.ts`** — every page sets its own `<title>`, `<meta name="description">`,
+  `<link rel="canonical">` and Open Graph tags. Pages call it with their own translated copy;
+  the strings live in `pageMetaLabels` in `src/i18n.ts`.
+- **`public/robots.txt`** — everything behind an account (`/admin`, `/antiques`, `/about`,
+  `/map`, `/cart`, `/wishlist`, `/profile`, `/preferences`) is closed to crawlers, because
+  those routes answer with the sign-in page. `/login` and `/register` stay crawlable on
+  purpose: they carry a `noindex` tag and a crawler that may not fetch them never sees it.
+- **`scripts/generate-sitemap.mjs`** — runs after webpack (`npm run build`) and writes
+  `dist/sitemap.xml` plus the absolute `Sitemap:` line in `dist/robots.txt`. It lists the pages
+  a visitor reaches without an account: `/dashboard` and `/dashboard/chat`.
+
+The site's public origin is not in the source. Pass it at build time, otherwise the sitemap
+points at `http://localhost:3000` and the script says so:
+
+```bash
+SITE_URL=https://www.example.be npm run build
+# or, for the container:
+docker build --build-arg SITE_URL=https://www.example.be ./galerie_de_ruiter_frontend_app
+```
+
+`SITE_URL` is also what turns the `og:url` and `og:image` tags in `index.html` into the
+absolute URLs a social preview needs. Add a 1200×630 image to `public/` and point
+`og:image` at it for richer previews.
+
+When the collection opens to visitors, remove the `/antiques` and `/about` lines from
+`robots.txt` and add the pieces to `publicPages` in the sitemap script (the API's
+`GET /api/antiques` lists them, so the script can fetch them at build time).
+
 ## Learn More
 
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).

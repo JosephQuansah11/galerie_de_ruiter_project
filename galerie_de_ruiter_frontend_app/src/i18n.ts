@@ -2264,6 +2264,73 @@ const cataloguePagingLabels: Record<string, Record<string, string>> = {
   de: { itemsPerPage: "Pro Seite", pageOf: "Seite {{page}} von {{pages}}", previousPage: "Vorherige Seite", nextPage: "Nächste Seite" },
 };
 
+/**
+ * Page metadata: the title and description a search engine shows for each route. Merged from
+ * one place like the blocks above so every language stays in step.
+ */
+const pageMetaLabels: Record<string, Record<string, string>> = {
+  en: {
+    metaHomeTitle: "Galerie de Ruiter — antiques and art",
+    metaHomeDescription: "Galerie de Ruiter shows antiques and art with a past life. Browse the collection, read the story behind each piece and talk to the gallery.",
+    metaChatTitle: "Chat with Galerie de Ruiter",
+    metaChatDescription: "Ask Galerie de Ruiter about the collection or a single piece, and request a visit or an online appointment.",
+    metaLoginTitle: "Sign in — Galerie de Ruiter",
+    metaRegisterTitle: "Create an account — Galerie de Ruiter",
+    metaCatalogueTitle: "The collection — Galerie de Ruiter",
+    metaCatalogueDescription: "Browse the pieces available through Galerie de Ruiter: photographs, prices and the story behind every object.",
+    metaPieceTitle: "{{title}} — Galerie de Ruiter",
+    metaPieceDescription: "{{title}} at Galerie de Ruiter: photographs, price and the story behind the piece.",
+  },
+  fr: {
+    metaHomeTitle: "Galerie de Ruiter — antiquités et art",
+    metaHomeDescription: "La Galerie de Ruiter présente des antiquités et des œuvres d'art qui ont déjà vécu. Parcourez la collection, découvrez l'histoire de chaque pièce et parlez à la galerie.",
+    metaChatTitle: "Discuter avec la Galerie de Ruiter",
+    metaChatDescription: "Posez vos questions à la Galerie de Ruiter sur la collection ou sur une pièce, et demandez une visite ou un rendez-vous en ligne.",
+    metaLoginTitle: "Se connecter — Galerie de Ruiter",
+    metaRegisterTitle: "Créer un compte — Galerie de Ruiter",
+    metaCatalogueTitle: "La collection — Galerie de Ruiter",
+    metaCatalogueDescription: "Parcourez les pièces disponibles à la Galerie de Ruiter : photographies, prix et histoire de chaque objet.",
+    metaPieceTitle: "{{title}} — Galerie de Ruiter",
+    metaPieceDescription: "{{title}} à la Galerie de Ruiter : photographies, prix et histoire de la pièce.",
+  },
+  "nl-NL": {
+    metaHomeTitle: "Galerie de Ruiter — antiek en kunst",
+    metaHomeDescription: "Galerie de Ruiter toont antiek en kunst met een verleden. Bekijk de collectie, lees het verhaal achter elk stuk en praat met de galerie.",
+    metaChatTitle: "Chat met Galerie de Ruiter",
+    metaChatDescription: "Stel Galerie de Ruiter je vragen over de collectie of over een bepaald stuk, en vraag een bezoek of een online afspraak aan.",
+    metaLoginTitle: "Aanmelden — Galerie de Ruiter",
+    metaRegisterTitle: "Account aanmaken — Galerie de Ruiter",
+    metaCatalogueTitle: "De collectie — Galerie de Ruiter",
+    metaCatalogueDescription: "Bekijk de stukken die via Galerie de Ruiter beschikbaar zijn: foto's, prijzen en het verhaal achter elk object.",
+    metaPieceTitle: "{{title}} — Galerie de Ruiter",
+    metaPieceDescription: "{{title}} bij Galerie de Ruiter: foto's, prijs en het verhaal achter het stuk.",
+  },
+  "nl-BE": {
+    metaHomeTitle: "Galerie de Ruiter — antiek en kunst",
+    metaHomeDescription: "Galerie de Ruiter toont antiek en kunst met een verleden. Bekijk de collectie, lees het verhaal achter elk stuk en praat met de galerie.",
+    metaChatTitle: "Chat met Galerie de Ruiter",
+    metaChatDescription: "Stel Galerie de Ruiter je vragen over de collectie of over een bepaald stuk, en vraag een bezoek of een online afspraak aan.",
+    metaLoginTitle: "Aanmelden — Galerie de Ruiter",
+    metaRegisterTitle: "Account aanmaken — Galerie de Ruiter",
+    metaCatalogueTitle: "De collectie — Galerie de Ruiter",
+    metaCatalogueDescription: "Bekijk de stukken die via Galerie de Ruiter beschikbaar zijn: foto's, prijzen en het verhaal achter elk object.",
+    metaPieceTitle: "{{title}} — Galerie de Ruiter",
+    metaPieceDescription: "{{title}} bij Galerie de Ruiter: foto's, prijs en het verhaal achter het stuk.",
+  },
+  de: {
+    metaHomeTitle: "Galerie de Ruiter — Antiquitäten und Kunst",
+    metaHomeDescription: "Die Galerie de Ruiter zeigt Antiquitäten und Kunst mit Vergangenheit. Durchstöbern Sie die Sammlung, lesen Sie die Geschichte hinter jedem Stück und sprechen Sie mit der Galerie.",
+    metaChatTitle: "Mit der Galerie de Ruiter chatten",
+    metaChatDescription: "Fragen Sie die Galerie de Ruiter nach der Sammlung oder nach einem bestimmten Stück und bitten Sie um einen Besuch oder einen Online-Termin.",
+    metaLoginTitle: "Anmelden — Galerie de Ruiter",
+    metaRegisterTitle: "Konto erstellen — Galerie de Ruiter",
+    metaCatalogueTitle: "Die Sammlung — Galerie de Ruiter",
+    metaCatalogueDescription: "Sehen Sie die Stücke, die über die Galerie de Ruiter erhältlich sind: Fotografien, Preise und die Geschichte hinter jedem Objekt.",
+    metaPieceTitle: "{{title}} — Galerie de Ruiter",
+    metaPieceDescription: "{{title}} bei der Galerie de Ruiter: Fotografien, Preis und die Geschichte des Stücks.",
+  },
+};
+
 Object.entries(resources).forEach(([language, resource]) => {
   Object.assign(resource.translation, engagementLabels[language] ?? engagementLabels.en);
   Object.assign(resource.translation, chatAccessLabels[language] ?? chatAccessLabels.en);
@@ -2271,6 +2338,7 @@ Object.entries(resources).forEach(([language, resource]) => {
   Object.assign(resource.translation, imageUploadLabels[language] ?? imageUploadLabels.en);
   Object.assign(resource.translation, aboutEditorLabels[language] ?? aboutEditorLabels.en);
   Object.assign(resource.translation, cataloguePagingLabels[language] ?? cataloguePagingLabels.en);
+  Object.assign(resource.translation, pageMetaLabels[language] ?? pageMetaLabels.en);
 });
 
 void i18n

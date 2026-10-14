@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Spinner } from "react-bootstrap";
 import { RefreshCw } from "lucide-react";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { useGalleryChat } from "./chat/useGalleryChat";
 import { ChatHeader } from "./chat/ChatHeader";
 import { ChatThread } from "./chat/ChatThread";
@@ -16,6 +17,9 @@ export default function ChatPage() {
   // A colour-coded dot that always shows whether the assistant service (Ollama) is reachable,
   // so the visitor can tell "starting up" from "running" at a glance.
   const assistantStatus = chat.checkingConnection ? "checking" : chat.ready ? "online" : "offline";
+  // `/chat` and `/dashboard/chat` both open this page; the landing page links to the latter, so
+  // that is the URL search engines are pointed at.
+  usePageMeta({ title: t("metaChatTitle"), description: t("metaChatDescription"), canonicalPath: "/dashboard/chat" });
   return <section className="chat-page">
     <ChatHeader appointment={chat.appointment} />
     <div className={`chat-assistant-status is-${assistantStatus}`} role="status" aria-live="polite">

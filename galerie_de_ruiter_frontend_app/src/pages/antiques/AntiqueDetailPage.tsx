@@ -2,10 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Spinner } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAntiqueContent } from "@/hooks/useAddAntiques";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { useShopping } from "@/context/ShoppingContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { AntiqueDetailContent } from "./AntiqueDetailContent";
 import { getDetailPresentation } from "./useDetailPresentation";
+import { summarizeDescription } from "./summarizeDescription";
+
+/** Roughly what a search result shows of a description before it is cut off. */
+const META_DESCRIPTION_WORDS = 22;
 
 export default function AntiqueDetailPage() {
   const { id } = useParams();
@@ -16,6 +21,15 @@ export default function AntiqueDetailPage() {
   const antique = useMemo(() => antiques.find((item) => item.id === id), [antiques, id]);
   const [selectedImage, setSelectedImage] = useState<string>();
   useEffect(() => setSelectedImage(undefined), [id]);
+  // The piece's own story becomes the description a search result shows; a piece that has none
+  // yet falls back to the gallery's wording. Both wait until the collection has loaded.
+  usePageMeta({
+    title: antique ? t("metaPieceTitle", { title: antique.title }) : undefined,
+    description: antique
+      ? summarizeDescription(antique.description, META_DESCRIPTION_WORDS) || t("metaPieceDescription", { title: antique.title })
+      : undefined,
+    canonicalPath: `/antiques/${id}`,
+  });
   if (loading) return <div className="catalogue-state"><Spinner animation="border" size="sm" /> {t("loadingPiece")}</div>;
   if (error || !antique) return <Alert variant="warning">{t("pieceNotFound")}</Alert>;
   const data = getDetailPresentation(antique, antiques, locale, selectedImage, t);

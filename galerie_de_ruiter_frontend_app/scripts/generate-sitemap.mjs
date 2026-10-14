@@ -1,0 +1,81 @@
+/**
+ * Writes the two files a search engine looks for into the built site: `sitemap.xml` and the
+ * `Sitemap:` line inside `robots.txt`.
+ *
+ * The site origin is not in the source, so it is read from SITE_URL at build time: the same
+ * source then produces a sitemap for a local run, for staging and for production. It runs
+ * after webpack, see the `build` script in package.json.
+ */
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const distDir = path.join(appRoot, "dist");
+
+/**
+ * The pages a visitor reaches without an account. Everything else answers with the sign-in
+ * page and is disallowed in robots.txt, so it does not belong in a sitemap.
+ */
+const publicPages = [
+  { path: "/dashboard", changefreq: "weekly", priority: "1.0" },
+  { path: "/dashboard/chat", changefreq: "monthly", priority: "0.6" },
+];
+
+function escapeXml(value) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+const siteUrl = (process.env.SITE_URL ?? process.env.VITE_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+
+if (!/^https?:\/\//i.test(siteUrl)) {
+  console.error(`generate-sitemap: SITE_URL must be an absolute URL, got "${siteUrl}"`);
+  process.exit(1);
+}
+
+if (/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(siteUrl)) {
+  console.warn(
+    "generate-sitemap: SITE_URL is still the local default, so the sitemap points at localhost.\n" +
+    "                  Set SITE_URL to the site's public origin when building for a server.",
+  );
+}
+
+const lastmod = new Date().toISOString().slice(0, 10);
+const sitemap = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  ...publicPages.map((page) => [
+    "  <url>",
+    `    <loc>${escapeXml(`${siteUrl}${page.path}`)}</loc>`,
+    `    <lastmod>${lastmod}</lastmod>`,
+    `    <changefreq>${page.changefreq}</changefreq>`,
+    `    <priority>${page.priority}</priority>`,
+    "  </url>",
+  ].join("\n")),
+  "</urlset>",
+  "",
+].join("\n");
+
+mkdirSync(distDir, { recursive: true });
+writeFileSync(path.join(distDir, "sitemap.xml"), sitemap, "utf8");
+
+// The crawler only finds the sitemap through an absolute URL, so the line is added here rather
+// than kept in public/robots.txt, which has to stay origin-independent.
+const robotsTarget = path.join(distDir, "robots.txt");
+const robotsSource = existsSync(robotsTarget) ? robotsTarget : path.join(appRoot, "public", "robots.txt");
+if (existsSync(robotsSource)) {
+  const robots = readFileSync(robotsSource, "utf8").trimEnd();
+  const withSitemap = robots.includes("Sitemap:")
+    ? robots
+    : `${robots}\n\nSitemap: ${siteUrl}/sitemap.xml`;
+  writeFileSync(robotsTarget, `${withSitemap}\n`, "utf8");
+} else {
+  console.warn("generate-sitemap: no robots.txt to add the Sitemap line to");
+}
+
+console.log(`generate-sitemap: ${publicPages.length} URLs for ${siteUrl}`);

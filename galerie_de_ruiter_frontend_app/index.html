@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl-BE">
 <head>
     <meta charset="UTF-8" />
 
@@ -8,10 +8,24 @@
         content="width=device-width, initial-scale=1.0"
     />
 
+    <!-- The gallery's own language is Belgian Dutch; LanguageContext swaps this to the
+         visitor's choice once the bundle has run, so a crawler that does not run it still
+         reads the right language. -->
     <meta
         name="description"
-        content="Galerie De Ruiter"
+        content="Galerie de Ruiter toont antiek en kunst met een verleden. Bekijk de collectie en praat met de galerie."
     />
+    <meta name="theme-color" content="#841a23" />
+
+    <!-- How a shared link to the gallery looks. Pages replace the title and description at
+         runtime; these are the site-wide defaults. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Galerie de Ruiter" />
+    <meta property="og:title" content="Galerie de Ruiter — antiek en kunst" />
+    <meta property="og:description" content="Galerie de Ruiter toont antiek en kunst met een verleden. Bekijk de collectie en praat met de galerie." />
+    <meta property="og:url" content="<%= htmlWebpackPlugin.options.siteUrl %>/" />
+    <meta property="og:image" content="<%= htmlWebpackPlugin.options.siteUrl %>/logo512.png" />
+
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" />
@@ -36,7 +50,7 @@
         />
     </noscript>
 
-    <title>Galerie De Ruiter</title>
+    <title>Galerie de Ruiter — antiek en kunst</title>
 </head>
 
 <body>

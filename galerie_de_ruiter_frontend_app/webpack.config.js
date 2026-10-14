@@ -9,6 +9,10 @@ import Dotenv from "dotenv-webpack";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// The site's public origin. `scripts/generate-sitemap.mjs` builds the sitemap and the robots
+// `Sitemap:` line from it, and the social preview tags in index.html need absolute URLs.
+const siteUrl = (process.env.SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+
 export default {
   entry: "./src/index.tsx",
 
@@ -103,6 +107,8 @@ export default {
     }),
     new HtmlWebpackPlugin({
       template: "./index.html",
+      // The template turns this into the absolute URLs a crawler needs in the preview tags.
+      siteUrl,
     }),
     new MiniCssExtractPlugin({
       filename: "css/[name].[contenthash].css",

@@ -62,4 +62,17 @@
 .admin-coordinate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
 .language-setting { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
 .language-setting select { min-width: 14rem; padding: 0.5rem 0.7rem; border: 1px solid var(--theme-border); background: var(--theme-surface); color: var(--theme-text); }
+
+// About page editor: a formatting toolbar above the Markdown textarea with a live preview of
+// the story beside it. The tools are named in `aboutEditorLabels` for every language.
+.admin-form-page.about-admin-page { width: min(100%, 80rem); }
+.about-editor-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.about-editor-toolbar { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.5rem; }
+.admin-form-page .about-editor-tool { display: inline-flex; align-items: center; justify-content: center; width: 2.3rem; height: 2.3rem; padding: 0; border: 1px solid var(--theme-border); border-radius: 0.3rem; background: var(--theme-surface); color: var(--theme-text); cursor: pointer; transition: border-color 140ms ease, color 140ms ease, background 140ms ease; }
+.admin-form-page .about-editor-tool:hover, .admin-form-page .about-editor-tool:focus-visible { border-color: var(--theme-primary); background: var(--theme-background); color: var(--theme-primary); }
+.about-editor-input { min-height: 26rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9rem; line-height: 1.65; }
+.about-editor-hint { margin: 0.45rem 0 0; color: var(--theme-text-secondary); font-size: 0.82rem; }
+.about-editor-preview { padding: 1rem 1.25rem 1.5rem; border: 1px solid var(--theme-border); border-radius: 0.4rem; background: var(--theme-surface); }
+.about-editor-preview-label { display: inline-block; margin-bottom: 0.6rem; color: var(--theme-text-secondary); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+@media (max-width: 900px) { .about-editor-layout { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 640px) { .category-create-form { grid-template-columns: 1fr; } .admin-form-page { width: 100%; padding-inline: 0.75rem; } .admin-form-page .address-lookup { grid-template-columns: minmax(0, 1fr); } .inventory-toolbar { align-items: stretch; flex-direction: column; } .inventory-add-button { align-self: flex-start; } .admin-page .inventory-row { align-items: flex-start; flex-wrap: wrap; } .inventory-row-actions { width: 100%; justify-content: flex-end; } }

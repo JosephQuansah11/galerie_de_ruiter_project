@@ -2164,11 +2164,80 @@ const imageUploadLabels: Record<string, Record<string, string>> = {
   },
 };
 
+/**
+ * Labels for the About page's formatting toolbar. The gallery story is stored as Markdown,
+ * so the tools (bold, italic, headings, bullets, divider) are named in every language from
+ * one place; a language without its own copy falls back to English.
+ */
+const aboutEditorLabels: Record<string, Record<string, string>> = {
+  en: {
+    formattingTools: "Formatting tools",
+    formatBold: "Bold",
+    formatItalic: "Italic",
+    formatHeading1: "Heading 1",
+    formatHeading2: "Heading 2",
+    formatHeading3: "Heading 3",
+    formatList: "Bulleted list",
+    formatDivider: "Divider",
+    formattingHint: "Select text and pick a tool, or type Markdown directly: # headings, **bold**, *italic*, - bullets and --- dividers.",
+    preview: "Preview",
+  },
+  fr: {
+    formattingTools: "Outils de mise en forme",
+    formatBold: "Gras",
+    formatItalic: "Italique",
+    formatHeading1: "Titre 1",
+    formatHeading2: "Titre 2",
+    formatHeading3: "Titre 3",
+    formatList: "Liste à puces",
+    formatDivider: "Séparateur",
+    formattingHint: "Sélectionnez du texte et choisissez un outil, ou saisissez le Markdown directement : titres #, **gras**, *italique*, puces - et séparateurs ---.",
+    preview: "Aperçu",
+  },
+  "nl-NL": {
+    formattingTools: "Opmaakhulpmiddelen",
+    formatBold: "Vet",
+    formatItalic: "Cursief",
+    formatHeading1: "Kop 1",
+    formatHeading2: "Kop 2",
+    formatHeading3: "Kop 3",
+    formatList: "Opsomming",
+    formatDivider: "Scheidingslijn",
+    formattingHint: "Selecteer tekst en kies een hulpmiddel, of typ Markdown direct: # koppen, **vet**, *cursief*, - opsommingen en --- scheidingslijnen.",
+    preview: "Voorbeeld",
+  },
+  "nl-BE": {
+    formattingTools: "Opmaakhulpmiddelen",
+    formatBold: "Vet",
+    formatItalic: "Cursief",
+    formatHeading1: "Kop 1",
+    formatHeading2: "Kop 2",
+    formatHeading3: "Kop 3",
+    formatList: "Opsomming",
+    formatDivider: "Scheidingslijn",
+    formattingHint: "Selecteer tekst en kies een hulpmiddel, of typ Markdown direct: # koppen, **vet**, *cursief*, - opsommingen en --- scheidingslijnen.",
+    preview: "Voorbeeld",
+  },
+  de: {
+    formattingTools: "Formatierungswerkzeuge",
+    formatBold: "Fett",
+    formatItalic: "Kursiv",
+    formatHeading1: "Überschrift 1",
+    formatHeading2: "Überschrift 2",
+    formatHeading3: "Überschrift 3",
+    formatList: "Aufzählung",
+    formatDivider: "Trennlinie",
+    formattingHint: "Text markieren und ein Werkzeug wählen oder Markdown direkt eingeben: # Überschriften, **fett**, *kursiv*, - Aufzählungen und --- Trennlinien.",
+    preview: "Vorschau",
+  },
+};
+
 Object.entries(resources).forEach(([language, resource]) => {
   Object.assign(resource.translation, engagementLabels[language] ?? engagementLabels.en);
   Object.assign(resource.translation, chatAccessLabels[language] ?? chatAccessLabels.en);
   Object.assign(resource.translation, availabilityLabels[language] ?? availabilityLabels.en);
   Object.assign(resource.translation, imageUploadLabels[language] ?? imageUploadLabels.en);
+  Object.assign(resource.translation, aboutEditorLabels[language] ?? aboutEditorLabels.en);
 });
 
 void i18n

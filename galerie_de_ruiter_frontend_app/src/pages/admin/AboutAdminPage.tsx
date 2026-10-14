@@ -16,7 +16,7 @@ export default function AboutAdminPage() {
   }
 
   return (
-    <section className="admin-form-page">
+    <section className="admin-form-page about-admin-page">
       <Card>
         <Card.Header>{t("editAboutPage")}</Card.Header>
         <Card.Body>

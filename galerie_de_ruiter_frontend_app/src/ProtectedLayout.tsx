@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { Container } from "react-bootstrap";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "./context/AuthContext";
 import { CustomNav } from "@/components/Navigation";
+import { PageLoading } from "@/components/PageLoading";
 import { ShoppingProvider } from "./context/ShoppingContext";
 import { ProtectedRoutes } from "./ProtectedRoutes";
 
@@ -15,6 +17,9 @@ export function ProtectedLayout() {
   if (auth.loading) return <div className="loading-screen">{t("checkingSession")}</div>;
   return <Container className="container-div">
     <CustomNav />
-    <ShoppingProvider><main className="app-main main-content"><ProtectedRoutes /></main></ShoppingProvider>
+    {/* The navigation stays put while a page's own chunk arrives. */}
+    <ShoppingProvider><main className="app-main main-content">
+      <Suspense fallback={<PageLoading />}><ProtectedRoutes /></Suspense>
+    </main></ShoppingProvider>
   </Container>;
 }

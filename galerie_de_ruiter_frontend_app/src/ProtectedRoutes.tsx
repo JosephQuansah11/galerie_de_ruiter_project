@@ -1,22 +1,30 @@
+import { lazy } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "./context/AuthContext";
-import WelcomePage from "./pages/WelcomePage";
-import ChatPage from "./pages/ChatPage";
-import AboutPage from "./pages/AboutPage";
-import { ProfilePage } from "./pages/profile/ProfilePage";
-import { PreferencesPage } from "./pages/preferences/PreferencesPage";
-import AntiquesPage from "./pages/antiques/AntiquesPage";
-import AntiqueDetailPage from "./pages/antiques/AntiqueDetailPage";
-import AddNewAntique from "./pages/antiques/AddNewAntique";
-import AntiqueAdminPage from "./pages/admin/AntiqueAdminPage";
-import CategoryAdminPage from "./pages/admin/CategoryAdminPage";
-import LocationAdminPage from "./pages/admin/LocationAdminPage";
-import AboutAdminPage from "./pages/admin/AboutAdminPage";
-import HomeAdminPage from "./pages/admin/HomeAdminPage";
-import WishlistPage from "./pages/shopping/WishlistPage";
-import CartPage from "./pages/shopping/CartPage";
-import LocationPage from "./pages/LocationPage";
+
+/**
+ * Every page is fetched on demand. The shell and the landing page are what the first paint
+ * needs; the catalogue, the admin screens and the rest would otherwise all be parsed and
+ * executed before anything is on screen, which is what makes the first task on the main
+ * thread long. React.lazy needs a default export, hence the `.then` hop for named ones.
+ */
+const WelcomePage = lazy(() => import("./pages/WelcomePage"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const LocationPage = lazy(() => import("./pages/LocationPage"));
+const AntiquesPage = lazy(() => import("./pages/antiques/AntiquesPage"));
+const AntiqueDetailPage = lazy(() => import("./pages/antiques/AntiqueDetailPage"));
+const AddNewAntique = lazy(() => import("./pages/antiques/AddNewAntique"));
+const AntiqueAdminPage = lazy(() => import("./pages/admin/AntiqueAdminPage"));
+const CategoryAdminPage = lazy(() => import("./pages/admin/CategoryAdminPage"));
+const LocationAdminPage = lazy(() => import("./pages/admin/LocationAdminPage"));
+const AboutAdminPage = lazy(() => import("./pages/admin/AboutAdminPage"));
+const HomeAdminPage = lazy(() => import("./pages/admin/HomeAdminPage"));
+const WishlistPage = lazy(() => import("./pages/shopping/WishlistPage"));
+const CartPage = lazy(() => import("./pages/shopping/CartPage"));
+const ProfilePage = lazy(() => import("./pages/profile/ProfilePage").then((module) => ({ default: module.ProfilePage })));
+const PreferencesPage = lazy(() => import("./pages/preferences/PreferencesPage").then((module) => ({ default: module.PreferencesPage })));
 
 /**
  * Everything behind an account. The dashboard and the concierge chat sit deliberately outside

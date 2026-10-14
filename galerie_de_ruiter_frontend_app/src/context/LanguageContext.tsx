@@ -4,7 +4,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import i18n from "@/i18n";
+import i18n, { ensureLanguage } from "@/i18n";
 import { languages } from "./languageOptions";
 import { LanguageContext } from "./languageContextCore";
 export { useLanguage } from "./languageContextCore";
@@ -36,7 +36,9 @@ export function LanguageProvider({
   useEffect(() => {
     localStorage.setItem("galerie-language", language);
     document.documentElement.lang = selected.locale;
-    void i18n.changeLanguage(language);
+    // A language that is not in the main bundle has to arrive before the switch, otherwise the
+    // page would briefly read in the fallback language.
+    void ensureLanguage(language).finally(() => void i18n.changeLanguage(language));
   }, [language, selected.locale]);
 
   const setLanguage = (nextLanguage: LanguageCode) =>

@@ -29,6 +29,7 @@
 .auth-page .auth-aside > span { display: block; margin-bottom: 0.65rem; color: #ead6c9; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; }
 .auth-page .auth-aside strong { display: block; font: 400 1.8rem Georgia, serif; }
 .auth-page .auth-aside p { margin: 0.6rem 0 0; color: #ead6c9; line-height: 1.6; }
+.auth-page .auth-panel .auth-notice { padding: 0.7rem 0.9rem; border-left: 3px solid var(--theme-primary); background: var(--theme-background); color: var(--theme-text); font-weight: 600; }
 
 form {
   margin: 0;

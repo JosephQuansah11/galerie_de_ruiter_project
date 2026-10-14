@@ -210,6 +210,7 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       themeBlush: "Rose poudré",
       loginIntro:
         "Entrez dans une collection réfléchie d'antiquités, d'art et de pièces de design choisies pour leur prochain chapitre.",
+      signInRequired: "Cette partie de la galerie demande un compte. Connectez-vous pour continuer.",
       objectsWorthReturning: "Des objets auxquels on revient.",
       loginAsideText:
         "Sauvegardez des pièces, organisez une visite et gardez la conversation avec la galerie à portée de main.",
@@ -623,6 +624,7 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       themeBlush: "Blush",
       loginIntro:
         "Betreed een doordachte collectie van antiek, kunst en designstukken gekozen voor hun volgende hoofdstuk.",
+      signInRequired: "Dit deel van de galerie vraagt een account. Meld je aan om verder te gaan.",
       objectsWorthReturning: "Objecten om naar terug te keren.",
       loginAsideText:
         "Bewaar stukken, plan een bezoek en houd het gesprek met de galerie dichtbij.",
@@ -1034,6 +1036,7 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       themeRosePaper: "Rosenpapier",
       themeOxblood: "Ochsenblutrot",
       themeBlush: "Puderrosa",
+      signInRequired: "Dieser Teil der Galerie erfordert ein Konto. Melden Sie sich an, um fortzufahren.",
       loginIntro:
         "Betreten Sie eine sorgfältig ausgewählte Kollektion von Antiquitäten, Kunst und Designstücken für ihr nächstes Kapitel.",
       objectsWorthReturning: "Objekte, zu denen man zurückkehrt.",

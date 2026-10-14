@@ -32,6 +32,7 @@ const mockedCategories = getVisibleCategories as jest.Mock;
 
 beforeEach(() => {
   mockAuth.isAdmin = true;
+  mockAuth.authenticated = true;
   mockedCategories.mockResolvedValue([
     { id: "c1", name: "Mirrors", visible: true, itemCount: 2, children: [] },
   ]);
@@ -62,6 +63,19 @@ describe("Gallery navigation", () => {
     expect(screen.getByRole("link", { name: new RegExp(i18n.t("cart"), "i") })).toHaveAttribute("href", "/cart");
     expect(screen.getByRole("link", { name: new RegExp(i18n.t("navGalleryChat"), "i") })).toHaveAttribute("href", "/dashboard/chat");
     expect(screen.getByRole("link", { name: new RegExp(i18n.t("navAbout"), "i") })).toHaveAttribute("href", "/about");
+  });
+
+  it("offers a visitor the pages that need no account, and nothing else", async () => {
+    mockAuth.authenticated = false;
+    mockAuth.isAdmin = false;
+    renderPage(<CustomNav />, { auth: false });
+    await flushPromises();
+
+    expect(screen.getByRole("link", { name: new RegExp(i18n.t("navAbout"), "i") })).toHaveAttribute("href", "/about");
+    expect(screen.getByRole("link", { name: new RegExp(i18n.t("location"), "i") })).toHaveAttribute("href", "/map");
+    // Acting on the collection needs an account, so those links are not offered at all.
+    expect(screen.queryByRole("link", { name: new RegExp(i18n.t("wishlist"), "i") })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: new RegExp(i18n.t("cart"), "i") })).not.toBeInTheDocument();
   });
 
   it("keeps the administration links away from visitors", async () => {

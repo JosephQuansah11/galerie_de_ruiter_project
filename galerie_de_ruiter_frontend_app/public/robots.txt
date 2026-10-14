@@ -1,17 +1,16 @@
 # https://www.robotstxt.org/robotstxt.html
 #
 # Everything behind an account is closed to crawlers: those routes answer with the sign-in
-# page, so crawling them only spends the crawl budget. The pages a visitor can reach without
-# an account are the landing page and the concierge chat; those are the ones listed in
-# sitemap.xml, whose URL is appended below at build time by scripts/generate-sitemap.mjs.
+# page, so crawling them only spends the crawl budget. What a visitor reaches without an
+# account - the landing page, the gallery story, the pop-up's address and the concierge chat -
+# is listed in sitemap.xml, whose URL is appended below at build time by
+# scripts/generate-sitemap.mjs.
 #
-# When the collection opens to visitors, drop the /antiques and /about lines and add the
-# pieces to the sitemap.
+# When the collection opens to visitors, drop the /antiques line and add the pieces to the
+# sitemap.
 User-agent: *
 Disallow: /admin
 Disallow: /antiques
-Disallow: /about
-Disallow: /map
 Disallow: /cart
 Disallow: /wishlist
 Disallow: /profile

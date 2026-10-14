@@ -46,13 +46,21 @@ The app is one HTML page, so what a crawler can reach is decided in three places
 - **`src/hooks/usePageMeta.ts`** — every page sets its own `<title>`, `<meta name="description">`,
   `<link rel="canonical">` and Open Graph tags. Pages call it with their own translated copy;
   the strings live in `pageMetaLabels` in `src/i18n.ts`.
-- **`public/robots.txt`** — everything behind an account (`/admin`, `/antiques`, `/about`,
-  `/map`, `/cart`, `/wishlist`, `/profile`, `/preferences`) is closed to crawlers, because
-  those routes answer with the sign-in page. `/login` and `/register` stay crawlable on
-  purpose: they carry a `noindex` tag and a crawler that may not fetch them never sees it.
+- **`public/robots.txt`** — everything that answers with the sign-in page (`/admin`, `/antiques`,
+  `/cart`, `/wishlist`, `/profile`, `/preferences`) is closed to crawlers. `/login` and
+  `/register` stay crawlable on purpose: they carry a `noindex` tag and a crawler that may not
+  fetch them never sees it.
 - **`scripts/generate-sitemap.mjs`** — runs after webpack (`npm run build`) and writes
   `dist/sitemap.xml` plus the absolute `Sitemap:` line in `dist/robots.txt`. It lists the pages
-  a visitor reaches without an account: `/dashboard` and `/dashboard/chat`.
+  a visitor reaches without an account: `/dashboard`, `/about`, `/map` and `/dashboard/chat`.
+
+**What a visitor may do.** The landing page, the gallery story, the pop-up's address and the
+concierge chat are readable without an account, and they are the pages a crawler may index.
+Acting on the collection is what needs one: `/antiques`, the wishlist, the cart and the profile
+screens sit behind `RequireAccount` in `src/ProtectedRoutes.tsx`, which sends the visitor to the
+sign-in page with the page they wanted, and the sign-in page says why (`signInRequired`). The
+navigation follows the same line: `src/components/NavigationLinks.tsx` shows a visitor the three
+public destinations and hides the rest rather than offering a link that only bounces them.
 
 The site's public origin lives in `site.config.mjs`, in one place, because two build steps need
 it: the sitemap (and the `Sitemap:` line in `robots.txt`) and the absolute `og:url`/`og:image`
@@ -86,22 +94,24 @@ curl -s https://galeriederuiter.cloud-ip.cc/robots.txt
 
 Both should name the public origin. Then, in Search Console, submit
 `https://galeriederuiter.cloud-ip.cc/sitemap.xml` under *Sitemaps*, and use *URL inspection* →
-*Request indexing* for `/dashboard` and `/dashboard/chat`.
+*Request indexing* for `/dashboard`, `/about` and `/map`.
 
-Those two are the only pages that can be indexed. Every other route needs an account and answers
-with the sign-in page, which carries `noindex`, so a crawler that follows `/antiques` or `/about`
-finds the login page and leaves; `robots.txt` closes those paths so it does not spend the crawl
-budget finding that out. Indexing the collection itself means making it readable without an
-account - the note below says how.
+Those are the pages that can be indexed. Everything else needs an account and answers with the
+sign-in page, which carries `noindex`, so a crawler that follows `/antiques` finds the login page
+and leaves; `robots.txt` closes those paths so it does not spend the crawl budget finding that
+out. Indexing the collection itself means making it readable without an account - the note below
+says how.
 
 The host is a free `cloud-ip.cc` subdomain. Search engines give such hostnames less weight than
 a domain you own, and the provider can reassign one, so a custom domain is the durable answer;
 nothing in the build depends on which one it is, because `site.config.mjs` is the only place that
 names it.
 
-When the collection opens to visitors, remove the `/antiques` and `/about` lines from
-`robots.txt` and add the pieces to `publicPages` in the sitemap script (the API's
-`GET /api/antiques` lists them, so the script can fetch them at build time).
+When the collection opens to visitors, remove the `/antiques` line from `robots.txt`, drop
+`/antiques` from the `RequireAccount` group in `src/ProtectedRoutes.tsx` and add the pieces to
+`publicPages` in the sitemap script (the API's `GET /api/antiques` lists them, so the script can
+fetch them at build time). The API already answers `GET /api/antiques` without a token, so this
+is a frontend decision, not a backend one.
 
 ## Stylesheets
 

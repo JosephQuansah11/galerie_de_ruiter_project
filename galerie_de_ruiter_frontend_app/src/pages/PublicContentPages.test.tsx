@@ -48,6 +48,13 @@ describe("About page", () => {
 
     expect(await screen.findByText(i18n.t("aboutLoadError"))).toBeInTheDocument();
   });
+
+  it("names itself in the head, because a visitor and a crawler both reach it", async () => {
+    renderPage(<AboutPage />, { auth: false });
+
+    expect(document.title).toBe(i18n.t("metaAboutTitle"));
+    expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute("href", expect.stringContaining("/about"));
+  });
 });
 
 describe("Location page", () => {
@@ -58,5 +65,20 @@ describe("Location page", () => {
     expect(screen.getByText("Thursday to Sunday, 11:00 - 18:00")).toBeInTheDocument();
     expect(screen.getByTitle(i18n.t("locationMapTitle"))).toBeInTheDocument();
     expect(screen.getByRole("link", { name: new RegExp(i18n.t("openInMap"), "i") })).toHaveAttribute("href", expect.stringContaining("openstreetmap.org"));
+  });
+
+  it("names itself in the head, because a visitor and a crawler both reach it", async () => {
+    renderPage(<LocationPage />, { auth: false });
+
+    expect(document.title).toBe(i18n.t("metaMapTitle"));
+    expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute("href", expect.stringContaining("/map"));
+  });
+
+  it("says so when the gallery cannot be reached, instead of loading forever", async () => {
+    mockedLocation.mockRejectedValueOnce(new Error("offline"));
+
+    renderPage(<LocationPage />, { auth: false });
+
+    expect(await screen.findByText(i18n.t("locationCouldNotLoad"))).toBeInTheDocument();
   });
 });

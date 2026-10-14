@@ -2,17 +2,28 @@ import { useEffect, useState } from "react";
 import { Clock3, MapPin } from "lucide-react";
 import { getStoreLocation, type StoreLocation } from "@/apis/backend_api";
 import { useLanguage } from "@/context/LanguageContext";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { subscribeToContentUpdates } from "@/services/contentUpdates";
 import { LocationMap } from "./location/LocationMap";
 
 export default function LocationPage() {
   const [location, setLocation] = useState<StoreLocation>();
+  const [error, setError] = useState(false);
   const { t } = useLanguage();
+  // The page is open to visitors and listed in the sitemap, so it names itself in the head.
+  usePageMeta({ title: t("metaMapTitle"), description: t("metaMapDescription"), canonicalPath: "/map" });
   useEffect(() => {
     let active = true;
     const loadLocation = () => {
       getStoreLocation().then((value) => {
-        if (active) setLocation(value);
+        if (active) {
+          setLocation(value);
+          setError(false);
+        }
+      }).catch(() => {
+        // The page is open to visitors, so a gallery that cannot be reached has to say so
+        // instead of leaving the address loading forever.
+        if (active) setError(true);
       });
     };
     loadLocation();
@@ -22,6 +33,8 @@ export default function LocationPage() {
       unsubscribe();
     };
   }, []);
+  if (error)
+    return <div className="catalogue-state">{t("locationCouldNotLoad")}</div>;
   if (!location)
     return <div className="catalogue-state">{t("loadingLocation")}</div>;
   return (

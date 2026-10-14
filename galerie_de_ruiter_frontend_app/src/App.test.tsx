@@ -16,6 +16,25 @@ describe("App shell", () => {
 
     expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent(i18n.t("welcomeBack"));
     expect(screen.getByRole("button", { name: new RegExp(i18n.t("continueKeycloak"), "i") })).toBeInTheDocument();
+    // Nobody asked for anything behind an account, so there is nothing to explain.
+    expect(screen.queryByText(i18n.t("signInRequired"))).not.toBeInTheDocument();
+  });
+
+  it("lets a visitor read the gallery story", async () => {
+    window.history.pushState({}, "", "/about");
+    renderPage(<App />, { auth: false, router: false });
+
+    // The page itself, not the sign-in redirect: it is loading the story from the gallery.
+    expect(await screen.findByText(i18n.t("aboutLoading"))).toBeInTheDocument();
+    expect(screen.queryByText(i18n.t("welcomeBack"))).not.toBeInTheDocument();
+  });
+
+  it("lets a visitor find the pop-up", async () => {
+    window.history.pushState({}, "", "/map");
+    renderPage(<App />, { auth: false, router: false });
+
+    expect(await screen.findByText(i18n.t("loadingLocation"))).toBeInTheDocument();
+    expect(screen.queryByText(i18n.t("welcomeBack"))).not.toBeInTheDocument();
   });
 
   it("shows a visitor the dashboard", async () => {
@@ -37,13 +56,15 @@ describe("App shell", () => {
     expect(screen.getByRole("link", { name: i18n.t("chatWhatsappSignIn") })).toBeInTheDocument();
   });
 
-  it.each(["/about", "/antiques", "/wishlist", "/profile"])(
+  it.each(["/antiques", "/antiques/123", "/wishlist", "/cart", "/profile", "/preferences", "/admin/antiques"])(
     "sends a visitor who opens %s to the sign-in page",
     async (route) => {
       window.history.pushState({}, "", route);
       renderPage(<App />, { auth: false, router: false });
 
       expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent(i18n.t("welcomeBack"));
+      // Acting on the collection needs an account, and the page says so instead of looking broken.
+      expect(screen.getByText(i18n.t("signInRequired"))).toBeInTheDocument();
     },
   );
 });

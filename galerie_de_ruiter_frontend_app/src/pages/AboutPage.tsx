@@ -5,10 +5,13 @@ import { Clock3, MapPin } from "lucide-react";
 import { getAboutContent, getStoreLocation, type StoreLocation } from "@/apis/backend_api";
 import { subscribeToContentUpdates } from "@/services/contentUpdates";
 import { useTranslation } from "react-i18next";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { renderAboutContent } from "./about/renderAboutContent";
 
 export default function AboutPage() {
   const { t } = useTranslation();
+  // The page is open to visitors and listed in the sitemap, so it names itself in the head.
+  usePageMeta({ title: t("metaAboutTitle"), description: t("metaAboutDescription"), canonicalPath: "/about" });
   const [content, setContent] = useState<string>();
   const [location, setLocation] = useState<StoreLocation>();
   const [error, setError] = useState(false);

@@ -17,13 +17,13 @@ export function NavigationLinks({ onNavigate }: { onNavigate: () => void }) {
   const { isAdmin, authenticated } = useAuth();
     const [categories, setCategories] = useState<Category[]>([]);
     const [categoryError, setCategoryError] = useState(false);
-  // A visitor can reach the concierge chat and the gallery story without an account.
+  // A visitor can read the gallery story, find the pop-up and talk to the concierge without an
+  // account; what needs one is acting on the collection, so those links stay hidden.
   const visitorLinks: LinkItem[] = [
     { href: "/dashboard/chat", icon: MessageCircle, translationKey: "navGalleryChat" },
     { href: "/about", icon: BookOpen, translationKey: "navAbout" },
+    { href: "/map", icon: Map, translationKey: "location" },
   ];
-  // Everything else is behind an account, so a visitor is not shown a link that only bounces
-  // them to the sign-in page.
   const memberLinks: LinkItem[] = [
     { href: "/wishlist", icon: Heart, translationKey: "wishlist" },
     { href: "/cart", icon: ShoppingBag, translationKey: "cart" },
@@ -37,9 +37,7 @@ export function NavigationLinks({ onNavigate }: { onNavigate: () => void }) {
         { href: "/admin/home", icon: Home, translationKey: "navEditHome" },
         { href: "/admin/about", icon: BookOpen, translationKey: "navEditAbout" },
       ]
-    : authenticated
-      ? [{ href: "/map", icon: Map, translationKey: "location" }]
-      : [];
+    : [];
 
   useEffect(() => {
     if (!authenticated) return;

@@ -10,13 +10,15 @@ export function LoginPage() {
   const { t } = useLanguage()
   // The sign-in page has nothing to offer a search result, so it stays out of the index.
   usePageMeta({ title: t("metaLoginTitle"), canonicalPath: "/login", noindex: true })
-  // The guard sends the visitor here with the page they wanted, so sign-in returns to it.
+  // The guard sends the visitor here with the page they wanted, so sign-in returns to it. That
+  // page is also the reason the visitor is here at all, which the notice spells out.
   const requestedPath = (useLocation().state as { from?: string } | null)?.from
   return <div className="page auth-page">
   <div className="auth-panel">
   <div className="eyebrow">{t("galleryName")}</div>
   <h1>{t("welcomeBack")}</h1>
   <p>{t("loginIntro")}</p>
+  {requestedPath && <p className="auth-notice">{t("signInRequired")}</p>}
   <Button className="primary-button" onClick={() => auth.login(requestedPath)}>
   <LogIn size={26} />{t("continueKeycloak")}
   </Button>

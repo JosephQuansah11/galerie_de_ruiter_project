@@ -27,8 +27,10 @@ const ProfilePage = lazy(() => import("./pages/profile/ProfilePage").then((modul
 const PreferencesPage = lazy(() => import("./pages/preferences/PreferencesPage").then((module) => ({ default: module.PreferencesPage })));
 
 /**
- * Everything behind an account. The dashboard and the concierge chat sit deliberately outside
- * this guard, so a visitor can see the gallery and talk to the assistant before signing in.
+ * Everything behind an account. The dashboard, the concierge chat, the gallery story and the
+ * pop-up's address sit deliberately outside this guard, so a visitor can read the gallery before
+ * signing in. What an account buys is acting on it: the catalogue, the wishlist, the cart and
+ * the profile screens all land here.
  */
 function RequireAccount() {
   const auth = useAuth();
@@ -42,9 +44,12 @@ function RequireAccount() {
 
 export function ProtectedRoutes() {
   return <Routes>
-    {/* Open to visitors without an account. */}
+    {/* Open to visitors without an account: the story of the gallery, where it is and the
+        landing page. Interacting with the collection is what asks for a sign-in. */}
     <Route path="/dashboard" element={<WelcomePage />} />
     <Route path="/dashboard/chat" element={<ChatPage />} />
+    <Route path="/about" element={<AboutPage />} />
+    <Route path="/map" element={<LocationPage />} />
 
     {/* Everything else needs a signed-in visitor. */}
     <Route element={<RequireAccount />}>
@@ -60,8 +65,6 @@ export function ProtectedRoutes() {
       <Route path="/admin/home" element={<HomeAdminPage />} />
       <Route path="/wishlist" element={<WishlistPage />} />
       <Route path="/cart" element={<CartPage />} />
-      <Route path="/map" element={<LocationPage />} />
-      <Route path="/about" element={<AboutPage />} />
     </Route>
 
     <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { addAntique, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
 import type { AntiqueForm } from "@/models/antiques/Antique";
 import { publishContentUpdate } from "@/services/contentUpdates";
@@ -8,9 +8,12 @@ import { isUploadableModel } from "./modelUploadLimits";
 type Draft = Omit<AntiqueForm, "price"> & { price: string };
 const empty: Draft = { title: "", artistId: "", description: "", price: "", categoryId: "", modelUrl: "" };
 
+/** A photograph the admin picked, paired with an object URL used for its preview. */
+export type DraftImage = { id: string; file: File; url: string };
+
 export function useNewAntiqueDraft(openAntique: (id: string) => void) {
   const [form, setForm] = useState(empty);
-  const [files, setFiles] = useState<File[]>([]);
+  const [images, setImages] = useState<DraftImage[]>([]);
   const [modelFile, setModelFile] = useState<File>();
   const [modelFileInvalid, setModelFileInvalid] = useState(false);
   const [modelUploaded, setModelUploaded] = useState(false);
@@ -18,11 +21,34 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
   const [uploadedFileCount, setUploadedFileCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string>();
+  const nextImageId = useRef(0);
+  // Preview thumbnails are object URLs, so they are released when an image is removed or
+  // when the page goes away instead of leaking for the life of the tab.
+  const imagesRef = useRef<DraftImage[]>([]);
+  imagesRef.current = images;
+  useEffect(() => () => {
+    imagesRef.current.forEach((image) => URL.revokeObjectURL(image.url));
+  }, []);
+  const files = images.map((image) => image.file);
   const update = (field: keyof Draft, value: string) => setForm((current) => ({ ...current, [field]: value }));
+  // Every pick is appended, so the gallery can add photographs a few at a time instead of
+  // replacing the whole selection each time.
   const selectImages = (input: FileList | null) => {
     const selected = Array.from(input ?? []);
+    if (selected.length === 0) return;
     if (selected.some((file) => !file.type.startsWith("image/"))) return setMessage("pleaseChooseImage");
-    setFiles(selected); setMessage(undefined);
+    const added = selected.map((file) => {
+      nextImageId.current += 1;
+      return { id: `image-${nextImageId.current}`, file, url: URL.createObjectURL(file) };
+    });
+    setImages((current) => [...current, ...added]);
+    setMessage(undefined);
+  };
+  const removeImage = (id: string) => {
+    const target = imagesRef.current.find((image) => image.id === id);
+    if (target) URL.revokeObjectURL(target.url);
+    setImages((current) => current.filter((image) => image.id !== id));
+    setMessage(undefined);
   };
   const selectModelFile = (input: FileList | null) => {
     const selected = input?.[0];
@@ -88,6 +114,6 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
     openAntique(antiqueId);
     setSaving(false);
   };
-  return { form, update, files, fileNames: files.map((file) => file.name), modelFileName: modelFile?.name,
+  return { form, update, images, removeImage, modelFileName: modelFile?.name,
     modelFileInvalid, createdId, saving, message, setMessage, selectImages, selectModelFile, submit };
 }

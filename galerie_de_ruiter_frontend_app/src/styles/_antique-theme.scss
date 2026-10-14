@@ -366,6 +366,70 @@ hr,
   box-shadow: var(--theme-shadow);
 }
 
+// Multi-image upload: a strip of mounted thumbnails that appears as photographs are picked,
+// each with a remove control so a mistake can be corrected before the piece is saved.
+.antique-image-previews {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: 0.75rem;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.antique-image-preview {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--theme-radius-sm);
+  border: 1px solid var(--theme-hairline);
+  background-image: linear-gradient(160deg, #fcf9f4, #efe3d7);
+  box-shadow: var(--theme-frame);
+}
+
+.antique-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.antique-image-position {
+  position: absolute;
+  left: 0.35rem;
+  bottom: 0.35rem;
+  min-width: 1.4rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(20, 12, 14, 0.62);
+  color: #fffaf7;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.antique-image-remove {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(20, 12, 14, 0.62);
+  color: #fffaf7;
+  cursor: pointer;
+}
+
+.antique-image-remove:hover,
+.antique-image-remove:focus-visible {
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+}
+
 .catalogue-card:hover {
   border-color: var(--theme-gold-soft);
   box-shadow: var(--theme-shadow), inset 0 0 0 1px var(--theme-gold-soft);

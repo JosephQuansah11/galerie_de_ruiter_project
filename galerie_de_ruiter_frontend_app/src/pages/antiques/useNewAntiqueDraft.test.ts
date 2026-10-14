@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import type { FormEvent } from "react";
-import { addAntique, uploadAntiqueModel } from "@/apis/backend_api";
+import { addAntique, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 import { useNewAntiqueDraft } from "./useNewAntiqueDraft";
 import { MODEL_MAX_SIZE_BYTES } from "./modelUploadLimits";
@@ -13,6 +13,7 @@ jest.mock("@/apis/backend_api", () => ({
 jest.mock("@/services/contentUpdates", () => ({ publishContentUpdate: jest.fn() }));
 
 const addAntiqueMock = addAntique as jest.MockedFunction<typeof addAntique>;
+const uploadImageMock = uploadAntiqueImage as jest.MockedFunction<typeof uploadAntiqueImage>;
 const uploadModelMock = uploadAntiqueModel as jest.MockedFunction<typeof uploadAntiqueModel>;
 
 const antique = (id: string) => ({ id } as unknown as Antique);
@@ -26,6 +27,22 @@ function glbFile(sizeBytes: number, name = "model.glb"): File {
 }
 
 const fileList = (file: File) => ({ 0: file, length: 1, item: () => file }) as unknown as FileList;
+
+/** An image file for the multi-image selection. */
+function imageFile(name: string): File {
+  return new File([new Uint8Array(1)], name, { type: "image/jpeg" });
+}
+
+/** A FileList the picker would hand over for several chosen files. */
+function fileListOf(...files: File[]): FileList {
+  const list: { length: number; item: (index: number) => File | null; [Symbol.iterator]: () => Iterator<File>; [index: number]: File } = {
+    length: files.length,
+    item: (index: number) => files[index] ?? null,
+    [Symbol.iterator]: () => files[Symbol.iterator](),
+  };
+  files.forEach((file, index) => { list[index] = file; });
+  return list as unknown as FileList;
+}
 
 /** Mirrors an axios HTTP failure so the hook's status handling can be exercised. */
 function httpError(status: number) {
@@ -89,5 +106,51 @@ describe("useNewAntiqueDraft model upload", () => {
 
     expect(result.current.message).toBeUndefined();
     expect(openAntique).toHaveBeenCalledWith("antique-1");
+  });
+});
+
+describe("useNewAntiqueDraft image selection", () => {
+  it("appends each pick instead of replacing the selection", () => {
+    const { result } = renderHook(() => useNewAntiqueDraft(jest.fn()));
+
+    act(() => result.current.selectImages(fileListOf(imageFile("front.jpg"), imageFile("back.jpg"))));
+    act(() => result.current.selectImages(fileListOf(imageFile("detail.jpg"))));
+
+    expect(result.current.images.map((image) => image.file.name)).toEqual(["front.jpg", "back.jpg", "detail.jpg"]);
+    // Each preview gets its own object URL so the thumbnails can be shown right away.
+    expect(result.current.images.every((image) => image.url.length > 0)).toBe(true);
+  });
+
+  it("rejects a file that is not an image and keeps the current selection", () => {
+    const { result } = renderHook(() => useNewAntiqueDraft(jest.fn()));
+
+    act(() => result.current.selectImages(fileListOf(imageFile("front.jpg"))));
+    act(() => result.current.selectImages(fileListOf(new File([new Uint8Array(1)], "notes.pdf", { type: "application/pdf" }))));
+
+    expect(result.current.images.map((image) => image.file.name)).toEqual(["front.jpg"]);
+    expect(result.current.message).toBe("pleaseChooseImage");
+  });
+
+  it("removes one image without touching the others", () => {
+    const { result } = renderHook(() => useNewAntiqueDraft(jest.fn()));
+    act(() => result.current.selectImages(fileListOf(imageFile("front.jpg"), imageFile("back.jpg"))));
+
+    const [first] = result.current.images;
+    act(() => result.current.removeImage(first.id));
+
+    expect(result.current.images.map((image) => image.file.name)).toEqual(["back.jpg"]);
+  });
+
+  it("uploads every selected image once the piece is saved", async () => {
+    uploadImageMock.mockResolvedValue(undefined);
+    const { result } = renderHook(() => useNewAntiqueDraft(jest.fn()));
+    act(() => result.current.selectImages(fileListOf(imageFile("front.jpg"), imageFile("back.jpg"))));
+
+    await act(async () => {
+      await result.current.submit(submitEvent);
+    });
+
+    expect(uploadImageMock).toHaveBeenCalledTimes(2);
+    expect(uploadImageMock.mock.calls.map((call) => (call[1] as File).name)).toEqual(["front.jpg", "back.jpg"]);
   });
 });

@@ -2120,10 +2120,40 @@ const availabilityLabels: Record<string, Record<string, string>> = {
     chatStatusOnline: "Assistente online", chatStatusChecking: "A verificar o assistente…", chatStatusOffline: "Assistente offline" },
 };
 
+/**
+ * Multi-image upload labels. An admin can add several photographs at once, see a thumbnail
+ * of each one and remove a mistake before saving. Merged from one place like the blocks
+ * above so every language stays in step; a language without its own copy falls back to
+ * English.
+ */
+const imageUploadLabels: Record<string, Record<string, string>> = {
+  en: {
+    selectedImageCount: "{{count}} image(s) ready to upload",
+    removeImage: "Remove {{name}}",
+  },
+  fr: {
+    selectedImageCount: "{{count}} image(s) prête(s) à téléverser",
+    removeImage: "Supprimer {{name}}",
+  },
+  "nl-NL": {
+    selectedImageCount: "{{count}} afbeelding(en) klaar om te uploaden",
+    removeImage: "{{name}} verwijderen",
+  },
+  "nl-BE": {
+    selectedImageCount: "{{count}} afbeelding(en) klaar om te uploaden",
+    removeImage: "{{name}} verwijderen",
+  },
+  de: {
+    selectedImageCount: "{{count}} Bild(er) bereit zum Hochladen",
+    removeImage: "{{name}} entfernen",
+  },
+};
+
 Object.entries(resources).forEach(([language, resource]) => {
   Object.assign(resource.translation, engagementLabels[language] ?? engagementLabels.en);
   Object.assign(resource.translation, chatAccessLabels[language] ?? chatAccessLabels.en);
   Object.assign(resource.translation, availabilityLabels[language] ?? availabilityLabels.en);
+  Object.assign(resource.translation, imageUploadLabels[language] ?? imageUploadLabels.en);
 });
 
 void i18n

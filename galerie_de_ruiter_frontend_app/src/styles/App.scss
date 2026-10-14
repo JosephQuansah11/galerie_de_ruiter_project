@@ -650,7 +650,14 @@ main {
   display: flex;
   flex: 0 0 clamp(11rem, 22vw, 15rem);
   flex-direction: column;
+  // The card stacks image, title and price. `align-items: stretch` keeps every row as wide as
+  // the card — without it the title keeps its full, unbroken width and paints over the card
+  // next to it — and `overflow: hidden` is the backstop that keeps the card's edges clean.
+  align-items: stretch;
+  justify-content: flex-start;
   gap: 0.4rem;
+  min-width: 0;
+  overflow: hidden;
   padding: 0.55rem;
   border: 1px solid var(--theme-border);
   background: var(--theme-surface);
@@ -678,10 +685,17 @@ main {
   object-fit: contain;
 }
 .detail-related-name {
+  // The title is clamped to two lines so a long piece name stays inside the card instead of
+  // running past its right edge. Same pattern as the inventory description preview.
+  display: -webkit-box;
   overflow: hidden;
+  width: 100%;
+  min-width: 0;
   font: 1.05rem Georgia, serif;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .detail-related-price {
   color: var(--theme-primary);

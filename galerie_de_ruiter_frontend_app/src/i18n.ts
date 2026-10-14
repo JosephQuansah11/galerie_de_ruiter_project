@@ -2133,6 +2133,9 @@ const imageUploadLabels: Record<string, Record<string, string>> = {
     removeImageNumber: "Remove image {{number}}",
     editAntiqueImages: "Photos",
     newPhoto: "New",
+    moveImageEarlier: "Move image {{number}} earlier",
+    moveImageLater: "Move image {{number}} later",
+    imageNumber: "{{number}} / {{total}}",
   },
   fr: {
     selectedImageCount: "{{count}} image(s) prête(s) à téléverser",
@@ -2140,6 +2143,9 @@ const imageUploadLabels: Record<string, Record<string, string>> = {
     removeImageNumber: "Supprimer l'image {{number}}",
     editAntiqueImages: "Photos",
     newPhoto: "Nouveau",
+    moveImageEarlier: "Déplacer l'image {{number}} vers la gauche",
+    moveImageLater: "Déplacer l'image {{number}} vers la droite",
+    imageNumber: "{{number}} / {{total}}",
   },
   "nl-NL": {
     selectedImageCount: "{{count}} afbeelding(en) klaar om te uploaden",
@@ -2147,6 +2153,9 @@ const imageUploadLabels: Record<string, Record<string, string>> = {
     removeImageNumber: "Afbeelding {{number}} verwijderen",
     editAntiqueImages: "Foto's",
     newPhoto: "Nieuw",
+    moveImageEarlier: "Afbeelding {{number}} naar links verplaatsen",
+    moveImageLater: "Afbeelding {{number}} naar rechts verplaatsen",
+    imageNumber: "{{number}} / {{total}}",
   },
   "nl-BE": {
     selectedImageCount: "{{count}} afbeelding(en) klaar om te uploaden",
@@ -2154,6 +2163,9 @@ const imageUploadLabels: Record<string, Record<string, string>> = {
     removeImageNumber: "Afbeelding {{number}} verwijderen",
     editAntiqueImages: "Foto's",
     newPhoto: "Nieuw",
+    moveImageEarlier: "Afbeelding {{number}} naar links verplaatsen",
+    moveImageLater: "Afbeelding {{number}} naar rechts verplaatsen",
+    imageNumber: "{{number}} / {{total}}",
   },
   de: {
     selectedImageCount: "{{count}} Bild(er) bereit zum Hochladen",
@@ -2161,6 +2173,9 @@ const imageUploadLabels: Record<string, Record<string, string>> = {
     removeImageNumber: "Bild {{number}} entfernen",
     editAntiqueImages: "Fotos",
     newPhoto: "Neu",
+    moveImageEarlier: "Bild {{number}} nach links verschieben",
+    moveImageLater: "Bild {{number}} nach rechts verschieben",
+    imageNumber: "{{number}} / {{total}}",
   },
 };
 
@@ -2237,12 +2252,25 @@ const aboutEditorLabels: Record<string, Record<string, string>> = {
   },
 };
 
+/**
+ * Catalogue paging labels: how many pieces a page shows and how to step through the pages.
+ * Merged from one place like the blocks above so every language stays in step.
+ */
+const cataloguePagingLabels: Record<string, Record<string, string>> = {
+  en: { itemsPerPage: "Per page", pageOf: "Page {{page}} of {{pages}}", previousPage: "Previous page", nextPage: "Next page" },
+  fr: { itemsPerPage: "Par page", pageOf: "Page {{page}} sur {{pages}}", previousPage: "Page précédente", nextPage: "Page suivante" },
+  "nl-NL": { itemsPerPage: "Per pagina", pageOf: "Pagina {{page}} van {{pages}}", previousPage: "Vorige pagina", nextPage: "Volgende pagina" },
+  "nl-BE": { itemsPerPage: "Per pagina", pageOf: "Pagina {{page}} van {{pages}}", previousPage: "Vorige pagina", nextPage: "Volgende pagina" },
+  de: { itemsPerPage: "Pro Seite", pageOf: "Seite {{page}} von {{pages}}", previousPage: "Vorherige Seite", nextPage: "Nächste Seite" },
+};
+
 Object.entries(resources).forEach(([language, resource]) => {
   Object.assign(resource.translation, engagementLabels[language] ?? engagementLabels.en);
   Object.assign(resource.translation, chatAccessLabels[language] ?? chatAccessLabels.en);
   Object.assign(resource.translation, availabilityLabels[language] ?? availabilityLabels.en);
   Object.assign(resource.translation, imageUploadLabels[language] ?? imageUploadLabels.en);
   Object.assign(resource.translation, aboutEditorLabels[language] ?? aboutEditorLabels.en);
+  Object.assign(resource.translation, cataloguePagingLabels[language] ?? cataloguePagingLabels.en);
 });
 
 void i18n

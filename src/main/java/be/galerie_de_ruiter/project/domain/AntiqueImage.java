@@ -14,6 +14,8 @@ import jakarta.validation.constraints.NotBlank;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.Comparator;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -68,6 +70,35 @@ public class AntiqueImage {
 
     public String getDisplayOrder() {
         return displayOrder;
+    }
+
+    public void setDisplayOrder(String displayOrder) {
+        this.displayOrder = displayOrder;
+    }
+
+    /**
+     * The display order as a number. A row without one (an image stored before the gallery
+     * could order its photographs) sorts last instead of breaking the catalogue.
+     */
+    public int displayOrderNumber() {
+        if (displayOrder == null || displayOrder.isBlank()) return Integer.MAX_VALUE;
+        try {
+            return Integer.parseInt(displayOrder.trim());
+        } catch (NumberFormatException notANumber) {
+            return Integer.MAX_VALUE;
+        }
+    }
+
+    /** Display order first, then id, so a piece's photographs come back in the gallery's order. */
+    public static final Comparator<AntiqueImage> BY_DISPLAY_ORDER =
+            Comparator.comparingInt(AntiqueImage::displayOrderNumber)
+                    .thenComparing(image -> String.valueOf(image.getId()));
+
+    /** The six-view scan positions, which are not part of the gallery's photograph order. */
+    private static final Set<String> SIX_VIEW_POSITIONS = Set.of("front", "back", "left", "right", "top", "bottom");
+
+    public static boolean isSixViewPosition(String position) {
+        return position != null && SIX_VIEW_POSITIONS.contains(position);
     }
 
     public byte[] getData() {

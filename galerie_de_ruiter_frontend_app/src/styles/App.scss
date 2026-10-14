@@ -2135,25 +2135,19 @@ button{
 }
 
 // --------------------------------------------------
-// Navbar hugs its own items
-// On wide screens the bar's box is only as wide and as tall as the navigation it
-// holds, instead of stretching across the viewport at a fixed height. The measured
-// height is published to `--top-nav-height` by `CustomNav`, so the page below still
-// starts exactly under the bar.
+// Navbar spans the window
+// On wide screens the bar takes the full width of the window and only as much height as its
+// items need. The measured height is published to `--top-nav-height` by `CustomNav`, so the
+// page below starts exactly under the bar.
 // --------------------------------------------------
 @media (min-width: 1200px) {
   #Navbar,
   #Navbar.navbar-collapsed {
-    width: fit-content;
-    max-width: 100%;
+    width: 100%;
+    max-width: none;
     height: auto;
     min-height: 0;
     padding: 0.4rem 0.85rem;
-  }
-
-  #Navbar .navbar-nav {
-    flex: 0 1 auto;
-    height: auto;
   }
 }
 

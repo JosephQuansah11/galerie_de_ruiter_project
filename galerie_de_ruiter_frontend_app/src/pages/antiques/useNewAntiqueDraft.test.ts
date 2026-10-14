@@ -127,7 +127,7 @@ describe("useNewAntiqueDraft image selection", () => {
   });
 
   it("uploads every selected image once the piece is saved", async () => {
-    uploadImageMock.mockResolvedValue(undefined);
+    uploadImageMock.mockResolvedValue({ id: "image-1", url: "/api/antiques/antique-1/image/image-1" });
     const { result } = renderHook(() => useNewAntiqueDraft(jest.fn()));
     act(() => result.current.selectImages(fileListOf(imageFile("front.jpg"), imageFile("back.jpg"))));
 

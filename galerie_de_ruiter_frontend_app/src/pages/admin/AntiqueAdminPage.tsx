@@ -3,7 +3,7 @@ import { Alert, Form, Modal, Spinner } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
 import { Check, Plus, Search, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { deleteAntique as deleteAntiqueRequest, deleteAntiqueImage, getAllAntiques, setAntiqueSold as setAntiqueSoldRequest, updateAntique as updateAntiqueRequest, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
+import { deleteAntique as deleteAntiqueRequest, deleteAntiqueImage, getAllAntiques, reorderAntiqueImages, setAntiqueSold as setAntiqueSoldRequest, updateAntique as updateAntiqueRequest, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/context/LanguageContext";
@@ -13,7 +13,7 @@ import { AntiqueImageEditor } from "./antiques/AntiqueImageEditor";
 import { DescriptionLimitHint } from "../antiques/DescriptionLimitHint";
 import { ANTIQUE_DESCRIPTION_MAX_LENGTH } from "../antiques/descriptionLimits";
 import { MODEL_MAX_SIZE_MB, isUploadableModel } from "../antiques/modelUploadLimits";
-import { useImageSelection } from "../antiques/useImageSelection";
+import { useAntiqueImageEditing } from "./antiques/useAntiqueImageEditing";
 import { logRequestFailure, managementErrorKey, modelUploadErrorKey } from "../antiques/antiqueSaveErrors";
 
 export default function AntiqueAdminPage() {
@@ -30,13 +30,12 @@ export default function AntiqueAdminPage() {
   const [editPrice, setEditPrice] = useState("");
   const [editModelFile, setEditModelFile] = useState<File>();
   const [modelFileInvalid, setModelFileInvalid] = useState(false);
-  const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
   const [deletingId, setDeletingId] = useState<string>();
   const [soldSavingId, setSoldSavingId] = useState<string>();
   const [actionError, setActionError] = useState<string>();
-  // Photographs picked in the edit dialog and not uploaded yet, with their previews.
-  const newImages = useImageSelection(() => setActionError("pleaseChooseImage"));
+  // The piece's photographs: stored and freshly picked in one order the admin can change.
+  const editingImages = useAntiqueImageEditing();
   useEffect(() => {
     getAllAntiques()
       .then((items) => { setAntiques(items); setLoadError(false); })
@@ -53,8 +52,7 @@ export default function AntiqueAdminPage() {
     setEditPrice(antique.price == null ? "" : String(antique.price));
     setEditModelFile(undefined);
     setModelFileInvalid(false);
-    setRemovedImageIds([]);
-    newImages.clear();
+    editingImages.load(antique.imageUrls ?? []);
     setActionError(undefined);
   };
   const descriptionTooLong = editDescription.length > ANTIQUE_DESCRIPTION_MAX_LENGTH;
@@ -80,10 +78,20 @@ export default function AntiqueAdminPage() {
           return;
         }
       }
-      // Photographs: remove the ones the admin deleted, then upload the newly picked ones.
+      // Photographs: remove the ones the admin deleted, upload the new ones, then store the
+      // order the dialog shows — the first photograph becomes the piece's main image.
       try {
-        for (const imageId of removedImageIds) await deleteAntiqueImage(editing.id, imageId);
-        for (const image of newImages.images) await uploadAntiqueImage(editing.id, image.file);
+        for (const imageId of editingImages.removedImageIds) await deleteAntiqueImage(editing.id, imageId);
+        const uploadedByKey = new Map<string, string>();
+        for (const image of editingImages.images) {
+          if (!image.file) continue;
+          const created = await uploadAntiqueImage(editing.id, image.file);
+          uploadedByKey.set(image.key, created.id);
+        }
+        const order = editingImages.images
+          .map((image) => image.imageId ?? uploadedByKey.get(image.key))
+          .filter((imageId): imageId is string => Boolean(imageId));
+        if (order.length > 0) await reorderAntiqueImages(editing.id, order);
       } catch (error) {
         logRequestFailure("antique image update", error);
         setActionError(managementErrorKey(error));
@@ -184,12 +192,10 @@ export default function AntiqueAdminPage() {
               <DescriptionLimitHint value={editDescription} />
             </Form.Group>
             <AntiqueImageEditor
-              existingUrls={editing?.imageUrls ?? []}
-              removedIds={removedImageIds}
-              onRemoveExisting={(imageId) => setRemovedImageIds((current) => current.includes(imageId) ? current : [...current, imageId])}
-              newImages={newImages.images}
-              onAddImages={(files) => { if (newImages.add(files)) setActionError(undefined); }}
-              onRemoveNew={newImages.remove}
+              images={editingImages.images}
+              onAddImages={(files) => { if (editingImages.addFiles(files)) setActionError(undefined); }}
+              onMove={editingImages.move}
+              onRemove={editingImages.remove}
               disabled={savingEdit}
             />
             <Form.Group className="mb-3">

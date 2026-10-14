@@ -25,7 +25,7 @@ export function AddAntiqueForm({ draft, lookups, selectArtist }: { draft: Draft;
         <DesignerCreator newArtist={lookups.newArtist} setNewArtist={lookups.setNewArtist}
           creating={lookups.creating} addArtist={lookups.addArtist} />
         <AntiqueIdentityFields form={draft.form} update={draft.update} categories={lookups.categories} />
-        <AntiqueMediaFields form={draft.form} update={draft.update} images={draft.images} removeImage={draft.removeImage}
+        <AntiqueMediaFields form={draft.form} update={draft.update} images={draft.images} removeImage={draft.removeImage} moveImage={draft.moveImage}
           modelFileName={draft.modelFileName} selectImages={draft.selectImages} selectModelFile={draft.selectModelFile}
           updateModelUrl={(value) => { draft.update("modelUrl", value); if (value) draft.selectModelFile(null); }} />
         <AntiqueDescriptionFields form={draft.form} update={draft.update} />

@@ -31,7 +31,8 @@ public record AntiqueResponse(UUID id, String title, DesignerResponse artist, St
 
     private static List<String> imageUrls(Antique antique) {
         return antique.getImages().stream()
-                .filter(image -> !isSixViewPosition(image.getPosition()))
+                .filter(image -> !AntiqueImage.isSixViewPosition(image.getPosition()))
+                .sorted(AntiqueImage.BY_DISPLAY_ORDER)
                 .map(AntiqueImage::getId)
                 .map(imageId -> "/api/antiques/" + antique.getId() + "/image/" + imageId)
                 .toList();
@@ -39,15 +40,11 @@ public record AntiqueResponse(UUID id, String title, DesignerResponse artist, St
 
     private static List<SixViewImageResponse> parseSixViewImages(Antique antique) {
         return antique.getImages().stream()
-                .filter(image -> isSixViewPosition(image.getPosition()))
+                .filter(image -> AntiqueImage.isSixViewPosition(image.getPosition()))
                 .map(image -> new SixViewImageResponse(
                         image.getPosition(),
                         "/api/antiques/" + antique.getId() + "/image/" + image.getId()))
                 .toList();
-    }
-
-    private static boolean isSixViewPosition(String position) {
-        return List.of("front", "back", "left", "right", "top", "bottom").contains(position);
     }
 
     public record SixViewImageResponse(String position, String url) {

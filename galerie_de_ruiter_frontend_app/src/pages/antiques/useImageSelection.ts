@@ -43,11 +43,23 @@ export function useImageSelection(onRejectImage?: () => void) {
     setImages((current) => current.filter((image) => image.id !== id));
   };
 
+  /** Moves an image one place earlier (`-1`) or later (`1`) in the selection. */
+  const move = (id: string, direction: -1 | 1) => {
+    setImages((current) => {
+      const index = current.findIndex((image) => image.id === id);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
   /** Drops every pending image, releasing their preview URLs. */
   const clear = () => {
     imagesRef.current.forEach((image) => URL.revokeObjectURL(image.url));
     setImages([]);
   };
 
-  return { images, add, remove, clear };
+  return { images, add, remove, move, clear };
 }

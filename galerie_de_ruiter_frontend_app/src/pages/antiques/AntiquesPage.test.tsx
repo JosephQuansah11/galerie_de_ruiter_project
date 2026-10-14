@@ -60,6 +60,31 @@ describe("Catalogue page", () => {
     expect(screen.queryByText(/word51/)).not.toBeInTheDocument();
   });
 
+  it("pages the collection and lets the visitor choose how many pieces to see", async () => {
+    const many = Array.from({ length: 20 }, (_, index) => ({
+      id: `p${index}`, title: `Piece ${index + 1}`, category: null, description: "A piece", price: 10,
+    }));
+    mockedAntiques.mockResolvedValueOnce(many);
+
+    renderPage(<AntiquesPage />, { shopping: true });
+    await screen.findByText("Piece 1");
+
+    // The default page holds twelve pieces of the twenty.
+    expect(document.querySelectorAll(".catalogue-row")).toHaveLength(12);
+    expect(screen.getByText(i18n.t("pageOf", { page: 1, pages: 2 }))).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("nextPage") }));
+
+    expect(document.querySelectorAll(".catalogue-row")).toHaveLength(8);
+    expect(screen.getByText(i18n.t("pageOf", { page: 2, pages: 2 }))).toBeInTheDocument();
+
+    // Choosing "all pieces" puts the whole collection back on one page.
+    fireEvent.change(screen.getByLabelText(i18n.t("itemsPerPage")), { target: { value: "0" } });
+
+    expect(document.querySelectorAll(".catalogue-row")).toHaveLength(20);
+    expect(screen.queryByText(i18n.t("pageOf", { page: 1, pages: 1 }))).not.toBeInTheDocument();
+  });
+
   it("filters pieces with the search control and clears the query again", async () => {
     renderPage(<AntiquesPage />, { shopping: true });
     await screen.findByText("Carved walnut mirror");

@@ -4,6 +4,7 @@ import { csrfHeaders } from "@/apis/client";
 import { visitorId } from "@/services/visitorId";
 import { axiosInstance, backendBaseURL } from "./backendClient";
 import { cachedRequest, invalidateCache } from "@/services/apiCache";
+import type { AntiqueImage } from "./apiTypes";
 
 export async function getAllAntiques(): Promise<Antique[]> {
   return cachedRequest("antiques", async () => {
@@ -83,12 +84,23 @@ export async function setAntiqueLike(id: string, liked: boolean): Promise<Antiqu
   return response.data;
 }
 
-export async function uploadAntiqueImage(id: string, image: File): Promise<void> {
+export async function uploadAntiqueImage(id: string, image: File): Promise<AntiqueImage> {
   const body = new FormData();
   body.append("image", image);
-  await axiosInstance.put(`${backendBaseURL}/api/antiques/${id}/image`, body, {
+  const response = await axiosInstance.put<AntiqueImage>(`${backendBaseURL}/api/antiques/${id}/image`, body, {
     timeout: 60000,
     headers: { ...(await csrfHeaders()), "Content-Type": undefined },
+  });
+  invalidateCache("antiques");
+  return response.data;
+}
+/**
+ * Stores the gallery's preferred order for a piece's photographs, first to last. The first id
+ * becomes the piece's main image.
+ */
+export async function reorderAntiqueImages(id: string, imageIds: string[]): Promise<void> {
+  await axiosInstance.put(`${backendBaseURL}/api/antiques/${id}/image/order`, { imageIds }, {
+    headers: { ...(await csrfHeaders()), "Content-Type": "application/json" },
   });
   invalidateCache("antiques");
 }

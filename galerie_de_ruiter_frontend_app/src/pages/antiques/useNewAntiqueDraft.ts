@@ -22,7 +22,7 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
   const [message, setMessage] = useState<string>();
   // Picks append, so the gallery can add photographs a few at a time instead of replacing
   // the whole selection each time. The hook also owns the preview object URLs.
-  const { images, add: addImages, remove: removeSelectedImage } = useImageSelection(
+  const { images, add: addImages, remove: removeSelectedImage, move: moveSelectedImage } = useImageSelection(
     () => setMessage("pleaseChooseImage"),
   );
   const files = images.map((image) => image.file);
@@ -34,6 +34,8 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
     removeSelectedImage(id);
     setMessage(undefined);
   };
+  /** Moving a photograph to the front is how the gallery picks the piece's main image. */
+  const moveImage = (id: string, direction: -1 | 1) => moveSelectedImage(id, direction);
   const selectModelFile = (input: FileList | null) => {
     const selected = input?.[0];
     if (selected && !isUploadableModel(selected)) {
@@ -98,6 +100,6 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
     openAntique(antiqueId);
     setSaving(false);
   };
-  return { form, update, images, removeImage, modelFileName: modelFile?.name,
+  return { form, update, images, removeImage, moveImage, modelFileName: modelFile?.name,
     modelFileInvalid, createdId, saving, message, setMessage, selectImages, selectModelFile, submit };
 }

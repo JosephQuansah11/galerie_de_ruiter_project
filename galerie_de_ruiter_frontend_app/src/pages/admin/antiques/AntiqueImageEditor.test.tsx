@@ -2,57 +2,52 @@ import { fireEvent, screen } from "@testing-library/react";
 import { renderPage } from "../../../../test/renderPage";
 import i18n from "../../../i18n";
 import { AntiqueImageEditor } from "./AntiqueImageEditor";
-import type { SelectedImage } from "@/pages/antiques/useImageSelection";
+import type { EditableImage } from "./useAntiqueImageEditing";
 
-const selected = (id: string, name: string): SelectedImage => ({
-  id,
-  file: new File([new Uint8Array(1)], name, { type: "image/jpeg" }),
-  url: `blob:${id}`,
+const stored = (imageId: string): EditableImage => ({
+  key: `stored-${imageId}`,
+  url: `http://api.test/api/antiques/1/image/${imageId}`,
+  imageId,
 });
 
-const storedImages = ["/api/antiques/1/image/aaa", "/api/antiques/1/image/bbb"];
+const picked = (key: string, name: string): EditableImage => ({
+  key,
+  url: `blob:${key}`,
+  file: new File([new Uint8Array(1)], name, { type: "image/jpeg" }),
+});
 
-function renderEditor(overrides: Partial<Parameters<typeof AntiqueImageEditor>[0]> = {}) {
-  const props = {
-    existingUrls: storedImages,
-    removedIds: [] as string[],
-    onRemoveExisting: jest.fn(),
-    newImages: [] as SelectedImage[],
-    onAddImages: jest.fn(),
-    onRemoveNew: jest.fn(),
-    ...overrides,
-  };
-  renderPage(<AntiqueImageEditor {...props} />);
-  return props;
+function renderEditor(images: EditableImage[], handlers: { onMove?: jest.Mock; onRemove?: jest.Mock } = {}) {
+  const onMove = handlers.onMove ?? jest.fn();
+  const onRemove = handlers.onRemove ?? jest.fn();
+  renderPage(<AntiqueImageEditor images={images} onAddImages={jest.fn()} onMove={onMove} onRemove={onRemove} />);
+  return { onMove, onRemove };
 }
 
 describe("antique image editor", () => {
-  it("shows the stored photographs with a remove control", () => {
-    const { onRemoveExisting } = renderEditor();
+  it("shows the stored photographs with move and remove controls", () => {
+    const { onMove, onRemove } = renderEditor([stored("aaa"), stored("bbb")]);
 
     expect(screen.getByText(i18n.t("selectedImageCount", { count: 2 }))).toBeInTheDocument();
-    expect(document.querySelectorAll(".antique-image-preview")).toHaveLength(2);
+    expect(document.querySelectorAll(".antique-gallery-item")).toHaveLength(2);
 
     fireEvent.click(screen.getByRole("button", { name: i18n.t("removeImageNumber", { number: 1 }) }));
+    expect(onRemove).toHaveBeenCalledWith("stored-aaa");
 
-    expect(onRemoveExisting).toHaveBeenCalledWith("aaa");
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("moveImageLater", { number: 1 }) }));
+    expect(onMove).toHaveBeenCalledWith("stored-aaa", 1);
   });
 
-  it("hides a stored photograph that is already marked for removal", () => {
-    renderEditor({ removedIds: ["aaa"] });
-
-    expect(document.querySelectorAll(".antique-image-preview")).toHaveLength(1);
-    expect(screen.getByText(i18n.t("selectedImageCount", { count: 1 }))).toBeInTheDocument();
-  });
-
-  it("previews a newly picked photograph and can remove it again", () => {
-    const { onRemoveNew } = renderEditor({ existingUrls: [], newImages: [selected("n1", "front.jpg")] });
+  it("marks a freshly picked photograph as new", () => {
+    renderEditor([picked("new-1", "front.jpg")]);
 
     expect(screen.getByText(i18n.t("newPhoto"))).toBeInTheDocument();
-    expect(screen.getByText(i18n.t("selectedImageCount", { count: 1 }))).toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByRole("button", { name: i18n.t("removeImage", { name: "front.jpg" }) }));
+  it("disables the move controls at the ends of the strip", () => {
+    renderEditor([stored("aaa"), stored("bbb")]);
 
-    expect(onRemoveNew).toHaveBeenCalledWith("n1");
+    expect(screen.getByRole("button", { name: i18n.t("moveImageEarlier", { number: 1 }) })).toBeDisabled();
+    expect(screen.getByRole("button", { name: i18n.t("moveImageLater", { number: 2 }) })).toBeDisabled();
   });
 });
+

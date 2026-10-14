@@ -7,11 +7,13 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import be.galerie_de_ruiter.project.domain.AntiqueImage;
 import be.galerie_de_ruiter.project.domain.Designer;
 import be.galerie_de_ruiter.project.domain.User;
 import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
@@ -20,9 +22,8 @@ import be.galerie_de_ruiter.project.repository.DesignerRepository;
 import be.galerie_de_ruiter.project.repository.UserRepository;
 import be.galerie_de_ruiter.project.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,13 +38,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * The gallery must be able to correct a wrong photograph on a piece without deleting and
- * recreating the whole antique. This walks the upload-then-remove path on a clean database.
+ * Managing a piece's photographs: the gallery can add several, remove a wrong one, and put them
+ * in its own order. This walks that whole path on a clean database.
  */
 @SpringBootTest(properties = "spring.jpa.open-in-view=false")
 @AutoConfigureMockMvc
 @ActiveProfiles("test-dev")
-class AntiqueImageDeleteTest {
+class AntiqueImageAdminTest {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     @Autowired
@@ -96,6 +97,35 @@ class AntiqueImageDeleteTest {
         assertThat(images.findById(image)).isPresent();
     }
 
+    @Test
+    void theGalleryCanPutItsPhotographsInItsOwnOrder() throws Exception {
+        UUID id = createAntique();
+        UUID first = uploadImage(id, "first.jpg");
+        UUID second = uploadImage(id, "second.jpg");
+        UUID third = uploadImage(id, "third.jpg");
+
+        mvc.perform(put("/api/antiques/" + id + "/image/order")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSON.writeValueAsString(java.util.Map.of("imageIds", List.of(third, first, second)))))
+                .andExpect(status().isNoContent());
+
+        // The list returns the photographs in the new order, so the first one is the main image.
+        MvcResult listed = mvc.perform(get("/api/antiques")).andExpect(status().isOk()).andReturn();
+        List<String> urls = new java.util.ArrayList<>();
+        for (var node : JSON.readTree(listed.getResponse().getContentAsString())) {
+            if (node.path("id").asText().equals(id.toString())) {
+                node.path("imageUrls").forEach(url -> urls.add(url.asText()));
+            }
+        }
+
+        assertThat(urls).containsExactly(
+                "/api/antiques/" + id + "/image/" + third,
+                "/api/antiques/" + id + "/image/" + first,
+                "/api/antiques/" + id + "/image/" + second);
+    }
+
     private UUID createAntique() throws Exception {
         Designer artist = designers.save(new Designer("Image", null, "Editor"));
         User creator = usersRepository.save(new User("image-subject", "image@example.com", "Admin"));
@@ -114,14 +144,11 @@ class AntiqueImageDeleteTest {
         return UUID.fromString(JSON.readTree(created.getResponse().getContentAsString()).path("id").asText());
     }
 
-    /** Uploads one photograph and returns its id (the image the API just appended). */
+    /** Uploads one photograph and returns its id from the API's answer. */
     private UUID uploadImage(UUID antiqueId, String name) throws Exception {
-        Set<UUID> before = images.findAllByAntiqueId(antiqueId).stream()
-                .map(AntiqueImage::getId)
-                .collect(Collectors.toSet());
         MockMultipartFile image = new MockMultipartFile("image", name, "image/jpeg", new byte[] {1, 2, 3});
 
-        mvc.perform(multipart("/api/antiques/" + antiqueId + "/image")
+        MvcResult uploaded = mvc.perform(multipart("/api/antiques/" + antiqueId + "/image")
                         .file(image)
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
                         .with(csrf())
@@ -129,12 +156,9 @@ class AntiqueImageDeleteTest {
                             request.setMethod("PUT");
                             return request;
                         }))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andReturn();
 
-        return images.findAllByAntiqueId(antiqueId).stream()
-                .map(AntiqueImage::getId)
-                .filter(imageId -> !before.contains(imageId))
-                .findFirst()
-                .orElseThrow();
+        return UUID.fromString(JSON.readTree(uploaded.getResponse().getContentAsString()).path("id").asText());
     }
 }

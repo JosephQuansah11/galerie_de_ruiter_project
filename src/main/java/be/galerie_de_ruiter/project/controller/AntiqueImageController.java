@@ -57,8 +57,7 @@ public class AntiqueImageController {
 
     /**
      * Removes one photograph from a piece. The gallery can correct a wrong picture without
-     * deleting and recreating the whole antique; the remaining images keep their order and
-     * the next one becomes the primary image.
+     * deleting and recreating the whole antique; the remaining photographs are untouched.
      */
     @DeleteMapping("/{imageId}")
     @PreAuthorize("hasRole('ADMIN')")

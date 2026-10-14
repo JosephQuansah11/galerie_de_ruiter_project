@@ -76,6 +76,7 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/location").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/about").permitAll()
+				.requestMatchers(HttpMethod.GET, "/api/about/images/**").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/home").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/home/images/**").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/chat").permitAll()

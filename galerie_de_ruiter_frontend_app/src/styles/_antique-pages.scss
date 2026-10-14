@@ -99,6 +99,8 @@
 .about-content p { margin: 0.65rem 0; white-space: pre-wrap; }
 .about-content ul { margin: 0.65rem 0; padding-left: 1.35rem; }
 .about-content li { margin: 0.3rem 0; }
+// Photographs the admin inserted from the editor toolbar.
+.about-content img { display: block; max-width: 100%; height: auto; margin: 1.25rem 0; border-radius: var(--theme-radius-sm); box-shadow: var(--theme-shadow-sm); }
 .about-content hr { margin: 2rem 0; border-color: rgba(60, 31, 37, 0.2); }
 .model-admin-panel { display: grid; gap: 0.6rem; padding: 1rem; border: 1px solid rgba(60, 31, 37, 0.14); background: var(--theme-surface); }
 .model-admin-panel > small { overflow-wrap: anywhere; }

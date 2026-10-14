@@ -24,4 +24,10 @@ describe("renderAboutContent", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Two" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "Three" })).toBeInTheDocument();
   });
+
+  it("renders an inserted photograph against the API origin", () => {
+    render(<div>{renderAboutContent("![Our pop-up](/api/about/images/7)")}</div>);
+
+    expect(screen.getByRole("img", { name: "Our pop-up" })).toHaveAttribute("src", "http://api.test/api/about/images/7");
+  });
 });

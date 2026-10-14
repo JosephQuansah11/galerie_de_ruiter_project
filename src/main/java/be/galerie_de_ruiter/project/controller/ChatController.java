@@ -43,20 +43,21 @@ public class ChatController {
     }
 
     /**
-     * The signed-in visitor's name, used to pre-fill the appointment hand-off on WhatsApp. Keycloak
-     * carries it as the {@code name} claim or as separate given/family name claims; an anonymous
-     * visitor has none, and the appointment is then sent without a name.
+     * The signed-in visitor's name, used to pre-fill the appointment hand-off on WhatsApp.
+     * Keycloak carries the first and last name as the {@code given_name} and {@code family_name}
+     * claims, and the gallery wants those rather than the account's username: a message that
+     * arrives as "My name is Joseph Quansah" reads far better than one with a login handle. An
+     * anonymous visitor has no name, and the appointment is then sent without one.
      */
-    private static String requesterName(Jwt jwt) {
+    static String requesterName(Jwt jwt) {
         if (jwt == null) return null;
-        String name = jwt.getClaimAsString("name");
-        if (name != null && !name.isBlank()) return name.trim();
         String combined = java.util.stream.Stream.of(
                         jwt.getClaimAsString("given_name"), jwt.getClaimAsString("family_name"))
                 .filter(value -> value != null && !value.isBlank())
                 .collect(java.util.stream.Collectors.joining(" "));
         if (!combined.isBlank()) return combined;
-        String username = jwt.getClaimAsString("preferred_username");
-        return username == null || username.isBlank() ? null : username.trim();
+        // A realm that only maps a single full name still gives a real name, never a username.
+        String name = jwt.getClaimAsString("name");
+        return name == null || name.isBlank() ? null : name.trim();
     }
 }

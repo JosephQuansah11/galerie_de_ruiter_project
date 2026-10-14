@@ -9,10 +9,11 @@ const WHATSAPP_NUMBER = "32493357568";
 export function ChatHeader({ appointment }: { appointment?: ChatAppointment }) {
   const { t, i18n } = useTranslation();
   const { authenticated, profile } = useAuth();
+  // The gallery wants the visitor's real name on the hand-off, never the account's username.
   const requester = [profile?.firstName, profile?.lastName]
     .filter((part) => part && part.trim())
     .join(" ")
-    .trim() || profile?.username || "";
+    .trim();
   const selectedDate = appointment ? new Date(`${appointment.at}:00Z`) : undefined;
   const appointmentDetails = appointment
     ? t("chatAppointmentWhatsappDetails", {

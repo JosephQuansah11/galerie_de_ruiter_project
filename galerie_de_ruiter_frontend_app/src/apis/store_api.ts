@@ -1,6 +1,6 @@
 import { csrfHeaders } from "@/apis/client";
 import { axiosInstance, backendBaseURL } from "./backendClient";
-import type { AboutContent, StoreLocation } from "./apiTypes";
+import type { AboutContent, AboutImage, StoreLocation } from "./apiTypes";
 import { cachedRequest, invalidateCache } from "@/services/apiCache";
 
 export async function getAboutContent(): Promise<AboutContent> {
@@ -22,4 +22,16 @@ export async function updateStoreLocation(location: Omit<StoreLocation, "id">): 
   })).data;
   invalidateCache("location");
   return result;
+}
+/**
+ * Uploads a photograph for the About page and returns the URL to insert into the story. The
+ * bytes live in the gallery database, like the welcome slider images.
+ */
+export async function uploadAboutImage(image: File): Promise<AboutImage> {
+  const form = new FormData();
+  form.append("image", image);
+  return (await axiosInstance.post<AboutImage>(`${backendBaseURL}/api/about/images`, form, {
+    timeout: 120000,
+    headers: { ...(await csrfHeaders()), "Content-Type": undefined },
+  })).data;
 }

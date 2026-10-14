@@ -72,6 +72,7 @@
 .admin-form-page .about-editor-tool:hover, .admin-form-page .about-editor-tool:focus-visible { border-color: var(--theme-primary); background: var(--theme-background); color: var(--theme-primary); }
 .about-editor-input { min-height: 26rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9rem; line-height: 1.65; }
 .about-editor-hint { margin: 0.45rem 0 0; color: var(--theme-text-secondary); font-size: 0.82rem; }
+.about-editor-error { margin: 0.45rem 0 0; color: #a12b36; font-size: 0.85rem; font-weight: 600; }
 .about-editor-preview { padding: 1rem 1.25rem 1.5rem; border: 1px solid var(--theme-border); border-radius: 0.4rem; background: var(--theme-surface); }
 .about-editor-preview-label { display: inline-block; margin-bottom: 0.6rem; color: var(--theme-text-secondary); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
 @media (max-width: 900px) { .about-editor-layout { grid-template-columns: minmax(0, 1fr); } }

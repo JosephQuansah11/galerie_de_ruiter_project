@@ -27,3 +27,14 @@ export const pythonApiBaseUrl = firstConfigured(
   [import.meta.env.VITE_PYTHON_API_URL, import.meta.env.VITE_RECONSTRUCTION_API_URL],
   pythonApiFallback,
 );
+
+/**
+ * Resolves a path the API returns (for example `/api/about/images/{id}`) to an absolute URL
+ * on the API origin. Content that is stored as a path rather than a full URL — page images
+ * the admin uploads — needs this so it loads in development and in production alike.
+ */
+export function resolveApiAssetUrl(path?: string | null): string | undefined {
+  if (!path) return undefined;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${apiBaseUrl}${path.startsWith("/") ? "" : "/"}${path}`;
+}

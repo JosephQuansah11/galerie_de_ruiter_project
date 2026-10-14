@@ -1,0 +1,38 @@
+// bootstrap-icons is not imported: no screen uses a `bi`/`bi-*` class (the interface draws its
+// icons with lucide-react SVGs), and its stylesheet was 85 kB of render-blocking CSS plus a
+// web-font request on the critical path.
+
+// --------------------------------------------------
+// Theme system CSS custom properties
+// --------------------------------------------------
+:root {
+  --nav-width: 14rem;
+  --theme-background: #f6f1ed;
+  --theme-surface: #fffdfb;
+  --theme-text: #352629;
+  --theme-text-secondary: #705c60;
+  --theme-primary: #841a23;
+  --theme-on-primary: #fffaf7;
+  --theme-accent: #c7a873;
+  --theme-border: #dfd1ca;
+  --theme-nav-start: #54121b;
+  --theme-nav-end: #841a23;
+}
+
+.theme-dark {
+  --theme-background: #26171a;
+  --theme-surface: #392428;
+  --theme-text: #fff8f4;
+  --theme-text-secondary: #d8c2bf;
+  --theme-primary: #cf8b91;
+  --theme-on-primary: #201416;
+  --theme-accent: #dfbf84;
+  --theme-border: #62464a;
+  --theme-nav-start: #351016;
+  --theme-nav-end: #741c27;
+}
+
+// --------------------------------------------------
+// Layout
+// --------------------------------------------------
+

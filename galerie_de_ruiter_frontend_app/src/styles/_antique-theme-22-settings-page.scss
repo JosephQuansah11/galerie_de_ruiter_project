@@ -1,0 +1,50 @@
+.settings-page .language-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+}
+
+.settings-page .language-row label {
+  margin: 0;
+}
+
+.settings-page .language-row select {
+  min-width: 17rem;
+  min-height: 2.9rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+// Theme choices read as paint chips with a mounted sample and palette dots.
+.settings-page .theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+  gap: 0.9rem;
+  margin-top: 1.15rem;
+  padding: 0;
+}
+
+.settings-page .theme-option {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "swatch swatch"
+    "copy check";
+  align-items: end;
+  gap: 0.75rem 0.5rem;
+  min-height: 11rem;
+  padding: 0.75rem;
+  border: 1px solid var(--theme-hairline);
+  border-radius: var(--theme-radius-lg);
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+

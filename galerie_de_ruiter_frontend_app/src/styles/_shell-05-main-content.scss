@@ -1,0 +1,50 @@
+.main-content {
+  position: relative !important;
+  margin-left: var(--nav-width);
+  width: calc(100% - var(--nav-width));
+  min-height: 100dvh;
+  overflow-y: auto;
+}
+
+#home {
+  flex-grow: 1;
+  overflow: auto;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+.catalogue-page {
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 2rem clamp(0.5rem, 3vw, 3rem) 4rem;
+}
+
+.catalogue-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.catalogue-kicker {
+  letter-spacing: 0.14em;
+  font-size: 0.68rem;
+}
+.catalogue-heading h1 {
+  margin: 0.8rem 0 0.35rem;
+  font-family: Georgia, serif;
+  font-size: clamp(2.2rem, 5vw, 4.5rem);
+  font-weight: 400;
+}
+.catalogue-heading p {
+  margin: 0;
+  color: var(--theme-text-secondary);
+}
+.catalogue-count {
+  display: grid;
+  text-align: right;
+  color: var(--theme-text-secondary);
+}

@@ -1,0 +1,50 @@
+.admin-form-page {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2rem clamp(0.5rem, 3vw, 3rem) 4rem;
+}
+.admin-form-page .card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--theme-primary);
+  color: #fffaf7;
+}
+.admin-form-page button {
+  display: inline-flex;
+  align-items: center;
+  color: --var(--theme-on-primary);
+  gap: 0.4rem;
+}
+.admin-coordinate-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.address-lookup {
+  display: flex;
+  gap: 0.5rem;
+}
+.address-lookup button {
+  white-space: nowrap;
+}
+.location-page {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.75fr) minmax(24rem, 1.25fr);
+  gap: 2rem;
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 2rem clamp(0.5rem, 3vw, 3rem) 4rem;
+}
+.location-copy h1 {
+  margin: 0.8rem 0;
+  font:
+    400 clamp(2.8rem, 6vw, 5.5rem) Georgia,
+    serif;
+}
+.location-copy > p {
+  max-width: 30rem;
+  color: var(--theme-text-secondary);
+  line-height: 1.7;
+}

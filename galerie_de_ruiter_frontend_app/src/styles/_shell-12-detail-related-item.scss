@@ -1,0 +1,38 @@
+.detail-related-item {
+  display: flex;
+  flex: 0 0 clamp(11rem, 22vw, 15rem);
+  flex-direction: column;
+  // The card stacks image, title and price. `align-items: stretch` keeps every row as wide as
+  // the card — without it the title keeps its full, unbroken width and paints over the card
+  // next to it — and `overflow: hidden` is the backstop that keeps the card's edges clean.
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.55rem;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  text-align: left;
+  scroll-snap-align: start;
+}
+.detail-related-item:hover {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0.5rem 1.5rem rgba(60, 31, 37, 0.12);
+}
+.detail-related-image {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  place-items: center;
+  overflow: hidden;
+  background: var(--theme-background);
+  color: var(--theme-primary);
+  font: 3rem Georgia, serif;
+}
+.detail-related-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

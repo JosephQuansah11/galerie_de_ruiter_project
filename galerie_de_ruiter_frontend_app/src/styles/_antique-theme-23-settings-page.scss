@@ -1,0 +1,46 @@
+.settings-page .theme-option:hover,
+.settings-page .theme-option:focus-visible {
+  border-color: var(--theme-gold-soft);
+  box-shadow: var(--theme-shadow-sm);
+  transform: translateY(-2px);
+}
+
+.settings-page .theme-option.selected {
+  border-color: var(--theme-gold);
+  box-shadow: 0 0 0 3px var(--theme-gold-soft), var(--theme-shadow-sm);
+}
+
+.settings-page .theme-swatch {
+  grid-area: swatch;
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 3.6rem;
+  border: 1px solid var(--theme-hairline);
+  border-radius: var(--theme-radius);
+  overflow: hidden;
+}
+
+.settings-page .theme-swatch-dots {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.4rem;
+  display: flex;
+  gap: 0.28rem;
+}
+
+.settings-page .theme-swatch-dots > span {
+  display: block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+}
+
+.settings-page .theme-copy {
+  grid-area: copy;
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+

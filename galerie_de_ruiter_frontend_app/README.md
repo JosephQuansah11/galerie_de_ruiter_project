@@ -71,6 +71,30 @@ When the collection opens to visitors, remove the `/antiques` and `/about` lines
 `robots.txt` and add the pieces to `publicPages` in the sitemap script (the API's
 `GET /api/antiques` lists them, so the script can fetch them at build time).
 
+## Stylesheets
+
+The gallery's CSS lives in `src/styles` and is imported once, from `src/index.tsx`. `App.scss` is
+the entry point and does nothing but import the rest, in the order the rules have to cascade in:
+Bootstrap and the navigation bar first, then the page chrome, then the design layer
+(`_antique-theme`) and finally the reset that used to be a separate `index.css`. **That order is
+the cascade order of the compiled CSS, so an import moved in `App.scss` changes the rendering.**
+
+Two rules keep the folder navigable:
+
+- **No stylesheet is longer than 50 lines.** `App.scss`'s own rules are the `_shell-*.scss` parts,
+  the design layer is `_antique-theme-*.scss`, and each of the smaller areas has its own numbered
+  parts (`_admin-01-…`, `_profile-02-…`). A part is imported by the index that carries its area's
+  name (`_shell.scss`, `_antique-theme.scss`, `_admin.scss`, …), and the number in the file name is
+  the position of its rules in the cascade. Adding a rule means editing the part that owns that
+  screen; a new part needs one `@import` line in the index, placed where the rules belong.
+- **Every file is reachable from `App.scss`.** `src/styles/stylesheetBudget.test.ts` fails the
+  suite when a stylesheet grows past 50 lines or when a part is not imported by any index, which
+  would silently drop its rules from the bundle.
+
+The parts were cut at rule boundaries from the original single files, and their text was copied
+verbatim, so splitting them did not change the compiled CSS: only long `@media` blocks were
+emitted as several consecutive blocks with the same query, which renders identically.
+
 ## Security headers
 
 `nginx.conf` sends these on every response (the container deployment; see below for the static

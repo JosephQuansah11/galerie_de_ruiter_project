@@ -1,0 +1,42 @@
+// ==========================================================================
+// Galerie de Ruiter — antique-shop design layer
+// --------------------------------------------------------------------------
+// Imported last from App.scss so it refines (never restructures) the existing
+// layout: parchment surfaces, hairline frames, gilded accents, serif display
+// type and refined controls.
+// ==========================================================================
+
+:root {
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-ui: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --theme-gold: #b08a4a;
+  --theme-gold-soft: rgba(176, 138, 74, 0.38);
+  --theme-hairline: rgba(60, 31, 37, 0.16);
+  --theme-parchment: #fdfaf6;
+
+  --theme-radius-sm: 4px;
+  --theme-radius: 6px;
+  --theme-radius-lg: 10px;
+
+  --theme-shadow-sm: 0 1px 2px rgba(43, 33, 28, 0.05), 0 6px 14px rgba(43, 33, 28, 0.06);
+  --theme-shadow: 0 2px 4px rgba(43, 33, 28, 0.07), 0 16px 32px rgba(43, 33, 28, 0.11);
+
+  --theme-frame: inset 0 0 0 1px rgba(60, 31, 37, 0.1), inset 0 0 0 6px rgba(255, 253, 250, 0.9),
+    inset 0 0 0 7px var(--theme-gold-soft);
+}
+
+.theme-dark {
+  --theme-gold: #d8b476;
+  --theme-gold-soft: rgba(216, 180, 118, 0.42);
+  --theme-hairline: rgba(255, 248, 244, 0.18);
+  --theme-parchment: #3f2a2e;
+  --theme-shadow-sm: 0 1px 2px rgba(10, 4, 6, 0.4), 0 8px 18px rgba(10, 4, 6, 0.35);
+  --theme-shadow: 0 2px 6px rgba(10, 4, 6, 0.45), 0 18px 36px rgba(10, 4, 6, 0.45);
+  --theme-frame: inset 0 0 0 1px rgba(255, 248, 244, 0.14), inset 0 0 0 6px rgba(0, 0, 0, 0.16),
+    inset 0 0 0 7px var(--theme-gold-soft);
+}
+
+// --------------------------------------------------------------------------
+// Paper backdrop — a warm vignette and a whisper of laid-paper texture
+// --------------------------------------------------------------------------

@@ -1,0 +1,44 @@
+.catalogue-card-image,
+.detail-image,
+.inventory-thumb,
+.shopping-thumb,
+.detail-image-gallery button,
+.model-preview-grid img {
+  padding: 0.5rem;
+}
+
+// --------------------------------------------------------------------------
+// Settings — a curated display shelf for the reading language and the palette
+// --------------------------------------------------------------------------
+.settings-page {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 76rem;
+}
+
+.settings-page .page-heading {
+  align-items: end;
+  margin: 0;
+  padding: 0.5rem 0.5rem 1.5rem;
+  border-bottom: 1px solid var(--theme-hairline);
+  background: linear-gradient(180deg, rgba(176, 138, 74, 0.08), rgba(176, 138, 74, 0));
+}
+
+.settings-page .page-heading h1 {
+  margin: 0.5rem 0 0.4rem;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+}
+
+.settings-page .page-heading p {
+  max-width: 38rem;
+  line-height: 1.7;
+}
+
+.settings-page .settings-card {
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  border: 1px solid var(--theme-hairline);
+  border-radius: var(--theme-radius-lg);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow-sm);
+}
+

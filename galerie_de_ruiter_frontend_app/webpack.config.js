@@ -44,8 +44,8 @@ export default {
         },
       },
     {
-      // Plain stylesheets (the entry's index.css) go through the same extractor as the Sass
-      // partials, so every stylesheet of the first paint lands in one render-blocking file.
+      // Plain stylesheets - a `.css` file from a dependency, say - go through the same extractor
+      // as the Sass partials, so every stylesheet of the first paint lands in one file.
       test: /\.css$/i,
       use: [
         MiniCssExtractPlugin.loader,

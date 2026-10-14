@@ -1,0 +1,49 @@
+@media (max-width: 640px) {
+  .catalogue-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+  .catalogue-count {
+    text-align: left;
+  }
+  .detail-layout {
+    grid-template-columns: 1fr;
+  }
+  .detail-banner {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 1rem;
+  }
+  .detail-banner-caption {
+    font-size: 0.62rem;
+  }
+  .detail-related-heading {
+    align-items: flex-start;
+  }
+  #Navbar {
+    width: min(14rem, calc(100vw - 3.5rem));
+    min-width: min(14rem, calc(100vw - 3.5rem));
+    max-width: min(14rem, calc(100vw - 3.5rem));
+  }
+  .shopping-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .shopping-row-actions {
+    margin-left: 6.7rem;
+  }
+  .cart-total {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .welcome-grid {
+    grid-template-columns: 1fr;
+  }
+  .location-page {
+    grid-template-columns: 1fr;
+  }
+  .map-frame {
+    width: 100%;
+  }
+}

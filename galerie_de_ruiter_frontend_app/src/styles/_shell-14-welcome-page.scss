@@ -1,0 +1,48 @@
+.welcome-page {
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 2rem clamp(0.5rem, 3vw, 3rem) 4rem;
+}
+.welcome-hero {
+  min-height: 55vh;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  max-width: 52rem;
+}
+.welcome-hero h1 {
+  margin: 1rem 0;
+  font:
+    400 clamp(3rem, 8vw, 7rem) Georgia,
+    serif;
+  line-height: 0.95;
+}
+.welcome-hero p {
+  max-width: 38rem;
+  color: var(--theme-text-secondary);
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+.welcome-hero button,
+.welcome-grid button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.welcome-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+.welcome-grid article {
+  min-height: 14rem;
+  padding: 1.5rem;
+  border-top: 1px solid rgba(30, 32, 34, 0.2);
+}
+.welcome-grid h2 {
+  margin: 0.8rem 0 0.4rem;
+  font:
+    1.8rem Georgia,
+    serif;
+}

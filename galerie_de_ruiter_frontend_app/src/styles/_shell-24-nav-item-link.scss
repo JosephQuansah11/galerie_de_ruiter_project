@@ -1,0 +1,42 @@
+#Navbar .nav-item-link.active {
+  background: rgba(255, 250, 247, 0.19);
+  box-shadow: inset 3px 0 var(--theme-accent);
+  color: #fffaf7;
+}
+#Navbar .nav-icon {
+  flex: 0 0 1.2rem;
+}
+#Navbar .icons-list-user-profile {
+  margin-top: auto;
+  gap: 0.35rem;
+  align-items: stretch;
+  padding: 0.8rem 0.7rem 1rem;
+  border-top: 1px solid rgba(255, 250, 247, 0.18);
+}
+#Navbar .icons-list-user-profile > a {
+  display: flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.55rem;
+  color: rgba(255, 250, 247, 0.9);
+  text-decoration: none;
+}
+#Navbar .icons-list-user-profile > a:hover,
+#Navbar .icons-list-user-profile > a.active {
+  background: rgba(255, 250, 247, 0.14);
+  color: #fffaf7;
+}
+.btn-primary {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+}
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+  filter: brightness(0.92);
+}

@@ -1,0 +1,44 @@
+@media (max-width: 640px) {
+  .btn {
+    font-size: 0.72rem;
+    padding: 0.55rem 0.85rem;
+    letter-spacing: 0.06em;
+  }
+
+  .eyebrow,
+  .catalogue-artist,
+  .catalogue-kicker {
+    letter-spacing: 0.16em;
+  }
+
+  .eyebrow::before,
+  .catalogue-artist::before,
+  .catalogue-kicker::before {
+    width: 1rem;
+  }
+}
+
+// --------------------------------------------------------------------------
+// Breathing room — every block container keeps its size and gains 0.5rem
+// --------------------------------------------------------------------------
+// `:where()` keeps the specificity at zero, so any padding a component already
+// declared still wins longhand by longhand (heroes, panels, grid gutters, the
+// search fields). Containers that never declared padding now sit on a 0.5rem mat
+// instead of touching their frame. Layout-critical wrappers are excluded: the app
+// shell would shift, Bootstrap rows would fight their negative gutters, and modal
+// and dropdown chrome must stay flush.
+:where(
+  div:not(.app-shell):not(.row):not(.modal-dialog):not(.modal-content):not(.dropdown-menu):not(.eyebrow):not(.catalogue-artist):not(.topbar),
+  section,
+  article,
+  aside,
+  figure,
+  fieldset,
+  header,
+  footer
+) {
+  padding: 0.5rem;
+}
+
+// Pictures hang on a mat: the mount keeps its size and the image is inset 0.5rem.
+// (Avatars are round portraits and keep their full bleed.)

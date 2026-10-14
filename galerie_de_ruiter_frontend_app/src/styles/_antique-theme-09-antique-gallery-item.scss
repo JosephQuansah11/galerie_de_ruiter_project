@@ -1,0 +1,42 @@
+.antique-gallery-item.is-main {
+  border-color: var(--theme-primary);
+}
+
+.antique-gallery-thumb {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--theme-radius-sm);
+  background-image: linear-gradient(160deg, #fcf9f4, #efe3d7);
+}
+
+.antique-gallery-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.antique-gallery-position {
+  position: absolute;
+  left: 0.35rem;
+  bottom: 0.35rem;
+  min-width: 1.2rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 999px;
+  background: rgba(20, 12, 14, 0.62);
+  color: #fffaf7;
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.antique-gallery-move {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  display: inline-flex;
+  gap: 0.15rem;
+}
+

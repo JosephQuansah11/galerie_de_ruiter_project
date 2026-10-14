@@ -1,0 +1,47 @@
+.btn-outline-dark:hover,
+.btn-outline-dark:focus-visible,
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus-visible,
+.btn-outline-primary:hover,
+.btn-outline-primary:focus-visible {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+}
+
+.admin-page .inventory-row-actions .btn-outline-primary {
+  border-color: var(--theme-hairline);
+  color: var(--theme-primary);
+}
+
+.admin-page .inventory-row-actions .btn-outline-danger {
+  border-color: var(--theme-hairline);
+  color: #8f2c2c;
+}
+
+.btn-outline-danger:hover,
+.btn-outline-danger:focus-visible {
+  border-color: #8f2c2c;
+  background: #8f2c2c;
+  color: #fff;
+}
+
+// Text buttons — gilded underlined links.
+.btn.btn-link,
+.btn-link {
+  border: 0;
+  background: transparent;
+  color: var(--theme-primary);
+  padding: 0.4rem 0.35rem;
+  box-shadow: none;
+  text-decoration: underline;
+  text-decoration-color: var(--theme-gold-soft);
+  text-underline-offset: 0.3em;
+}
+
+.btn.btn-link:hover,
+.btn.btn-link:focus-visible {
+  color: var(--theme-gold);
+  text-decoration-color: currentColor;
+}
+

@@ -1,0 +1,36 @@
+.settings-page .theme-option {
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+}
+
+.settings-page .theme-option.selected {
+  border-color: var(--theme-gold);
+  box-shadow: 0 0 0 3px var(--theme-gold-soft);
+}
+
+.theme-swatch {
+  border-radius: var(--theme-radius-sm);
+}
+
+// Totals and counters
+.cart-total {
+  border-top: 1px solid var(--theme-hairline);
+}
+
+.catalogue-count strong,
+.cart-total strong {
+  color: var(--theme-primary);
+}
+
+.welcome-hero {
+  border-bottom: 1px solid var(--theme-hairline);
+}
+
+.welcome-grid article {
+  border-radius: var(--theme-radius-lg);
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+// Narrow screens: keep letterspaced labels from overflowing.

@@ -1,0 +1,49 @@
+#Navbar .icons-list-user-profile {
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.25rem 0 0.25rem 0.35rem;
+  background: transparent;
+}
+
+#Navbar .icons-list-user-profile > a {
+  width: auto;
+  min-height: 2.5rem;
+  white-space: nowrap;
+}
+
+.app-main.main-content {
+  width: 100%;
+  min-height: calc(100dvh - var(--top-nav-height));
+  height: calc(100dvh - var(--top-nav-height));
+  margin: var(--top-nav-height) 0 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+@media (max-width: 1199.98px) {
+  #Navbar {
+    height: auto;
+    min-height: var(--top-nav-height);
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding-block: 0.35rem;
+  }
+
+  #Navbar .navbar-collapse {
+    flex: 0 0 calc(100% + 1.5rem);
+    width: calc(100% + 1.5rem);
+    max-height: calc(100dvh - var(--top-nav-height));
+    margin: 0 -0.75rem -0.35rem;
+    overflow-y: auto;
+    background: linear-gradient(165deg, var(--theme-nav-start), var(--theme-nav-end));
+  }
+
+  #Navbar .navbar-collapse:has(.icons-list-user-profile .dropdown-menu.show) {
+    overflow: visible;
+  }
+
+  // The collapsed menu itself — every list, list entry and drop-down inside it — is
+  // owned by the single "Collapsed (small screen) navigation" block further down, so
+  // the full-width panel contract only exists in one place.
+}
+

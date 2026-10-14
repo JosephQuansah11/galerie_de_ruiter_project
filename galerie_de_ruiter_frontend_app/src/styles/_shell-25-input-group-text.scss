@@ -1,0 +1,50 @@
+.card,
+.modal-content,
+.dropdown-menu,
+.list-group-item,
+.form-control,
+.form-select,
+.input-group-text {
+  border-color: var(--theme-border);
+  background-color: var(--theme-surface);
+  color: var(--theme-text);
+}
+.dropdown-item {
+  color: var(--theme-text);
+}
+body.theme-dark .dropdown-item:hover,
+body.theme-dark .dropdown-item:focus {
+  background-color: rgba(255, 250, 247, 0.1);
+  color: var(--theme-text);
+}
+body.theme-dark .text-muted {
+  color: var(--theme-text-secondary) !important;
+}
+body.theme-dark .form-control::placeholder {
+  color: var(--theme-text-secondary);
+  opacity: 0.8;
+}
+.btn-outline-dark {
+  border-color: var(--theme-primary);
+  color: var(--theme-on-primary);
+  width: auto;
+  text-align: center;
+}
+.btn-outline-dark:hover,
+.btn-outline-dark:focus-visible {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+}
+
+:root {
+  --top-nav-height: 5.5rem;
+}
+
+.container-div {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+

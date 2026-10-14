@@ -1,0 +1,48 @@
+.catalogue-search-submit:hover,
+.catalogue-search-submit:focus-visible,
+.inventory-search-submit:hover,
+.inventory-search-submit:focus-visible {
+  border-color: var(--theme-gold);
+  box-shadow: inset 0 0 0 3px var(--theme-gold-soft);
+  transform: translateY(-1px);
+}
+
+.catalogue-search-clear:hover,
+.catalogue-search-clear:focus-visible,
+.inventory-search-clear:hover,
+.inventory-search-clear:focus-visible {
+  background: rgba(176, 138, 74, 0.16);
+  color: var(--theme-text);
+}
+
+// --------------------------------------------------------------------------
+// Chat, menus and messages
+// --------------------------------------------------------------------------
+.chat-bubble {
+  border-radius: var(--theme-radius-lg);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+.chat-assistant {
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+}
+
+.chat-user {
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 250, 247, 0.18), var(--theme-shadow-sm);
+}
+
+.chat-option {
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+  color: var(--theme-text);
+}
+
+.chat-option:hover:not(:disabled),
+.chat-option:focus-visible {
+  border-color: var(--theme-gold);
+  background: rgba(176, 138, 74, 0.12);
+  color: var(--theme-text);
+}
+

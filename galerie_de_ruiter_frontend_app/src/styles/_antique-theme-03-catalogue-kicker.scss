@@ -1,0 +1,47 @@
+.eyebrow::before,
+.catalogue-artist::before,
+.catalogue-kicker::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.65;
+}
+
+// Section rules: a gilded hairline instead of a bare border.
+.profile-access-summary, .security-line, .settings-page .page-heading, .profile-hero, .add-antique-intro, .chat-header {
+  border-color: var(--theme-hairline);
+}
+
+hr,
+.about-content hr {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, var(--theme-gold-soft), var(--theme-hairline) 40%, rgba(0, 0, 0, 0));
+}
+
+// Badges read as engraved plaques.
+.badge {
+  border-radius: var(--theme-radius-sm);
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.35em 0.65em;
+}
+
+.badge.catalogue-kicker {
+  border: 1px solid var(--theme-gold-soft);
+  background-color: transparent;
+  color: var(--theme-gold);
+}
+
+.badge.catalogue-kicker::before {
+  display: none;
+}
+
+// --------------------------------------------------------------------------
+// Buttons — engraved gallery labels: squared, letterspaced, gilded on hover
+// --------------------------------------------------------------------------

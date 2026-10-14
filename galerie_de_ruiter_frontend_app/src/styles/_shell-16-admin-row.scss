@@ -1,0 +1,46 @@
+.admin-row > div {
+  display: grid;
+  gap: 0.25rem;
+}
+.admin-row span {
+  color: var(--theme-text-secondary);
+  font-size: 0.85rem;
+}
+.admin-row .form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.admin-row .form-check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+.admin-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.category-create-form {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: 0.6rem;
+  margin: 1.5rem 0;
+}
+.category-create-form button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: normal;
+}
+.inventory-search {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: 34rem;
+  margin: 1.5rem 0;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgba(60, 31, 37, 0.18);
+  background: var(--theme-surface);
+}

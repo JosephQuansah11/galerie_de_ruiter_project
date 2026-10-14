@@ -1,0 +1,47 @@
+.dropdown-header {
+  color: var(--theme-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+// Notices and dialogs sit on the parchment too.
+.alert {
+  border: 1px solid var(--theme-hairline);
+  border-left-width: 3px;
+  border-radius: var(--theme-radius);
+  background: var(--theme-parchment);
+  color: var(--theme-text);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+}
+
+.alert-danger { border-left-color: #8f2c2c; }
+.alert-success { border-left-color: #3f7d68; }
+.alert-warning { border-left-color: var(--theme-gold); }
+.alert-light { background: var(--theme-parchment); color: var(--theme-text); }
+
+.modal-content {
+  border-radius: var(--theme-radius-lg);
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow);
+}
+
+.modal-header,
+.modal-footer {
+  border-color: var(--theme-hairline);
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 500;
+}
+
+.modal-backdrop.show {
+  opacity: 0.5;
+}
+
+// Preference swatches read as paint chips on a display card.

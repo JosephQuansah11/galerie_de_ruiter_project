@@ -1,0 +1,42 @@
+.catalogue-row-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.catalogue-row .catalogue-card-footer {
+  margin-top: 0.75rem;
+}
+
+// On a narrow screen the price and its actions stack under the story instead of squeezing
+// the row.
+@media (max-width: 520px) {
+  .catalogue-row .catalogue-card-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+// --------------------------------------------------------------------------
+// Forms — ruled parchment fields with a gilded focus ring
+// --------------------------------------------------------------------------
+.form-control,
+.form-select,
+textarea.form-control {
+  border: 1px solid var(--theme-hairline);
+  border-radius: var(--theme-radius);
+  background: var(--theme-parchment);
+  color: var(--theme-text);
+  font-family: var(--font-ui);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea.form-control:focus {
+  border-color: var(--theme-gold);
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--theme-gold-soft);
+}
+

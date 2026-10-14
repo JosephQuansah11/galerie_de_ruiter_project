@@ -1,0 +1,44 @@
+.welcome-slider .carousel-caption {
+  right: 0.75rem;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--theme-radius);
+  background: rgba(38, 10, 15, 0.72);
+  color: #fffaf7;
+}
+
+.welcome-slider .carousel-caption p {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+}
+
+.welcome-slider .carousel-indicators [data-bs-target] {
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--theme-gold);
+}
+
+.welcome-slider .carousel-control-prev-icon,
+.welcome-slider .carousel-control-next-icon {
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.6));
+}
+
+// --------------------------------------------------------------------------
+// Welcome images administration
+// --------------------------------------------------------------------------
+.home-images-admin {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--theme-hairline);
+}
+
+.home-images-admin h3 {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+}
+

@@ -1,0 +1,50 @@
+@media (max-width: 1199.98px) {
+  #Navbar {
+    inset: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    min-height: var(--top-nav-height);
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    row-gap: 0.35rem;
+    /* The collapsed panel cancels this inline padding so the menu spans the
+       navigation bar edge to edge. */
+    padding: 0.35rem 0.75rem;
+    z-index: 1040;
+  }
+
+  #Navbar .navbar-brand-div {
+    width: auto;
+    min-height: 0;
+    padding: 0;
+    margin-right: auto;
+  }
+
+  #Navbar .navbar-toggler {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 1px solid rgba(255, 250, 247, 0.42);
+    border-radius: 0.6rem;
+    background: rgba(255, 250, 247, 0.1);
+    box-shadow: none;
+    transition: background 160ms ease, border-color 160ms ease;
+  }
+  #Navbar .navbar-toggler:hover,
+  #Navbar .navbar-toggler:focus-visible {
+    border-color: rgba(255, 250, 247, 0.8);
+    background: rgba(255, 250, 247, 0.22);
+  }
+  #Navbar .navbar-toggler:focus-visible {
+    outline: 2px solid rgba(255, 250, 247, 0.65);
+    outline-offset: 2px;
+  }
+}

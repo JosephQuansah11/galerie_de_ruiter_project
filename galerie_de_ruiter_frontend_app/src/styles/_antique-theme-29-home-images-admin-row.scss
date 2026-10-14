@@ -1,0 +1,46 @@
+.home-images-admin-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+.home-images-admin-row .form-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.home-images-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-images-list li {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  border: 1px solid var(--theme-hairline);
+  border-radius: var(--theme-radius);
+  background: var(--theme-surface);
+}
+
+.home-images-list img {
+  width: 100%;
+  height: 8rem;
+  padding: 0.25rem;
+  object-fit: contain;
+  border-radius: var(--theme-radius-sm);
+  background: linear-gradient(160deg, #fcf9f4, #efe3d7);
+}
+
+.home-images-list span {
+  min-height: 1rem;
+  color: var(--theme-text-secondary);
+  font-size: 0.8rem;
+}
+

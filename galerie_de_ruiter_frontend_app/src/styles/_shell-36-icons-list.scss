@@ -1,0 +1,50 @@
+@media (max-width: 1199.98px) {
+
+  // …and every entry in those lists covers the full width of the bar.
+  #Navbar .icons-list > *, #Navbar .nav-item, #Navbar .nav-category-dropdown, #Navbar .nav-item-link, #Navbar .nav-category-dropdown > .nav-link, #Navbar .nav-category-dropdown .dropdown-toggle {
+    width: 100%;
+    max-width: none;
+  }
+
+  #Navbar .nav-item-link,
+  #Navbar .nav-category-dropdown > .nav-link,
+  #Navbar .nav-category-dropdown .dropdown-toggle {
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    min-height: 2.6rem;
+    white-space: normal;
+    justify-content: flex-start;
+    text-align: left;
+  }
+  #Navbar .nav-item-link.active,
+  #Navbar .nav-category-dropdown .dropdown-toggle.active {
+    background: rgba(255, 250, 247, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(255, 250, 247, 0.25);
+  }
+
+  #Navbar .icons-list-user-profile {
+    width: 100%;
+    margin: 0.75rem 0 0;
+    padding: 0.85rem 0 0;
+    border-top: 1px solid rgba(255, 250, 247, 0.16);
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  #Navbar .icons-list-user-profile > *,
+  #Navbar .icons-list-user-profile .dropdown,
+  #Navbar .icons-list-user-profile .dropdown > .btn {
+    width: 100%;
+    max-width: none;
+  }
+  #Navbar .icons-list-user-profile .dropdown > .btn {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+}

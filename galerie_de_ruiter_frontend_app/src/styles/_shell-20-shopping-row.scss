@@ -1,0 +1,42 @@
+.shopping-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1rem;
+  border: 1px solid rgba(30, 32, 34, 0.13);
+  background: var(--theme-surface);
+}
+.shopping-thumb {
+  display: grid;
+  flex: 0 0 5.5rem;
+  width: 5.5rem;
+  height: 5.5rem;
+  place-items: center;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #cfb89b, #7b6d5c);
+  color: whitesmoke;
+  font:
+    2.3rem Georgia,
+    serif;
+}
+.shopping-row-copy {
+  flex: 1;
+}
+.shopping-row-copy h2 {
+  margin: 0.25rem 0;
+  font:
+    1.35rem Georgia,
+    serif;
+}
+.shopping-row-actions button,
+.cart-total button,
+.catalogue-state button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.quantity-input {
+  max-width: 4.5rem;
+}

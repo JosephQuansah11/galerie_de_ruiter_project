@@ -1,0 +1,43 @@
+#Navbar .navbar-nav {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  flex-direction: row;
+  flex-wrap: wrap-reverse;
+  align-items: center;
+  overflow: visible;
+  padding: 0 0.4rem;
+}
+
+#Navbar .navbar-toggler {
+  flex: 0 0 auto;
+  border-color: rgba(255, 250, 247, 0.55);
+}
+
+#Navbar .navbar-toggler:focus {
+  box-shadow: 0 0 0 0.2rem rgba(255, 250, 247, 0.2);
+}
+
+#Navbar .nav-category-dropdown {
+  flex: 0 0 auto;
+}
+
+#Navbar .nav-category-dropdown > .nav-link {
+  display: flex;
+  min-height: 2.6rem;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.55rem;
+  color: rgba(255, 250, 247, 0.9);
+  white-space: nowrap;
+}
+
+#Navbar .nav-category-dropdown > .nav-link:hover,
+#Navbar .nav-category-dropdown > .nav-link:focus {
+  background: rgba(255, 250, 247, 0.14);
+  color: #fffaf7;
+}
+

@@ -1,0 +1,46 @@
+body:not(.theme-dark),
+body:not(.theme-dark) .app-main,
+body:not(.theme-dark) .main-content {
+  background-image:
+    radial-gradient(circle at 12% -10%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 46%),
+    radial-gradient(circle at 92% 4%, rgba(176, 138, 74, 0.08), rgba(176, 138, 74, 0) 40%),
+    repeating-linear-gradient(0deg, rgba(60, 31, 37, 0.016) 0 1px, rgba(0, 0, 0, 0) 1px 3px);
+  background-attachment: fixed;
+}
+
+// --------------------------------------------------------------------------
+// Typography — gallery display serif for headings, crisp UI sans elsewhere
+// --------------------------------------------------------------------------
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.004em;
+  line-height: 1.14;
+}
+
+.catalogue-heading h1, .shopping-heading h1, .profile-hero h1, .chat-header h1, .location-copy h1, .settings-page .page-heading h1, .add-antique-intro h1, .auth-page .auth-panel h1, .welcome-hero h1, .about-content h1, .about-content h2, .about-content h3, .catalogue-card h2, .shopping-row h2, .cart-total strong, .catalogue-count strong, .profile-details-panel h2, .security-card h3, .welcome-story h2, .welcome-grid h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.006em;
+}
+
+.catalogue-heading h1,
+.shopping-heading h1,
+.welcome-hero h1,
+.auth-page .auth-panel h1 {
+  font-weight: 400;
+}
+
+// Small-caps gilded labels with a drawn rule, used above every section title.
+.eyebrow, .catalogue-artist, .catalogue-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--theme-gold);
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+

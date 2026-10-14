@@ -1,0 +1,50 @@
+.about-location {
+  margin: 2rem 0 0;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+}
+
+.about-location h2 {
+  margin: 0 0 0.85rem;
+  font: 400 clamp(1.4rem, 3vw, 2rem) Georgia, serif;
+}
+
+.about-location-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 2rem;
+  margin-bottom: 0.85rem;
+}
+
+.about-location-facts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--theme-text);
+}
+
+.about-location a {
+  color: var(--theme-primary);
+  font-weight: 600;
+}
+
+// --------------------------------------------------
+// Navbar spans the window
+// On wide screens the bar takes the full width of the window and only as much height as its
+// items need. The measured height is published to `--top-nav-height` by `CustomNav`, so the
+// page below starts exactly under the bar.
+// --------------------------------------------------
+@media (min-width: 1200px) {
+  #Navbar {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    min-height: 0;
+    padding: 0.4rem 0.85rem;
+  }
+}
+
+// The antique-shop design layer refines the rules above (surfaces, buttons,
+// typography and controls) and must stay last so it wins the cascade.
+

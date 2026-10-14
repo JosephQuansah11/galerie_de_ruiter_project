@@ -1,0 +1,49 @@
+.detail-banner > div > span {
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+}
+.detail-banner p {
+  margin: 0.3rem 0 0;
+  font: 1.45rem Georgia, serif;
+}
+.detail-banner-caption {
+  color: rgba(255, 250, 247, 0.78);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+}
+.detail-layout {
+  grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr);
+  align-items: start;
+  gap: clamp(2rem, 5vw, 5rem);
+  margin-top: 2rem;
+}
+.detail-image {
+  background: var(--theme-surface);
+  color: var(--theme-primary);
+}
+.detail-image img {
+  object-fit: contain;
+  padding: 1rem;
+}
+.detail-copy .catalogue-artist {
+  color: var(--theme-primary);
+}
+.detail-copy h1 {
+  color: var(--theme-text);
+}
+.detail-copy .catalogue-kicker {
+  border-radius: 0;
+  background: var(--theme-primary) !important;
+  color: var(--theme-on-primary);
+}
+.detail-facts {
+  border-color: var(--theme-border);
+}
+.detail-actions .btn-dark {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: var(--theme-on-primary);
+}
+.detail-related {
+  margin-top: 4rem;
+}

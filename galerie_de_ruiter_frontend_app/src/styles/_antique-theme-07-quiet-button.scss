@@ -1,0 +1,48 @@
+.quiet-button {
+  border: 1px solid var(--theme-hairline);
+  background: transparent;
+  color: var(--theme-text);
+  font-size: 0.75rem;
+  padding: 0.55rem 0.95rem;
+}
+
+.quiet-button:hover, .quiet-button:focus-visible {
+  border-color: var(--theme-gold);
+  background: rgba(176, 138, 74, 0.1);
+  color: var(--theme-text);
+}
+
+// Navigation links stay readable: no letterspaced capitals in the sidebar rail.
+.nav-item-link,
+.chat-whatsapp,
+.auth-page .auth-panel .auth-login {
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+// --------------------------------------------------------------------------
+// Containers — parchment panels with a hairline frame and a soft cast shadow
+// --------------------------------------------------------------------------
+.form-panel, .security-card, .profile-details-panel, .category-create-form, .chat-appointment-picker, .appointment-summary, .map-frame, .auth-page .auth-panel, .catalogue-card, .shopping-row, .admin-row, .inventory-row {
+  border-radius: var(--theme-radius-lg);
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+.add-antique-page .card {
+  border-radius: var(--theme-radius-lg);
+  border: 1px solid var(--theme-hairline);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow);
+}
+
+// The photograph gallery: the main image on top with a strip of thumbnails beneath it, the
+// same shape the piece's own page uses. The first photograph is the one the catalogue shows
+// large, so the arrows are how the gallery moves a picture to the front.
+.antique-gallery {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.85rem 0 0;
+}
+

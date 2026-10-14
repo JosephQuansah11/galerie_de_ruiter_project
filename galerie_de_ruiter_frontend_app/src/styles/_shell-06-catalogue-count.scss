@@ -1,0 +1,45 @@
+.catalogue-count strong {
+  color: var(--theme-text);
+  font-size: 2rem;
+}
+// The catalogue search control is styled in the shared _antique-pages partial.
+.catalogue-card {
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(30, 32, 34, 0.13);
+  background: var(--theme-surface);
+  box-shadow: 0 0.8rem 2rem rgba(30, 32, 34, 0.08);
+}
+.catalogue-card {
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+.catalogue-card:hover {
+  transform: translateY(-0.25rem);
+  box-shadow: 0 1.2rem 2.5rem rgba(30, 32, 34, 0.14);
+}
+.catalogue-card-image {
+  display: grid;
+  place-items: center;
+  height: min(30vh, 24rem);
+  overflow: hidden;
+  background: linear-gradient(135deg, #cfb89b, #7b6d5c);
+  color: rgba(255, 255, 255, 0.8);
+  font:
+    4rem Georgia,
+    serif;
+}
+.shopping-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.catalogue-card-image img,
+.detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

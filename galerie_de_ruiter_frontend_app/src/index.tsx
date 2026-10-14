@@ -2,7 +2,6 @@ import i18n, { ensureLanguage } from "./i18n";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "@/styles/App.scss";
-import "@/styles/index.css";
 
 /**
  * The gallery's own language (Belgian Dutch) and English, its fallback, ship with the app. A

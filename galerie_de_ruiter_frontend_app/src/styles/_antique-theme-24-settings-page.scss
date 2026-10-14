@@ -1,0 +1,46 @@
+.settings-page .theme-copy strong {
+  color: var(--theme-text);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 500;
+  text-transform: none;
+}
+
+.settings-page .theme-copy small {
+  color: var(--theme-text-secondary);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.settings-page .theme-check {
+  grid-area: check;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--theme-gold-soft);
+  border-radius: 999px;
+  color: var(--theme-gold);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@media (max-width: 650px) {
+  .settings-page .settings-card-head {
+    align-items: stretch;
+  }
+
+  .settings-page .language-row select {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+// --------------------------------------------------------------------------
+// Welcome hero — the gallery logo hangs large beside the welcome message
+// --------------------------------------------------------------------------

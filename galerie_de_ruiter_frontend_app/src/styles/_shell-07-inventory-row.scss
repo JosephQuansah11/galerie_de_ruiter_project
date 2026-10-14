@@ -1,0 +1,49 @@
+.inventory-row img {
+  flex: 0 0 4.5rem;
+  width: 4.5rem;
+  height: 100%;
+  max-height: 4.5rem;
+  object-fit: contain;
+}
+.catalogue-card-content {
+  padding: 1.25rem;
+}
+.catalogue-artist {
+  color: var(--theme-text-secondary);
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.catalogue-card h2 {
+  margin: 0.45rem 0;
+  font:
+    1.45rem Georgia,
+    serif;
+}
+.catalogue-card p {
+  min-height: 3rem;
+  color: var(--theme-text-secondary);
+}
+.catalogue-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+.catalogue-card-actions,
+.detail-actions,
+.shopping-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.catalogue-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  min-height: 14rem;
+  color: var(--theme-text-secondary);
+}
+

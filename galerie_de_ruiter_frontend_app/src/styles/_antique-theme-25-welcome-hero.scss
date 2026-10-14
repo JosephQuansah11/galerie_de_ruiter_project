@@ -1,0 +1,48 @@
+.welcome-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  padding: clamp(1.5rem, 4vw, 3rem) 0.5rem;
+}
+
+.welcome-hero-logo {
+  margin: 0;
+}
+
+.welcome-logo {
+  display: block;
+  width: clamp(12rem, 30vw, 26rem);
+  max-width: 100%;
+  // `height: auto` keeps the logo's own ratio: without it the height the img element declares
+  // would win over the width set here and stretch the logo.
+  height: auto;
+  max-height: 26rem;
+  object-fit: contain;
+  border-radius: 0;
+  filter: drop-shadow(0 1.2rem 2.4rem rgba(60, 31, 37, 0.2));
+}
+
+.welcome-hero-copy h1 {
+  margin: 0.6rem 0 0.8rem;
+  font-size: clamp(2.4rem, 5vw, 4.2rem);
+}
+
+@media (max-width: 760px) {
+  .welcome-hero {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .welcome-hero-copy {
+    justify-items: center;
+  }
+
+  .welcome-logo {
+    width: min(18rem, 70vw);
+    margin: 0 auto;
+  }
+}
+
+// The top bar now carries the gallery wordmark instead of the logo image.

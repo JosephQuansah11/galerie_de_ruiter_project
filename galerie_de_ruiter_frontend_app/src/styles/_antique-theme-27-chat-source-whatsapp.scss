@@ -1,0 +1,47 @@
+.chat-source-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--theme-gold-soft);
+  border-radius: 999px;
+  background: var(--theme-surface);
+  color: var(--theme-primary) !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.chat-source-whatsapp:hover,
+.chat-source-whatsapp:focus-visible {
+  background: rgba(176, 138, 74, 0.16);
+  border-color: var(--theme-gold);
+}
+
+// --------------------------------------------------------------------------
+// Welcome slider — the gallery's photographs in a framed carousel
+// --------------------------------------------------------------------------
+.welcome-slider {
+  max-width: 74rem;
+  margin: 1.5rem auto 2.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--theme-hairline);
+  border-radius: var(--theme-radius-lg);
+  background: var(--theme-parchment);
+  box-shadow: var(--theme-shadow-sm);
+}
+
+.welcome-slider .carousel,
+.welcome-slider .carousel-inner {
+  border-radius: var(--theme-radius);
+  overflow: hidden;
+}
+
+.welcome-slide-image {
+  display: block;
+  width: 100%;
+  height: clamp(16rem, 46vw, 32rem);
+  object-fit: contain;
+  background: linear-gradient(160deg, #fcf9f4, #efe3d7);
+  border-radius: var(--theme-radius-sm);
+}
+

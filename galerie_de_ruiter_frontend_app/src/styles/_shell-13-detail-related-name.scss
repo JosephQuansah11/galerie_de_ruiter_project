@@ -1,0 +1,48 @@
+.detail-related-name {
+  // The title is clamped to two lines so a long piece name stays inside the card instead of
+  // running past its right edge. Same pattern as the inventory description preview.
+  display: -webkit-box;
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  font: 1.05rem Georgia, serif;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.detail-related-price {
+  color: var(--theme-primary);
+  font-size: 0.8rem;
+}
+.model-preview {
+  display: grid;
+  gap: 0.4rem;
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  min-height: 9rem;
+  place-content: center;
+  border: 1px dashed rgba(30, 32, 34, 0.3);
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--theme-text-secondary);
+  text-align: center;
+}
+.model-preview span {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+}
+.model-preview strong {
+  color: var(--theme-text);
+  font:
+    1.15rem Georgia,
+    serif;
+}
+.model-preview p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.model-preview iframe {
+  width: 100%;
+  min-height: 18rem;
+  border: 0;
+}

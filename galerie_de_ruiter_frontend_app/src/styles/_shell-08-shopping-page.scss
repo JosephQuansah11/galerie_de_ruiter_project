@@ -1,0 +1,49 @@
+.detail-page,
+.shopping-page {
+  max-width: 74rem;
+  margin: 0 auto;
+  padding: 1.5rem clamp(0.5rem, 3vw, 3rem) 4rem;
+}
+.detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding-left: 0;
+  color: var(--theme-text);
+  text-decoration: none;
+  background: var(--theme-surface);
+}
+.detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.85fr);
+  gap: clamp(2rem, 7vw, 6rem);
+  align-items: center;
+  margin-top: 2rem;
+}
+.detail-image {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #cfb89b, #7b6d5c);
+  color: rgba(255, 255, 255, 0.8);
+  font:
+    clamp(6rem, 15vw, 13rem) Georgia,
+    serif;
+  overflow: hidden;
+}
+.detail-copy .catalogue-artist {
+  display: block;
+  margin-top: 1.5rem;
+}
+.detail-copy h1,
+.shopping-heading h1 {
+  margin: 0.55rem 0 1rem;
+  font:
+    400 clamp(2.4rem, 5vw, 4.5rem) Georgia,
+    serif;
+}
+.detail-description {
+  max-width: 36rem;
+  color: var(--theme-text-secondary);
+  font-size: 1.1rem;
+  line-height: 1.7;
+}

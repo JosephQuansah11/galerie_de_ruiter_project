@@ -1,0 +1,48 @@
+.welcome-grid p {
+  max-width: 30rem;
+  color: var(--theme-text-secondary);
+  line-height: 1.6;
+}
+.welcome-story {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(30, 32, 34, 0.2);
+}
+.welcome-story h2 {
+  margin: 0.8rem 0 1.2rem;
+  font: 400 clamp(2rem, 4vw, 3.25rem) Georgia, serif;
+}
+.welcome-story-copy {
+  max-width: 52rem;
+}
+.welcome-story-copy p {
+  color: var(--theme-text-secondary);
+  line-height: 1.75;
+}
+.category-count {
+  margin-left: 0.35rem;
+  opacity: 0.65;
+}
+.admin-page {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 2rem clamp(0.5rem, 3vw, 3rem) 4rem;
+}
+.admin-intro {
+  max-width: 38rem;
+  color: var(--theme-text-secondary);
+}
+.admin-list {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 2rem;
+}
+.admin-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid rgba(30, 32, 34, 0.13);
+  background: var(--theme-surface);
+}

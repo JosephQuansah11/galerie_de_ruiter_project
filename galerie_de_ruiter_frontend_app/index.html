@@ -16,6 +16,26 @@
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" />
 
+    <!-- The gallery type comes from Google Fonts. The preconnects open the two connections
+         while the parser is still reading this file, and the stylesheet is fetched with
+         media="print" so it never holds up the first paint: the browser switches it to
+         media="all" as soon as it arrives. The noscript copy keeps the type for clients that
+         do not run the app's JavaScript. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        rel="stylesheet"
+        media="print"
+        onload="this.media='all'"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&amp;family=DM+Sans:wght@400;500;600;700&amp;display=swap"
+    />
+    <noscript>
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&amp;family=DM+Sans:wght@400;500;600;700&amp;display=swap"
+        />
+    </noscript>
+
     <title>Galerie De Ruiter</title>
 </head>
 

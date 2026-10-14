@@ -5,7 +5,9 @@
 @import "admin";
 @import "profile";
 @import "settings";
-@import "bootstrap-icons/font/bootstrap-icons.css";
+// bootstrap-icons is not imported: no screen uses a `bi`/`bi-*` class (the interface draws its
+// icons with lucide-react SVGs), and its stylesheet was 85 kB of render-blocking CSS plus a
+// web-font request on the critical path.
 
 
 

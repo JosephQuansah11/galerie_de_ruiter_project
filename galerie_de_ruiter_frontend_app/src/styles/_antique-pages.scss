@@ -97,7 +97,7 @@
 .glb-model-viewer model-viewer { background: #f4f1eb; --poster-color: #f4f1eb; }
 .glb-model-viewer { position: relative; }
 .glb-model-viewer-error { position: absolute; right: 0.75rem; bottom: 0.5rem; left: 0.75rem; margin: 0; padding: 0.5rem 0.75rem; background: rgba(255, 253, 251, 0.94); color: var(--theme-text); font-size: 0.9rem; text-align: center; }
-.three-d-viewer-fallback { display: grid; place-items: center; width: 100%; min-height: min(30vh, 18rem); padding: 1.5rem; color: var(--theme-text-secondary); text-align: center; }
+.three-d-viewer-loading, .three-d-viewer-fallback { display: grid; place-items: center; width: 100%; min-height: min(30vh, 18rem); padding: 1.5rem; color: var(--theme-text-secondary); text-align: center; }
 .about-page { max-width: 58rem; margin: 0 auto; padding: 2.5rem clamp(0.75rem, 4vw, 3rem) 5rem; }
 .about-content { color: var(--theme-text); font: 1.05rem/1.85 Georgia, serif; }
 .about-content h1, .about-content h2, .about-content h3 { color: var(--theme-primary); font-family: Georgia, serif; font-weight: 400; line-height: 1.2; }

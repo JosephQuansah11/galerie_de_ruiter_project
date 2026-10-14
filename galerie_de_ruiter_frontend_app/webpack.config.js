@@ -40,6 +40,15 @@ export default {
         },
       },
     {
+      // Plain stylesheets (the entry's index.css) go through the same extractor as the Sass
+      // partials, so every stylesheet of the first paint lands in one render-blocking file.
+      test: /\.css$/i,
+      use: [
+        MiniCssExtractPlugin.loader,
+        "css-loader",
+      ],
+    },
+    {
       test: /\.s[ac]ss$/i,
       use: [
         MiniCssExtractPlugin.loader, // or "style-loader" in development
@@ -122,6 +131,12 @@ export default {
   optimization: {
     splitChunks: {
       chunks: "all",
+      cacheGroups: {
+        // Every stylesheet the first paint needs lands in one file, so the browser waits on a
+        // single render-blocking <link> instead of one per split chunk. Styles that only an
+        // on-demand chunk needs (the 3D viewer) keep their own file and travel with it.
+        styles: { name: "styles", type: "css/mini-extract", chunks: "initial", enforce: true },
+      },
     },
   },
 

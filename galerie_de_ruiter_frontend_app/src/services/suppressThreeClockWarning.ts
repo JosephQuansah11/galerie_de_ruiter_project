@@ -11,6 +11,10 @@
  * exactly, so only that deprecation notice is dropped: every other three.js log, including
  * TSL stack-trace warnings, still reaches the browser console unchanged.
  *
+ * three is imported on demand: this shim runs with the entry module, but the library itself
+ * belongs to the 3D viewer's own chunk so it stays out of the first paint. The filter is
+ * installed as soon as three lands, which is always before a `<Canvas>` can build a Clock.
+ *
  * REMOVAL: delete this file and its import in `src/index.tsx` once React Three Fiber stops
  * building `new THREE.Clock()`. Confirm with
  * `grep -n "new THREE.Clock" node_modules/@react-three/fiber/dist/*.js`.
@@ -18,7 +22,6 @@
  *
  * @see https://github.com/pmndrs/react-three-fiber/issues/3741
  */
-import { setConsoleFunction } from "three";
 
 /**
  * `warn()` prepends `THREE.` to its first argument, and the Clock constructor passes a
@@ -40,20 +43,22 @@ const scope = globalThis as GlobalScope;
 if (!scope[INSTALLED]) {
   scope[INSTALLED] = true;
 
-  setConsoleFunction((method: ConsoleMethod, message: string, ...params: unknown[]) => {
-    if (method === "warn" && message === CLOCK_DEPRECATION) {
-      return;
-    }
-
-    // Mirror three's default handling so TSL warnings/errors keep clickable stack frames.
-    if (method !== "log") {
-      const first = params[0] as { isStackTrace?: boolean; getError?: (m: string) => Error } | undefined;
-      if (first?.isStackTrace && typeof first.getError === "function") {
-        console[method](first.getError(message));
+  void import("three").then(({ setConsoleFunction }) => {
+    setConsoleFunction((method: ConsoleMethod, message: string, ...params: unknown[]) => {
+      if (method === "warn" && message === CLOCK_DEPRECATION) {
         return;
       }
-    }
 
-    console[method](message, ...params);
+      // Mirror three's default handling so TSL warnings/errors keep clickable stack frames.
+      if (method !== "log") {
+        const first = params[0] as { isStackTrace?: boolean; getError?: (m: string) => Error } | undefined;
+        if (first?.isStackTrace && typeof first.getError === "function") {
+          console[method](first.getError(message));
+          return;
+        }
+      }
+
+      console[method](message, ...params);
+    });
   });
 }

@@ -1,4 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap");
+/* The gallery type is loaded by index.html: preconnect plus a stylesheet that does not block
+   the first paint. It used to be an `@import` here, which chained a third-party request behind
+   this whole bundle. */
 
 :root {
   font-family: "DM Sans", sans-serif;

@@ -54,18 +54,50 @@ The app is one HTML page, so what a crawler can reach is decided in three places
   `dist/sitemap.xml` plus the absolute `Sitemap:` line in `dist/robots.txt`. It lists the pages
   a visitor reaches without an account: `/dashboard` and `/dashboard/chat`.
 
-The site's public origin is not in the source. Pass it at build time, otherwise the sitemap
-points at `http://localhost:3000` and the script says so:
+The site's public origin lives in `site.config.mjs`, in one place, because two build steps need
+it: the sitemap (and the `Sitemap:` line in `robots.txt`) and the absolute `og:url`/`og:image`
+of the social preview tags. It defaults to `https://galeriederuiter.cloud-ip.cc`, so a deploy
+that sets nothing still publishes the right URLs; `SITE_URL` overrides it for a staging deploy or
+a local build:
 
 ```bash
-SITE_URL=https://www.example.be npm run build
+SITE_URL=http://localhost:3000 npm run build
 # or, for the container:
 docker build --build-arg SITE_URL=https://www.example.be ./galerie_de_ruiter_frontend_app
 ```
 
-`SITE_URL` is also what turns the `og:url` and `og:image` tags in `index.html` into the
-absolute URLs a social preview needs. Add a 1200×630 image to `public/` and point
-`og:image` at it for richer previews.
+`render.yaml` sets `SITE_URL` for the static site. Like the other frontend values in it, it is
+read while the bundle is built, so changing it needs a new deploy.
+
+The `og:image` a shared link shows is `logo512.png`. A 1200×630 image in `public/` pointed at
+from `index.html` makes for a richer preview, which is what a shared link gets instead of a
+square logo.
+
+### Google Search Console
+
+A sitemap is only as good as the origin inside it. URLs a crawler cannot fetch - `localhost`
+among them - come back as *Couldn't fetch*, and the pages stay out of the results even though
+the site itself is reachable. Check what a deploy actually published before submitting anything:
+
+```bash
+curl -s https://galeriederuiter.cloud-ip.cc/sitemap.xml | grep '<loc>'
+curl -s https://galeriederuiter.cloud-ip.cc/robots.txt
+```
+
+Both should name the public origin. Then, in Search Console, submit
+`https://galeriederuiter.cloud-ip.cc/sitemap.xml` under *Sitemaps*, and use *URL inspection* →
+*Request indexing* for `/dashboard` and `/dashboard/chat`.
+
+Those two are the only pages that can be indexed. Every other route needs an account and answers
+with the sign-in page, which carries `noindex`, so a crawler that follows `/antiques` or `/about`
+finds the login page and leaves; `robots.txt` closes those paths so it does not spend the crawl
+budget finding that out. Indexing the collection itself means making it readable without an
+account - the note below says how.
+
+The host is a free `cloud-ip.cc` subdomain. Search engines give such hostnames less weight than
+a domain you own, and the provider can reassign one, so a custom domain is the durable answer;
+nothing in the build depends on which one it is, because `site.config.mjs` is the only place that
+names it.
 
 When the collection opens to visitors, remove the `/antiques` and `/about` lines from
 `robots.txt` and add the pieces to `publicPages` in the sitemap script (the API's

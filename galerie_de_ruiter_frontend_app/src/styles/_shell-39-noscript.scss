@@ -1,0 +1,23 @@
+// The page a visitor without JavaScript gets: index.html carries this text inside <noscript>,
+// so a crawler's first pass and a browser that cannot run the bundle see the gallery described
+// instead of an empty document. It is not laid out like the app - there is no app - it only has
+// to be readable, in the theme's colours.
+.noscript-page {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 3rem clamp(1rem, 4vw, 3rem);
+  color: var(--theme-text);
+  background: var(--theme-background);
+  font-family: "DM Sans", sans-serif;
+  line-height: 1.7;
+}
+
+.noscript-page h1 {
+  margin: 0 0 1rem;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 500;
+}
+
+.noscript-page a {
+  color: var(--theme-primary);
+}

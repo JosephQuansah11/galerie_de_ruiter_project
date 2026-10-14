@@ -19,4 +19,7 @@ Disallow: /preferences
 
 # The sign-in and registration pages stay crawlable on purpose: they carry a noindex tag, and
 # a crawler that is not allowed to fetch them would never see it.
-Sitemap: https://galeriederuiter.cloud-ip.cc/sitemap.xml
+#
+# The `Sitemap:` line is appended below at build time by scripts/generate-sitemap.mjs, from the
+# site origin in site.config.mjs, so this file stays origin-independent.
+

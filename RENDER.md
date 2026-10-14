@@ -57,6 +57,16 @@ be configured separately in its dashboard.
   dashboard. In particular, set `KC_BOOTSTRAP_ADMIN_USERNAME`,
   `KC_BOOTSTRAP_ADMIN_PASSWORD`, `KEYCLOAK_ADMIN_USERNAME`,
   `KEYCLOAK_ADMIN_PASSWORD`, and `KEYCLOAK_REALM_ADMIN_PASSWORD`.
+- The frontend's public origin is `SITE_URL=https://galeriederuiter.cloud-ip.cc` in
+  `render.yaml`. `sitemap.xml`, the `Sitemap:` line in `robots.txt` and the `og:url`/`og:image`
+  tags are built from it; without it the build falls back to the same origin in
+  `site.config.mjs`. If it names a host a crawler cannot fetch, Search Console reports every URL
+  in the sitemap as "Couldn't fetch".
+- `FRONTEND_ORIGIN` on `galerie-java-api` and `CORS_ORIGINS` on `galerie-reconstruction-api`
+  are the browser origins allowed to call those APIs, so they name the domain the frontend is
+  served on. The backend allows one frontend origin plus the localhost ports, so serving the app
+  from a second hostname as well needs that hostname added to the list in
+  `SecurityConfiguration`/`CORS_ORIGINS`, not just to `render.yaml`.
 - The frontend environment variables are build-time values for the static site. Trigger a frontend deploy after changing them.
 - The frontend's public Keycloak settings are already declared in `render.yaml`:
   `VITE_KEYCLOAK_URL=https://galerie-keycloak.onrender.com`,

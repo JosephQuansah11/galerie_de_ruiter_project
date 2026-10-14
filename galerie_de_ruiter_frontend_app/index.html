@@ -55,5 +55,19 @@
 
 <body>
     <div id="root"></div>
+
+    <!-- Every page is drawn by the bundle, so a client that does not run JavaScript - and the
+         first pass of a crawler - would otherwise see an empty document. This is the gallery's
+         own description of itself, not copy written for a search engine. -->
+    <noscript>
+        <div class="noscript-page">
+            <h1>Galerie de Ruiter</h1>
+            <p>
+                Galerie de Ruiter toont antiek en kunst met een verleden. De collectie en de
+                galeriechat worden door de applicatie getoond; zet JavaScript aan om ze te bekijken.
+            </p>
+            <p><a href="/login">Aanmelden</a> om de collectie te bekijken.</p>
+        </div>
+    </noscript>
 </body>
 </html>

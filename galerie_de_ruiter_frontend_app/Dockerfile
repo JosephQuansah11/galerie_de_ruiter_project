@@ -9,9 +9,10 @@ ARG VITE_KEYCLOAK_CLIENT_ID=movie_project_frontend_client
 ARG VITE_RECONSTRUCTION_API_URL=http://localhost:8000
 ARG VITE_PYTHON_API_URL=http://localhost:8000
 # The site's public origin: it becomes the URLs in sitemap.xml, robots.txt and the social
-# preview tags. Pass the real origin when building for a server, e.g.
+# preview tags. Leave it unset and the build uses the production origin from
+# `site.config.mjs`; pass the real origin when building for another host, e.g.
 # --build-arg SITE_URL=https://www.example.be
-ARG SITE_URL=http://localhost:3000
+ARG SITE_URL
 ENV VITE_JAVA_API_URL=$VITE_JAVA_API_URL \
     VITE_JAVA_BACKEND_URL=$VITE_JAVA_BACKEND_URL \
     VITE_API_URL=$VITE_API_URL \

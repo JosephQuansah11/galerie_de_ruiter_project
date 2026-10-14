@@ -5,13 +5,15 @@ import HtmlWebpackPlugin from "html-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import Dotenv from "dotenv-webpack";
+import { resolveSiteUrl } from "./site.config.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// The site's public origin. `scripts/generate-sitemap.mjs` builds the sitemap and the robots
-// `Sitemap:` line from it, and the social preview tags in index.html need absolute URLs.
-const siteUrl = (process.env.SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+// The site's public origin, for the social preview tags in index.html, which need absolute URLs.
+// `scripts/generate-sitemap.mjs` reads the same value from site.config.mjs for sitemap.xml and
+// the robots `Sitemap:` line, so the two build steps cannot drift apart.
+const siteUrl = resolveSiteUrl();
 
 export default {
   entry: "./src/index.tsx",

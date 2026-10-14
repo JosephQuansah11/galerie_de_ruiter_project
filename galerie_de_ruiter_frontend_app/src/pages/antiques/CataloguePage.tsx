@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type Antique from "@/models/antiques/Antique";
 import type { Category } from "@/models/antiques/Antique";
 import { CollectionFilter } from "./CollectionFilter";
-import { AntiqueGrid } from "./AntiqueGrid";
+import { AntiqueList } from "./AntiqueList";
 import { CatalogueStatus } from "./CatalogueStatus";
 
 type Props = {
@@ -40,7 +40,7 @@ export function CataloguePage(props: Props) {
       <CollectionFilter categories={props.categories} category={props.category} onSelect={props.setCategory} />
     </div>
     <CatalogueStatus loading={props.loading} error={props.error} categoriesLoading={props.categoriesLoading} categoriesError={props.categoriesError} empty={!props.filteredAntiques.length} hasQuery={Boolean(props.query)} />
-    {!props.loading && !props.error && <AntiqueGrid antiques={props.filteredAntiques} />}
+    {!props.loading && !props.error && <AntiqueList antiques={props.filteredAntiques} />}
   </section>;
 }
 

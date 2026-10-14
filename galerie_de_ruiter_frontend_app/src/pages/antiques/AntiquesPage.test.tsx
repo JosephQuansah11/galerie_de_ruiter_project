@@ -37,6 +37,29 @@ describe("Catalogue page", () => {
     expect(screen.getByText(i18n.t("priceOnRequest"))).toBeInTheDocument();
   });
 
+  it("lays the collection out as a list of rows rather than grid tiles", async () => {
+    renderPage(<AntiquesPage />, { shopping: true });
+    await screen.findByText("Carved walnut mirror");
+
+    expect(document.querySelector(".catalogue-list")).not.toBeNull();
+    expect(document.querySelectorAll(".catalogue-row")).toHaveLength(2);
+    // The Bootstrap grid markup the old card layout used is gone.
+    expect(document.querySelector(".catalogue-list .row")).toBeNull();
+  });
+
+  it("shows only a short preview of a long description", async () => {
+    const words = Array.from({ length: 80 }, (_, index) => `word${index + 1}`);
+    mockedAntiques.mockResolvedValueOnce([
+      { id: "3", title: "Long story", category: null, description: words.join(" "), price: 10 },
+    ]);
+
+    renderPage(<AntiquesPage />, { shopping: true });
+    await screen.findByText("Long story");
+
+    expect(screen.getByText(/word1 word2/)).toBeInTheDocument();
+    expect(screen.queryByText(/word51/)).not.toBeInTheDocument();
+  });
+
   it("filters pieces with the search control and clears the query again", async () => {
     renderPage(<AntiquesPage />, { shopping: true });
     await screen.findByText("Carved walnut mirror");

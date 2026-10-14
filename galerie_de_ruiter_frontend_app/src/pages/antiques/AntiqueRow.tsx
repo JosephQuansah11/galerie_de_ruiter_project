@@ -7,20 +7,32 @@ import { useLanguage } from "@/context/LanguageContext";
 import { formatEuroAmount } from "@/i18n";
 import type Antique from "@/models/antiques/Antique";
 import { resolveAntiqueImageUrl } from "@/models/antiques/Antique";
+import { summarizeDescription } from "./summarizeDescription";
 
-export function AntiqueCard({ antique }: { antique: Antique }) {
+/**
+ * One piece in the catalogue, laid out as a compact row: a small thumbnail with the piece's
+ * short story beside it. The description is trimmed to a preview here; the full story stays
+ * on the piece's own page.
+ */
+export function AntiqueRow({ antique }: { antique: Antique }) {
   const navigate = useNavigate();
   const shopping = useShopping();
   const { t, locale } = useLanguage();
   const artist = antique.artist?.displayName ?? antique.artist?.name ?? t("galerieCollection");
   const price = antique.price == null ? t("priceOnRequest") : formatEuroAmount(antique.price, locale);
-  return <article className={`catalogue-card${antique.sold ? " is-sold" : ""}`} onClick={() => navigate(`/antiques/${antique.id}`)}>
-    <div className="catalogue-card-image" aria-hidden="true">{(antique.imageUrl ?? antique.imageUrls?.[0]) ? <img src={resolveAntiqueImageUrl(antique.imageUrl ?? antique.imageUrls?.[0])} alt="" /> : antique.title.slice(0, 1).toUpperCase()}
+  const description = summarizeDescription(antique.description);
+  const imageUrl = antique.imageUrl ?? antique.imageUrls?.[0];
+  return <article className={`catalogue-card catalogue-row${antique.sold ? " is-sold" : ""}`} onClick={() => navigate(`/antiques/${antique.id}`)}>
+    <div className="catalogue-card-image" aria-hidden="true">{imageUrl ? <img src={resolveAntiqueImageUrl(imageUrl)} alt="" /> : antique.title.slice(0, 1).toUpperCase()}
       {antique.sold && <span className="catalogue-sold-badge">{t("sold")}</span>}</div>
-    <div className="catalogue-card-content"><span className="catalogue-artist">{artist}</span><h2>{antique.title}</h2><p>{antique.description || t("storyWaiting")}</p>
-      <div className="d-flex gap-3 small text-secondary"><span className="d-inline-flex align-items-center gap-1">
-        <Eye size={14} /> {t("viewsCountLabel", { count: antique.viewCount ?? 0 })}</span><span className="d-inline-flex align-items-center gap-1">
-        <Heart size={14} /> {t("likesCountLabel", { count: antique.likeCount ?? 0 })}</span></div>
+    <div className="catalogue-card-content">
+      <span className="catalogue-artist">{artist}</span>
+      <h2>{antique.title}</h2>
+      <p className="catalogue-row-description">{description || t("storyWaiting")}</p>
+      <div className="catalogue-row-meta">
+        <span><Eye size={14} /> {t("viewsCountLabel", { count: antique.viewCount ?? 0 })}</span>
+        <span><Heart size={14} /> {t("likesCountLabel", { count: antique.likeCount ?? 0 })}</span>
+      </div>
       <div className="catalogue-card-footer"><strong>{price}</strong><div className="catalogue-card-actions">
         {antique.sold
           ? <Badge bg="dark" className="catalogue-sold-pill"><ShoppingBag size={14} /> {t("sold")}</Badge>

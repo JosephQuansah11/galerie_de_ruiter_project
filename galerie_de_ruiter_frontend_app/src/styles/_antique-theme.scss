@@ -483,6 +483,71 @@ hr,
   border-radius: var(--theme-radius-sm);
 }
 
+// --------------------------------------------------
+// Catalogue list
+// The collection reads as a vertical list of compact rows — a small thumbnail with the
+// piece's short story beside it — instead of a wall of equal-sized grid tiles.
+// --------------------------------------------------
+.catalogue-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.catalogue-card.catalogue-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  height: auto;
+  padding: 0.85rem;
+}
+
+.catalogue-row .catalogue-card-image {
+  flex: 0 0 clamp(5.5rem, 14vw, 8rem);
+  width: clamp(5.5rem, 14vw, 8rem);
+  height: clamp(5.5rem, 14vw, 8rem);
+  font: 2rem Georgia, serif;
+}
+
+.catalogue-row .catalogue-card-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+}
+
+.catalogue-row .catalogue-card p {
+  min-height: 0;
+}
+
+.catalogue-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  margin-top: 0.5rem;
+  color: var(--theme-text-secondary);
+  font-size: 0.85rem;
+}
+
+.catalogue-row-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.catalogue-row .catalogue-card-footer {
+  margin-top: 0.75rem;
+}
+
+// On a narrow screen the price and its actions stack under the story instead of squeezing
+// the row.
+@media (max-width: 520px) {
+  .catalogue-row .catalogue-card-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
 // --------------------------------------------------------------------------
 // Forms — ruled parchment fields with a gilded focus ring
 // --------------------------------------------------------------------------

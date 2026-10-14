@@ -39,3 +39,14 @@ jest.mock("@/apis/home_api", () => ({
   deleteHomeImage: jest.fn(),
   resolveHomeImageUrl: (url: string) => url,
 }));
+
+/**
+ * Pages keep a little state in the browser (the chat session, the chosen language, cached
+ * responses). Reset it before each test so one test cannot leak a conversation, a language
+ * or a cached response into the next.
+ */
+beforeEach(() => {
+  localStorage.clear();
+  sessionStorage.clear();
+  localStorage.setItem("galerie-language", "en");
+});

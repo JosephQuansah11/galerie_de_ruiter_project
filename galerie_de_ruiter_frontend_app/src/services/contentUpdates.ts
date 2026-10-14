@@ -1,3 +1,5 @@
+import { invalidateCache } from "./apiCache";
+
 export type ContentUpdateTopic =
   | "antiques"
   | "about"
@@ -11,6 +13,9 @@ const channelName = "galerie-content-updates";
 type ContentUpdate = { topic: ContentUpdateTopic };
 
 export function publishContentUpdate(topic: ContentUpdateTopic): void {
+  // The cached read for this topic is stale the moment the gallery changes it, so the
+  // next page visit fetches fresh copy instead of showing what the cache held.
+  invalidateCache(topic);
   const update: ContentUpdate = { topic };
   window.dispatchEvent(new CustomEvent<ContentUpdate>(updateEventName, { detail: update }));
   if (typeof BroadcastChannel !== "undefined") {

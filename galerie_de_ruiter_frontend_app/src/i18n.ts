@@ -2130,7 +2130,9 @@ void i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: localStorage.getItem("galerie-language") || "en",
+    // The gallery is Belgian: first-time visitors start in Belgian Dutch and can switch
+    // from the language picker. A stored choice is honoured.
+    lng: localStorage.getItem("galerie-language") || "nl-BE",
     fallbackLng: "en",
     interpolation: { escapeValue: false },
   });

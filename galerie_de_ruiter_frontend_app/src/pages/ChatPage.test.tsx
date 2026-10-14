@@ -200,4 +200,29 @@ describe("Gallery chat page", () => {
     expect(whatsapp).toHaveAttribute("href", expect.stringContaining("text="));
     expect(screen.getByText(i18n.t("chatAppointmentSubmitted"))).toBeInTheDocument();
   });
+
+  it("keeps the conversation open when the visitor leaves the page and returns", async () => {
+    mockedWarmUp.mockResolvedValue({ ready: true, model: "llama3.2:3b", detail: "ready" });
+    mockedSend.mockResolvedValue({
+      message: "We have three mirrors in the collection.",
+      appointmentConfirmed: false,
+      appointmentHandoffRequired: false,
+      sources: [],
+    });
+
+    const first = renderPage(<ChatPage />);
+    const composer = await screen.findByLabelText(i18n.t("chatMessage"));
+    await waitFor(() => expect(composer).toBeEnabled());
+    fireEvent.change(composer, { target: { value: "Do you have mirrors?" } });
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("sendMessage") }));
+    expect(await screen.findByText("We have three mirrors in the collection.")).toBeInTheDocument();
+
+    // The session lasts for the visit: coming back restores the same thread instead of
+    // starting over.
+    first.unmount();
+    renderPage(<ChatPage />);
+
+    expect(await screen.findByText("Do you have mirrors?")).toBeInTheDocument();
+    expect(screen.getByText("We have three mirrors in the collection.")).toBeInTheDocument();
+  });
 });

@@ -2098,6 +2098,65 @@ button{
 .chat-composer button:disabled { opacity: 0.55; cursor: not-allowed; }
 .profile-upload-alert { margin: 0.35rem 0 0; font-size: 0.85rem; }
 
+// --------------------------------------------------
+// About page: live gallery location
+// The address and opening hours come from the store location (the same record the
+// concierge chat answers from), shown under the gallery story.
+// --------------------------------------------------
+.about-location {
+  margin: 2rem 0 0;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+}
+
+.about-location h2 {
+  margin: 0 0 0.85rem;
+  font: 400 clamp(1.4rem, 3vw, 2rem) Georgia, serif;
+}
+
+.about-location-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 2rem;
+  margin-bottom: 0.85rem;
+}
+
+.about-location-facts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--theme-text);
+}
+
+.about-location a {
+  color: var(--theme-primary);
+  font-weight: 600;
+}
+
+// --------------------------------------------------
+// Navbar hugs its own items
+// On wide screens the bar's box is only as wide and as tall as the navigation it
+// holds, instead of stretching across the viewport at a fixed height. The measured
+// height is published to `--top-nav-height` by `CustomNav`, so the page below still
+// starts exactly under the bar.
+// --------------------------------------------------
+@media (min-width: 1200px) {
+  #Navbar,
+  #Navbar.navbar-collapsed {
+    width: fit-content;
+    max-width: 100%;
+    height: auto;
+    min-height: 0;
+    padding: 0.4rem 0.85rem;
+  }
+
+  #Navbar .navbar-nav {
+    flex: 0 1 auto;
+    height: auto;
+  }
+}
+
 // The antique-shop design layer refines the rules above (surfaces, buttons,
 // typography and controls) and must stay last so it wins the cascade.
 @import "antique-theme";

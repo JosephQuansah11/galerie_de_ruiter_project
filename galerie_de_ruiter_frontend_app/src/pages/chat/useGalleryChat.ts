@@ -1,24 +1,47 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { fetchChatStatus, sendChatMessage, warmUpChat, type ChatAppointmentSelection, type ChatHistoryMessage, type ChatSource } from "@/apis/chat_api";
+import { fetchChatStatus, sendChatMessage, warmUpChat, type ChatAppointmentSelection, type ChatHistoryMessage } from "@/apis/chat_api";
+import {
+  readChatSession,
+  writeChatSession,
+  type ChatSessionAppointment,
+  type ChatSessionMessage,
+} from "@/services/chatSession";
 
-export type ChatMessage = { role: "user" | "assistant"; text: string; translationKey?: string; sources?: ChatSource[] };
-export type ChatAppointment = ChatAppointmentSelection;
+export type ChatMessage = ChatSessionMessage;
+export type ChatAppointment = ChatSessionAppointment;
 
 const CONNECTION_RETRY_MS = 10000;
 const SESSION_HEARTBEAT_MS = 60000;
 
+/** The greeting every new conversation opens with. */
+const WELCOME_MESSAGE: ChatMessage = { role: "assistant", text: "", translationKey: "chatWelcome" };
+
 export function useGalleryChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", text: "", translationKey: "chatWelcome" }]);
+  // A conversation already stored for this visit is restored, so the visitor keeps one
+  // thread while browsing the gallery and until they sign out.
+  const [restored] = useState(readChatSession);
+  const hasRestoredSession = !!restored && restored.messages.length > 0;
+  const [messages, setMessages] = useState<ChatMessage[]>(
+    () => (hasRestoredSession ? restored.messages : [WELCOME_MESSAGE]),
+  );
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
-  const [appointment, setAppointment] = useState<ChatAppointment>();
-  const [ready, setReady] = useState(false);
-  const [checkingConnection, setCheckingConnection] = useState(true);
+  const [appointment, setAppointment] = useState<ChatAppointment | undefined>(restored?.appointment);
+  // A restored session means the model was already warmed up during this visit, so the
+  // page opens ready instead of showing the "connecting" state again. The probe below
+  // still confirms the connection in the background.
+  const [ready, setReady] = useState(hasRestoredSession);
+  const [checkingConnection, setCheckingConnection] = useState(!hasRestoredSession);
   const [connectionDetail, setConnectionDetail] = useState<string>();
   // The connection is established when the visitor enters the page and then kept for
   // the whole session: a transient probe failure no longer drops the chat back to
   // "connecting" while the visitor stays on the page.
-  const connectedForSession = useRef(false);
+  const connectedForSession = useRef(hasRestoredSession);
+
+  // Persist the thread on every change so navigation and a refresh keep it.
+  useEffect(() => {
+    writeChatSession({ messages, appointment });
+  }, [messages, appointment]);
 
   const checkConnection = useCallback(async () => {
     setCheckingConnection(true);

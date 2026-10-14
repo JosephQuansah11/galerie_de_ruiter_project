@@ -32,6 +32,15 @@ describe("About page", () => {
     expect(screen.getByText(/pop-up store in Waasmunster/)).toBeInTheDocument();
   });
 
+  it("shows the live gallery location from the store location", async () => {
+    renderPage(<AboutPage />, { auth: false });
+
+    // The About page must use the same location record the concierge chat answers from,
+    // not a hardcoded city in the story text.
+    expect(await screen.findByText("De Ruiter 12, Waasmunster")).toBeInTheDocument();
+    expect(screen.getByText("Thursday to Sunday, 11:00 - 18:00")).toBeInTheDocument();
+  });
+
   it("reports a failing story request", async () => {
     mockedAbout.mockRejectedValueOnce(new Error("offline"));
 

@@ -6,6 +6,8 @@ import { useAvatar } from "./useAvatar";
 import { useAuthInitialization } from "./useAuthInitialization";
 import { useKeycloakToken } from "./useKeycloakToken";
 import { registerUser, updateCurrentUser } from "@/pages/auth/authApi";
+import { clearChatSession } from "@/services/chatSession";
+import { clearCache } from "@/services/apiCache";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -29,7 +31,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles,
     isAdmin: roles.some((role) => role.replace(/^ROLE_/i, "").toUpperCase() === "ADMIN"),
     login: (from?: string) => keycloak.login({ redirectUri: `${window.location.origin}${from ?? "/dashboard"}` }),
-    logout: () => keycloak.logout(), register, updateProfile,
+    // Signing out ends the concierge conversation and drops the cached public data, so the
+    // next person to use the browser starts from a clean slate.
+    logout: () => {
+      clearChatSession();
+      clearCache();
+      return keycloak.logout();
+    },
+    register, updateProfile,
   }), [authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

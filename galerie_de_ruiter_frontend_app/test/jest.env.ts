@@ -49,4 +49,8 @@ if (typeof window !== "undefined") {
   window.scrollTo = () => undefined;
   Element.prototype.scrollIntoView = Element.prototype.scrollIntoView ?? (() => undefined);
   window.HTMLElement.prototype.scrollIntoView = window.HTMLElement.prototype.scrollIntoView ?? (() => undefined);
+
+  // The application now defaults to Belgian Dutch. The suite pins English before any
+  // module loads so the assertions written against the English copy stay stable.
+  window.localStorage.setItem("galerie-language", "en");
 }

@@ -3,23 +3,28 @@ import type { AntiqueForm } from "@/models/antiques/Antique";
 import { csrfHeaders } from "@/apis/client";
 import { visitorId } from "@/services/visitorId";
 import { axiosInstance, backendBaseURL } from "./backendClient";
+import { cachedRequest, invalidateCache } from "@/services/apiCache";
 
 export async function getAllAntiques(): Promise<Antique[]> {
-  const response = await axiosInstance.get<Antique[] | { content?: Antique[]; antiques?: Antique[]; data?: Antique[] }>(`${backendBaseURL}/api/antiques`);
-  const payload = response.data;
-  return Array.isArray(payload) ? payload : payload.content ?? payload.antiques ?? payload.data ?? [];
+  return cachedRequest("antiques", async () => {
+    const response = await axiosInstance.get<Antique[] | { content?: Antique[]; antiques?: Antique[]; data?: Antique[] }>(`${backendBaseURL}/api/antiques`);
+    const payload = response.data;
+    return Array.isArray(payload) ? payload : payload.content ?? payload.antiques ?? payload.data ?? [];
+  });
 }
 export async function addAntique(antique: AntiqueForm): Promise<Antique> {
   const response = await axiosInstance.post<Antique>(`${backendBaseURL}/api/antiques`, antique, {
     timeout: 60000,
     headers: await csrfHeaders().then((headers) => ({ ...headers, "Content-Type": "application/json" })),
   });
+  invalidateCache("antiques");
   return response.data;
 }
 export async function updateAntique(id: string, antique: Pick<AntiqueForm, "title" | "description" | "price">): Promise<Antique> {
   const response = await axiosInstance.put<Antique>(`${backendBaseURL}/api/antiques/${id}`, antique, {
     headers: { ...(await csrfHeaders()), "Content-Type": "application/json" },
   });
+  invalidateCache("antiques");
   return response.data;
 }
 /**
@@ -30,12 +35,14 @@ export async function setAntiqueSold(id: string, sold: boolean): Promise<Antique
   const response = await axiosInstance.put<Antique>(`${backendBaseURL}/api/antiques/${id}/sold`, { sold }, {
     headers: { ...(await csrfHeaders()), "Content-Type": "application/json" },
   });
+  invalidateCache("antiques");
   return response.data;
 }
 export async function deleteAntique(id: string): Promise<void> {
   await axiosInstance.delete(`${backendBaseURL}/api/antiques/${id}`, {
     headers: await csrfHeaders(),
   });
+  invalidateCache("antiques");
 }
 export type AntiqueEngagement = { antiqueId: string; viewCount: number; likeCount: number; liked: boolean };
 
@@ -83,6 +90,7 @@ export async function uploadAntiqueImage(id: string, image: File): Promise<void>
     timeout: 60000,
     headers: { ...(await csrfHeaders()), "Content-Type": undefined },
   });
+  invalidateCache("antiques");
 }
 export async function uploadAntiqueModel(id: string, model: File): Promise<Antique> {
   const body = new FormData();
@@ -93,5 +101,6 @@ export async function uploadAntiqueModel(id: string, model: File): Promise<Antiq
     timeout: 900000,
     headers: { ...(await csrfHeaders()), "Content-Type": undefined },
   });
+  invalidateCache("antiques");
   return response.data;
 }

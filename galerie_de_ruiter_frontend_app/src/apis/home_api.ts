@@ -1,5 +1,6 @@
 import { csrfHeaders } from "@/apis/client";
 import { axiosInstance, backendBaseURL } from "./backendClient";
+import { cachedRequest, invalidateCache } from "@/services/apiCache";
 
 /** Editable copy for the dashboard / home page. Blank fields use the translated default. */
 export type HomeContent = {
@@ -11,13 +12,15 @@ export type HomeContent = {
 };
 
 export async function getHomeContent(): Promise<HomeContent> {
-  return (await axiosInstance.get<HomeContent>(`${backendBaseURL}/api/home`)).data;
+  return cachedRequest("home", async () =>
+    (await axiosInstance.get<HomeContent>(`${backendBaseURL}/api/home`)).data);
 }
 
 export async function updateHomeContent(content: HomeContent): Promise<HomeContent> {
   const { data } = await axiosInstance.put<HomeContent>(`${backendBaseURL}/api/home`, content, {
     headers: await csrfHeaders(),
   });
+  invalidateCache("home");
   return data;
 }
 
@@ -30,7 +33,8 @@ export function resolveHomeImageUrl(url: string): string {
 }
 
 export async function getHomeImages(): Promise<HomeImage[]> {
-  return (await axiosInstance.get<HomeImage[]>(`${backendBaseURL}/api/home/images`)).data;
+  return cachedRequest("home:images", async () =>
+    (await axiosInstance.get<HomeImage[]>(`${backendBaseURL}/api/home/images`)).data);
 }
 
 export async function uploadHomeImage(image: File, caption?: string): Promise<HomeImage> {
@@ -41,9 +45,11 @@ export async function uploadHomeImage(image: File, caption?: string): Promise<Ho
     timeout: 120000,
     headers: { ...(await csrfHeaders()), "Content-Type": undefined },
   });
+  invalidateCache("home");
   return data;
 }
 
 export async function deleteHomeImage(id: string): Promise<void> {
   await axiosInstance.delete(`${backendBaseURL}/api/home/images/${id}`, { headers: await csrfHeaders() });
+  invalidateCache("home");
 }

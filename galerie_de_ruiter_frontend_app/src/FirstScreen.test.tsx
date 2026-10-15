@@ -37,6 +37,9 @@ describe("the first screen in index.html", () => {
 
   it("carries the navigation a visitor gets", () => {
     expect(copy(".navbar-wordmark")).toBe(gallery("galleryName"));
+    // The brand goes to the landing page, and the landing page is the root: `/home` is a redirect
+    // to it, so a shell that linked `/home` would send a visitor through one.
+    expect(firstScreen?.querySelector(".navbar-brand-div")?.getAttribute("href")).toBe("/");
     const links = [...(firstScreen?.querySelectorAll(".main-navbar-links .nav-item-link") ?? [])]
       .map((link) => link.textContent?.trim());
     expect(links).toEqual([gallery("navGalleryChat"), gallery("navAbout"), gallery("location")]);

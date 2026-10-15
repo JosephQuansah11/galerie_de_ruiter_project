@@ -9,6 +9,7 @@
 # When the collection opens to visitors, drop the /antiques line and add the pieces to the
 # sitemap.
 User-agent: *
+
 Disallow: /admin
 Disallow: /antiques
 Disallow: /cart

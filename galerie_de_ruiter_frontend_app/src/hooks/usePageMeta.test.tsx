@@ -24,7 +24,18 @@ describe("page metadata", () => {
     expect(document.title).toBe("Chat met Galerie de Ruiter");
     expect(metaContent("name", "description")).toBe("Stel je vragen.");
     expect(metaContent("property", "og:title")).toBe("Chat met Galerie de Ruiter");
-    expect(canonicalHref()).toBe("http://localhost/chat");
+    expect(canonicalHref()).toBe("https://galeriederuiter.cloud-ip.cc/chat");
+  });
+
+  it("declares the gallery's own origin, whatever host served the page", () => {
+    // Render serves the same site on its own onrender.com domain as well. A canonical built from
+    // the host would have that domain declare itself canonical for every page, and a search engine
+    // would then be choosing between two copies of the whole site.
+    render(<Page title="Chat met Galerie de Ruiter" canonicalPath="/chat" />);
+
+    expect(window.location.origin).not.toBe("https://galeriederuiter.cloud-ip.cc");
+    expect(canonicalHref()).toBe("https://galeriederuiter.cloud-ip.cc/chat");
+    expect(metaContent("property", "og:url")).toBe("https://galeriederuiter.cloud-ip.cc/chat");
   });
 
   it("follows the visitor to the next route", () => {
@@ -33,7 +44,7 @@ describe("page metadata", () => {
     rerender(<Page title="De collectie — Galerie de Ruiter" canonicalPath="/antiques" />);
 
     expect(document.title).toBe("De collectie — Galerie de Ruiter");
-    expect(canonicalHref()).toBe("http://localhost/antiques");
+    expect(canonicalHref()).toBe("https://galeriederuiter.cloud-ip.cc/antiques");
   });
 
   it("keeps the sign-in pages out of the results", () => {

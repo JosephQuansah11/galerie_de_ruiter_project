@@ -45,7 +45,9 @@ The app is one HTML page, so what a crawler can reach is decided in three places
 
 - **`src/hooks/usePageMeta.ts`** — every page sets its own `<title>`, `<meta name="description">`,
   `<link rel="canonical">` and Open Graph tags. Pages call it with their own translated copy;
-  the strings live in `pageMetaLabels` in `src/i18n.ts`.
+  the strings live in `pageMetaLabels` in `src/i18n.ts`. The canonical URL is built from the
+  configured origin rather than from the host that served the page, so the copy Render also serves
+  on its `onrender.com` domain never declares itself canonical.
 - **`public/robots.txt`** — everything that answers with the sign-in page (`/admin`, `/antiques`,
   `/cart`, `/wishlist`, `/profile`, `/preferences`) is closed to crawlers. `/login` and
   `/register` stay crawlable on purpose: they carry a `noindex` tag and a crawler that may not
@@ -64,9 +66,11 @@ sign-in page with the page they wanted, and the sign-in page says why (`signInRe
 navigation follows the same line: `src/components/NavigationLinks.tsx` shows a visitor the three
 public destinations and hides the rest rather than offering a link that only bounces them.
 
-The site's public origin lives in `site.config.mjs`, in one place, because two build steps need
-it: the sitemap (and the `Sitemap:` line in `robots.txt`) and the absolute `og:url`/`og:image`
-of the social preview tags. It defaults to `https://galeriederuiter.cloud-ip.cc`, so a deploy
+The site's public origin lives in `site.config.mjs`, in one place, because three build steps need
+it: the sitemap (and the `Sitemap:` line in `robots.txt`), the absolute `og:url`/`og:image` of the
+social preview tags, and the canonical URL every page declares — webpack hands that one to the
+bundle as `import.meta.env.SITE_URL`. The static document declares the same origin, so a crawler
+that runs nothing still reads it. It defaults to `https://galeriederuiter.cloud-ip.cc`, so a deploy
 that sets nothing still publishes the right URLs; `SITE_URL` overrides it for a staging deploy or
 a local build:
 

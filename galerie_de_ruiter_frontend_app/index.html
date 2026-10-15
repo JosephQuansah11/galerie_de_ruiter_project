@@ -39,6 +39,12 @@
     <link rel="preload" as="font" type="font/woff2" href="/fonts/cormorant-garamond-400.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/dm-sans-400.woff2" crossorigin />
 
+    <!-- The gallery's address, for a crawler that does not run the bundle and for any route that
+         does not describe itself: every page declares the same origin, so the copy Render serves
+         on its own onrender.com domain never competes with the gallery's domain. Pages replace
+         this with their own path at runtime (see src/hooks/usePageMeta.ts). -->
+    <link rel="canonical" href="<%= htmlWebpackPlugin.options.siteUrl %>/" />
+
     <title>Galerie de Ruiter — antiek en kunst</title>
 </head>
 

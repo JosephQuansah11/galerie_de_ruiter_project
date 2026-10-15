@@ -5,6 +5,10 @@
  * `apis/apiConfig.ts` resolves an absolute API origin instead of the localhost fallback.
  */
 process.env.NODE_ENV = "test";
+// The gallery's public origin, which the canonical URL is built from (src/hooks/usePageMeta.ts).
+// It is deliberately not the jsdom origin: a test that expects the canonical to follow the host
+// would pass while the deployed site let Render's own domain declare itself canonical.
+process.env.SITE_URL = "https://galeriederuiter.cloud-ip.cc";
 process.env.VITE_JAVA_API_URL = "http://api.test";
 process.env.VITE_JAVA_BACKEND_URL = "http://api.test";
 process.env.VITE_API_URL = "http://api.test";

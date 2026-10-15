@@ -1,5 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
+import webpack from "webpack";
 import CopyPlugin from "copy-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
@@ -10,9 +11,10 @@ import { resolveSiteUrl } from "./site.config.mjs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// The site's public origin, for the social preview tags in index.html, which need absolute URLs.
-// `scripts/generate-sitemap.mjs` reads the same value from site.config.mjs for sitemap.xml and
-// the robots `Sitemap:` line, so the two build steps cannot drift apart.
+// The site's public origin, for the social preview tags in index.html, which need absolute URLs,
+// for the canonical URL the pages declare (see src/hooks/usePageMeta.ts) and for the sitemap.
+// `scripts/generate-sitemap.mjs` reads the same value from site.config.mjs, so the build steps
+// cannot drift apart.
 const siteUrl = resolveSiteUrl();
 
 export default {
@@ -29,7 +31,6 @@ export default {
     extensions: [".tsx", ".ts", ".jsx", ".js"],
     alias: {
       "@": path.resolve(__dirname, "src"),
-      "@images": path.resolve(__dirname, "src/images"),
     },
   },
 
@@ -124,6 +125,14 @@ export default {
     new Dotenv({
       prefix: "import.meta.env.",
       systemvars: true,
+    }),
+    // The canonical URL the pages declare has to name the gallery's own origin rather than the
+    // host that happened to serve the page: Render serves this site on its `onrender.com` domain
+    // as well, and a canonical built from `window.location.origin` lets that domain declare itself
+    // canonical for every page too, which is how a search engine ends up choosing between two
+    // copies of the whole site. The value is the same `siteUrl` the template and the sitemap use.
+    new webpack.DefinePlugin({
+      "import.meta.env.SITE_URL": JSON.stringify(siteUrl),
     }),
   ],
 

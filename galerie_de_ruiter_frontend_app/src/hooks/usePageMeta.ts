@@ -12,6 +12,17 @@ type PageMeta = {
 };
 
 /**
+ * The gallery's own origin, fixed at build time from `site.config.mjs` (see webpack.config.js).
+ *
+ * The canonical URL has to name the gallery rather than whichever host served the page: Render
+ * serves the same site on its `onrender.com` domain as well, so a canonical built from
+ * `window.location.origin` let that domain declare itself canonical for every page, which is how a
+ * search engine ends up choosing between two copies of the whole site. The fallback keeps a build
+ * without the define working.
+ */
+const SITE_ORIGIN = import.meta.env.SITE_URL;
+
+/**
  * Gives a route its own title, description and canonical URL.
  *
  * The application ships as a single HTML page, so index.html carries one title and one
@@ -34,7 +45,7 @@ export function usePageMeta({ title, description, canonicalPath, noindex }: Page
 
 function absoluteUrl(path?: string): string {
   const target = path ?? `${window.location.pathname}${window.location.search}`;
-  return new URL(target, window.location.origin).toString();
+  return new URL(target, SITE_ORIGIN ?? window.location.origin).toString();
 }
 
 function metaTag(attribute: "name" | "property", value: string): HTMLMetaElement | undefined {

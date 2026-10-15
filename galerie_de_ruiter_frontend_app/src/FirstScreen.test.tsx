@@ -43,6 +43,14 @@ describe("the first screen in index.html", () => {
     expect(copy(".icons-list-user-profile .nav-item-link")).toBe(gallery("navSignIn"));
   });
 
+  it("declares the gallery's own address in the document, for a crawler that runs nothing", () => {
+    // The build fills the template in with the configured origin (see site.config.mjs), so the
+    // document itself never declares a host of its own choosing - which is what keeps Render's
+    // onrender.com copy of the site from competing with the gallery's domain.
+    const canonical = firstScreen?.ownerDocument.querySelector('link[rel="canonical"]');
+    expect(canonical?.getAttribute("href")).toBe("<%= htmlWebpackPlugin.options.siteUrl %>/");
+  });
+
   it("reserves the logo's box, so the picture cannot push the copy around", () => {
     const logo = firstScreen?.querySelector(".welcome-logo");
     expect(logo?.getAttribute("src")).toBe("/images/galerie_de_ruiter.png");

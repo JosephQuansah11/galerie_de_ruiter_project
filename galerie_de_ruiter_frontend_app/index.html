@@ -89,11 +89,15 @@
     <link rel="preload" as="font" type="font/woff2" href="/fonts/cormorant-garamond-400.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/dm-sans-400.woff2" crossorigin />
 
-    <!-- The gallery's address, for a crawler that does not run the bundle and for any route that
-         does not describe itself: every page declares the same origin, so the copy Render serves
-         on its own onrender.com domain never competes with the gallery's domain. Pages replace
-         this with their own path at runtime (see src/hooks/usePageMeta.ts). -->
-    <link rel="canonical" href="<%= htmlWebpackPlugin.options.siteUrl %>/" />
+    <!-- No canonical here, on purpose. Every route is served this same document, so a canonical
+         written into it names one URL for all of them - and the pages it named were reported as
+         "canonical to a different URL", which is an instruction to drop a page from the index
+         rather than a hint. The document cannot know which route it is being served for; each page
+         can, and every one of them declares its own absolute canonical URL built from the
+         configured origin, so the copy Render also serves on its onrender.com domain never
+         competes with the gallery's domain (see src/hooks/usePageMeta.ts, and
+         src/staticDocument.test.ts, which fails if a page stops declaring one). A crawler that
+         runs nothing is told nothing, which is better than being told the wrong thing. -->
 
     <title>Galerie de Ruiter — antiek en kunst</title>
 </head>

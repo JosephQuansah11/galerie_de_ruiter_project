@@ -48,7 +48,7 @@ export function useAuthInitialization({ setAuthenticated, setLoading, setProfile
      * iframe, and `redirectUri` names where the visitor comes back to.
      */
     keycloak.init({ pkceMethod: "S256", checkLoginIframe: false,
-      redirectUri: `${window.location.origin}${requestedPath === "/login" ? "/home" : requestedPath}` }).then((isAuthenticated) => {
+      redirectUri: `${window.location.origin}${requestedPath === "/login" ? "/" : requestedPath}` }).then((isAuthenticated) => {
       setAuthenticated(isAuthenticated); syncToken(keycloak.token);
       if (!isAuthenticated) return;
       const data = keycloak.tokenParsed as { preferred_username?: string; email?: string;

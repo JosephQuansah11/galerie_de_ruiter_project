@@ -58,6 +58,14 @@ names them one by one - the four public pages, the sign-in and registration page
 screens, and the `/antiques/*` and `/admin/*` prefixes - and rewrites each to `/index.html`.
 Everything else is a path the gallery does not have, and Render answers it with 404 Not Found.
 
+Three of the addresses are not pages at all. `/home` is what the landing page was called before it
+moved to the root, and `/dashboard` and `/dashboard/chat` are older still; each is a `redirect` rule
+(a 301) rather than a rewrite, so a search engine is told which URL is canonical instead of finding
+two pages that claim to be the same one. The root is the canonical landing page because Render
+applies no rule to a domain root: the one address that cannot be redirected is the one that has to be
+canonical. `index.html` carries no `<link rel="canonical">` for the same reason it carries no title
+per route - it is served for all of them, and each page declares its own absolute URL at runtime.
+
 That list *is* the 404 story on this deployment, and it replaced a catch-all (`/*` ->
 `/index.html`) that answered every typo with the landing page and HTTP 200. An audit reported it,
 and it is worth knowing why it matters: a search engine handed a 200 and a page indexes that page

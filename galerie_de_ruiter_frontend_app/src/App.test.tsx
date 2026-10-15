@@ -42,7 +42,7 @@ describe("App shell", () => {
   });
 
   it("shows a visitor the landing page", async () => {
-    window.history.pushState({}, "", "/home");
+    window.history.pushState({}, "", "/");
     renderPage(<App />, { auth: false, router: false });
 
     expect(await screen.findByRole("heading", { level: 1, name: i18n.t("welcomeTitle") })).toBeInTheDocument();
@@ -53,11 +53,14 @@ describe("App shell", () => {
     expect(screen.getByText(i18n.t("navGalleryChat"))).toBeInTheDocument();
   });
 
-  it("sends the old landing-page address on to the new one", async () => {
-    window.history.pushState({}, "", "/dashboard");
+  it.each(["/home", "/dashboard"])("sends the old landing-page address %s on to the root", async (route) => {
+    // Both are 301s on the server; this is what an in-app link to one of them gets, so that the
+    // two do not live on as a second page in the index.
+    window.history.pushState({}, "", route);
     renderPage(<App />, { auth: false, router: false });
 
     expect(await screen.findByRole("heading", { level: 1, name: i18n.t("welcomeTitle") })).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/");
   });
 
   it("lets a visitor talk to the concierge without reaching WhatsApp", async () => {

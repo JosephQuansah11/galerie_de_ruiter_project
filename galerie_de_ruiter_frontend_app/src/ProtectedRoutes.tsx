@@ -47,7 +47,7 @@ export function ProtectedRoutes() {
   return <Routes>
     {/* Open to visitors without an account: the gallery story, where it is, the landing page and
         the concierge chat. Interacting with the collection is what asks for a sign-in. */}
-    <Route path="/home" element={<WelcomePage />} />
+    <Route path="/" element={<WelcomePage />} />
     <Route path="/chat" element={<ChatPage />} />
     <Route path="/about" element={<AboutPage />} />
     <Route path="/map" element={<LocationPage />} />
@@ -69,11 +69,18 @@ export function ProtectedRoutes() {
       <Route path="/cart" element={<CartPage />} />
     </Route>
 
-    {/* The landing page used to live at /dashboard and the chat at /dashboard/chat, and search
-        engines have those URLs. They keep working, so the indexed address is not lost. */}
-    <Route path="/dashboard" element={<Navigate to="/home" replace />} />
+    {/* The addresses that are not pages. `/home` is what the landing page was called before it
+        moved to the root, and `/dashboard` and `/dashboard/chat` are older still: search engines
+        have all three, so they keep working by sending the visitor on to the URL that is
+        canonical. Both servers answer them with a 301 before the application sees them, and these
+        client-side redirects are what an in-app link to one of them gets. */}
+    <Route path="/home" element={<Navigate to="/" replace />} />
+    <Route path="/dashboard" element={<Navigate to="/" replace />} />
     <Route path="/dashboard/chat" element={<Navigate to="/chat" replace />} />
 
-    <Route path="*" element={<Navigate to="/home" replace />} />
+    {/* Nothing the server serves reaches this, because a path the application does not draw is
+        answered with a 404 (see src/spaRoutes.test.ts). It is what an in-app link to a route that
+        no longer exists gets. */}
+    <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>;
 }

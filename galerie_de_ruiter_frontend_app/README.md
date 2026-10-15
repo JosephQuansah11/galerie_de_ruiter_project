@@ -57,7 +57,11 @@ The app is one HTML page, so what a crawler can reach is decided in five places:
   `<link rel="canonical">` and Open Graph tags. Pages call it with their own translated copy;
   the strings live in `pageMetaLabels` in `src/i18n.ts`. The canonical URL is built from the
   configured origin rather than from the host that served the page, so the copy Render also serves
-  on its `onrender.com` domain never declares itself canonical.
+  on its `onrender.com` domain never declares itself canonical. `index.html` deliberately carries
+  none: it is the document every route is served, so a canonical written into it names one URL for
+  all of them, and the pages it named were reported as *canonical to a different URL* — which asks
+  a search engine to drop them from the index. `src/staticDocument.test.ts` checks both ends: the
+  document has none, and every page declares one that the router actually serves.
 - **`public/robots.txt`** — everything that answers with the sign-in page (`/admin`, `/antiques`,
   `/cart`, `/wishlist`, `/profile`, `/preferences`) is closed to crawlers. `/login` and
   `/register` stay crawlable on purpose: they carry a `noindex` tag and a crawler that may not
@@ -67,12 +71,15 @@ The app is one HTML page, so what a crawler can reach is decided in five places:
   submissions used, so it keeps answering) plus the absolute `Sitemap:` and `Agentmap:` lines in
   `dist/robots.txt`.
   It lists the pages
-  a visitor reaches without an account: `/home`, `/about`, `/map` and `/chat`.
+  a visitor reaches without an account: `/`, `/about`, `/map` and `/chat`.
 - **the routes, on both deployments** — `render.yaml` names the application's routes one by one and
   `nginx.conf` names them in one regular expression, so a path the router does not draw is a 404
   rather than the landing page with a 200. `public/404.html` (with `public/404.css`) is the page a
   visitor gets, and `src/spaRoutes.test.ts` reads the router and both files, so a route that no rule
-  covers fails a test instead of 404ing for a visitor who follows a deep link.
+  covers fails a test instead of 404ing for a visitor who follows a deep link. The addresses that
+  are *not* pages are permanent redirects on both: `/home` is the landing page under its old name
+  and `/dashboard` its predecessor, and each sends the visitor to the URL that is canonical, so two
+  addresses never compete for one page in the index.
 
 **What a visitor may do.** The landing page, the gallery story, the pop-up's address and the
 concierge chat are readable without an account, and they are the pages a crawler may index.
@@ -116,7 +123,7 @@ curl -s https://galeriederuiter.cloud-ip.cc/robots.txt
 
 Both should name the public origin. Then, in Search Console, submit
 `https://galeriederuiter.cloud-ip.cc/sitemap_index.xml` under *Sitemaps*, and use *URL inspection* →
-*Request indexing* for `/dashboard`, `/about` and `/map`.
+*Request indexing* for `/`, `/about` and `/map`.
 
 Those are the pages that can be indexed. Everything else needs an account and answers with the
 sign-in page, which carries `noindex`, so a crawler that follows `/antiques` finds the login page

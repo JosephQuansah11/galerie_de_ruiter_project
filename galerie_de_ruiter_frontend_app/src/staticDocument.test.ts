@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import i18n from "@/i18n";
 
@@ -18,6 +18,7 @@ import i18n from "@/i18n";
  * that comes out as JavaScript is a data block a search engine cannot read.
  */
 const appRoot = join(__dirname, "..");
+const read = (...parts: string[]) => readFileSync(join(appRoot, ...parts), "utf8");
 const indexHtml = readFileSync(join(appRoot, "index.html"), "utf8");
 /** The origin the build fills the template in with, from the one module that decides it. */
 const origin = /PRODUCTION_ORIGIN\s*=\s*"([^"]+)"/.exec(readFileSync(join(appRoot, "site.config.mjs"), "utf8"))![1];
@@ -79,5 +80,53 @@ describe("the document, read without the bundle", () => {
     // engine nothing to work out what it is about. The copy is the gallery's own account of itself,
     // in its own language, for the crawler and the visitor that cannot run the bundle.
     expect(words.length).toBeGreaterThanOrEqual(300);
+  });
+});
+
+/** The paths the router draws, so a page's canonical URL can be checked against them. */
+const routerPaths = [...new Set(
+  ["src/AppContent.tsx", "src/ProtectedRoutes.tsx"]
+    .flatMap((file) => [...read(file).matchAll(/path="([^"]+)"/g)].map(([, path]) => path)),
+)].filter((path) => !path.includes("*"));
+/** `/antiques/${id}` and `/antiques/:id` are the same URL written two ways. */
+const normalise = (path: string) => path.replace(/\$\{[^}]+\}/g, ":").replace(/:[a-zA-Z]+/g, ":");
+
+/** Every page component that declares a canonical URL, and the URL it declares. */
+function declaredCanonicals(): Array<{ file: string; path: string }> {
+  const found: Array<{ file: string; path: string }> = [];
+  const walk = (directory: string) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const full = join(directory, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith(".tsx") && !entry.name.endsWith(".test.tsx")) {
+        const match = /canonicalPath: (["`])([^"`]+)/.exec(readFileSync(full, "utf8"));
+        if (match) found.push({ file: full.slice(appRoot.length + 1), path: match[2] });
+      }
+    }
+  };
+  walk(join(appRoot, "src", "pages"));
+  return found;
+}
+
+describe("the canonical URLs", () => {
+  it("leaves them to the pages, because the document is served for every route", () => {
+    // A canonical in the document names one URL for all of them, and every page it named was
+    // reported as "canonical to a different URL" - an instruction to drop it from the index.
+    expect(document.querySelector('link[rel="canonical"]')).toBeNull();
+  });
+
+  it("gives every page its own, and the landing page the root", () => {
+    const declared = declaredCanonicals();
+    // The four public pages, both sign-in pages, the catalogue, a piece's page and the dashboard.
+    expect(declared.length).toBeGreaterThanOrEqual(8);
+    // No page may canonicalise to a URL the application does not serve: a canonical that names
+    // somewhere else is a request to index that page instead of this one.
+    for (const { file, path } of declared) {
+      const served = routerPaths.some((route) => normalise(route) === normalise(path));
+      expect({ file, path, served }).toEqual({ file, path, served: true });
+    }
+    // The landing page's URL is the root: `/` cannot be redirected (Render applies no rule to a
+    // domain root), so the root is the address that is canonical and `/home` redirects to it.
+    expect(declared.find(({ file }) => file.endsWith("WelcomePage.tsx"))?.path).toBe("/");
   });
 });

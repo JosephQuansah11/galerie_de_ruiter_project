@@ -194,6 +194,21 @@ services:
       - key: VITE_GOOGLE_MAPS_API_KEY
         sync: false
     routes:
+      # The addresses that are not pages. `/home` is what the landing page was called before it
+      # moved to the root, and `/dashboard` and `/dashboard/chat` are older still: all three are
+      # known to search engines, and a redirect is what tells them which URL is canonical instead
+      # of leaving two addresses for one page. A redirect rule is applied before a rewrite and only
+      # where no file exists, and Render applies no rule to a domain root - which is why the root
+      # is the canonical address and these are the ones that redirect.
+      - type: redirect
+        source: /home
+        destination: /
+      - type: redirect
+        source: /dashboard
+        destination: /
+      - type: redirect
+        source: /dashboard/chat
+        destination: /chat
       # The paths the application draws, one rewrite each: the bundle renders all of them from the
       # shell, and Render serves a file that exists before it applies a rule, so a real file at one
       # of these paths still wins. Everything else is a path the gallery does not have, and Render
@@ -203,9 +218,6 @@ services:
       # the router (src/AppContent.tsx, src/ProtectedRoutes.tsx); src/spaRoutes.test.ts fails when
       # the two drift apart. `/` is not here because a rewrite cannot name the domain root - Render
       # serves `index.html` for it already.
-      - type: rewrite
-        source: /home
-        destination: /index.html
       - type: rewrite
         source: /chat
         destination: /index.html
@@ -244,12 +256,6 @@ services:
         destination: /index.html
       - type: rewrite
         source: /admin/*
-        destination: /index.html
-      - type: rewrite
-        source: /dashboard
-        destination: /index.html
-      - type: rewrite
-        source: /dashboard/chat
         destination: /index.html
     # The security headers a static site cannot get from a server: there is nothing at the origin to
     # inject them, so Render sends these from the edge. Values are sent as written - there is no

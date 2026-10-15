@@ -12,7 +12,7 @@ import { clearCache } from "@/services/apiCache";
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 /** Where a sign-in returns to: the page the visitor asked for, or the landing page. */
-const returnTo = (from?: string) => `${window.location.origin}${from ?? "/home"}`;
+const returnTo = (from?: string) => `${window.location.origin}${from ?? "/"}`;
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [authenticated, setAuthenticated] = useState(false);

@@ -16,9 +16,10 @@ Disallow: /wishlist
 Disallow: /profile
 Disallow: /preferences
 
-Allow:/about
-Allow:/location
-Allow:/home
+Allow: /
+Allow: /about
+Allow: /map
+Allow: /chat
 
 # The sign-in and registration pages stay crawlable on purpose: they carry a noindex tag, and
 # a crawler that is not allowed to fetch them would never see it.

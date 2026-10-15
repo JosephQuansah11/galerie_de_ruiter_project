@@ -57,7 +57,9 @@ describe("the agent guide", () => {
   });
 
   it("describes the pages a visitor can read without an account", () => {
-    for (const page of ["/home", "/about", "/map", "/chat"]) expect(llmsTxt).toContain(`${origin}${page}`);
+    // The landing page is the root, and the guide links to it with its trailing slash.
+    expect(llmsTxt).toContain(`${origin}/)`);
+    for (const page of ["/about", "/map", "/chat"]) expect(llmsTxt).toContain(`${origin}${page}`);
     // The catalogue is behind the sign-in page, so the guide says so rather than sending a visitor
     // to a redirect.
     expect(llmsTxt).toContain("/antiques");

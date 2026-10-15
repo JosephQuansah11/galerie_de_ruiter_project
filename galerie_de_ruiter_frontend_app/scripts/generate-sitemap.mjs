@@ -17,12 +17,12 @@ const distDir = path.join(appRoot, "dist");
 
 /**
  * The pages a visitor reaches without an account. Everything else answers with the sign-in
- * page and is disallowed in robots.txt, so it does not belong in a sitemap. `/home` is the
- * landing page: `/` and the old `/dashboard` redirect there, so a sitemap listing them would
- * list a redirect.
+ * page and is disallowed in robots.txt, so it does not belong in a sitemap. The landing page is
+ * the root: `/home` and the older `/dashboard` are sent to it by both servers, so a sitemap
+ * listing them would list a redirect.
  */
 const publicPages = [
-  { path: "/home", changefreq: "weekly", priority: "1.0" },
+  { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/about", changefreq: "monthly", priority: "0.8" },
   { path: "/map", changefreq: "monthly", priority: "0.8" },
   { path: "/chat", changefreq: "monthly", priority: "0.6" },

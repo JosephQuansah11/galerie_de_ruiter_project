@@ -44,7 +44,7 @@ export function CustomNav() {
   }, []);
 
   return <Navbar id="Navbar" aria-label={t("navMain")} className="navbar-dark navbar-expanded" expand="xl" fixed="top" expanded={expanded} onToggle={setExpanded}>
-    <Navbar.Brand as={NavLink} to="/home" className="navbar-brand-div" onClick={() => setExpanded(false)}>
+    <Navbar.Brand as={NavLink} to="/" className="navbar-brand-div" onClick={() => setExpanded(false)}>
       <span className="navbar-wordmark">{t("galleryName")}</span>
     </Navbar.Brand>
     <Navbar.Toggle aria-controls="main-navigation" aria-expanded={expanded} aria-label={t("navMain")} label={t("navMain")} />

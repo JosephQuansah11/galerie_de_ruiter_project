@@ -17,7 +17,11 @@ export default function WelcomePage() {
   usePageMeta({
     title: titleWithCity(t, "metaHomeTitle", city),
     description: t("metaHomeDescription"),
-    canonicalPath: "/home",
+    // The landing page's URL is the root, not `/home`: `/` is the address a visitor links to, the
+    // one a crawler is handed, and the one the server cannot redirect (Render applies no rule to a
+    // domain root) - so `/` is the URL that is canonical and `/home` is the one that redirects to
+    // it. Two URLs for one page would otherwise be two pages claiming to be the home page.
+    canonicalPath: "/",
   });
   return <section className="welcome-page">
     <WelcomeHero />

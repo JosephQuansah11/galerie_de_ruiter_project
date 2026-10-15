@@ -11,7 +11,7 @@ current values are.
 
 ## Pages a visitor can read without an account
 
-- [Home](https://galeriederuiter.cloud-ip.cc/home): the landing page - what the gallery is, what it
+- [Home](https://galeriederuiter.cloud-ip.cc/): the landing page - what the gallery is, what it
   shows, and where it is.
 - [About](https://galeriederuiter.cloud-ip.cc/about): the gallery's own story, with the address and
   the opening hours of the pop-up.

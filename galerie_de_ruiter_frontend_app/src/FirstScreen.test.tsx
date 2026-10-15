@@ -43,12 +43,11 @@ describe("the first screen in index.html", () => {
     expect(copy(".icons-list-user-profile .nav-item-link")).toBe(gallery("navSignIn"));
   });
 
-  it("declares the gallery's own address in the document, for a crawler that runs nothing", () => {
-    // The build fills the template in with the configured origin (see site.config.mjs), so the
-    // document itself never declares a host of its own choosing - which is what keeps Render's
-    // onrender.com copy of the site from competing with the gallery's domain.
-    const canonical = firstScreen?.ownerDocument.querySelector('link[rel="canonical"]');
-    expect(canonical?.getAttribute("href")).toBe("<%= htmlWebpackPlugin.options.siteUrl %>/");
+  it("declares no canonical, because the document is served for every route", () => {
+    // A canonical written into this document names one URL for all of them, and the pages it named
+    // were reported as "canonical to a different URL" - an instruction to drop them from the index.
+    // Each page declares its own at runtime instead; src/staticDocument.test.ts holds that end.
+    expect(firstScreen?.ownerDocument.querySelector('link[rel="canonical"]')).toBeNull();
   });
 
   it("reserves the logo's box, so the picture cannot push the copy around", () => {

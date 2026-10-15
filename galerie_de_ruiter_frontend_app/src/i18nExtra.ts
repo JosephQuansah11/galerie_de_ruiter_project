@@ -92,7 +92,6 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
         "Le modèle interactif apparaîtra ici lorsque la galerie aura terminé son scan en six vues.",
       welcomeBack: "Bon retour",
       continueKeycloak: "Continuer avec Keycloak",
-      continueGoogle: "Continuer avec Google",
       createAccount: "Créer un compte",
 
       // New keys – French
@@ -529,7 +528,6 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
         "Het interactieve model verschijnt hier zodra de galerie de scan vanuit zes hoeken heeft voltooid.",
       welcomeBack: "Welkom terug",
       continueKeycloak: "Doorgaan met Keycloak",
-      continueGoogle: "Doorgaan met Google",
       createAccount: "Account aanmaken",
 
       // New keys – Dutch (Netherlands)
@@ -968,7 +966,6 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
         "Das interaktive Modell erscheint hier, sobald die Galerie den Sechs-Seiten-Scan abgeschlossen hat.",
       welcomeBack: "Willkommen zurück",
       continueKeycloak: "Mit Keycloak fortfahren",
-      continueGoogle: "Mit Google fortfahren",
       createAccount: "Konto erstellen",
 
       // New keys – German

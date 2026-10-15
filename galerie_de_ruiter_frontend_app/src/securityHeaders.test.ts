@@ -152,7 +152,7 @@ describe("security headers", () => {
     // Every request the browser makes goes to the API, so both img-src and connect-src need it.
     expect(directive(policy, "img-src")).toContain(api);
     expect(directive(policy, "connect-src")).toContain(api);
-    // Keycloak answers the sign-in check, frames the silent one and hosts the Google button.
+    // Keycloak answers the sign-in check and frames the silent one.
     expect(directive(policy, "connect-src")).toContain(keycloak);
     expect(directive(policy, "frame-src")).toContain(keycloak);
     // The map is a Google Embed frame, and the administrator's address lookup calls Google's

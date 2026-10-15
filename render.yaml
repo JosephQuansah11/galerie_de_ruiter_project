@@ -158,14 +158,6 @@ services:
         value: ""
       - key: KEYCLOAK_REALM_ADMIN_PASSWORD
         sync: false
-      # Google sign-in (see "Sign in with Google" in the README). The API creates the realm's Google
-      # identity provider from these on every start. Without them the gallery signs in through
-      # Keycloak alone and the Google button leads to an error page, so set both in the dashboard:
-      # the OAuth client's id, and its secret.
-      - key: GOOGLE_IDP_CLIENT_ID
-        sync: false
-      - key: GOOGLE_IDP_CLIENT_SECRET
-        sync: false
       - key: OLLAMA_BASE_URL
         fromService:
           type: pserv

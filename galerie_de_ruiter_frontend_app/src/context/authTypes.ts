@@ -10,8 +10,6 @@ export interface AuthContextValue {
   roles: string[];
   isAdmin: boolean;
   login: (from?: string) => void;
-  /** The same sign-in with Google named as the provider, so Keycloak does not show its own page. */
-  loginWithGoogle: (from?: string) => void;
   logout: () => void;
   updateProfile: (profile: UserProfileUpdate) => Promise<void>;
   register: (profile: UserProfile & { password: string }) => Promise<void>;

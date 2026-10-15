@@ -87,7 +87,6 @@ const enTranslation: Record<string, string> = {
         "The interactive model will appear here when the gallery has completed its six-view scan.",
       welcomeBack: "Welcome back",
       continueKeycloak: "Continue with Keycloak",
-      continueGoogle: "Continue with Google",
       createAccount: "Create an account",
 
       // New keys
@@ -524,7 +523,6 @@ const nlBeTranslation: Record<string, string> = {
         "Het interactieve model verschijnt hier zodra de galerie de scan vanuit zes hoeken heeft voltooid.",
       welcomeBack: "Welkom terug",
       continueKeycloak: "Doorgaan met Keycloak",
-      continueGoogle: "Doorgaan met Google",
       createAccount: "Account aanmaken",
 
       // New keys – Belgian Dutch (mostly same as nl-NL, with small differences)

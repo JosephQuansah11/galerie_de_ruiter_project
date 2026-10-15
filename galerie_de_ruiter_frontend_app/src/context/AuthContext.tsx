@@ -11,15 +11,6 @@ import { clearCache } from "@/services/apiCache";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-/**
- * The alias the realm's Google identity provider is created under (see the API's
- * `KeycloakGoogleIdentityProviderProvisioner`). Naming it in the sign-in request is what makes the
- * button a Google button: Keycloak skips its own login page and goes straight to Google. The
- * sign-in page also looks for it in the provider list the API reports, so the button only appears
- * when the realm really has it.
- */
-export const GOOGLE_IDENTITY_PROVIDER = "google";
-
 /** Where a sign-in returns to: the page the visitor asked for, or the landing page. */
 const returnTo = (from?: string) => `${window.location.origin}${from ?? "/home"}`;
 
@@ -43,8 +34,6 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles,
     isAdmin: roles.some((role) => role.replace(/^ROLE_/i, "").toUpperCase() === "ADMIN"),
     login: (from?: string) => keycloak.login({ redirectUri: returnTo(from) }),
-    loginWithGoogle: (from?: string) =>
-      keycloak.login({ idpHint: GOOGLE_IDENTITY_PROVIDER, redirectUri: returnTo(from) }),
     // Signing out ends the concierge conversation and drops the cached public data, so the next
     // person to use the browser starts from a clean slate. Keycloak then returns the browser to
     // /logout, the one response that carries Clear-Site-Data (see nginx.conf and the blueprint):

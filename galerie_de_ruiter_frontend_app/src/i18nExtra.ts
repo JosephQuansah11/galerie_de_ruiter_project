@@ -41,9 +41,9 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       welcomeStoryEyebrow: "NOTRE HISTOIRE",
       welcomeStoryTitle: "Un lieu pour les objets qui ont une histoire.",
       welcomeStoryParagraph1:
-        "La Galerie De Ruiter est une boutique éphémère située dans le cadre rural de Waasmunster, entre Anvers et Gand, dans un hameau voisin au nom fascinant : De Ruiter.",
+        "La Galerie De Ruiter est une boutique éphémère : un lieu temporaire où la collection se rassemble. Où se trouve la galerie et quand elle est ouverte se lit sur la page de localisation.",
       welcomeStoryParagraph2:
-        "Ce qui a commencé comme un passe-temps et une recherche de belles pièces d’art, de design, vintage et d’antiquités est devenu un mélange éclectique. Vous pouvez le découvrir dans la charmante maison de Dirk. Sa devise est « Entrez sans frapper » : les visiteurs peuvent s’y détendre en cherchant l’objet de leurs rêves.",
+        "Ce qui a commencé comme un passe-temps et une recherche de belles pièces d’art, de design, vintage et d’antiquités est devenu un mélange éclectique. La devise de Dirk est « Entrez sans frapper » : les visiteurs peuvent s’y détendre en cherchant l’objet de leurs rêves.",
       welcomeStoryParagraph3:
         "Dirk est passionné par les beaux objets et par l’art de les réunir dans un intérieur harmonieux. C’est un mode de vie et une passion qu’il aime partager avec ses clients, qui deviennent souvent des amis.",
       welcomeStoryParagraph4:
@@ -454,9 +454,9 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       welcomeStoryEyebrow: "ONS VERHAAL",
       welcomeStoryTitle: "Een plek voor objecten met een verhaal.",
       welcomeStoryParagraph1:
-        "Galerie De Ruiter is een pop-upstore in het landelijke Waasmunster (tussen Antwerpen & Gent), in een nabijgelegen gehucht met de fascinerende naam De Ruiter.",
+        "Galerie De Ruiter is een pop-upstore: een tijdelijke plek waar de collectie samenkomt. Waar de galerie is en wanneer ze open is, lees je op de locatiepagina.",
       welcomeStoryParagraph2:
-        "Wat begon als een hobby en een zoektocht naar mooie items — kunst, design, vintage en antiek — is uitgegroeid tot een eclectische mix. Alles is te ontdekken in de charmante woning van Dirk. Zijn motto is “Entrez sans frapper”: bezoekers kunnen er op een ontspannen manier op zoek gaan naar het voorwerp van hun dromen.",
+        "Wat begon als een hobby en een zoektocht naar mooie items — kunst, design, vintage en antiek — is uitgegroeid tot een eclectische mix. Het motto van Dirk is “Entrez sans frapper”: bezoekers kunnen er op een ontspannen manier op zoek gaan naar het voorwerp van hun dromen.",
       welcomeStoryParagraph3:
         "Dirk is zelf gepassioneerd door mooie spullen en door de manier waarop ze samen een mooi interieur vormen. Het is een manier van leven en een passie die hij graag deelt met zijn klanten, die gemakkelijk vrienden worden.",
       welcomeStoryParagraph4:
@@ -868,9 +868,9 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       welcomeStoryEyebrow: "UNSERE GESCHICHTE",
       welcomeStoryTitle: "Ein Zuhause für Objekte mit Geschichte.",
       welcomeStoryParagraph1:
-        "Die Galerie De Ruiter ist ein Pop-up-Store im ländlichen Waasmunster zwischen Antwerpen und Gent, in einem nahegelegenen Weiler mit dem faszinierenden Namen De Ruiter.",
+        "Die Galerie De Ruiter ist ein Pop-up-Store: ein vorübergehender Ort, an dem die Sammlung zusammenkommt. Wo die Galerie ist und wann sie geöffnet ist, steht auf der Standortseite.",
       welcomeStoryParagraph2:
-        "Was als Hobby und Suche nach schönen Kunst-, Design-, Vintage- und antiken Stücken begann, ist zu einer eklektischen Mischung gewachsen. Entdecken lässt sie sich in Dirks charmantem Zuhause. Sein Motto lautet „Entrez sans frapper“ — einfach hereinkommen — und in entspannter Atmosphäre nach dem Objekt der eigenen Träume suchen.",
+        "Was als Hobby und Suche nach schönen Kunst-, Design-, Vintage- und antiken Stücken begann, ist zu einer eklektischen Mischung gewachsen. Dirks Motto lautet „Entrez sans frapper“ — einfach hereinkommen — und in entspannter Atmosphäre nach dem Objekt der eigenen Träume suchen.",
       welcomeStoryParagraph3:
         "Dirk begeistert sich für schöne Dinge und dafür, sie in einem stimmigen Interieur zusammenzubringen. Diese Leidenschaft und Lebensart teilt er gerne mit seinen Kunden, die oft auch zu Freunden werden.",
       welcomeStoryParagraph4:

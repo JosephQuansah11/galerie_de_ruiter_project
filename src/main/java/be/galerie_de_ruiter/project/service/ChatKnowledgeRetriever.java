@@ -31,14 +31,38 @@ public class ChatKnowledgeRetriever {
             "quelle", "comment", "est", "sont", "dans", "vous", "nous", "der", "die", "das", "und", "mit",
             "wie", "wo", "ist", "sind", "ein", "eine", "von", "zu", "bitte");
 
+    /**
+     * The words a visitor uses to ask where the gallery is and when it is open, in the languages
+     * the site ships. The location document is written in English, so its own words cannot tell a
+     * Dutch "waar is de galerie" apart from a question about a chair: the source link to the
+     * location page is offered on these words, and the address itself is always in the context.
+     */
+    private static final Set<String> LOCATION_TERMS = Set.of(
+            // English
+            "location", "address", "opening", "hours", "open", "where", "when", "visit", "map", "gallery",
+            // Dutch
+            "locatie", "adres", "openingstijden", "openingsuren", "waar", "wanneer", "bezoek", "kaart", "galerie",
+            // French
+            "adresse", "horaire", "horaires", "ouvert", "ouverte", "quand", "ou", "visite", "plan",
+            // German
+            "standort", "offnungszeiten", "geoffnet", "wann", "wo", "besuch");
+
     private final AntiqueRepository antiques;
     private final CategoryRepository categories;
     private final StoreLocationService locations;
     private final AboutContentService aboutContent;
 
     public RetrievedKnowledge retrieve(String question) {
+        // The gallery's address and opening hours come from the store_location row - the same
+        // record the location page and the About page show - and they are kept apart from the
+        // scored documents below, because they are always part of the context: it is one line of
+        // public information, and the document is written in English while a visitor asks in
+        // Dutch, French or German. Scoring would miss "waar is de galerie" or "wo ist die
+        // Galerie", and the assistant would have to invent an answer to a location question.
+        List<KnowledgeDocument> location = new ArrayList<>();
+        addLocationDocuments(location, locations.get());
+
         List<KnowledgeDocument> documents = new ArrayList<>();
-        addLocationDocuments(documents, locations.get());
         addCategoryDocuments(documents, categories.findAll());
         addAboutDocuments(documents, aboutContent.getContent());
         addCatalogueDocuments(documents, antiques.findChatCatalogueEntries());
@@ -52,14 +76,21 @@ public class ChatKnowledgeRetriever {
                 .map(ScoredDocument::document)
                 .toList();
 
-        List<ChatSource> sources = matches.stream()
+        List<KnowledgeDocument> context = new ArrayList<>(location);
+        context.addAll(matches);
+
+        // The location page is only offered as a source when the question was about the gallery's
+        // whereabouts, so every reply does not end up citing the map.
+        List<ChatSource> sources = Stream
+                .concat(asksAboutLocation(question) ? location.stream() : Stream.<KnowledgeDocument>empty(),
+                        matches.stream())
                 .map(document -> new ChatSource(document.title(), document.url()))
                 .distinct()
                 .toList();
-        String context = matches.isEmpty()
+        String contextText = context.isEmpty()
                 ? "No relevant public website or catalogue information was found for this question."
-                : matches.stream().map(ChatKnowledgeRetriever::formatDocument).collect(Collectors.joining("\n\n"));
-        return new RetrievedKnowledge(context, sources);
+                : context.stream().map(ChatKnowledgeRetriever::formatDocument).collect(Collectors.joining("\n\n"));
+        return new RetrievedKnowledge(contextText, sources);
     }
 
     private static void addLocationDocuments(List<KnowledgeDocument> documents, StoreLocation location) {
@@ -131,12 +162,26 @@ public class ChatKnowledgeRetriever {
     }
 
     private static Set<String> terms(String text) {
-        String normalized = Normalizer.normalize(text == null ? "" : text, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "")
-                .toLowerCase(Locale.ROOT);
-        return java.util.Arrays.stream(normalized.split("[^a-z0-9]+"))
+        return java.util.Arrays.stream(words(text))
                 .filter(term -> term.length() > 2 && !STOP_WORDS.contains(term))
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * Whether the visitor is asking where the gallery is or when it is open. This reads the raw
+     * words, not the filtered terms: a German "wo" or a French "ou" is a stop word for scoring,
+     * yet it is exactly how those visitors ask for the location.
+     */
+    private static boolean asksAboutLocation(String question) {
+        return java.util.Arrays.stream(words(question)).anyMatch(LOCATION_TERMS::contains);
+    }
+
+    /** The words of a text, without accents and in lower case. */
+    private static String[] words(String text) {
+        return Normalizer.normalize(text == null ? "" : text, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase(Locale.ROOT)
+                .split("[^a-z0-9]+");
     }
 
     private static String formatDocument(KnowledgeDocument document) {

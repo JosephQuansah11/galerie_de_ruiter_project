@@ -49,6 +49,44 @@ class ChatKnowledgeRetrieverTest {
         verify(antiques, never()).findAll();
     }
 
+    @Test
+    void alwaysAnswersWithTheStoreLocationTheLocationPageShows() {
+        when(antiques.findChatCatalogueEntries()).thenReturn(List.of());
+        when(categories.findAll()).thenReturn(List.of());
+        when(locations.get()).thenReturn(
+                new StoreLocation("Groenselstraat 48, Waasmunster", "Thursday to Sunday, 11:00 - 18:00", null, null));
+        when(aboutContent.getContent()).thenReturn("");
+
+        // The document is written in English and the visitor asks in Dutch: the words do not
+        // overlap, so relevance scoring alone would leave the assistant without the address.
+        var result = new ChatKnowledgeRetriever(antiques, categories, locations, aboutContent)
+                .retrieve("Waar is de galerie en wanneer is ze open?");
+
+        assertThat(result.context()).contains("Groenselstraat 48, Waasmunster")
+                .contains("Thursday to Sunday, 11:00 - 18:00");
+        assertThat(result.sources()).singleElement()
+                .satisfies(source -> {
+                    assertThat(source.title()).isEqualTo("Gallery location and opening hours");
+                    assertThat(source.url()).isEqualTo("/map");
+                });
+    }
+
+    @Test
+    void doesNotCiteTheLocationPageForAQuestionThatWasNotAboutIt() {
+        ChatCatalogueProjection chair = catalogueItem("Dining chair", "Oak chair", "Furniture");
+        when(antiques.findChatCatalogueEntries()).thenReturn(List.of(chair));
+        when(categories.findAll()).thenReturn(List.of());
+        when(locations.get()).thenReturn(
+                new StoreLocation("Groenselstraat 48, Waasmunster", "Thursday to Sunday, 11:00 - 18:00", null, null));
+        when(aboutContent.getContent()).thenReturn("");
+
+        var result = new ChatKnowledgeRetriever(antiques, categories, locations, aboutContent).retrieve("Oak chair");
+
+        // The address is still in the context, but a reply about a chair does not advertise the map.
+        assertThat(result.context()).contains("Groenselstraat 48, Waasmunster");
+        assertThat(result.sources()).noneSatisfy(source -> assertThat(source.url()).isEqualTo("/map"));
+    }
+
     private static ChatCatalogueProjection catalogueItem(String title, String description, String category) {
         ChatCatalogueProjection projection = org.mockito.Mockito.mock(ChatCatalogueProjection.class);
         when(projection.getId()).thenReturn(UUID.randomUUID());

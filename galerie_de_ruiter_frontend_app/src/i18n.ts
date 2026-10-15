@@ -36,9 +36,9 @@ const enTranslation: Record<string, string> = {
       welcomeStoryEyebrow: "OUR STORY",
       welcomeStoryTitle: "A home for objects with a story.",
       welcomeStoryParagraph1:
-        "Galerie De Ruiter is a pop-up store in rural Waasmunster, between Antwerp and Ghent, in a nearby hamlet with the fascinating name De Ruiter.",
+        "Galerie De Ruiter is a pop-up store: a temporary place where the collection comes together. Where the gallery is and when it is open is on the location page.",
       welcomeStoryParagraph2:
-        "What began as a hobby and a search for beautiful pieces of art, design, vintage and antiques has grown into an eclectic mix. You can discover it in Dirk's charming home. His motto is “Entrez sans frapper” — come in without knocking — where visitors can relax as they search for the object of their dreams.",
+        "What began as a hobby and a search for beautiful pieces of art, design, vintage and antiques has grown into an eclectic mix. Dirk's motto is “Entrez sans frapper” — come in without knocking — and visitors can relax as they search for the object of their dreams.",
       welcomeStoryParagraph3:
         "Dirk is passionate about beautiful things and bringing them together in a harmonious interior. It is a way of life and a passion he loves to share with his customers, who often become friends.",
       welcomeStoryParagraph4:
@@ -449,9 +449,9 @@ const nlBeTranslation: Record<string, string> = {
       welcomeStoryEyebrow: "ONS VERHAAL",
       welcomeStoryTitle: "Een plek voor objecten met een verhaal.",
       welcomeStoryParagraph1:
-        "Galerie De Ruiter is een pop-upstore in het landelijke Waasmunster (tussen Antwerpen & Gent), in een nabijgelegen gehucht met de fascinerende naam De Ruiter.",
+        "Galerie De Ruiter is een pop-upstore: een tijdelijke plek waar de collectie samenkomt. Waar de galerie is en wanneer ze open is, lees je op de locatiepagina.",
       welcomeStoryParagraph2:
-        "Wat begon als een hobby en een zoektocht naar mooie items — kunst, design, vintage en antiek — is uitgegroeid tot een eclectische mix. Alles is te ontdekken in de charmante woning van Dirk. Zijn motto is “Entrez sans frapper”: bezoekers kunnen er op een ontspannen manier op zoek gaan naar het voorwerp van hun dromen.",
+        "Wat begon als een hobby en een zoektocht naar mooie items — kunst, design, vintage en antiek — is uitgegroeid tot een eclectische mix. Het motto van Dirk is “Entrez sans frapper”: bezoekers kunnen er op een ontspannen manier op zoek gaan naar het voorwerp van hun dromen.",
       welcomeStoryParagraph3:
         "Dirk is zelf gepassioneerd door mooie spullen en door de manier waarop ze samen een mooi interieur vormen. Het is een manier van leven en een passie die hij graag deelt met zijn klanten, die gemakkelijk vrienden worden.",
       welcomeStoryParagraph4:

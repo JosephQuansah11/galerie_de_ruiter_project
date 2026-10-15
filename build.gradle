@@ -134,6 +134,11 @@ tasks.register("stopDevServices", Exec) {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	// KeycloakRealmFilesTest reads the realm files, and Gradle tracks a test task by its classes and
+	// classpath, not by what the tests open at runtime. Without declaring them here, editing a realm
+	// file and running the tests again answers from the previous run - the guard would be skipped
+	// exactly when it has something to say.
+	inputs.files(fileTree("keycloak/realms") { include("*.json") }).withPropertyName("keycloakRealmFiles")
 }
 
 tasks.named("bootRun") {

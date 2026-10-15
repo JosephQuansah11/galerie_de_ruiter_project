@@ -124,7 +124,11 @@ describe("advertising the catalog", () => {
   });
 
   it("names it in the document, so a crawler does not have to guess the path", () => {
+    // Two relations, one document: rel="ai-catalog" is the AI Catalog relation, and rel="ard" is
+    // the one Agentic Resource Discovery v0.91 names in its place. A consumer must honour the
+    // latter, which makes it a real alternative to the well-known path rather than a hint.
     expect(document).toContain('<link rel="ai-catalog" href="/.well-known/ai-catalog.json" />');
+    expect(document).toContain('<link rel="ard" href="/.well-known/ard.json" />');
     expect(document).toContain('<link rel="describedby" type="text/markdown" href="/llms.txt" />');
   });
 

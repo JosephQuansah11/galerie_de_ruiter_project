@@ -33,10 +33,13 @@
     <!-- What this origin offers agents: the manifest agents and registries look for by convention,
          advertised here so a crawler that reads the document finds it without guessing the path,
          and the guide for agents (llms.txt v2 asks for the describedby relation). Both files are
-         in public/ and are copied to the site root as they are; the manifest is served at
-         /.well-known/ard.json too, which is the path the current Agentic Resource Discovery
-         specification names. src/agentDiscovery.test.ts holds them together. -->
+         in public/ and are copied to the site root as they are. The manifest is advertised under
+         two relations because the specification renamed one: rel="ai-catalog" is the AI Catalog
+         relation, and rel="ard" is the one Agentic Resource Discovery v0.91 names in its place,
+         which a consumer must honour. Both hrefs are the same byte-identical document.
+         src/agentDiscovery.test.ts holds them together. -->
     <link rel="ai-catalog" href="/.well-known/ai-catalog.json" />
+    <link rel="ard" href="/.well-known/ard.json" />
     <link rel="describedby" type="text/markdown" href="/llms.txt" />
 
     <!-- The gallery type ships with the app (src/styles/_fonts.scss), so the first paint no longer

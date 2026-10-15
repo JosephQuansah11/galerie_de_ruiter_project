@@ -137,11 +137,14 @@ Two files describe the gallery to AI agents. Neither is generated: they are writ
   document satisfies both readings, and the test asserts the two files are byte-identical so they
   cannot drift apart.
 
-It is advertised three ways: a `<link rel="ai-catalog">` in `index.html`, an `Agentmap:` line in
-`dist/robots.txt`, and the conventional well-known path itself. The `Agentmap:` line is written by
-`scripts/generate-sitemap.mjs` rather than by hand, because the directive takes an absolute URL and
-the origin is only known at build time - and it names `/.well-known/ard.json`, the path the current
-specification requires a consumer to consult, rather than the predecessor path it supersedes.
+It is advertised three ways: the `<link>` tags in `index.html`, an `Agentmap:` line in
+`dist/robots.txt`, and the conventional well-known path itself. The document carries two relations
+because the specification renamed one: `rel="ai-catalog"` is the AI Catalog relation, and
+`rel="ard"` is the one Agentic Resource Discovery v0.91 names in its place. The `Agentmap:` line is
+written by `scripts/generate-sitemap.mjs` rather than by hand, because the directive takes an
+absolute URL and the origin is only known at build time - and it names `/.well-known/ard.json`, the
+path the current specification requires a consumer to consult, rather than the predecessor path it
+supersedes.
 `/.well-known/*` is also the one place the site sends `Access-Control-Allow-Origin: *` and
 `Cross-Origin-Resource-Policy: cross-origin` (see *Security headers*), because a crawler reading the
 manifest from its own origin makes a cross-origin request.

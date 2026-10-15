@@ -1,0 +1,72 @@
+/* The page for a path the gallery does not have (public/404.html). It brings its own stylesheet
+   rather than a link to the bundle's, which is content-hashed and only exists after a build: an
+   inline <style> would be blocked by the site's own `style-src 'self'`. The two faces and the
+   colours are the ones the application uses, so a visitor who mistypes an address still sees the
+   gallery's page rather than the browser's. */
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/cormorant-garamond-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/dm-sans-400.woff2") format("woff2");
+}
+
+:root {
+  --theme-primary: #841a23;
+  --theme-background: #f6f1ed;
+  --theme-text: #352629;
+  --theme-text-secondary: #705c60;
+}
+
+body {
+  margin: 0;
+  background: var(--theme-background);
+  color: var(--theme-text);
+  font-family: "DM Sans", system-ui, sans-serif;
+  line-height: 1.7;
+}
+
+.not-found {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 9vw, 7rem) clamp(1rem, 4vw, 3rem);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  color: var(--theme-primary);
+}
+
+.not-found h1 {
+  margin: 0.6rem 0 1rem;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(2rem, 6vw, 3.25rem);
+  font-weight: 500;
+}
+
+.not-found p {
+  color: var(--theme-text-secondary);
+}
+
+.not-found-links {
+  display: grid;
+  gap: 0.5rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.not-found-links a {
+  color: var(--theme-primary);
+}

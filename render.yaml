@@ -194,8 +194,62 @@ services:
       - key: VITE_GOOGLE_MAPS_API_KEY
         sync: false
     routes:
+      # The paths the application draws, one rewrite each: the bundle renders all of them from the
+      # shell, and Render serves a file that exists before it applies a rule, so a real file at one
+      # of these paths still wins. Everything else is a path the gallery does not have, and Render
+      # answers that with 404 Not Found - which is what a search engine needs to hear. The catch-all
+      # `/*` -> `/index.html` that used to be here answered every typo with the landing page and
+      # HTTP 200, which is how a site ends up with hundreds of indexed error pages. The list mirrors
+      # the router (src/AppContent.tsx, src/ProtectedRoutes.tsx); src/spaRoutes.test.ts fails when
+      # the two drift apart. `/` is not here because a rewrite cannot name the domain root - Render
+      # serves `index.html` for it already.
       - type: rewrite
-        source: /*
+        source: /home
+        destination: /index.html
+      - type: rewrite
+        source: /chat
+        destination: /index.html
+      - type: rewrite
+        source: /about
+        destination: /index.html
+      - type: rewrite
+        source: /map
+        destination: /index.html
+      - type: rewrite
+        source: /login
+        destination: /index.html
+      - type: rewrite
+        source: /register
+        destination: /index.html
+      - type: rewrite
+        source: /logout
+        destination: /index.html
+      - type: rewrite
+        source: /profile
+        destination: /index.html
+      - type: rewrite
+        source: /preferences
+        destination: /index.html
+      - type: rewrite
+        source: /wishlist
+        destination: /index.html
+      - type: rewrite
+        source: /cart
+        destination: /index.html
+      - type: rewrite
+        source: /antiques
+        destination: /index.html
+      - type: rewrite
+        source: /antiques/*
+        destination: /index.html
+      - type: rewrite
+        source: /admin/*
+        destination: /index.html
+      - type: rewrite
+        source: /dashboard
+        destination: /index.html
+      - type: rewrite
+        source: /dashboard/chat
         destination: /index.html
     # The security headers a static site cannot get from a server: there is nothing at the origin to
     # inject them, so Render sends these from the edge. Values are sent as written - there is no

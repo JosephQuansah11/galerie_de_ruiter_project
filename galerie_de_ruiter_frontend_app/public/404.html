@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="nl-BE">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#841a23" />
+
+    <!-- The page for a path the gallery does not have, served with a 404 status: nginx.conf answers
+         an unmatched path with this file and the status of the failure, and the static deployment
+         answers its own 404, which Render does not let a site replace. `noindex` keeps the address
+         out of the index rather than in it. Hand-written rather than drawn by the bundle, because
+         the bundle's routes are what did not match: its stylesheet is content-hashed, so this page
+         brings its own, which is also what keeps it inside the site's `style-src 'self'`. -->
+    <meta name="robots" content="noindex, follow" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="stylesheet" href="/404.css" />
+    <title>Pagina niet gevonden — Galerie de Ruiter</title>
+</head>
+<body>
+    <main class="not-found">
+        <p class="eyebrow">GALERIE DE RUITER</p>
+        <h1>Deze pagina bestaat niet.</h1>
+        <p>
+            Misschien is de link oud, of is het adres verkeerd getypt. Vanaf hier vind je de weg
+            terug naar de galerie.
+        </p>
+        <ul class="not-found-links">
+            <li><a href="/home">Naar de galerie</a></li>
+            <li><a href="/about">Over de galerie</a></li>
+            <li><a href="/map">Locatie en openingsuren</a></li>
+            <li><a href="/chat">Chat met de galerie</a></li>
+        </ul>
+    </main>
+</body>
+</html>

@@ -44,12 +44,34 @@ to Google Maps instead of a frame.
 `galerie-frontend` serves the gallery's `llms.txt` and its `/.well-known/ai-catalog.json` - and the
 same document at `/.well-known/ard.json`, the path the current Agentic Resource Discovery
 specification names - as ordinary static files. Render answers with a file that exists before it
-applies the `/*` -> `/index.html` rewrite, which is what makes the manifest JSON instead of the
-single-page application's HTML; before those files existed, an audit that asked for the manifest
+applies any rewrite, which is what makes the manifest JSON instead of the single-page
+application's HTML; before those files existed, an audit that asked for the manifest
 reported *"Malformed JSON in manifest: Unexpected token '<'"*. The `headers` block adds
 `Access-Control-Allow-Origin: *` and `Cross-Origin-Resource-Policy: cross-origin` for
 `/.well-known/*`, because a crawler reading the manifest from its own origin makes a cross-origin
 request. See *Agent discovery* in the frontend README for the files themselves.
+
+## Routes and the 404
+
+The site is a single-page application, so `render.yaml` has to say which paths belong to it. It
+names them one by one - the four public pages, the sign-in and registration pages, the account
+screens, and the `/antiques/*` and `/admin/*` prefixes - and rewrites each to `/index.html`.
+Everything else is a path the gallery does not have, and Render answers it with 404 Not Found.
+
+That list *is* the 404 story on this deployment, and it replaced a catch-all (`/*` ->
+`/index.html`) that answered every typo with the landing page and HTTP 200. An audit reported it,
+and it is worth knowing why it matters: a search engine handed a 200 and a page indexes that page
+under an address that does not exist, which is how a site collects error pages in its results.
+Render does not let a site replace its own 404 page, so a visitor gets Render's; the container
+deployment answers with the gallery's own `public/404.html` and the same 404 status (`error_page
+404` in `nginx.conf`).
+
+**These routes reach the live site through a Blueprint sync, not through a deploy.** They live in
+the blueprint, and `autoDeploy` deploys code - so this list needs *Blueprint* -> *Sync* in the
+dashboard, exactly like the header changes above, and the same values can be entered by hand under
+*Redirects/Rewrites* for the service. A route added to the application without a rule here is a
+deep link that 404s; `src/spaRoutes.test.ts` reads the router, this file and `nginx.conf` and fails
+when the three disagree.
 
 ## Security headers
 

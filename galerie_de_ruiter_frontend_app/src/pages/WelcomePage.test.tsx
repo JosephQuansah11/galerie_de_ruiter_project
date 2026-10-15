@@ -29,4 +29,15 @@ describe("WelcomePage", () => {
     expect(screen.getByRole("heading", { level: 2, name: i18n.t("welcomeStoryTitle") })).toBeInTheDocument();
     expect(screen.getByText(i18n.t("welcomeStoryParagraph1"))).toBeInTheDocument();
   });
+
+  it("puts the gallery story where the philosophy and pop-up cards used to be", async () => {
+    renderPage(<WelcomePage />);
+    await flushPromises();
+
+    const story = screen.getByRole("heading", { level: 2, name: i18n.t("welcomeStoryTitle") });
+    const philosophy = screen.getByText(i18n.t("curiosityOverClutter"));
+
+    // The gallery asked for this order: the photographs, then the story, then the two cards.
+    expect(story.compareDocumentPosition(philosophy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });

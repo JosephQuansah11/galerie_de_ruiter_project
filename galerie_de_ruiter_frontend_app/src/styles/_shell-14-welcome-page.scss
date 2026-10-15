@@ -28,7 +28,9 @@
 .welcome-grid button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  text-align: center;
 }
 .welcome-grid {
   display: grid;

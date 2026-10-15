@@ -19,7 +19,7 @@
 .chat-composer { display: flex; flex-direction: row; gap: 0.6rem; padding-top: 1rem; border-top: 1px solid rgba(60, 31, 37, 0.14); }
 .chat-composer button { display: grid; place-items: center; width: 3rem; }
 .appointment-summary { display: grid; gap: 0.2rem; margin-bottom: 1rem; padding: 0.8rem 1rem; border-left: 3px solid var(--theme-accent); background: var(--theme-surface); }
-.welcome-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.welcome-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
 .auth-page { display: grid; place-items: center; min-height: calc(100dvh - 4rem); padding: 2rem; background: linear-gradient(135deg, #f4e8df 0%, var(--theme-background) 52%, #d9e3d5 100%); }
 .auth-page .auth-panel { width: min(100%, 35rem); padding: clamp(2rem, 5vw, 4rem); background: var(--theme-surface); box-shadow: 0 1.4rem 3.2rem rgba(60, 31, 37, 0.17); }
 .auth-page .auth-panel h1 { margin: 0.4rem 0 1rem; font: 400 clamp(2.5rem, 6vw, 4.5rem) Georgia, serif; }

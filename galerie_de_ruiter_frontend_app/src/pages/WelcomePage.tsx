@@ -13,7 +13,9 @@ export default function WelcomePage() {
   return <section className="welcome-page">
     <WelcomeHero />
     <WelcomeSlider images={images} />
-    <WelcomeHighlights />
+    {/* The gallery asked for the story where the philosophy and pop-up cards used to sit, so the
+        story follows the photographs and the two cards close the page. */}
     <WelcomeStory />
+    <WelcomeHighlights />
   </section>;
 }

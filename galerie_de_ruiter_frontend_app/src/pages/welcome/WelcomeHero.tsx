@@ -19,10 +19,10 @@ export function WelcomeHero() {
       <span className="catalogue-artist">{t("galleryName")}</span>
       <h1>{home?.heroTitle?.trim() || titleWithCity(t, "welcomeTitle", city)}</h1>
       <p>{home?.heroIntro?.trim() || t("welcomeIntro")}</p>
+      </div>
       <div className="welcome-actions">
         <NavLink className="btn btn-dark" to="/antiques">{t("explore")} <ArrowRight size={17} /></NavLink>
         <NavLink className="btn btn-outline-dark" to="/chat"><MessageCircle size={17} /> {t("talkToGallery")}</NavLink>
       </div>
-    </div>
   </div>;
 }

@@ -18,6 +18,24 @@ Keycloak uses the `standard` web-service plan (2 GiB RAM) because its startup
 exceeded the 512 MiB available on the `starter` plan. This service-plan change
 increases costs; review the current price in Render before syncing.
 
+## Security headers
+
+A static site has nothing running at the origin to add response headers, so
+they are listed in the `headers` block of the `galerie-frontend` service in
+`render.yaml` and Render sends them from the edge. Changing that block only
+takes effect when the Blueprint is synced in the Render dashboard
+(*Blueprint* → *Sync*): `autoDeploy` deploys code, not Blueprint changes. The
+same values can be entered by hand under *Headers* for the service.
+
+`galerie_de_ruiter_frontend_app/nginx.conf` sends the same set for the
+container deployment, and
+`galerie_de_ruiter_frontend_app/src/securityHeaders.test.ts` fails when the two
+lists drift apart. See *Security headers* in the frontend README for what each
+header is for, and for the two the audit asks for that are deliberately absent
+(`Cross-Origin-Embedder-Policy` would break the map and sign-in frames;
+`Clear-Site-Data` belongs on a logout response, and this site has no
+server-side logout).
+
 ## Secrets and first-time setup
 
 1. Create or apply the blueprint from `render.yaml`; it sets Render's automatic

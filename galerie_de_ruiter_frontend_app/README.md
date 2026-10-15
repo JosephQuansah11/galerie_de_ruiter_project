@@ -182,13 +182,19 @@ one):
 
 | Header | Value |
 |---|---|
-| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: blob: <API>; connect-src 'self' <API> <Keycloak> https://nominatim.openstreetmap.org; frame-src 'self' https://www.openstreetmap.org <Keycloak>; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'` |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: <API>; connect-src 'self' <API> <Keycloak> https://nominatim.openstreetmap.org; frame-src 'self' https://www.openstreetmap.org <Keycloak>; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests` |
 | `Content-Security-Policy-Report-Only` | `require-trusted-types-for 'script'; trusted-types default` |
 | `Strict-Transport-Security` | `max-age=31536000` |
 | `X-Frame-Options` | `DENY` |
 | `Cross-Origin-Opener-Policy` | `same-origin` |
+| `Cross-Origin-Resource-Policy` | `same-origin` |
 | `X-Content-Type-Options` | `nosniff` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()` |
+| `X-Permitted-Cross-Domain-Policies` | `none` |
+| `X-XSS-Protection` | `0` |
+| `X-DNS-Prefetch-Control` | `off` |
+| `Origin-Agent-Cluster` | `?1` |
 
 `script-src 'self'` — no `'unsafe-inline'`, no `'unsafe-eval'` — is what makes the policy worth
 having: the app ships no inline script and no `eval`. The scripts that live outside the bundle are
@@ -199,6 +205,22 @@ type is served from this origin now (see *Speed*). The one inline handler the pa
 (the `onload` that flipped the font stylesheet from `media="print"`) went with the Google Fonts
 stylesheet it was flipping.
 
+`style-src-attr 'unsafe-inline'` is what keeps the gallery itself working: the dashboard charts size
+their bars, the theme picker draws its swatches and the photo carousel positions its slides with
+style *attributes*, which `style-src 'self'` alone blocks. Allowing inline attributes is not the
+same as allowing inline code — no script can run from a `style` attribute — and it is scoped to
+attributes, so an injected `<style>` element is still refused. The built document is checked to be
+free of inline `<style>` blocks, inline event handlers, `javascript:` URLs and `eval`; the one
+`new Function` in the bundle is webpack's own `globalThis` fallback, which every browser of the last
+few years short-circuits and which is wrapped in a `try`/`catch` for the ones that do not.
+
+Two headers from the audit are deliberately absent. `Cross-Origin-Embedder-Policy` would require
+every cross-origin subresource to opt in, and the map frame and the sign-in frames grant nothing, so
+it would break them; `Cross-Origin-Resource-Policy: same-origin` already stops other sites embedding
+the gallery. `Clear-Site-Data` belongs on a logout *response*, and this site has no server-side
+logout: signing out ends the Keycloak session and the app clears its own caches in
+`AuthContext.logout`.
+
 **The API and Keycloak origins come from the environment**, so the policy always matches the
 bundle: the image sets `CSP_API_ORIGIN` and `CSP_KEYCLOAK_ORIGIN` from the same build arguments
 the frontend was built with, and `docker-compose.production.yml` passes them explicitly. Override
@@ -206,11 +228,25 @@ them if the browser-facing origins differ from the ones the frontend was built a
 
 ### The static deployment (Render)
 
-`render.yaml` publishes the frontend as a Render **static site**, which does not run nginx, so
-the headers above have to be set there — Render's dashboard, under *Headers* for the service.
-Use the same values with `https://galerie-java-api.onrender.com` as `<API>` and
-`https://galerie-keycloak.onrender.com` as `<Keycloak>`. HSTS is added by Render on its own
-domains.
+`render.yaml` publishes the frontend as a Render **static site**, which does not run nginx, so the
+same headers are listed in the frontend service's `headers` block. Render sends header values as
+written — there is no environment substitution — so that copy spells the origins out:
+`https://galerie-java-api.onrender.com` and `https://galerie-keycloak.onrender.com`. It leaves
+`X-Content-Type-Options` out because Render already sends `nosniff` itself, and the report-only
+Trusted Types policy out because staging that is the container's job.
+`src/securityHeaders.test.ts` fails when the two lists disagree, so a header added to one has to be
+added to the other, and it checks the policy against the origins and style attributes the code
+actually uses.
+
+**A Blueprint change only reaches the site when the Blueprint is synced** in the Render dashboard
+(*Blueprint* → *Sync*); `autoDeploy` deploys code, not Blueprint changes. The same values can be
+entered by hand under *Headers* for the service, which takes effect on the next request.
+
+To confirm the policy against the running site, open it and watch the console for `Refused to load`
+/ `Refused to apply` messages while clicking through the landing page, the pop-up map, the chat, a
+piece's page (the 3D viewer loads its model over `connect-src`) and the dashboard charts. Render
+adds HSTS on its own `onrender.com` domains; on the custom domain the header above is what carries
+it.
 
 ### Trusted Types is staged in report-only mode
 

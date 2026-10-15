@@ -196,3 +196,50 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
+    # The security headers a static site cannot get from a server: there is nothing at the origin to
+    # inject them, so Render sends these from the edge. Values are sent as written - there is no
+    # environment substitution - so the API and Keycloak origins are spelled out; they are the same
+    # ones the build above uses. `nginx.conf` sends the same policy for the container deployment,
+    # and `src/securityHeaders.test.ts` fails when the two drift apart.
+    #
+    # Editing this file only reaches the site when the Blueprint is synced in the Render dashboard:
+    # `autoDeploy` deploys code, not Blueprint changes.
+    #
+    # `style-src-attr 'unsafe-inline'` is not decoration: the charts size their bars, the theme
+    # picker draws its swatches and the photo carousel positions its slides with style attributes,
+    # which `style-src 'self'` alone would block. Cross-Origin-Embedder-Policy is deliberately
+    # absent - requiring it would block the map and sign-in frames, which grant nothing.
+    headers:
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://galerie-java-api.onrender.com; connect-src 'self' https://galerie-java-api.onrender.com https://galerie-keycloak.onrender.com https://nominatim.openstreetmap.org; frame-src 'self' https://www.openstreetmap.org https://galerie-keycloak.onrender.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Cross-Origin-Opener-Policy
+        value: same-origin
+      - path: /*
+        name: Cross-Origin-Resource-Policy
+        value: same-origin
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
+      - path: /*
+        name: X-Permitted-Cross-Domain-Policies
+        value: none
+      - path: /*
+        name: Origin-Agent-Cluster
+        value: "?1"
+      - path: /*
+        name: X-DNS-Prefetch-Control
+        value: "off"
+      - path: /*
+        name: X-XSS-Protection
+        value: "0"

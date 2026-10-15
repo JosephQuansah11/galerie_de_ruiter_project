@@ -45,6 +45,18 @@ Embed API and the Geocoding API, restricted by HTTP referrer to
 `https://galeriederuiter.cloud-ip.cc/*`. Without it the location page shows the address and a link
 to Google Maps instead of a frame.
 
+## Agent discovery
+
+`galerie-frontend` serves the gallery's `llms.txt` and its `/.well-known/ai-catalog.json` - and the
+same document at `/.well-known/ard.json`, the path the current Agentic Resource Discovery
+specification names - as ordinary static files. Render answers with a file that exists before it
+applies the `/*` -> `/index.html` rewrite, which is what makes the manifest JSON instead of the
+single-page application's HTML; before those files existed, an audit that asked for the manifest
+reported *"Malformed JSON in manifest: Unexpected token '<'"*. The `headers` block adds
+`Access-Control-Allow-Origin: *` and `Cross-Origin-Resource-Policy: cross-origin` for
+`/.well-known/*`, because a crawler reading the manifest from its own origin makes a cross-origin
+request. See *Agent discovery* in the frontend README for the files themselves.
+
 ## Security headers
 
 A static site has nothing running at the origin to add response headers, so

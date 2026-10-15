@@ -119,6 +119,50 @@ When the collection opens to visitors, remove the `/antiques` line from `robots.
 fetch them at build time). The API already answers `GET /api/antiques` without a token, so this
 is a frontend decision, not a backend one.
 
+## Agent discovery
+
+Two files describe the gallery to AI agents. Neither is generated: they are written by hand in
+`public/` and copied to the site root as they are.
+
+- **`public/llms.txt`** follows the [llms.txt](https://llmstxt.org/) format: an H1, then sections of
+  Markdown links to the pages a visitor can read without an account — and the fact that the
+  catalogue is not one of them. Lighthouse's audit fails a file with no H1, no Markdown link, or
+  fewer than 50 characters, so `src/agentDiscovery.test.ts` pins all three.
+- **`public/.well-known/ai-catalog.json`** is the Agentic Resource Discovery manifest: a `specVersion`
+  and a `host` block (the AI Catalog envelope) around `entries[]`, where each entry carries a
+  domain-anchored URN (`urn:air:<host>:<namespace>:<name>`), a `displayName`, an IANA media type and
+  exactly one of `url` or `data`. The same document is served at `/.well-known/ard.json`, the path
+  the current ARD specification names. ARD reads only `entries` and ignores the envelope, so one
+  document satisfies both readings, and the test asserts the two files are byte-identical so they
+  cannot drift apart.
+
+It is advertised three ways, all pointing at the same path: a `<link rel="ai-catalog">` in
+`index.html`, an `Agentmap:` line in `public/robots.txt`, and the conventional well-known path
+itself. `/.well-known/*` is also the one place the site sends `Access-Control-Allow-Origin: *` and
+`Cross-Origin-Resource-Policy: cross-origin` (see *Security headers*), because a crawler reading the
+manifest from its own origin makes a cross-origin request.
+
+**Why the manifest was reported as malformed.** This is a single-page application: `render.yaml`
+rewrites `/*` to `/index.html`, and `nginx.conf` falls back to it with `try_files`. A path with no
+file behind it therefore answers `200` with the HTML document, so a crawler that asked for
+`ai-catalog.json` before it existed got `<!DOCTYPE html>` where JSON was expected — *"Malformed JSON
+in manifest: SyntaxError: Unexpected token '<'"*. Render and nginx both serve a real file before the
+fallback, so shipping the file is the whole fix; `src/agentDiscovery.test.ts` fails if the file, its
+fields, the paths that advertise it, or the webpack `globOptions.dot` that copies a dot directory go
+missing.
+
+The gallery runs no MCP server and publishes no agent card, so the catalog lists one entry: the guide
+above, typed `text/markdown`. An entry for an MCP server or an agent card goes in when there is one
+to point at — the specification is explicit that a catalogue listing resources that do not resolve is
+worse than a small one.
+
+The two forms a visitor can use without an account — the concierge composer and the appointment
+picker in the chat — carry WebMCP declarative annotations (`toolname` and `tooldescription` on the
+form, `toolparamdescription` on each control), so an agent can find them as tools and fill them in.
+Chrome reads the attributes directly and nothing else changes; no form carries `toolautosubmit`, so
+the visitor still checks and submits. `src/webmcp.d.ts` declares the attributes for TypeScript, which
+knows no such attribute on a `<form>`.
+
 ## Stylesheets
 
 The gallery's CSS lives in `src/styles` and is imported once, from `src/index.tsx`. `App.scss` is
@@ -214,7 +258,7 @@ one):
 |---|---|
 | `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: <API>; connect-src 'self' <API> <Keycloak> https://maps.googleapis.com; frame-src 'self' https://www.google.com <Keycloak>; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests` |
 | `Content-Security-Policy-Report-Only` | `require-trusted-types-for 'script'; trusted-types default` |
-| `Strict-Transport-Security` | `max-age=31536000` |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` |
 | `X-Frame-Options` | `SAMEORIGIN` |
 | `Cross-Origin-Opener-Policy` | `same-origin` |
 | `Cross-Origin-Embedder-Policy` | `credentialless` |
@@ -227,6 +271,7 @@ one):
 | `X-DNS-Prefetch-Control` | `off` |
 | `Origin-Agent-Cluster` | `?1` |
 | `Clear-Site-Data` (path `/logout`) | `"cache", "cookies", "storage"` |
+| `Access-Control-Allow-Origin` (path `/.well-known/*`) | `*`, with `Cross-Origin-Resource-Policy: cross-origin` beside it |
 
 `script-src 'self'` — no `'unsafe-inline'`, no `'unsafe-eval'` — is what makes the policy worth
 having: the app ships no inline script and no `eval`. The scripts that live outside the bundle are
@@ -285,11 +330,13 @@ them if the browser-facing origins differ from the ones the frontend was built a
 same headers are listed in the frontend service's `headers` block. Render sends header values as
 written — there is no environment substitution — so that copy spells the origins out:
 `https://galerie-java-api.onrender.com` and `https://galerie-keycloak.onrender.com`. It leaves
-`X-Content-Type-Options` out because Render already sends `nosniff` itself, and the report-only
-Trusted Types policy out because staging that is the container's job.
-`src/securityHeaders.test.ts` fails when the two lists disagree, so a header added to one has to be
-added to the other, and it checks the policy against the origins and style attributes the code
-actually uses.
+`X-Content-Type-Options` out because Render already sends `nosniff` itself. The report-only Trusted
+Types policy is sent by both deployments: the audit that looks for the directive reads the static
+site, and a rollout that is staged in one place and absent in the other is not staged, it is half
+done. `src/securityHeaders.test.ts` fails when the two lists disagree, so a header added to one has
+to be added to the other, and it checks the policy against the origins and style attributes the code
+actually uses — including the `/.well-known/*` exception above, which is the only response that may
+be read from another origin.
 
 **A Blueprint change only reaches the site when the Blueprint is synced** in the Render dashboard
 (*Blueprint* → *Sync*); `autoDeploy` deploys code, not Blueprint changes. The same values can be
@@ -324,9 +371,18 @@ That is `script.src = …` for a lazily loaded route, which every navigation nee
 
 ### Rolling out HSTS
 
-`max-age=31536000` is what the audit wants. If you are not certain every subdomain of the domain
-can serve HTTPS, start with a low value (for example `max-age=300`), raise it once you are sure,
-and add `includeSubDomains` only when all subdomains are ready.
+`max-age=31536000; includeSubDomains` is what the audit asks for, and both parts are safe here: the
+gallery's host is `galeriederuiter.cloud-ip.cc`, so `includeSubDomains` covers subdomains of a name
+the gallery would create itself, and there are none. If that ever changes — a subdomain that has to
+answer over plain HTTP, for example — lower the `max-age` first, then remove `includeSubDomains`.
+
+`preload` is deliberately **not** sent, and the audit's suggestion to add it does not apply to this
+site. Preloading means submitting the domain to the browsers' built-in HSTS list, which can only be
+done for a registrable domain the publisher owns; `galeriederuiter.cloud-ip.cc` is a subdomain of
+`cloud-ip.cc`, so it cannot be submitted, and a `preload` token would claim a commitment nobody can
+honour. If the gallery moves to a domain it owns, add `preload` **after** submitting it at
+[hstspreload.org](https://hstspreload.org/) and confirming the whole domain — apex and every
+subdomain — serves HTTPS.
 
 ## Learn More
 

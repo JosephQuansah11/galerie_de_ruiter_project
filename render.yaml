@@ -208,9 +208,13 @@ services:
     #
     # `style-src-attr 'unsafe-inline'` is not decoration: the charts size their bars, the theme
     # picker draws its swatches and the photo carousel positions its slides with style attributes,
-    # which `style-src 'self'` alone would block. Cross-Origin-Embedder-Policy is `credentialless`
-    # rather than `require-corp`: the map frame and the silent sign-in frame send no CORP header, so
-    # requiring one would block both, and neither grants anything the page does not already have.
+    # which `style-src 'self'` alone would block. There is deliberately no Cross-Origin-Embedder-
+    # Policy: COEP makes every cross-origin frame, image and script on the page declare a
+    # Cross-Origin-Resource-Policy, and the ones this page loads are other people's - the Google map
+    # and Keycloak's own pages - which send none and cannot be given one. Keycloak's third-party-
+    # cookie probe is what that broke: keycloak-js loads it in a hidden iframe, COEP refused it, and
+    # the sign-in button stopped working. `credentialless` does not help; that frame is still
+    # refused. Nothing here needs crossOriginIsolated, which is all COEP buys.
     headers:
       - path: /*
         name: Content-Security-Policy
@@ -225,9 +229,6 @@ services:
       - path: /*
         name: Content-Security-Policy-Report-Only
         value: "require-trusted-types-for 'script'; trusted-types default"
-      - path: /*
-        name: Cross-Origin-Embedder-Policy
-        value: credentialless
       - path: /*
         name: X-Frame-Options
         value: SAMEORIGIN

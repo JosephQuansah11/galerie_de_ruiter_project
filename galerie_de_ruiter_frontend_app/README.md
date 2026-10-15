@@ -203,14 +203,15 @@ four things were behind that. All four are fixed:
   session" screen until Keycloak answered, which put the whole page behind a round trip to the
   identity provider. It draws the shell immediately now; the routes that need an account wait for
   the answer themselves, and the account menu fills an empty slot when it arrives.
-- **The silent sign-in check stays inside the page.** `keycloak-js` is given a
-  `silentCheckSsoRedirectUri`, so it asks through a hidden iframe
-  (`public/silent-check-sso.html`, which loads `silent-check-sso.js`) instead of navigating the
-  top-level document to Keycloak and back. That navigation made the browser load the document, the
-  stylesheet and the bundle a second time before anything could be painted. The trade is that a
-  browser which blocks third-party cookies cannot answer through the iframe; a returning
-  signed-in visitor then has to open the sign-in page once, where Keycloak's own session takes
-  them straight through without a password.
+- **Nothing asks the identity provider for the session while the page loads.** `keycloak-js` used to
+  be given `onLoad: "check-sso"` and a `silentCheckSsoRedirectUri`, so a returning visitor looked
+  signed in without a round trip. That check cannot work in a browser that blocks third-party
+  cookies, and before it even tries, the adapter loads Keycloak's third-party-cookie probe
+  (`.../3p-cookies/step1.html`) in a hidden iframe of its own. That frame is cross-origin, Keycloak
+  serves it with no `Cross-Origin-Resource-Policy` - not a header this site can add - and the browser
+  refused it under the site's own `Cross-Origin-Embedder-Policy`: `init` rejected on its ten-second
+  timeout and the sign-in button did nothing at all. The visitor is now simply signed out until they
+  sign in, which is one navigation; a visitor who still has a Keycloak session does not see the form.
 - **The gallery type is self-hosted.** `public/fonts` holds the latin subsets and
   `src/styles/_fonts.scss` declares them; `index.html` preloads the two faces of the first screen
   (Cormorant Garamond 400 for the heading, DM Sans 400 for the body copy). The type used to come
@@ -261,7 +262,6 @@ one):
 | `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` |
 | `X-Frame-Options` | `SAMEORIGIN` |
 | `Cross-Origin-Opener-Policy` | `same-origin` |
-| `Cross-Origin-Embedder-Policy` | `credentialless` |
 | `Cross-Origin-Resource-Policy` | `same-origin` |
 | `X-Content-Type-Options` | `nosniff` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
@@ -274,10 +274,12 @@ one):
 | `Access-Control-Allow-Origin` (path `/.well-known/*`) | `*`, with `Cross-Origin-Resource-Policy: cross-origin` beside it |
 
 `script-src 'self'` — no `'unsafe-inline'`, no `'unsafe-eval'` — is what makes the policy worth
-having: the app ships no inline script and no `eval`. The scripts that live outside the bundle are
-files for that reason: `public/silent-check-sso.js`, which the hidden sign-in iframe loads, is
-`<script src>` rather than an inline block. `frame-src` therefore lists `'self'` beside the map and
-Keycloak, and `style-src`/`font-src` no longer list the Google Fonts origins, because the gallery
+having: the app ships no inline script and no `eval`. The one script that used to live outside the
+bundle, `public/silent-check-sso.js` for the silent sign-in check, went with the check itself (see
+*Speed*), so the policy no longer allows a `<script src>` the bundle did not put there. `frame-src`
+lists `'self'` beside the map and Keycloak - the gallery frames nothing of its own today, and a
+same-origin frame is the one thing that value cannot break. `style-src`/`font-src` no longer list the
+Google Fonts origins, because the gallery
 type is served from this origin now (see *Speed*). The one inline handler the page used to have
 (the `onload` that flipped the font stylesheet from `media="print"`) went with the Google Fonts
 stylesheet it was flipping.
@@ -292,20 +294,22 @@ free of inline `<style>` blocks, inline event handlers, `javascript:` URLs and `
 few years short-circuits and which is wrapped in a `try`/`catch` for the ones that do not.
 
 `frame-ancestors 'self'` and `X-Frame-Options: SAMEORIGIN` are the other way round from what a
-hardening checklist suggests, and for a measured reason: the gallery frames one of its own pages.
-keycloak-js loads `public/silent-check-sso.html` in a hidden iframe for the silent sign-in check, so
-`'none'` and `DENY` blocked the check itself — the browser logged *"Framing … violates …
-frame-ancestors 'none'"* and a returning signed-in visitor looked signed out. `'self'` still stops a
-foreign page framing the gallery, which is the clickjacking risk, and `src/securityHeaders.test.ts`
-pins both values so the tighter-looking setting cannot come back.
+hardening checklist suggests, and the reason is history: the gallery framed one of its own pages for
+the silent sign-in check, so `'none'` and `DENY` blocked that check and a returning signed-in visitor
+looked signed out. That check is gone (see *Speed*), which makes `'none'` and `DENY` safe today;
+`src/securityHeaders.test.ts` records the decision either way. Both values close the clickjacking
+risk, which is a foreign page framing the gallery.
 
-`Cross-Origin-Embedder-Policy: credentialless` is the value for a page that embeds third-party
-content, which this one does. `require-corp` would refuse to load any cross-origin resource that
-does not grant permission through `Cross-Origin-Resource-Policy`, and neither Google's map frame nor
-Keycloak's silent sign-in page sends that header, so it would break both. `credentialless` instead
-sends cross-origin *no-cors* requests without credentials, which suits the gallery: the images it
-loads from its own API are public reads that need no cookie, and the frames keep their own browsing
-context, cookies included, so the silent sign-in check still works.
+`Cross-Origin-Embedder-Policy` is deliberately **absent**, and that is the one header here that was
+removed rather than added. COEP makes every cross-origin frame, image and script on the page declare
+a `Cross-Origin-Resource-Policy`, and the resources this page loads are other people's: the Google
+map and Keycloak's own pages. Keycloak sends no CORP and cannot be given one - it is not this site's
+server - so the header only takes things away, and it took away sign-in: keycloak-js loads Keycloak's
+third-party-cookie probe in a hidden iframe, the browser refused that frame under COEP, the adapter
+rejected on its ten-second timeout, and the sign-in button did nothing. `credentialless`, the
+alternative the guidance offers, refuses that frame too. The only thing COEP buys is
+`crossOriginIsolated`, which nothing here needs, so the site sends none and keeps
+`Cross-Origin-Resource-Policy: same-origin` for its own responses instead.
 
 `Clear-Site-Data` is on one path, not on the site: `/logout`. Signing out ends the Keycloak session,
 and `AuthContext.logout` sends the browser back through `/logout`, so that one response tells the
@@ -331,10 +335,9 @@ them if the browser-facing origins differ from the ones the frontend was built a
 this origin to embed them: it sends `Cross-Origin-Resource-Policy: cross-origin`, because
 `same-origin` and `same-site` are compared against the embedding page - this one - and this page is a
 different host *and* a different site from the API. That header is what a page setting
-`Cross-Origin-Embedder-Policy: require-corp` consults before it renders a cross-origin resource; this
-site sets `credentialless`, which loads such resources without requiring it, so the API's header is
-what keeps the gallery's images working in the stricter case as well. See *API response headers* in
-the repository README.
+`Cross-Origin-Embedder-Policy: require-corp` consults before it renders a cross-origin resource: this
+site sends no COEP, so its own pages load those images either way, and the API's header is what keeps
+them working for an embedder that does set it. See *API response headers* in the repository README.
 
 ### The static deployment (Render)
 

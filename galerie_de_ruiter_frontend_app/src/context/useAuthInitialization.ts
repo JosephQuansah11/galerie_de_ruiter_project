@@ -18,19 +18,36 @@ export function useAuthInitialization({ setAuthenticated, setLoading, setProfile
     if (initialized.current) return;
     initialized.current = true;
     /**
-     * The silent sign-in round trip returns to the redirect URI, so it has to be the page the
-     * visitor asked for. A reload on a deep link (for example the inventory or the categories
-     * screen) used to land on the dashboard instead, which looked like the page had vanished.
+     * The sign-in round trip returns to the redirect URI, so it has to be the page the visitor
+     * asked for. A reload on a deep link (for example the inventory or the categories screen) used
+     * to land on the dashboard instead, which looked like the page had vanished.
      */
     const requestedPath = `${window.location.pathname}${window.location.search}`;
-    keycloak.init({ onLoad: "check-sso", pkceMethod: "S256", checkLoginIframe: false,
-      /**
-       * The silent check has to answer inside the page. Without an iframe to ask through,
-       * keycloak-js navigates the top-level document to the identity provider and back, so
-       * every visit loaded the document, the stylesheet and the bundle a second time before
-       * anything could be painted.
-       */
-      silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
+    /**
+     * No `onLoad`, so nothing about the page waits on the identity provider: the visitor is treated
+     * as signed out until they sign in.
+     *
+     * `onLoad: "check-sso"` is what this used to ask for, with `silentCheckSsoRedirectUri` naming a
+     * page of ours for the adapter to answer through. Such a check only works where third-party
+     * cookies work, and keycloak-js tests for them first by loading Keycloak's third-party-cookie
+     * probe (`.../3p-cookies/step1.html`) in a hidden iframe of its own. That frame is cross-origin
+     * and Keycloak serves it with no Cross-Origin-Resource-Policy - a header this site cannot add
+     * to someone else's server - so the site's own Cross-Origin-Embedder-Policy refused to load it:
+     * the probe never answered, the adapter rejected on its ten-second timeout, and the sign-in
+     * button did nothing, because it builds its URL from the endpoints `init` discovers.
+     *
+     * Where the probe did answer, it answered "unsupported" - current browsers block third-party
+     * cookies - and the adapter then cleared the silent redirect and navigated the whole document
+     * to Keycloak. That is the round trip the first screen spends its budget avoiding.
+     *
+     * Signing in is now the only thing that talks to the identity provider, and it is one
+     * navigation: a visitor who still has a session there does not see the form, because Keycloak
+     * answers with the session it already has.
+     *
+     * `checkLoginIframe: false` keeps the adapter from polling the session status in a second
+     * iframe, and `redirectUri` names where the visitor comes back to.
+     */
+    keycloak.init({ pkceMethod: "S256", checkLoginIframe: false,
       redirectUri: `${window.location.origin}${requestedPath === "/login" ? "/home" : requestedPath}` }).then((isAuthenticated) => {
       setAuthenticated(isAuthenticated); syncToken(keycloak.token);
       if (!isAuthenticated) return;

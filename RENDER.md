@@ -63,13 +63,14 @@ same values can be entered by hand under *Headers* for the service.
 `galerie_de_ruiter_frontend_app/nginx.conf` sends the same set for the
 container deployment - the headers themselves live in
 `galerie_de_ruiter_frontend_app/security-headers.conf`, which that config includes
-twice, because the sign-out response needs them too and a location-level
-`add_header` drops the inherited ones - and
+at the server level and again in the two locations whose own `add_header` would
+drop the inherited ones (`/logout` and `/.well-known/`) - and
 `galerie_de_ruiter_frontend_app/src/securityHeaders.test.ts` fails when the two
 lists drift apart. See *Security headers* in the frontend README for what each
-header is for, and for why `Cross-Origin-Embedder-Policy` is `credentialless`
-(`require-corp` would block the map and the silent sign-in frame) and why
-`Clear-Site-Data` sits on `/logout` rather than on the whole site.
+header is for, for why there is deliberately no `Cross-Origin-Embedder-Policy`
+(it would make Keycloak's own frames declare a policy this site cannot give them,
+and that is what broke sign-in), and for why `Clear-Site-Data` sits on `/logout`
+rather than on the whole site.
 
 ## Secrets and first-time setup
 

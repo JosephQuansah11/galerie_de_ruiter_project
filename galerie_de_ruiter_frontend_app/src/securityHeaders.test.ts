@@ -81,15 +81,16 @@ describe("security headers", () => {
     expect(Object.keys(blueprintHeaders).filter((name) => !notShared.includes(name)).sort()).toEqual(expected);
   });
 
-  it("embeds third-party frames without granting them credentials", () => {
-    // `require-corp` would refuse to load Google's map frame and Keycloak's silent sign-in page,
-    // because neither grants permission through Cross-Origin-Resource-Policy. `credentialless` is
-    // the value for a page that embeds third-party content: the cross-origin no-cors requests go
-    // out without credentials, and the gallery's own images from the API are public reads that need
-    // none. The frames keep their own browsing context, cookies included, so the silent sign-in
-    // check still works.
-    expect(fromNginx()["cross-origin-embedder-policy"]).toBe("credentialless");
-    expect(fromBlueprint()["cross-origin-embedder-policy"]).toBe("credentialless");
+  it("sends no Cross-Origin-Embedder-Policy, on purpose", () => {
+    // COEP makes every cross-origin frame, image and script on the page declare a
+    // Cross-Origin-Resource-Policy, and the resources this page loads are other people's: the Google
+    // map and Keycloak's own pages. Keycloak sends no CORP and cannot be given one - it is not this
+    // site's server. Its third-party-cookie probe, which keycloak-js loads in a hidden iframe, is
+    // what COEP broke: the frame was refused, the adapter rejected on its ten-second timeout, and
+    // the sign-in button did nothing. `credentialless`, the alternative the guidance offers, refuses
+    // that frame too. Nothing here needs `crossOriginIsolated`, which is all COEP buys.
+    expect(fromNginx()["cross-origin-embedder-policy"]).toBeUndefined();
+    expect(fromBlueprint()["cross-origin-embedder-policy"]).toBeUndefined();
   });
 
   it("clears the browser's data on the sign-out response, and nowhere else", () => {
@@ -152,14 +153,15 @@ describe("security headers", () => {
     // Every request the browser makes goes to the API, so both img-src and connect-src need it.
     expect(directive(policy, "img-src")).toContain(api);
     expect(directive(policy, "connect-src")).toContain(api);
-    // Keycloak answers the sign-in check and frames the silent one.
+    // Keycloak answers the sign-in check.
     expect(directive(policy, "connect-src")).toContain(keycloak);
     expect(directive(policy, "frame-src")).toContain(keycloak);
     // The map is a Google Embed frame, and the administrator's address lookup calls Google's
     // geocoder, so both directives have to name Google and neither may name OpenStreetMap any more.
     expect(directive(policy, "frame-src")).toContain("https://www.google.com");
     expect(directive(policy, "connect-src")).toContain("https://maps.googleapis.com");
-    // The silent check's iframe is the gallery's own page.
+    // 'self' stays in frame-src: the gallery frames nothing of its own today, and a same-origin
+    // frame is the one thing that value cannot break.
     expect(directive(policy, "frame-src")).toContain("'self'");
     expect(policy.join("; ")).not.toMatch(/openstreetmap|nominatim/i);
     // The type is self-hosted now, so no font origin may creep back in.
@@ -168,12 +170,13 @@ describe("security headers", () => {
     expect(policy.join("; ")).not.toContain("fonts.gstatic.com");
   });
 
-  it("lets the gallery frame its own silent sign-in page, and nothing else", () => {
+  it("keeps a foreign page from framing the gallery", () => {
     const policy = cspOf(fromNginx());
-    // keycloak-js loads public/silent-check-sso.html in a hidden iframe, so 'none' - the value a
-    // hardening checklist suggests - blocks the check itself and a returning signed-in visitor
-    // looks signed out. 'self' is the tightest value that works, and SAMEORIGIN is its partner for
-    // browsers that only understand the older header.
+    // The gallery framed one of its own pages for the silent sign-in check until that check was
+    // dropped, and that is why this pair is 'self'/SAMEORIGIN rather than 'none'/DENY: 'self' is the
+    // tightest value that cannot break a same-origin frame. The clickjacking risk is closed either
+    // way - a foreign page may not frame the gallery - so tightening to 'none' and DENY is safe
+    // today, and this is the test that records the decision.
     expect(directive(policy, "frame-ancestors")).toBe("frame-ancestors 'self'");
     expect(fromNginx()["x-frame-options"]).toBe("SAMEORIGIN");
   });

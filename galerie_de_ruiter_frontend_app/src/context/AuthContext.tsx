@@ -14,9 +14,11 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 /**
  * The alias the realm's Google identity provider is created under (see the API's
  * `KeycloakGoogleIdentityProviderProvisioner`). Naming it in the sign-in request is what makes the
- * button a Google button: Keycloak skips its own login page and goes straight to Google.
+ * button a Google button: Keycloak skips its own login page and goes straight to Google. The
+ * sign-in page also looks for it in the provider list the API reports, so the button only appears
+ * when the realm really has it.
  */
-const GOOGLE_IDENTITY_PROVIDER = "google";
+export const GOOGLE_IDENTITY_PROVIDER = "google";
 
 /** Where a sign-in returns to: the page the visitor asked for, or the landing page. */
 const returnTo = (from?: string) => `${window.location.origin}${from ?? "/home"}`;

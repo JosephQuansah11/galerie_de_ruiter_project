@@ -27,6 +27,19 @@ authorized redirect URI in the Google Cloud console is
 `https://galerie-keycloak.onrender.com/realms/movie_project_keycloak/broker/google/endpoint`. See
 *Sign in with Google* in the repository README for the OAuth client itself.
 
+The live client in the running Keycloak (`movie_project_frontend_client`) must also list
+`https://galeriederuiter.cloud-ip.cc/*` in **Valid redirect URIs** *and* in **Valid post logout
+redirect URIs**. Keycloak refuses to return the browser to an origin its client does not declare, so
+without them a sign-in started on the gallery's own domain fails once Google has answered - and the
+sign-out that returns through `/logout` fails with it. The realm file in `keycloak/realms` is a
+reference for a fresh import; a deploy does not re-import it into a Keycloak that already holds the
+realm.
+
+`GET /api/auth/providers` reports the realm's enabled providers by alias. The sign-in page asks it
+before it offers the Google button, so a deployment without the provider shows no button that would
+lead to a Keycloak error page (the page keeps the button when the API cannot answer, because the
+provider lives in Keycloak, not in the API).
+
 The frontend also needs `VITE_GOOGLE_MAPS_API_KEY` (also `sync: false`): a browser key for the Maps
 Embed API and the Geocoding API, restricted by HTTP referrer to
 `https://galeriederuiter.cloud-ip.cc/*`. Without it the location page shows the address and a link

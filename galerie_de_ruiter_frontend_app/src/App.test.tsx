@@ -4,6 +4,16 @@ import i18n from "./i18n";
 import App from "./App";
 
 /**
+ * The sign-in page asks the API which identity providers the realm offers. That answer is not what
+ * these tests are about, and an unmocked request would leave a socket open past the test: the double
+ * below answers "the realm has Google", the same as the gallery's own realm.
+ */
+jest.mock("./pages/auth/authApi", () => ({
+  ...jest.requireActual("./pages/auth/authApi"),
+  getIdentityProviders: jest.fn().mockResolvedValue(["google"]),
+}));
+
+/**
  * `App` provides its own BrowserRouter and AuthProvider, so these tests drive the real
  * shell: the jsdom URL selects the route and the mocked Keycloak double ends the session
  * check without touching the network. That double is signed out, so these also pin down

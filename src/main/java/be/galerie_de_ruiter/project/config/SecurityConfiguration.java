@@ -75,6 +75,9 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.GET, "/api/antiques/*/reconstruction").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/location").permitAll()
+				// The sign-in page asks which third-party providers the realm offers before it
+				// offers a button for one of them, so this answers before anyone is signed in.
+				.requestMatchers(HttpMethod.GET, "/api/auth/providers").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/about").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/about/images/**").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/home").permitAll()

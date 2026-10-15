@@ -26,3 +26,13 @@ function toUserProfile(user: BackendUser): UserProfile {
     username: user.username ?? user.displayName ?? '',
   }
 }
+
+/**
+ * The identity providers the gallery's realm offers, by alias. The sign-in page asks before it
+ * offers a button for one of them: Google is provisioned into the realm by the API, so the realm -
+ * not this build - is what knows whether that button can lead anywhere.
+ */
+export async function getIdentityProviders(): Promise<string[]> {
+  const { data } = await javaApi.get<{ providers?: string[] }>('/api/auth/providers')
+  return data.providers ?? []
+}

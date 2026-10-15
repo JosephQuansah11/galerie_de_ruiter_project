@@ -1,6 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { flushPromises, renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
+import { getIdentityProviders } from "./authApi";
 import { LoginPage } from "./LoginPage";
 
 const mockAuth = {
@@ -21,7 +22,16 @@ const mockAuth = {
 jest.mock("@/context/AuthContext", () => ({
   AuthProvider: ({ children }: { children?: unknown }) => children,
   useAuth: () => mockAuth,
+  // The alias the sign-in page looks for in the provider list the API reports.
+  GOOGLE_IDENTITY_PROVIDER: "google",
 }));
+
+jest.mock("./authApi", () => ({ getIdentityProviders: jest.fn() }));
+
+const providers = getIdentityProviders as jest.MockedFunction<typeof getIdentityProviders>;
+
+// Every test starts from a realm that offers Google, which is what the gallery's realm does.
+beforeEach(() => providers.mockResolvedValue(["google"]));
 
 describe("Sign-in page", () => {
   it("invites the visitor to continue with Keycloak", async () => {
@@ -51,5 +61,26 @@ describe("Sign-in page", () => {
 
     expect(screen.getByRole("link", { name: new RegExp(i18n.t("createAccount"), "i") })).toHaveAttribute("href", "/register");
     expect(screen.getByRole("link", { name: new RegExp(i18n.t("talkToGallery"), "i") })).toHaveAttribute("href", "/chat");
+  });
+
+  it("keeps the button off the page when the realm has no Google provider", async () => {
+    providers.mockResolvedValue([]);
+    renderPage(<LoginPage />, { auth: false });
+    await flushPromises();
+
+    // A Google button on a realm without the provider is a dead end: Keycloak has nothing to send
+    // the visitor to, so the click ends on an error page with no way back.
+    expect(screen.queryByRole("button", { name: new RegExp(i18n.t("continueGoogle"), "i") })).toBeNull();
+    expect(screen.getByRole("button", { name: new RegExp(i18n.t("continueKeycloak"), "i") })).toBeInTheDocument();
+  });
+
+  it("still offers Google when the API cannot answer", async () => {
+    providers.mockRejectedValue(new Error("offline"));
+    renderPage(<LoginPage />, { auth: false });
+    await flushPromises();
+
+    // The provider lives in Keycloak, not in this API, so a cold or unreachable API is no reason
+    // to hide a button that would have worked.
+    expect(screen.getByRole("button", { name: new RegExp(i18n.t("continueGoogle"), "i") })).toBeInTheDocument();
   });
 });

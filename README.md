@@ -63,11 +63,20 @@ Two things are needed, and neither belongs in the repository:
    | `GOOGLE_IDP_REQUIRED` | `true` to fail the start when the two above are missing (default `false`) |
 
    With neither value set the API leaves the realm exactly as it was, so a deployment
-   that does not want Google sign-in is unaffected — but the Google button is still on
-   the sign-in page, and it then leads to a Keycloak error page. That is what
-   `GOOGLE_IDP_REQUIRED` is for. `KeycloakGoogleIdentityProviderProvisioner` does the
-   provisioning and `KeycloakGoogleIdentityProviderProvisionerTest` pins what it writes
-   into the realm.
+   that does not want Google sign-in is unaffected: the realm then has no `google`
+   provider, `GET /api/auth/providers` does not name one, and the sign-in page leaves the
+   Google button off rather than offering a button that ends on a Keycloak error page.
+   `GOOGLE_IDP_REQUIRED` is for a deployment that would rather fail to start than run
+   without Google. `KeycloakGoogleIdentityProviderProvisioner` does the provisioning and
+   `KeycloakGoogleIdentityProviderProvisionerTest` pins what it writes into the realm;
+   `IdentityProviderService` answers what the realm really offers.
+
+Keycloak also has to be able to send the browser back to the gallery. The client the frontend signs
+in with (`movie_project_frontend_client`) must list the gallery's own origin
+(`https://galeriederuiter.cloud-ip.cc/*`) in its **Valid redirect URIs** and in its **Valid post
+logout redirect URIs**. The realm file in `keycloak/realms` carries them for a fresh import, but a
+deploy does not re-import a realm that already exists, so the running Keycloak is edited by hand
+(*RENDER.md* has the steps).
 
 ### Local chat model
 

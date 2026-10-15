@@ -110,6 +110,10 @@ export default {
           to: ".",
           globOptions: {
             ignore: ["**/index.html"],
+            // `public/.well-known/` holds the files agents and registries look for by convention
+            // (the ARD manifest). A glob skips dot files and dot directories unless it is told
+            // otherwise, so without this the manifest is built, published - and missing.
+            dot: true,
           },
         },
       ],

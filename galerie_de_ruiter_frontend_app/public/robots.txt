@@ -25,4 +25,10 @@ Allow:/home
 #
 # The `Sitemap:` line is appended below at build time by scripts/generate-sitemap.mjs, from the
 # site origin in site.config.mjs, so this file stays origin-independent.
+#
+# `Agentmap` is the Agentic Resource Discovery convention for pointing at the manifest that says
+# what this domain offers agents. It is a relative path on purpose: the manifest sits at
+# /.well-known/ai-catalog.json (and at /.well-known/ard.json, the path the current specification
+# names), and a crawler resolves it against the origin it fetched this file from.
+Agentmap: /.well-known/ai-catalog.json
 

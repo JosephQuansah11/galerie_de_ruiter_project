@@ -1,0 +1,41 @@
+# Galerie de Ruiter
+
+> Galerie de Ruiter is a gallery for antiques, art, vintage design and objects with a past, in
+> Waasmunster, Belgium. It shows the collection on this site and answers questions about it in its
+> own chat.
+
+This file describes what the gallery publishes for agents. The pages below are written for people
+and drawn by the application, so their source carries only the gallery's own summary: the address,
+the opening hours and the collection live in the gallery's database, and the links are where the
+current values are.
+
+## Pages a visitor can read without an account
+
+- [Home](https://galeriederuiter.cloud-ip.cc/home): the landing page - what the gallery is, what it
+  shows, and where it is.
+- [About](https://galeriederuiter.cloud-ip.cc/about): the gallery's own story, with the address and
+  the opening hours of the pop-up.
+- [Map](https://galeriederuiter.cloud-ip.cc/map): the address, the opening hours, and a Google Maps
+  frame of the place.
+- [Chat](https://galeriederuiter.cloud-ip.cc/chat): the concierge, which answers questions about the
+  collection and can take an appointment request for a visit.
+
+## Behind an account
+
+- The catalogue (`/antiques`), a piece's page, the wishlist, the basket and the profile pages answer
+  with the sign-in page until a visitor signs in. They are disallowed in `robots.txt` and are not
+  listed in the sitemap.
+
+## Buying
+
+- The gallery does not sell online and takes no payment on this site. A purchase is arranged by
+  contacting the gallery, and the chat on `/chat` is the way to start.
+
+## For agents
+
+- [Sitemap](https://galeriederuiter.cloud-ip.cc/sitemap_index.xml): the public pages, with the dates
+  they changed.
+- [AI catalog](https://galeriederuiter.cloud-ip.cc/.well-known/ai-catalog.json): what this domain
+  offers agents, in the Agentic Resource Discovery format. It is the same document as
+  [/.well-known/ard.json](https://galeriederuiter.cloud-ip.cc/.well-known/ard.json).
+- [robots.txt](https://galeriederuiter.cloud-ip.cc/robots.txt): what may be crawled.

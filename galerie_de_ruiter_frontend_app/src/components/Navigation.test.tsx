@@ -61,7 +61,7 @@ describe("Gallery navigation", () => {
 
     expect(screen.getByRole("link", { name: new RegExp(i18n.t("wishlist"), "i") })).toHaveAttribute("href", "/wishlist");
     expect(screen.getByRole("link", { name: new RegExp(i18n.t("cart"), "i") })).toHaveAttribute("href", "/cart");
-    expect(screen.getByRole("link", { name: new RegExp(i18n.t("navGalleryChat"), "i") })).toHaveAttribute("href", "/dashboard/chat");
+    expect(screen.getByRole("link", { name: new RegExp(i18n.t("navGalleryChat"), "i") })).toHaveAttribute("href", "/chat");
     expect(screen.getByRole("link", { name: new RegExp(i18n.t("navAbout"), "i") })).toHaveAttribute("href", "/about");
   });
 

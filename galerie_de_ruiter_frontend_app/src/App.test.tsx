@@ -37,8 +37,8 @@ describe("App shell", () => {
     expect(screen.queryByText(i18n.t("welcomeBack"))).not.toBeInTheDocument();
   });
 
-  it("shows a visitor the dashboard", async () => {
-    window.history.pushState({}, "", "/dashboard");
+  it("shows a visitor the landing page", async () => {
+    window.history.pushState({}, "", "/home");
     renderPage(<App />, { auth: false, router: false });
 
     expect(await screen.findByRole("heading", { level: 1, name: i18n.t("welcomeTitle") })).toBeInTheDocument();
@@ -47,8 +47,15 @@ describe("App shell", () => {
     expect(screen.getByText(i18n.t("navSignIn"))).toBeInTheDocument();
   });
 
+  it("sends the old landing-page address on to the new one", async () => {
+    window.history.pushState({}, "", "/dashboard");
+    renderPage(<App />, { auth: false, router: false });
+
+    expect(await screen.findByRole("heading", { level: 1, name: i18n.t("welcomeTitle") })).toBeInTheDocument();
+  });
+
   it("lets a visitor talk to the concierge without reaching WhatsApp", async () => {
-    window.history.pushState({}, "", "/dashboard/chat");
+    window.history.pushState({}, "", "/chat");
     renderPage(<App />, { auth: false, router: false });
 
     expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent(i18n.t("talkToGallery"));
@@ -56,7 +63,7 @@ describe("App shell", () => {
     expect(screen.getByRole("link", { name: i18n.t("chatWhatsappSignIn") })).toBeInTheDocument();
   });
 
-  it.each(["/antiques", "/antiques/123", "/wishlist", "/cart", "/profile", "/preferences", "/admin/antiques"])(
+  it.each(["/antiques", "/antiques/123", "/wishlist", "/cart", "/profile", "/preferences", "/admin/antiques", "/admin/dashboard"])(
     "sends a visitor who opens %s to the sign-in page",
     async (route) => {
       window.history.pushState({}, "", route);

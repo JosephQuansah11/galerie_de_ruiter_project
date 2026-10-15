@@ -17,9 +17,9 @@ export default function ChatPage() {
   // A colour-coded dot that always shows whether the assistant service (Ollama) is reachable,
   // so the visitor can tell "starting up" from "running" at a glance.
   const assistantStatus = chat.checkingConnection ? "checking" : chat.ready ? "online" : "offline";
-  // `/chat` and `/dashboard/chat` both open this page; the landing page links to the latter, so
-  // that is the URL search engines are pointed at.
-  usePageMeta({ title: t("metaChatTitle"), description: t("metaChatDescription"), canonicalPath: "/dashboard/chat" });
+  // The chat is one URL now: it used to answer on `/dashboard/chat` too, and that address
+  // redirects here, so the canonical points at the page a visitor actually reads.
+  usePageMeta({ title: t("metaChatTitle"), description: t("metaChatDescription"), canonicalPath: "/chat" });
   return <section className="chat-page">
     <ChatHeader appointment={chat.appointment} />
     <div className={`chat-assistant-status is-${assistantStatus}`} role="status" aria-live="polite">

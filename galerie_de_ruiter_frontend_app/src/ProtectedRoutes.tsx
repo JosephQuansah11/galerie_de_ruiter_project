@@ -11,6 +11,7 @@ import { useAuth } from "./context/AuthContext";
  */
 const WelcomePage = lazy(() => import("./pages/WelcomePage"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
+const DashboardPage = lazy(() => import("./pages/admin/DashboardPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const LocationPage = lazy(() => import("./pages/LocationPage"));
 const AntiquesPage = lazy(() => import("./pages/antiques/AntiquesPage"));
@@ -44,10 +45,10 @@ function RequireAccount() {
 
 export function ProtectedRoutes() {
   return <Routes>
-    {/* Open to visitors without an account: the story of the gallery, where it is and the
-        landing page. Interacting with the collection is what asks for a sign-in. */}
-    <Route path="/dashboard" element={<WelcomePage />} />
-    <Route path="/dashboard/chat" element={<ChatPage />} />
+    {/* Open to visitors without an account: the gallery story, where it is, the landing page and
+        the concierge chat. Interacting with the collection is what asks for a sign-in. */}
+    <Route path="/home" element={<WelcomePage />} />
+    <Route path="/chat" element={<ChatPage />} />
     <Route path="/about" element={<AboutPage />} />
     <Route path="/map" element={<LocationPage />} />
 
@@ -57,6 +58,7 @@ export function ProtectedRoutes() {
       <Route path="/preferences" element={<PreferencesPage />} />
       <Route path="/antiques" element={<AntiquesPage />} />
       <Route path="/antiques/:id" element={<AntiqueDetailPage />} />
+      <Route path="/admin/dashboard" element={<DashboardPage />} />
       <Route path="/admin/antiques/new" element={<AddNewAntique />} />
       <Route path="/admin/antiques" element={<AntiqueAdminPage />} />
       <Route path="/admin/categories" element={<CategoryAdminPage />} />
@@ -67,6 +69,11 @@ export function ProtectedRoutes() {
       <Route path="/cart" element={<CartPage />} />
     </Route>
 
-    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    {/* The landing page used to live at /dashboard and the chat at /dashboard/chat, and search
+        engines have those URLs. They keep working, so the indexed address is not lost. */}
+    <Route path="/dashboard" element={<Navigate to="/home" replace />} />
+    <Route path="/dashboard/chat" element={<Navigate to="/chat" replace />} />
+
+    <Route path="*" element={<Navigate to="/home" replace />} />
   </Routes>;
 }

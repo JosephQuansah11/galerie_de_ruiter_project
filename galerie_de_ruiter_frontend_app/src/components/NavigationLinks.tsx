@@ -1,4 +1,4 @@
-import { BookOpen, Heart, Home, LibraryBig, Map, MapPin, MessageCircle, Plus, ShoppingBag, Tags } from "lucide-react";
+import { BookOpen, Heart, Home, LayoutDashboard, LibraryBig, Map, MapPin, MessageCircle, Plus, ShoppingBag, Tags } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Nav } from "react-bootstrap";
 import { NavLink } from "react-router-dom";
@@ -20,7 +20,7 @@ export function NavigationLinks({ onNavigate }: { onNavigate: () => void }) {
   // A visitor can read the gallery story, find the pop-up and talk to the concierge without an
   // account; what needs one is acting on the collection, so those links stay hidden.
   const visitorLinks: LinkItem[] = [
-    { href: "/dashboard/chat", icon: MessageCircle, translationKey: "navGalleryChat" },
+    { href: "/chat", icon: MessageCircle, translationKey: "navGalleryChat" },
     { href: "/about", icon: BookOpen, translationKey: "navAbout" },
     { href: "/map", icon: Map, translationKey: "location" },
   ];
@@ -30,6 +30,7 @@ export function NavigationLinks({ onNavigate }: { onNavigate: () => void }) {
   ];
   const adminLinks: LinkItem[] = isAdmin
     ? [
+        { href: "/admin/dashboard", icon: LayoutDashboard, translationKey: "navDashboard" },
         { href: "/admin/antiques", icon: LibraryBig, translationKey: "navAdminAntiques" },
         { href: "/admin/antiques/new", icon: Plus, translationKey: "navAddAntique" },
         { href: "/admin/categories", icon: Tags, translationKey: "categories" },

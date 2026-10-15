@@ -12,6 +12,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +57,12 @@ public class Antique {
      */
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean sold = false;
+
+    /**
+     * When the piece was marked sold, which is what the dashboard charts. Empty while the piece
+     * is on offer, and empty for pieces that were sold before the column existed.
+     */
+    private Instant soldAt;
     // // JSON array of {position, url} produced by the reconstruction service, persisted so every user sees the same six views.
     // @Column(columnDefinition = "bytea")
     // private List<byte[]> sixViewImages;
@@ -174,8 +181,19 @@ public class Antique {
         return sold;
     }
 
+    /**
+     * Marks the piece sold, or puts it back on offer, and remembers when that happened. Marking
+     * it sold twice keeps the first date, so the dashboard does not move a sale to today.
+     */
     public void setSold(boolean sold) {
+        if (sold == this.sold) return;
         this.sold = sold;
+        this.soldAt = sold ? Instant.now() : null;
+    }
+
+    /** When the piece was marked sold, or {@code null} while it is on offer. */
+    public Instant getSoldAt() {
+        return soldAt;
     }
 
     // public List<byte[]> getSixViewImages() {

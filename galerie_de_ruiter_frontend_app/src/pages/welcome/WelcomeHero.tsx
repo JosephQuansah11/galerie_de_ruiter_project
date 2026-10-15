@@ -21,7 +21,7 @@ export function WelcomeHero() {
       <p>{home?.heroIntro?.trim() || t("welcomeIntro")}</p>
       <div className="welcome-actions">
         <NavLink className="btn btn-dark" to="/antiques">{t("explore")} <ArrowRight size={17} /></NavLink>
-        <NavLink className="btn btn-outline-dark" to="/dashboard/chat"><MessageCircle size={17} /> {t("talkToGallery")}</NavLink>
+        <NavLink className="btn btn-outline-dark" to="/chat"><MessageCircle size={17} /> {t("talkToGallery")}</NavLink>
       </div>
     </div>
   </div>;

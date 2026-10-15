@@ -17,7 +17,7 @@ export default function WelcomePage() {
   usePageMeta({
     title: titleWithCity(t, "metaHomeTitle", city),
     description: t("metaHomeDescription"),
-    canonicalPath: "/dashboard",
+    canonicalPath: "/home",
   });
   return <section className="welcome-page">
     <WelcomeHero />

@@ -19,16 +19,16 @@ function metaContent(attribute: "name" | "property", value: string): string | nu
 describe("page metadata", () => {
   it("gives the route its own title, description and canonical URL", () => {
     render(<Page title="Chat met Galerie de Ruiter" description="Stel je vragen."
-      canonicalPath="/dashboard/chat" />);
+      canonicalPath="/chat" />);
 
     expect(document.title).toBe("Chat met Galerie de Ruiter");
     expect(metaContent("name", "description")).toBe("Stel je vragen.");
     expect(metaContent("property", "og:title")).toBe("Chat met Galerie de Ruiter");
-    expect(canonicalHref()).toBe("http://localhost/dashboard/chat");
+    expect(canonicalHref()).toBe("http://localhost/chat");
   });
 
   it("follows the visitor to the next route", () => {
-    const { rerender } = render(<Page title="Chat met Galerie de Ruiter" canonicalPath="/dashboard/chat" />);
+    const { rerender } = render(<Page title="Chat met Galerie de Ruiter" canonicalPath="/chat" />);
 
     rerender(<Page title="De collectie — Galerie de Ruiter" canonicalPath="/antiques" />);
 

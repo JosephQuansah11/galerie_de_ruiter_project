@@ -17,7 +17,7 @@ describe("WelcomePage", () => {
     await flushPromises();
 
     expect(screen.getByRole("link", { name: new RegExp(i18n.t("explore"), "i") })).toHaveAttribute("href", "/antiques");
-    expect(screen.getByRole("link", { name: new RegExp(i18n.t("talkToGallery"), "i") })).toHaveAttribute("href", "/dashboard/chat");
+    expect(screen.getByRole("link", { name: new RegExp(i18n.t("talkToGallery"), "i") })).toHaveAttribute("href", "/chat");
   });
 
   it("describes the philosophy, the pop-up shop and the gallery story", async () => {

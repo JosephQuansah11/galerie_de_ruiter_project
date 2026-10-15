@@ -30,7 +30,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const value = useMemo(() => ({
     authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles,
     isAdmin: roles.some((role) => role.replace(/^ROLE_/i, "").toUpperCase() === "ADMIN"),
-    login: (from?: string) => keycloak.login({ redirectUri: `${window.location.origin}${from ?? "/dashboard"}` }),
+    login: (from?: string) => keycloak.login({ redirectUri: `${window.location.origin}${from ?? "/home"}` }),
     // Signing out ends the concierge conversation and drops the cached public data, so the
     // next person to use the browser starts from a clean slate.
     logout: () => {

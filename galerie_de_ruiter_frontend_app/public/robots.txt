@@ -18,7 +18,7 @@ Disallow: /preferences
 
 Allow:/about
 Allow:/location
-Allow:/dashboard
+Allow:/home
 
 # The sign-in and registration pages stay crawlable on purpose: they carry a noindex tag, and
 # a crawler that is not allowed to fetch them would never see it.

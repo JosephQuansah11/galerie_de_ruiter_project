@@ -36,7 +36,7 @@ export function ChatHeader({ appointment }: { appointment?: ChatAppointment }) {
       ? <a className="chat-whatsapp" href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`} target="_blank" rel="noreferrer">
           <ExternalLink size={15} /> {t("messageOnWhatsApp")}
         </a>
-      : <Link className="chat-whatsapp" to="/login" state={{ from: "/dashboard/chat" }}>
+      : <Link className="chat-whatsapp" to="/login" state={{ from: "/chat" }}>
           <LogIn size={15} /> {t("chatWhatsappSignIn")}
         </Link>}
   </header>;

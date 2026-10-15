@@ -19,7 +19,7 @@ export function ChatThread({ messages, sending }: { messages: ChatMessage[]; sen
         {message.sources.map((source) => isWhatsApp(source.url) && !authenticated
           // The WhatsApp hand-off needs an account, so a visitor is offered sign-in rather than
           // an external link the gallery cannot follow up.
-          ? <Link key={`${source.url}-${source.title}`} className="chat-source-whatsapp" to="/login" state={{ from: "/dashboard/chat" }}>
+          ? <Link key={`${source.url}-${source.title}`} className="chat-source-whatsapp" to="/login" state={{ from: "/chat" }}>
             <LogIn size={15} aria-hidden="true" /> {t("chatWhatsappSignIn")}
           </Link>
           : isExternal(source.url)

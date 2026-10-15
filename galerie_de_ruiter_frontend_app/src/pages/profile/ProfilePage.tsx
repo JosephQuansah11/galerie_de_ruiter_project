@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DynamicForm } from '../../components/UI'
+import { DynamicForm } from '../../components/DynamicForm'
 import { Avatar } from '../../components/Avatar'
 import { useAuth } from '../../context/AuthContext'
 import type { FormField, UserProfile } from '../../types/types'

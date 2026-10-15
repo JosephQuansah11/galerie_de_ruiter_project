@@ -7,7 +7,6 @@
  * development and in production.
  */
 const javaApiFallback = "http://localhost:8080";
-const pythonApiFallback = "http://localhost:8000";
 
 function stripTrailingSlashes(value: string): string {
   return value.replace(/\/+$/, "");
@@ -21,11 +20,6 @@ function firstConfigured(candidates: Array<string | undefined>, fallback: string
 export const apiBaseUrl = firstConfigured(
   [import.meta.env.VITE_JAVA_API_URL, import.meta.env.VITE_JAVA_BACKEND_URL, import.meta.env.VITE_API_URL],
   javaApiFallback,
-);
-
-export const pythonApiBaseUrl = firstConfigured(
-  [import.meta.env.VITE_PYTHON_API_URL, import.meta.env.VITE_RECONSTRUCTION_API_URL],
-  pythonApiFallback,
 );
 
 /**

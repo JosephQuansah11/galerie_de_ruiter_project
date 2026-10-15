@@ -1,7 +1,6 @@
 package be.galerie_de_ruiter.project.service;
 
 import be.galerie_de_ruiter.project.domain.Appointment;
-import be.galerie_de_ruiter.project.domain.Category;
 import be.galerie_de_ruiter.project.dto.ChatAppointmentSelection;
 import be.galerie_de_ruiter.project.dto.ChatConnectionStatus;
 import be.galerie_de_ruiter.project.dto.ChatRequest;
@@ -517,19 +516,5 @@ public class OllamaChatService {
                 || normalized.contains("termin");
         boolean confirmationClaim = normalized.matches("(?s).*(confirmed|confirmé|bevestigd|bestätigt|booked|reserved|scheduled|gebucht|reserviert|réservé|gereserveerd).*");
         return appointmentTopic && confirmationClaim;
-    }
-
-    static String describeCategories(List<Category> categories) {
-        List<String> visibleNames = categories.stream()
-                .filter(Category::isVisible)
-                .map(Category::getName)
-                .filter(name -> name != null && !name.isBlank())
-                .sorted(String.CASE_INSENSITIVE_ORDER)
-                .toList();
-        if (visibleNames.isEmpty()) {
-            return "There are 0 visible categories.";
-        }
-        return "There are %d visible categories: %s.".formatted(
-                visibleNames.size(), String.join(", ", visibleNames));
     }
 }

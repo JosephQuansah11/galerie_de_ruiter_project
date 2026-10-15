@@ -26,7 +26,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile>();
   const [roles, setRoles] = useState<string[]>([]);
-  const { token, syncToken, refreshToken } = useKeycloakToken(setAuthenticated, setProfile, setRoles);
+  const { token, syncToken } = useKeycloakToken(setAuthenticated, setProfile, setRoles);
   const { avatarUrl, refreshAvatar } = useAvatar(authenticated, token);
   useAuthInitialization({ setAuthenticated, setLoading, setProfile, setRoles, syncToken });
   const register = async (registration: UserProfile & { password: string }) => {

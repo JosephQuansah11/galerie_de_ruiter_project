@@ -37,5 +37,6 @@ export function useKeycloakToken(setAuthenticated: Dispatch<SetStateAction<boole
       window.removeEventListener("focus", refreshOnFocus);
     };
   }, [token, refreshToken]);
-  return { token, syncToken, refreshToken };
+  return { token, syncToken };
+
 }

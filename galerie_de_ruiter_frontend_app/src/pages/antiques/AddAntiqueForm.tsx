@@ -1,7 +1,7 @@
 import { Alert, Form, Spinner } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
 import { Save } from "lucide-react";
-import type { Category, Designer } from "@/models/antiques/Antique";
+import type { Designer } from "@/models/antiques/Antique";
 import type { useNewAntiqueDraft } from "./useNewAntiqueDraft";
 import type { useAntiqueLookups } from "./useAntiqueLookups";
 import { useTranslation } from "react-i18next";
@@ -25,7 +25,7 @@ export function AddAntiqueForm({ draft, lookups, selectArtist }: { draft: Draft;
         <DesignerCreator newArtist={lookups.newArtist} setNewArtist={lookups.setNewArtist}
           creating={lookups.creating} addArtist={lookups.addArtist} />
         <AntiqueIdentityFields form={draft.form} update={draft.update} categories={lookups.categories} />
-        <AntiqueMediaFields form={draft.form} update={draft.update} images={draft.images} removeImage={draft.removeImage} moveImage={draft.moveImage}
+        <AntiqueMediaFields form={draft.form} images={draft.images} removeImage={draft.removeImage} moveImage={draft.moveImage}
           modelFileName={draft.modelFileName} selectImages={draft.selectImages} selectModelFile={draft.selectModelFile}
           updateModelUrl={(value) => { draft.update("modelUrl", value); if (value) draft.selectModelFile(null); }} />
         <AntiqueDescriptionFields form={draft.form} update={draft.update} />

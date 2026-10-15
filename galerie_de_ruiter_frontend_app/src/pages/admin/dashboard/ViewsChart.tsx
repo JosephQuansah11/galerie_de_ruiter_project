@@ -35,7 +35,10 @@ export function ViewsChart({ series, label, emptyLabel, locale }: Props) {
   const baseline = (HEIGHT - PAD.bottom).toFixed(1);
   const area = `${line} L${x(series.length - 1).toFixed(1)} ${baseline} L${x(0).toFixed(1)} ${baseline} Z`;
 
-  const day = (value: string) => new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" });
+  // One formatter, asked for the label of a day: the chart shows the ends of the window and a
+  // tooltip per point.
+  const day = (value: string) =>
+    new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(value));
   return <figure className="dashboard-chart" role="img" aria-label={label}>
     <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none">
       <line className="dashboard-chart-axis" x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={baseline} />
@@ -44,14 +47,14 @@ export function ViewsChart({ series, label, emptyLabel, locale }: Props) {
       <path className="dashboard-chart-line" d={line} />
       {series.map((point, index) => (
         <circle key={point.day} className="dashboard-chart-point" cx={x(index)} cy={y(point.count)} r={3}>
-          <title>{`${day(point.day).format(new Date(point.day))}: ${point.count}`}</title>
+          <title>{`${day(point.day)}: ${point.count}`}</title>
         </circle>
       ))}
     </svg>
     <figcaption>
-      <span>{day(series[0].day).format(new Date(series[0].day))}</span>
+      <span>{day(series[0].day)}</span>
       <strong>{`${peak}`}</strong>
-      <span>{day(series[series.length - 1].day).format(new Date(series[series.length - 1].day))}</span>
+      <span>{day(series[series.length - 1].day)}</span>
     </figcaption>
   </figure>;
 }

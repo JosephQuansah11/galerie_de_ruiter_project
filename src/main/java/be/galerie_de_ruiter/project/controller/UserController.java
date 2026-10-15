@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
-import java.util.Map;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import be.galerie_de_ruiter.project.dto.UserResponse;
 
@@ -75,10 +73,5 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<User> register(@Valid @RequestBody UserRegistrationRequest request) {
         return ResponseEntity.ok(userService.register(request));
-    }
-
-    @GetMapping("/debug")
-    public Map<String, String> debug(@RequestParam("value") String CSRF_TOKEN) {
-        return Map.of("value", CSRF_TOKEN);
     }
 }

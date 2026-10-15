@@ -190,10 +190,6 @@ services:
         value: https://galerie-java-api.onrender.com
       - key: VITE_API_URL
         value: https://galerie-java-api.onrender.com
-      - key: VITE_RECONSTRUCTION_API_URL
-        value: https://galerie-reconstruction-api.onrender.com
-      - key: VITE_PYTHON_API_URL
-        value: https://galerie-reconstruction-api.onrender.com
       - key: VITE_KEYCLOAK_URL
         value: https://galerie-keycloak.onrender.com
       - key: VITE_KEYCLOAK_REALM

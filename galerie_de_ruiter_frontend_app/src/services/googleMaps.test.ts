@@ -1,4 +1,4 @@
-import { geocodeAddress, googleMapsEmbedUrl, googleMapsLink, hasGoogleMapsKey } from "./googleMaps";
+import { geocodeAddress, googleMapsEmbedUrl, googleMapsLink } from "./googleMaps";
 
 /**
  * The gallery maps through Google instead of OpenStreetMap. These pin the two things that are easy
@@ -24,7 +24,6 @@ describe("googleMapsEmbedUrl", () => {
   it("has no frame to offer without a key, but still has the link", () => {
     process.env.VITE_GOOGLE_MAPS_API_KEY = "";
     try {
-      expect(hasGoogleMapsKey()).toBe(false);
       expect(googleMapsEmbedUrl(place)).toBeUndefined();
       // The Maps URL scheme needs no key, which is why the link is never conditional.
       expect(googleMapsLink(place)).toContain("https://www.google.com/maps/search/?api=1&query=");

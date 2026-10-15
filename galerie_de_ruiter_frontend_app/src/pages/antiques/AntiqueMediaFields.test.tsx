@@ -15,7 +15,7 @@ const form = { title: "", artistId: "", description: "", price: "", categoryId: 
 function renderFields(images: DraftImage[], handlers: { moveImage?: jest.Mock; removeImage?: jest.Mock } = {}) {
   const moveImage = handlers.moveImage ?? jest.fn();
   const removeImage = handlers.removeImage ?? jest.fn();
-  renderPage(<AntiqueMediaFields form={form} update={jest.fn()} updateModelUrl={jest.fn()} images={images}
+  renderPage(<AntiqueMediaFields form={form} updateModelUrl={jest.fn()} images={images}
     modelFileName={undefined} selectImages={jest.fn()} removeImage={removeImage} moveImage={moveImage} selectModelFile={jest.fn()} />);
   return { moveImage, removeImage };
 }

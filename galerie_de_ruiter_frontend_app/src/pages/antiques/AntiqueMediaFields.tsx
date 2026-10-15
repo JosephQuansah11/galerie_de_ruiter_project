@@ -5,7 +5,7 @@ import { AntiqueImageGallery } from "./AntiqueImageGallery";
 import { MODEL_MAX_SIZE_MB } from "./modelUploadLimits";
 
 type Draft = ReturnType<typeof useNewAntiqueDraft>;
-export function AntiqueMediaFields({ form, update, updateModelUrl, images, modelFileName, selectImages, removeImage, moveImage, selectModelFile }: Pick<Draft, "form" | "update" | "images" | "modelFileName" | "selectImages" | "removeImage" | "moveImage" | "selectModelFile"> & { updateModelUrl: (value: string) => void }) {
+export function AntiqueMediaFields({ form, updateModelUrl, images, modelFileName, selectImages, removeImage, moveImage, selectModelFile }: Pick<Draft, "form" | "images" | "modelFileName" | "selectImages" | "removeImage" | "moveImage" | "selectModelFile"> & { updateModelUrl: (value: string) => void }) {
   const { t } = useTranslation();
   return <><Form.Group className="mb-3" controlId="antique-images"><Form.Label>{t("uploadLocalImages")}</Form.Label>
     <Form.Control type="file" accept="image/*" multiple onChange={(event) => {

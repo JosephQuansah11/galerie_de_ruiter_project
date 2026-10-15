@@ -6,8 +6,6 @@ ARG VITE_API_URL=http://localhost:8080
 ARG VITE_KEYCLOAK_URL=http://localhost:8081
 ARG VITE_KEYCLOAK_REALM=movie_project_keycloak
 ARG VITE_KEYCLOAK_CLIENT_ID=movie_project_frontend_client
-ARG VITE_RECONSTRUCTION_API_URL=http://localhost:8000
-ARG VITE_PYTHON_API_URL=http://localhost:8000
 # The Google Maps browser key for the location page's frame and the admin's address lookup (see
 # "Google Maps" in README.md). It is optional: an image built without it shows the address and a
 # Maps link instead of a frame.
@@ -23,8 +21,6 @@ ENV VITE_JAVA_API_URL=$VITE_JAVA_API_URL \
     VITE_KEYCLOAK_URL=$VITE_KEYCLOAK_URL \
     VITE_KEYCLOAK_REALM=$VITE_KEYCLOAK_REALM \
     VITE_KEYCLOAK_CLIENT_ID=$VITE_KEYCLOAK_CLIENT_ID \
-    VITE_RECONSTRUCTION_API_URL=$VITE_RECONSTRUCTION_API_URL \
-    VITE_PYTHON_API_URL=$VITE_PYTHON_API_URL \
     VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY \
     SITE_URL=$SITE_URL
 COPY package*.json ./

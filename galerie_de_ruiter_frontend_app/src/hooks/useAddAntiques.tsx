@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import type Antique from "@/models/antiques/Antique";
-import type { AntiqueForm } from "@/models/antiques/Antique";
-import { getAllAntiques, addAntique } from "@/apis/backend_api";
-import { publishContentUpdate, subscribeToContentUpdates } from "@/services/contentUpdates";
+import { getAllAntiques } from "@/apis/backend_api";
+import { subscribeToContentUpdates } from "@/services/contentUpdates";
 
 export function useAntiqueContent() {
   const [antiques, setAntiques] = useState<Antique[]>([]);
@@ -25,9 +24,4 @@ export function useAntiqueContent() {
     return () => { active = false; unsubscribe(); };
   }, []);
   return { antiques, loading, error };
-}
-
-export async function AddAntiqueItem(antique: AntiqueForm): Promise<void> {
-  await addAntique(antique);
-  publishContentUpdate("antiques");
 }

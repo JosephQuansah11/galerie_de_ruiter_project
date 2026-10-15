@@ -22,8 +22,7 @@
     "allowSyntheticDefaultImports": true,
 
     "paths": {
-      "@/*": ["./src/*"],
-      "@images/*": ["./src/images/*"]
+      "@/*": ["./src/*"]
     }
   },
 

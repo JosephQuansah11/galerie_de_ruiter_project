@@ -15,9 +15,6 @@ export function googleMapsKey(): string {
   return (import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? "").trim();
 }
 
-export function hasGoogleMapsKey(): boolean {
-  return googleMapsKey().length > 0;
-}
 
 /** The gallery's own address searches best: Google resolves it to the place, pin and all. */
 function query({ address, latitude, longitude }: Place): string {

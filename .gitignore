@@ -45,5 +45,7 @@ node_modules
 # Locally uploaded 3D models (app.models.storage-dir default).
 /data/
 
+# JVM crash dumps, which a failing test run writes into the working directory. `/hs_err` alone
+# does not cover the names the JVM writes, which carry the pid.
 /replay_pid*.log
-/hs_err
+/hs_err*

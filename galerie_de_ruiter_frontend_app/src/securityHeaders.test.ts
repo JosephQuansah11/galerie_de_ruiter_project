@@ -71,10 +71,9 @@ describe("security headers", () => {
   it("sends the same headers from nginx and from the Render blueprint", () => {
     const nginxHeaders = fromNginx();
     const blueprintHeaders = fromBlueprint();
-    // Two headers are deliberately one-sided: Render sends nosniff itself (its own default), and
-    // the report-only Trusted Types policy is staged for the container deployment, which has a
-    // report endpoint and an nginx to move the directives in.
-    const containerOnly = ["x-content-type-options", "content-security-policy-report-only"];
+    // One header is deliberately one-sided: Render sends nosniff itself, as its own default for a
+    // static site, so listing it here as well would only be a second place to keep in step.
+    const containerOnly = ["x-content-type-options"];
     // The cache header is not a security header and each side sets it with its own tool: nginx
     // with `expires`, Render with a path-specific header. It is checked separately below.
     const notShared = ["cache-control"];
@@ -102,9 +101,10 @@ describe("security headers", () => {
     // drops the inherited ones, so it includes them again there.
     expect(nginx).toContain("location = /logout {");
     expect(nginx).toContain(`add_header Clear-Site-Data '"cache", "cookies", "storage"' always;`);
-    // ...and the file it includes twice has to be in the image, or the container starts without any
-    // of these headers at all.
-    expect(nginx.match(/include \/etc\/nginx\/security-headers\.conf;/g) ?? []).toHaveLength(2);
+    // ...and every location that includes it has to find it in the image, or those responses start
+    // without any of these headers: the server level, the /.well-known/ location below - which adds
+    // the discovery CORS headers on top - and this one.
+    expect(nginx.match(/include \/etc\/nginx\/security-headers\.conf;/g) ?? []).toHaveLength(3);
     expect(dockerfile).toContain("COPY security-headers.conf /etc/nginx/security-headers.conf");
   });
 
@@ -113,6 +113,24 @@ describe("security headers", () => {
     // preloaded faces on every visit.
     expect(fromBlueprint("/fonts/*")["cache-control"]).toContain("max-age=31536000");
     expect(nginx).toContain("expires max;");
+  });
+
+  it("lets agents read the discovery files from their own origin, and nothing else", () => {
+    // The manifest agents and registries look for (public/.well-known/) is fetched cross-origin by a
+    // crawler, so the one directory that exists to be read from elsewhere grants that - in both
+    // deployments - while every other response keeps same-origin.
+    expect(fromBlueprint("/.well-known/*")["access-control-allow-origin"]).toBe("*");
+    expect(fromBlueprint("/.well-known/*")["cross-origin-resource-policy"]).toBe("cross-origin");
+    expect(fromBlueprint()["access-control-allow-origin"]).toBeUndefined();
+    expect(nginx).toContain("location ^~ /.well-known/ {");
+    expect(nginx).toContain('add_header Access-Control-Allow-Origin "*" always;');
+  });
+
+  it("stages Trusted Types in report-only mode on both deployments", () => {
+    // The audit that looks for the directive reads the static deployment, and the container sends
+    // the same policy, so the staged rollout cannot be half done.
+    expect(fromBlueprint()["content-security-policy-report-only"]).toBe(fromNginx()["content-security-policy-report-only"]);
+    expect(fromNginx()["content-security-policy-report-only"]).toContain("require-trusted-types-for 'script'");
   });
 
   it("sends the same policy from both", () => {

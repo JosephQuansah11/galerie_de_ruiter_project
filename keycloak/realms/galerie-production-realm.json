@@ -27,6 +27,9 @@
         "https://galeriederuiter.cloud-ip.cc",
         "https://galerie-frontend.onrender.com"
       ],
+      "postLogoutRedirectUris": [
+        "https://galeriederuiter.cloud-ip.cc/*"
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256"
       },

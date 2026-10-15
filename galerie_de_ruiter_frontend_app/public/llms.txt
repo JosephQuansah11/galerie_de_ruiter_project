@@ -19,12 +19,14 @@ current values are.
   frame of the place.
 - [Chat](https://galeriederuiter.cloud-ip.cc/chat): the concierge, which answers questions about the
   collection and can take an appointment request for a visit.
+- [Collection](https://galeriederuiter.cloud-ip.cc/antiques): the first list of pieces the gallery
+  has, with photographs and prices. A visitor sees the first page of it and no more.
 
 ## Behind an account
 
-- The catalogue (`/antiques`), a piece's page, the wishlist, the basket and the profile pages answer
-  with the sign-in page until a visitor signs in. They are disallowed in `robots.txt` and are not
-  listed in the sitemap.
+- A piece's own page, the wishlist, the basket and the profile pages answer with the sign-in page
+  until a visitor signs in, and so does everything past the first page of the collection list. The
+  pieces are disallowed in `robots.txt`; the list itself is allowed and is in the sitemap.
 
 ## Buying
 

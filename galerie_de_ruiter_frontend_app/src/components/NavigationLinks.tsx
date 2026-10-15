@@ -17,9 +17,11 @@ export function NavigationLinks({ onNavigate }: { onNavigate: () => void }) {
   const { isAdmin, authenticated } = useAuth();
     const [categories, setCategories] = useState<Category[]>([]);
     const [categoryError, setCategoryError] = useState(false);
-  // A visitor can read the gallery story, find the pop-up and talk to the concierge without an
-  // account; what needs one is acting on the collection, so those links stay hidden.
+  // A visitor can read the first list of the collection, the gallery story, the pop-up's address
+  // and the concierge without an account; what needs one is going deeper into the collection and
+  // acting on it, so those links stay hidden.
   const visitorLinks: LinkItem[] = [
+    { href: "/antiques", icon: LibraryBig, translationKey: "browseAntiques" },
     { href: "/chat", icon: MessageCircle, translationKey: "navGalleryChat" },
     { href: "/about", icon: BookOpen, translationKey: "navAbout" },
     { href: "/map", icon: Map, translationKey: "location" },

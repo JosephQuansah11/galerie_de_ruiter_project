@@ -51,12 +51,15 @@ export function ProtectedRoutes() {
     <Route path="/chat" element={<ChatPage />} />
     <Route path="/about" element={<AboutPage />} />
     <Route path="/map" element={<LocationPage />} />
+    {/* The catalogue list is open too, and a visitor sees the first page of it: an account is what
+        buys going deeper - the pages after the first, a piece's own page, and acting on the
+        collection (see src/pages/antiques/CataloguePage.tsx and AntiqueRow.tsx). */}
+    <Route path="/antiques" element={<AntiquesPage />} />
 
     {/* Everything else needs a signed-in visitor. */}
     <Route element={<RequireAccount />}>
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/preferences" element={<PreferencesPage />} />
-      <Route path="/antiques" element={<AntiquesPage />} />
       <Route path="/antiques/:id" element={<AntiqueDetailPage />} />
       <Route path="/admin/dashboard" element={<DashboardPage />} />
       <Route path="/admin/antiques/new" element={<AddNewAntique />} />

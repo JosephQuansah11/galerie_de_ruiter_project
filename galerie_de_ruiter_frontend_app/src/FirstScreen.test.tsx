@@ -42,7 +42,7 @@ describe("the first screen in index.html", () => {
     expect(firstScreen?.querySelector(".navbar-brand-div")?.getAttribute("href")).toBe("/");
     const links = [...(firstScreen?.querySelectorAll(".main-navbar-links .nav-item-link") ?? [])]
       .map((link) => link.textContent?.trim());
-    expect(links).toEqual([gallery("navGalleryChat"), gallery("navAbout"), gallery("location")]);
+    expect(links).toEqual([gallery("browseAntiques"), gallery("navGalleryChat"), gallery("navAbout"), gallery("location")]);
     expect(copy(".icons-list-user-profile .nav-item-link")).toBe(gallery("navSignIn"));
   });
 

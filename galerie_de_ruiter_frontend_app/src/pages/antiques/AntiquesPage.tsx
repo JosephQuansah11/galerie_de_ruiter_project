@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useAntiqueContent } from "@/hooks/useAddAntiques";
@@ -9,6 +10,8 @@ import { CataloguePage } from "./CataloguePage";
 
 export default function AntiquesPage() {
   const { antiques, loading, error } = useAntiqueContent();
+  // The list is open to everyone; what an account buys is the rest of it (see CataloguePage).
+  const { authenticated } = useAuth();
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const [query, setQuery] = useState("");
@@ -28,6 +31,7 @@ export default function AntiquesPage() {
     error={Boolean(error)}
     query={query}
     onQueryChange={setQuery}
+    signedIn={authenticated}
     {...categoryState}
   />;
 }

@@ -1,7 +1,8 @@
 import { Badge } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
 import { Eye, Heart, ShoppingBag } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { useShopping } from "@/context/ShoppingContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { formatEuroAmount } from "@/i18n";
@@ -13,15 +14,27 @@ import { summarizeDescription } from "./summarizeDescription";
  * One piece in the catalogue, laid out as a compact row: a small thumbnail with the piece's
  * short story beside it. The description is trimmed to a preview here; the full story stays
  * on the piece's own page.
+ *
+ * The list is open to a visitor without an account; saving a piece and putting it in the basket
+ * are not. Those two buttons send the visitor to the sign-in page with this list as the page to
+ * come back to, which is the same `from` the route guard passes (see src/ProtectedRoutes.tsx).
  */
 export function AntiqueRow({ antique }: { antique: Antique }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const shopping = useShopping();
+  const { authenticated } = useAuth();
   const { t, locale } = useLanguage();
   const artist = antique.artist?.displayName ?? antique.artist?.name ?? t("galerieCollection");
   const price = antique.price == null ? t("priceOnRequest") : formatEuroAmount(antique.price, locale);
   const description = summarizeDescription(antique.description);
   const imageUrl = antique.imageUrl ?? antique.imageUrls?.[0];
+  /** Runs the action for an account, and asks for one otherwise. */
+  const withAccount = (action: () => void) => (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (authenticated) action();
+    else navigate("/login", { state: { from: `${location.pathname}${location.search}` } });
+  };
   return <article className={`catalogue-card catalogue-row${antique.sold ? " is-sold" : ""}`} onClick={() => navigate(`/antiques/${antique.id}`)}>
     <div className="catalogue-card-image" aria-hidden="true">{imageUrl ? <img src={resolveAntiqueImageUrl(imageUrl)} alt="" width={800} height={600} /> : antique.title.slice(0, 1).toUpperCase()}
       {antique.sold && <span className="catalogue-sold-badge">{t("sold")}</span>}</div>
@@ -36,8 +49,8 @@ export function AntiqueRow({ antique }: { antique: Antique }) {
       <div className="catalogue-card-footer"><strong>{price}</strong><div className="catalogue-card-actions">
         {antique.sold
           ? <Badge bg="dark" className="catalogue-sold-pill"><ShoppingBag size={14} /> {t("sold")}</Badge>
-          : <Button className="btn btn-sm btn-outline-dark" type="button" onClick={(event) => { event.stopPropagation(); shopping.addToCart(antique); }} text={<><ShoppingBag size={15} /> {t("add")}</>} />}
-        <Button className="btn btn-sm btn-link" type="button" aria-label={t("savePieceNamed", { title: antique.title })} onClick={(event) => { event.stopPropagation(); shopping.toggleWishlist(antique); }} text={<Heart size={18} fill={shopping.isWishlisted(antique.id) ? "currentColor" : "none"} />} />
+          : <Button className="btn btn-sm btn-outline-dark" type="button" onClick={withAccount(() => shopping.addToCart(antique))} text={<><ShoppingBag size={15} /> {t("add")}</>} />}
+        <Button className="btn btn-sm btn-link" type="button" aria-label={t("savePieceNamed", { title: antique.title })} onClick={withAccount(() => shopping.toggleWishlist(antique))} text={<Heart size={18} fill={shopping.isWishlisted(antique.id) ? "currentColor" : "none"} />} />
       </div></div>
     </div>
   </article>;

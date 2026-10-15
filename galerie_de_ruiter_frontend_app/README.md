@@ -62,8 +62,9 @@ The app is one HTML page, so what a crawler can reach is decided in five places:
   all of them, and the pages it named were reported as *canonical to a different URL* — which asks
   a search engine to drop them from the index. `src/staticDocument.test.ts` checks both ends: the
   document has none, and every page declares one that the router actually serves.
-- **`public/robots.txt`** — everything that answers with the sign-in page (`/admin`, `/antiques`,
-  `/cart`, `/wishlist`, `/profile`, `/preferences`) is closed to crawlers. `/login` and
+- **`public/robots.txt`** — everything that answers with the sign-in page (`/admin`, `/antiques/`
+  — the pieces, not the list — `/cart`, `/wishlist`, `/profile`, `/preferences`) is closed to
+  crawlers. `/login` and
   `/register` stay crawlable on purpose: they carry a `noindex` tag and a crawler that may not
   fetch them never sees it.
 - **`scripts/generate-sitemap.mjs`** — runs after webpack (`npm run build`) and writes
@@ -71,7 +72,7 @@ The app is one HTML page, so what a crawler can reach is decided in five places:
   submissions used, so it keeps answering) plus the absolute `Sitemap:` and `Agentmap:` lines in
   `dist/robots.txt`.
   It lists the pages
-  a visitor reaches without an account: `/`, `/about`, `/map` and `/chat`.
+  a visitor reaches without an account: `/`, `/antiques`, `/about`, `/map` and `/chat`.
 - **the routes, on both deployments** — `render.yaml` names the application's routes one by one and
   `nginx.conf` names them in one regular expression, so a path the router does not draw is a 404
   rather than the landing page with a 200. `public/404.html` (with `public/404.css`) is the page a
@@ -81,13 +82,19 @@ The app is one HTML page, so what a crawler can reach is decided in five places:
   and `/dashboard` its predecessor, and each sends the visitor to the URL that is canonical, so two
   addresses never compete for one page in the index.
 
-**What a visitor may do.** The landing page, the gallery story, the pop-up's address and the
-concierge chat are readable without an account, and they are the pages a crawler may index.
-Acting on the collection is what needs one: `/antiques`, the wishlist, the cart and the profile
-screens sit behind `RequireAccount` in `src/ProtectedRoutes.tsx`, which sends the visitor to the
-sign-in page with the page they wanted, and the sign-in page says why (`signInRequired`). The
-navigation follows the same line: `src/components/NavigationLinks.tsx` shows a visitor the three
-public destinations and hides the rest rather than offering a link that only bounces them.
+**What a visitor may do.** The landing page, the gallery story, the pop-up's address, the concierge
+chat and the first page of the collection are readable without an account, and they are the pages a
+crawler may index. Everything past that needs one: a piece's own page, the pages after the first of
+the collection list, the wishlist, the cart and the profile screens sit behind `RequireAccount` in
+`src/ProtectedRoutes.tsx`, which sends the visitor to the sign-in page with the page they wanted,
+and the sign-in page says why (`signInRequired`). The collection is gated in three places rather
+than one, because the list is public and the actions are not: `src/pages/antiques/CataloguePage.tsx`
+gives a visitor the first page and an invitation to sign in where the paging controls would be,
+`src/pages/antiques/AntiqueRow.tsx` sends the save and basket buttons to the sign-in page with the
+list as the page to come back to, and the like control lives on a piece's own page, which a visitor
+never reaches. The navigation follows the same line: `src/components/NavigationLinks.tsx` shows a
+visitor the four public destinations and hides the rest rather than offering a link that only
+bounces them.
 
 The site's public origin lives in `site.config.mjs`, in one place, because three build steps need
 it: the sitemap (and the `Sitemap:` line in `robots.txt`), the absolute `og:url`/`og:image` of the
@@ -136,11 +143,12 @@ a domain you own, and the provider can reassign one, so a custom domain is the d
 nothing in the build depends on which one it is, because `site.config.mjs` is the only place that
 names it.
 
-When the collection opens to visitors, remove the `/antiques` line from `robots.txt`, drop
-`/antiques` from the `RequireAccount` group in `src/ProtectedRoutes.tsx` and add the pieces to
-`publicPages` in the sitemap script (the API's `GET /api/antiques` lists them, so the script can
-fetch them at build time). The API already answers `GET /api/antiques` without a token, so this
-is a frontend decision, not a backend one.
+The collection is half open today: the list is public and belongs in the sitemap, while a piece's own
+page is not. Opening the pieces to visitors means removing the `Disallow: /antiques/` line from
+`robots.txt`, dropping `/antiques/:id` from the `RequireAccount` group in `src/ProtectedRoutes.tsx`
+and adding the pieces to `publicPages` in the sitemap script (the API's `GET /api/antiques` lists
+them, so the script can fetch them at build time). The API already answers `GET /api/antiques`
+without a token, so this is a frontend decision, not a backend one.
 
 ## Agent discovery
 

@@ -1,9 +1,22 @@
 import { fireEvent, screen } from "@testing-library/react";
+import { Route, Routes } from "react-router-dom";
 import { renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
 import AntiquesPage from "./AntiquesPage";
 import { getAllAntiques, getVisibleCategories } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
+
+/**
+ * The catalogue is open to a visitor without an account for its first page, so these tests drive
+ * both halves: what an account buys (the paging controls, saving a piece, the basket) and what it
+ * does not (the list itself).
+ */
+const mockAuth = { authenticated: true, isAdmin: false, loading: false };
+
+jest.mock("@/context/AuthContext", () => ({
+  AuthProvider: ({ children }: { children?: unknown }) => children,
+  useAuth: () => mockAuth,
+}));
 
 jest.mock("@/apis/backend_api", () => ({
   getAllAntiques: jest.fn(),
@@ -20,6 +33,7 @@ const pieces: Antique[] = [
 ];
 
 beforeEach(() => {
+  mockAuth.authenticated = true;
   mockedAntiques.mockResolvedValue(pieces);
   mockedCategories.mockResolvedValue([
     { id: "c1", name: "Mirrors", visible: true, itemCount: 1, children: [] },
@@ -143,5 +157,39 @@ describe("Catalogue page", () => {
     // Both the image overlay and the footer pill announce the piece as sold.
     expect(screen.getAllByText(i18n.t("sold")).length).toBeGreaterThan(1);
     expect(screen.queryByText(i18n.t("add"))).not.toBeInTheDocument();
+  });
+
+  it("gives a visitor the first page of the list, and an account for the rest of it", async () => {
+    mockAuth.authenticated = false;
+    const many = Array.from({ length: 20 }, (_, index) => ({
+      id: `p${index}`, title: `Piece ${index + 1}`, category: null, description: "A piece", price: 10,
+    }));
+    mockedAntiques.mockResolvedValueOnce(many);
+
+    renderPage(<AntiquesPage />, { shopping: true });
+    await screen.findByText("Piece 1");
+
+    // The first page of the list, and no controls that would go past it.
+    expect(document.querySelectorAll(".catalogue-row")).toHaveLength(12);
+    expect(screen.queryByLabelText(i18n.t("itemsPerPage"))).not.toBeInTheDocument();
+    expect(screen.queryByText(i18n.t("pageOf", { page: 1, pages: 2 }))).not.toBeInTheDocument();
+    expect(screen.getByText(i18n.t("collectionSignInHint"))).toBeInTheDocument();
+  });
+
+  it("sends a visitor who tries to save a piece to the sign-in page", async () => {
+    mockAuth.authenticated = false;
+
+    renderPage(
+      <Routes>
+        <Route path="/antiques" element={<AntiquesPage />} />
+        <Route path="/login" element={<p>the sign-in page</p>} />
+      </Routes>,
+      { shopping: true, route: "/antiques" },
+    );
+    await screen.findByText("Carved walnut mirror");
+
+    fireEvent.click(screen.getAllByRole("button", { name: new RegExp(i18n.t("add"), "i") })[0]);
+
+    expect(await screen.findByText("the sign-in page")).toBeInTheDocument();
   });
 });

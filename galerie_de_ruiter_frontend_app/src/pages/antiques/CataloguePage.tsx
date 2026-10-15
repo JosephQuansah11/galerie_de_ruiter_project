@@ -7,6 +7,7 @@ import type { Category } from "@/models/antiques/Antique";
 import { CollectionFilter } from "./CollectionFilter";
 import { AntiqueList } from "./AntiqueList";
 import { CataloguePaging } from "./CataloguePaging";
+import { CatalogueSignInHint } from "./CatalogueSignInHint";
 import { CatalogueStatus } from "./CatalogueStatus";
 
 /** How many pieces a page shows until the visitor chooses otherwise. */
@@ -24,6 +25,8 @@ type Props = {
   categoriesError: boolean;
   category: string;
   setCategory: (category: string) => void;
+  /** Whether the visitor has an account: a visitor sees the first page of the list and no more. */
+  signedIn: boolean;
 };
 
 export function CataloguePage(props: Props) {
@@ -31,13 +34,16 @@ export function CataloguePage(props: Props) {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [page, setPage] = useState(1);
   const hasQuery = props.query.length > 0;
+  // A visitor without an account reads the first page of the list and nothing deeper, so the page
+  // size is the default one and the page is the first, whatever the controls would have said.
+  const effectivePageSize = props.signedIn ? pageSize : DEFAULT_PAGE_SIZE;
   // A new search, category or page size starts again from the first page.
   useEffect(() => { setPage(1); }, [props.query, props.category, pageSize]);
-  const pageCount = pageSize === 0 ? 1 : Math.max(1, Math.ceil(props.filteredAntiques.length / pageSize));
-  const currentPage = Math.min(page, pageCount);
-  const visible = pageSize === 0
+  const pageCount = effectivePageSize === 0 ? 1 : Math.max(1, Math.ceil(props.filteredAntiques.length / effectivePageSize));
+  const currentPage = props.signedIn ? Math.min(page, pageCount) : 1;
+  const visible = effectivePageSize === 0
     ? props.filteredAntiques
-    : props.filteredAntiques.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    : props.filteredAntiques.slice((currentPage - 1) * effectivePageSize, currentPage * effectivePageSize);
   return <section className="catalogue-page">
     <CatalogueHeading count={props.antiques.length} />
     <div className="catalogue-controls">
@@ -56,8 +62,11 @@ export function CataloguePage(props: Props) {
     <CatalogueStatus loading={props.loading} error={props.error} categoriesLoading={props.categoriesLoading} categoriesError={props.categoriesError} empty={!props.filteredAntiques.length} hasQuery={Boolean(props.query)} />
     {!props.loading && !props.error && <>
       <AntiqueList antiques={visible} />
-      {props.filteredAntiques.length > 0 && <CataloguePaging pageSize={pageSize} page={currentPage} pageCount={pageCount}
-        onPageSize={setPageSize} onPage={setPage} />}
+      {props.filteredAntiques.length > 0 && (props.signedIn
+        ? <CataloguePaging pageSize={pageSize} page={currentPage} pageCount={pageCount}
+          onPageSize={setPageSize} onPage={setPage} />
+        // The invitation belongs there only when there is something past the first page.
+        : props.filteredAntiques.length > DEFAULT_PAGE_SIZE && <CatalogueSignInHint />)}
     </>}
   </section>;
 }

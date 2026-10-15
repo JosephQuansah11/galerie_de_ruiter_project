@@ -73,6 +73,8 @@ describe("Gallery navigation", () => {
 
     expect(screen.getByRole("link", { name: new RegExp(i18n.t("navAbout"), "i") })).toHaveAttribute("href", "/about");
     expect(screen.getByRole("link", { name: new RegExp(i18n.t("location"), "i") })).toHaveAttribute("href", "/map");
+    // The list is open to a visitor; the pages that act on the collection are not.
+    expect(screen.getByRole("link", { name: new RegExp(i18n.t("browseAntiques"), "i") })).toHaveAttribute("href", "/antiques");
     // Acting on the collection needs an account, so those links are not offered at all.
     expect(screen.queryByRole("link", { name: new RegExp(i18n.t("wishlist"), "i") })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: new RegExp(i18n.t("cart"), "i") })).not.toBeInTheDocument();

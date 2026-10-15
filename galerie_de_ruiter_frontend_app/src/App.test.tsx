@@ -72,7 +72,16 @@ describe("App shell", () => {
     expect(screen.getByRole("link", { name: i18n.t("chatWhatsappSignIn") })).toBeInTheDocument();
   });
 
-  it.each(["/antiques", "/antiques/123", "/wishlist", "/cart", "/profile", "/preferences", "/admin/antiques", "/admin/dashboard"])(
+  it("lets a visitor read the first list of the collection", async () => {
+    window.history.pushState({}, "", "/antiques");
+    renderPage(<App />, { auth: false, router: false });
+
+    // The list itself, not the sign-in redirect: an account is what the rest of it costs.
+    expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent(i18n.t("collectionTitle"));
+    expect(screen.queryByText(i18n.t("welcomeBack"))).not.toBeInTheDocument();
+  });
+
+  it.each(["/antiques/123", "/wishlist", "/cart", "/profile", "/preferences", "/admin/antiques", "/admin/dashboard"])(
     "sends a visitor who opens %s to the sign-in page",
     async (route) => {
       window.history.pushState({}, "", route);

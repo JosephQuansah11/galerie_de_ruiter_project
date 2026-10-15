@@ -197,7 +197,10 @@ The key ships in the bundle, so it is not a secret: restrict it in the Google Cl
 
 Without a key the gallery still works. The location page shows the address, the opening hours and an
 *Open in Google Maps* link — the Maps URL scheme needs no key, which is why that link is never
-conditional — and the admin's lookup says the lookup is unavailable rather than failing silently.
+conditional — and the panel that would hold the frame drops its height for a quieter card: the mark
+and the link, centred, instead of an empty rectangle where a map should be (`.map-frame-link-only` in
+`src/styles/_location-02-location-facts.scss`, which `LocationMap.test.tsx` pins). The admin's lookup
+says the lookup is unavailable rather than failing silently.
 `src/services/googleMaps.test.ts` covers both builds. The OpenStreetMap embed and its Nominatim
 lookup that this replaced are gone from the code and from the policy, and
 `src/securityHeaders.test.ts` fails if either name comes back.

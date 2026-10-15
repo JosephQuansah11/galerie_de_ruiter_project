@@ -15,7 +15,7 @@ const props = { title: "Kaart van Galerie de Ruiter", linkText: "Open in Google 
 
 describe("the location map", () => {
   it("frames the gallery's address on Google Maps", () => {
-    renderPage(<LocationMap location={location} {...props} />, { auth: false });
+    const { container } = renderPage(<LocationMap location={location} {...props} />, { auth: false });
 
     const frame = screen.getByTitle(props.title);
     expect(frame).toHaveAttribute("src", expect.stringContaining("google.com/maps/embed/v1/place"));
@@ -24,16 +24,22 @@ describe("the location map", () => {
     expect(new URL(frame.getAttribute("src")!).searchParams.get("q")).toBe(location.address);
     // Below the address on a phone, so it must not compete with the first paint.
     expect(frame).toHaveAttribute("loading", "lazy");
+    // With a frame in it the panel keeps the frame's height, so it carries no modifier.
+    expect(container.querySelector(".map-frame-link-only")).toBeNull();
   });
 
   it("keeps the link, and drops the frame, when the build carries no key", () => {
     process.env.VITE_GOOGLE_MAPS_API_KEY = "";
     try {
-      renderPage(<LocationMap location={location} {...props} />, { auth: false });
+      const { container } = renderPage(<LocationMap location={location} {...props} />, { auth: false });
 
       expect(screen.queryByTitle(props.title)).toBeNull();
       expect(screen.getByRole("link", { name: new RegExp(props.linkText, "i") }))
         .toHaveAttribute("href", expect.stringContaining("google.com/maps/search"));
+      // The panel would otherwise keep the frame's height and stand there as an empty card where
+      // a map should be, so it is marked as the link-only shape the stylesheet shrinks.
+      expect(container.querySelector("iframe")).toBeNull();
+      expect(container.querySelector(".map-frame-link-only")).not.toBeNull();
     } finally {
       process.env.VITE_GOOGLE_MAPS_API_KEY = "test-maps-key";
     }

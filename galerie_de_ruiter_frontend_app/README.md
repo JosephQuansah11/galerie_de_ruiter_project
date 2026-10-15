@@ -51,7 +51,9 @@ The app is one HTML page, so what a crawler can reach is decided in three places
   `/register` stay crawlable on purpose: they carry a `noindex` tag and a crawler that may not
   fetch them never sees it.
 - **`scripts/generate-sitemap.mjs`** — runs after webpack (`npm run build`) and writes
-  `dist/sitemap.xml` plus the absolute `Sitemap:` line in `dist/robots.txt`. It lists the pages
+  `dist/sitemap_index.xml` (and the same document at `dist/sitemap.xml`, the address earlier
+  submissions used, so it keeps answering) plus the absolute `Sitemap:` line in `dist/robots.txt`.
+  It lists the pages
   a visitor reaches without an account: `/dashboard`, `/about`, `/map` and `/dashboard/chat`.
 
 **What a visitor may do.** The landing page, the gallery story, the pop-up's address and the
@@ -88,12 +90,12 @@ among them - come back as *Couldn't fetch*, and the pages stay out of the result
 the site itself is reachable. Check what a deploy actually published before submitting anything:
 
 ```bash
-curl -s https://galeriederuiter.cloud-ip.cc/sitemap.xml | grep '<loc>'
+curl -s https://galeriederuiter.cloud-ip.cc/sitemap_index.xml | grep '<loc>'
 curl -s https://galeriederuiter.cloud-ip.cc/robots.txt
 ```
 
 Both should name the public origin. Then, in Search Console, submit
-`https://galeriederuiter.cloud-ip.cc/sitemap.xml` under *Sitemaps*, and use *URL inspection* →
+`https://galeriederuiter.cloud-ip.cc/sitemap_index.xml` under *Sitemaps*, and use *URL inspection* →
 *Request indexing* for `/dashboard`, `/about` and `/map`.
 
 Those are the pages that can be indexed. Everything else needs an account and answers with the

@@ -69,7 +69,11 @@ const sitemap = [
 ].join("\n");
 
 mkdirSync(distDir, { recursive: true });
-writeFileSync(path.join(distDir, "sitemap.xml"), sitemap, "utf8");
+// Both names serve the same document. The gallery submits `sitemap_index.xml`, and the address
+// earlier submissions used (`sitemap.xml`) keeps answering instead of turning into a 404.
+for (const name of ["sitemap_index.xml", "sitemap.xml"]) {
+  writeFileSync(path.join(distDir, name), sitemap, "utf8");
+}
 
 // The crawler only finds the sitemap through an absolute URL, so the line is added here rather
 // than kept in public/robots.txt, which has to stay origin-independent. A line already in the
@@ -82,9 +86,9 @@ if (existsSync(robotsSource)) {
     .filter((line) => !/^Sitemap:/i.test(line))
     .join("\n")
     .trimEnd();
-  writeFileSync(robotsTarget, `${robots}\n\nSitemap: ${siteUrl}/sitemap.xml\n`, "utf8");
+  writeFileSync(robotsTarget, `${robots}\n\nSitemap: ${siteUrl}/sitemap_index.xml\n`, "utf8");
 } else {
   console.warn("generate-sitemap: no robots.txt to add the Sitemap line to");
 }
 
-console.log(`generate-sitemap: ${publicPages.length} URLs for ${siteUrl}`);
+console.log(`generate-sitemap: ${publicPages.length} URLs for ${siteUrl} (sitemap_index.xml)`);

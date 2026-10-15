@@ -4,14 +4,20 @@ import { getStoreLocation, type StoreLocation } from "@/apis/backend_api";
 import { useLanguage } from "@/context/LanguageContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { subscribeToContentUpdates } from "@/services/contentUpdates";
+import { cityFromAddress, titleWithCity } from "@/services/pageTitle";
 import { LocationMap } from "./location/LocationMap";
 
 export default function LocationPage() {
   const [location, setLocation] = useState<StoreLocation>();
   const [error, setError] = useState(false);
   const { t } = useLanguage();
-  // The page is open to visitors and listed in the sitemap, so it names itself in the head.
-  usePageMeta({ title: t("metaMapTitle"), description: t("metaMapDescription"), canonicalPath: "/map" });
+  // The heading and the title name the city, which is where the address in the record points.
+  const city = cityFromAddress(location?.address);
+  usePageMeta({
+    title: titleWithCity(t, "metaMapTitle", city),
+    description: t("metaMapDescription"),
+    canonicalPath: "/map",
+  });
   useEffect(() => {
     let active = true;
     const loadLocation = () => {
@@ -41,7 +47,7 @@ export default function LocationPage() {
     <section className="location-page">
       <div className="location-copy">
         <span className="catalogue-artist">{t("location")}</span>
-        <h1>{t("findPopup")}</h1>
+        <h1>{titleWithCity(t, "mapHeading", city)}</h1>
         <p>
           {t("locationIntro")}
         </p>

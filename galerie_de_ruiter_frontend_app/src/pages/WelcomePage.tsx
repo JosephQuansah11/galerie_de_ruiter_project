@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { useLocationCity } from "@/hooks/useLocationCity";
+import { titleWithCity } from "@/services/pageTitle";
 import { WelcomeHero } from "./welcome/WelcomeHero";
 import { WelcomeHighlights } from "./welcome/WelcomeHighlights";
 import { WelcomeSlider } from "./welcome/WelcomeSlider";
@@ -9,7 +11,14 @@ import { useHomeImages } from "@/hooks/useHomeImages";
 export default function WelcomePage() {
   const { t } = useTranslation();
   const images = useHomeImages();
-  usePageMeta({ title: t("metaHomeTitle"), description: t("metaHomeDescription"), canonicalPath: "/dashboard" });
+  // The title carries the gallery's categories and the city of the pop-up, both of which a
+  // visitor searches for ("antiek Waasmunster"); the city comes from the location record.
+  const city = useLocationCity();
+  usePageMeta({
+    title: titleWithCity(t, "metaHomeTitle", city),
+    description: t("metaHomeDescription"),
+    canonicalPath: "/dashboard",
+  });
   return <section className="welcome-page">
     <WelcomeHero />
     <WelcomeSlider images={images} />

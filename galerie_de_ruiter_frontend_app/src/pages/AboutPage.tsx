@@ -6,12 +6,19 @@ import { getAboutContent, getStoreLocation, type StoreLocation } from "@/apis/ba
 import { subscribeToContentUpdates } from "@/services/contentUpdates";
 import { useTranslation } from "react-i18next";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { cityFromAddress, titleWithCity } from "@/services/pageTitle";
 import { renderAboutContent } from "./about/renderAboutContent";
 
 export default function AboutPage() {
   const { t } = useTranslation();
-  // The page is open to visitors and listed in the sitemap, so it names itself in the head.
-  usePageMeta({ title: t("metaAboutTitle"), description: t("metaAboutDescription"), canonicalPath: "/about" });
+  // The page is open to visitors and listed in the sitemap, so it names itself in the head, with
+  // the categories a visitor searches for and the city the pop-up is in.
+  const [city, setCity] = useState<string>();
+  usePageMeta({
+    title: titleWithCity(t, "metaAboutTitle", city),
+    description: t("metaAboutDescription"),
+    canonicalPath: "/about",
+  });
   const [content, setContent] = useState<string>();
   const [location, setLocation] = useState<StoreLocation>();
   const [error, setError] = useState(false);
@@ -35,8 +42,8 @@ export default function AboutPage() {
     // can drift out of date.
     const loadLocation = () => {
       getStoreLocation()
-        .then((value) => { if (active) setLocation(value); })
-        .catch(() => { if (active) setLocation(undefined); });
+        .then((value) => { if (active) { setLocation(value); setCity(cityFromAddress(value.address)); } })
+        .catch(() => { if (active) { setLocation(undefined); setCity(undefined); } });
     };
     loadContent();
     loadLocation();
@@ -69,7 +76,7 @@ export default function AboutPage() {
       <div className="about-content">{renderAboutContent(content)}</div>
       {location && (
         <aside className="about-location" aria-label={t("location")}>
-          <h2>{t("findPopup")}</h2>
+          <h2>{titleWithCity(t, "findPopup", city)}</h2>
           <div className="about-location-facts">
             <span>
               <MapPin size={18} aria-hidden="true" />

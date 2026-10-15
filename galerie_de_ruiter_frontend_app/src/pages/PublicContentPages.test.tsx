@@ -55,6 +55,13 @@ describe("About page", () => {
     expect(document.title).toBe(i18n.t("metaAboutTitle"));
     expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute("href", expect.stringContaining("/about"));
   });
+
+  it("names the city in the location heading and the title", async () => {
+    renderPage(<AboutPage />, { auth: false });
+
+    expect(await screen.findByRole("heading", { level: 2, name: /Waasmunster/ })).toBeInTheDocument();
+    expect(document.title).toContain("Waasmunster");
+  });
 });
 
 describe("Location page", () => {
@@ -72,6 +79,14 @@ describe("Location page", () => {
 
     expect(document.title).toBe(i18n.t("metaMapTitle"));
     expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute("href", expect.stringContaining("/map"));
+  });
+
+  it("names the city in the heading and the title, because that is how it is searched for", async () => {
+    renderPage(<LocationPage />, { auth: false });
+
+    expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent("Waasmunster");
+    expect(document.title).toContain("Waasmunster");
+    expect(document.title).toContain("Galerie de Ruiter");
   });
 
   it("says so when the gallery cannot be reached, instead of loading forever", async () => {

@@ -31,46 +31,6 @@ Stop the dependencies with `.\gradlew.bat stopDevServices` (or
 containers and local data, run `docker compose -f docker-compose.dev.yml down
 -v`.
 
-### Sign in with Google
-
-Visitors can sign in with a Google account instead of a password the gallery would have
-to store. Google is an identity provider *inside* the gallery's Keycloak realm, so the
-flow is still Keycloak's: the sign-in page offers a Google button, and the frontend
-names the provider (`idpHint`), which sends the visitor straight to Google rather than
-to Keycloak's own page with a Google button on it.
-
-Two things are needed, and neither belongs in the repository:
-
-1. A **Google Cloud OAuth client** (Google Cloud Console → *APIs & Services* →
-   *Credentials* → *Create credentials* → *OAuth client ID* → *Web application*) with
-   this authorized redirect URI:
-
-   ```
-   https://galerie-keycloak.onrender.com/realms/movie_project_keycloak/broker/google/endpoint
-   ```
-
-   and, for local development,
-   `http://localhost:8082/realms/movie_project_keycloak/broker/google/endpoint`.
-
-2. Those two values as environment variables. The API reads them on start and creates
-   (or updates) the realm's Google provider from them, so rotating the secret or
-   changing the scopes is a deploy rather than a visit to the Keycloak console:
-
-   | Variable | Value |
-   |---|---|
-   | `GOOGLE_IDP_CLIENT_ID` | the OAuth client's id |
-   | `GOOGLE_IDP_CLIENT_SECRET` | its secret |
-   | `GOOGLE_IDP_REQUIRED` | `true` to fail the start when the two above are missing (default `false`) |
-
-   With neither value set the API leaves the realm exactly as it was, so a deployment
-   that does not want Google sign-in is unaffected: the realm then has no `google`
-   provider, `GET /api/auth/providers` does not name one, and the sign-in page leaves the
-   Google button off rather than offering a button that ends on a Keycloak error page.
-   `GOOGLE_IDP_REQUIRED` is for a deployment that would rather fail to start than run
-   without Google. `KeycloakGoogleIdentityProviderProvisioner` does the provisioning and
-   `KeycloakGoogleIdentityProviderProvisionerTest` pins what it writes into the realm;
-   `IdentityProviderService` answers what the realm really offers.
-
 Keycloak also has to be able to send the browser back to the gallery. The client the frontend signs
 in with (`movie_project_frontend_client`) must list the gallery's own origin
 (`https://galeriederuiter.cloud-ip.cc/*`) in its **Valid redirect URIs** and in its **Valid post
@@ -111,8 +71,8 @@ previous run.
 **The import only fills an empty Keycloak.** It runs with the `IGNORE_EXISTING` strategy, so a realm
 that is already in the database is left exactly as it is. Editing a realm file therefore changes what
 a *fresh* install gets; the running realm is changed in the console (or by the API's own
-provisioners, which is why the Google provider and the realm's administrator are set from the
-environment rather than from the file).
+provisioners, which is why the realm's administrator is set from the environment rather than
+from the file).
 
 ### Local chat model
 

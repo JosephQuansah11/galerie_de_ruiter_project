@@ -18,19 +18,12 @@ Keycloak uses the `standard` web-service plan (2 GiB RAM) because its startup
 exceeded the 512 MiB available on the `starter` plan. This service-plan change
 increases costs; review the current price in Render before syncing.
 
-## Sign in with Google
-
-Set `GOOGLE_IDP_CLIENT_ID` and `GOOGLE_IDP_CLIENT_SECRET` on `galerie-java-api`; both are
-`sync: false` in the blueprint, so the dashboard asks for them. The API creates the realm's Google
-identity provider from them on every start, and leaves the realm alone when neither is set. The
-authorized redirect URI in the Google Cloud console is
-`https://galerie-keycloak.onrender.com/realms/movie_project_keycloak/broker/google/endpoint`. See
-*Sign in with Google* in the repository README for the OAuth client itself.
+## Keycloak
 
 The live client in the running Keycloak (`movie_project_frontend_client`) must also list
 `https://galeriederuiter.cloud-ip.cc/*` in **Valid redirect URIs** *and* in **Valid post logout
 redirect URIs**. Keycloak refuses to return the browser to an origin its client does not declare, so
-without them a sign-in started on the gallery's own domain fails once Google has answered - and the
+without them a sign-in started on the gallery's own domain fails at the redirect back - and the
 sign-out that returns through `/logout` fails with it. The realm file in `keycloak/realms` is a
 reference for a fresh import; a deploy does not re-import it into a Keycloak that already holds the
 realm.
@@ -40,11 +33,6 @@ realm file in `keycloak/realms` carries a field Keycloak's client representation
 the container exits before it serves anything - the fix is the field, not the service. *Keycloak
 realm files* in the repository README says where each setting belongs and which test now catches it
 before a deploy does.
-
-`GET /api/auth/providers` reports the realm's enabled providers by alias. The sign-in page asks it
-before it offers the Google button, so a deployment without the provider shows no button that would
-lead to a Keycloak error page (the page keeps the button when the API cannot answer, because the
-provider lives in Keycloak, not in the API).
 
 The frontend also needs `VITE_GOOGLE_MAPS_API_KEY` (also `sync: false`): a browser key for the Maps
 Embed API and the Geocoding API, restricted by HTTP referrer to

@@ -22,10 +22,9 @@
   color: var(--theme-primary);
 }
 
-.welcome-hero {
-  border-bottom: 1px solid var(--theme-hairline);
-}
-
+// The hero deliberately draws no rule of its own: the story below it already opens with a
+// full-width one, and the hero is narrower (`max-width: 52rem`), so a border here showed as a
+// short line sitting just above a long one - two separators where the page needs one.
 .welcome-grid article {
   border-radius: var(--theme-radius-lg);
   border: 1px solid var(--theme-hairline);

@@ -15,6 +15,8 @@ const mockedLocation = getStoreLocation as jest.Mock;
  * the store location rather than from a string in the code.
  */
 describe("useLocationCity", () => {
+  afterEach(() => window.localStorage.removeItem("galerie-city"));
+
   it("names the city in the landing page heading and title", async () => {
     mockedLocation.mockResolvedValue({
       id: "1",
@@ -37,5 +39,24 @@ describe("useLocationCity", () => {
 
     expect(await screen.findByRole("heading", { level: 1 })).not.toHaveTextContent("undefined");
     expect(document.title).not.toContain("undefined");
+  });
+
+  it("starts from the city of the last visit, so the heading never shrinks and grows again", () => {
+    // The document's first screen already names the city. Without the remembered answer the
+    // application would take over with a shorter heading, grow it back when the store location
+    // answered, and the largest-contentful-paint would follow that second growth.
+    window.localStorage.setItem("galerie-city", "Waasmunster");
+    mockedLocation.mockResolvedValue({
+      id: "1",
+      address: "Groenselstraat 48 , Waasmunster",
+      openingHours: "",
+      latitude: 51.1,
+      longitude: 4.08,
+    });
+
+    renderPage(<WelcomePage />);
+
+    // Read straight after rendering, before the location request has had a chance to resolve.
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Waasmunster");
   });
 });

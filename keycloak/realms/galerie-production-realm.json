@@ -18,11 +18,13 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "implicitFlowEnabled": false,
-      "rootUrl": "https://galerie-frontend.onrender.com",
+      "rootUrl": "https://galeriederuiter.cloud-ip.cc",
       "redirectUris": [
+        "https://galeriederuiter.cloud-ip.cc/*",
         "https://galerie-frontend.onrender.com/*"
       ],
       "webOrigins": [
+        "https://galeriederuiter.cloud-ip.cc",
         "https://galerie-frontend.onrender.com"
       ],
       "attributes": {

@@ -214,6 +214,7 @@ one):
 | `Strict-Transport-Security` | `max-age=31536000` |
 | `X-Frame-Options` | `SAMEORIGIN` |
 | `Cross-Origin-Opener-Policy` | `same-origin` |
+| `Cross-Origin-Embedder-Policy` | `credentialless` |
 | `Cross-Origin-Resource-Policy` | `same-origin` |
 | `X-Content-Type-Options` | `nosniff` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
@@ -222,6 +223,7 @@ one):
 | `X-XSS-Protection` | `0` |
 | `X-DNS-Prefetch-Control` | `off` |
 | `Origin-Agent-Cluster` | `?1` |
+| `Clear-Site-Data` (path `/logout`) | `"cache", "cookies", "storage"` |
 
 `script-src 'self'` — no `'unsafe-inline'`, no `'unsafe-eval'` — is what makes the policy worth
 having: the app ships no inline script and no `eval`. The scripts that live outside the bundle are
@@ -249,12 +251,20 @@ frame-ancestors 'none'"* and a returning signed-in visitor looked signed out. `'
 foreign page framing the gallery, which is the clickjacking risk, and `src/securityHeaders.test.ts`
 pins both values so the tighter-looking setting cannot come back.
 
-Two headers from the audit are deliberately absent. `Cross-Origin-Embedder-Policy` would require
-every cross-origin subresource to opt in, and the map frame and the sign-in frames grant nothing, so
-it would break them; `Cross-Origin-Resource-Policy: same-origin` already stops other sites embedding
-the gallery. `Clear-Site-Data` belongs on a logout *response*, and this site has no server-side
-logout: signing out ends the Keycloak session and the app clears its own caches in
-`AuthContext.logout`.
+`Cross-Origin-Embedder-Policy: credentialless` is the value for a page that embeds third-party
+content, which this one does. `require-corp` would refuse to load any cross-origin resource that
+does not grant permission through `Cross-Origin-Resource-Policy`, and neither Google's map frame nor
+Keycloak's silent sign-in page sends that header, so it would break both. `credentialless` instead
+sends cross-origin *no-cors* requests without credentials, which suits the gallery: the images it
+loads from its own API are public reads that need no cookie, and the frames keep their own browsing
+context, cookies included, so the silent sign-in check still works.
+
+`Clear-Site-Data` is on one path, not on the site: `/logout`. Signing out ends the Keycloak session,
+and `AuthContext.logout` sends the browser back through `/logout`, so that one response tells the
+browser to drop everything it holds for the gallery's origin — `"cache"`, `"cookies"` and
+`"storage"`, which is the chosen language, the remembered city, the cached responses and the chat
+session. Sent on every response it would clear the visitor's language on any page load, which is why
+the header belongs on a logout response and not in the site-wide set.
 
 **The API and Keycloak origins come from the environment**, so the policy always matches the
 bundle: the image sets `CSP_API_ORIGIN` and `CSP_KEYCLOAK_ORIGIN` from the same build arguments

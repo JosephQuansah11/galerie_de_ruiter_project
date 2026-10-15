@@ -13,7 +13,12 @@ import { join } from "node:path";
  * gallery the moment it is switched on.
  */
 const appRoot = join(__dirname, "..");
+// The headers themselves live in `security-headers.conf`, which nginx.conf includes twice - for
+// every response, and for the sign-out response - so the headers are read from there and
+// nginx.conf is read for the locations that use them.
+const securityHeaders = readFileSync(join(appRoot, "security-headers.conf"), "utf8");
 const nginx = readFileSync(join(appRoot, "nginx.conf"), "utf8");
+const dockerfile = readFileSync(join(appRoot, "Dockerfile"), "utf8");
 const blueprint = readFileSync(join(join(appRoot, ".."), "render.yaml"), "utf8");
 
 /** What the container deployment substitutes into the policy at build time (see the Dockerfile). */
@@ -25,21 +30,29 @@ const substituted = {
 const expand = (value: string) =>
   Object.entries(substituted).reduce((text, [token, origin]) => text.split(token).join(origin), value);
 
-/** `add_header Name "value" always;` from nginx.conf, keyed by lower-case name. */
+/** `add_header Name "value" always;` from security-headers.conf, keyed by lower-case name. */
 function fromNginx(): Record<string, string> {
   const headers: Record<string, string> = {};
-  for (const [, name, value] of nginx.matchAll(/add_header\s+([A-Za-z-]+)\s+"([^"]+)"\s+always;/g)) {
+  for (const [, name, value] of securityHeaders.matchAll(/add_header\s+([A-Za-z-]+)\s+"([^"]+)"\s+always;/g)) {
     headers[name.toLowerCase()] = expand(value);
   }
   return headers;
 }
 
-/** The `headers:` list of the frontend service in render.yaml, keyed by lower-case name. */
-function fromBlueprint(): Record<string, string> {
+/**
+ * The `headers` entries of the frontend service in render.yaml for one path, keyed by lower-case
+ * name. The path is part of the question: the cache header and Clear-Site-Data are scoped to a
+ * path rather than to the whole site.
+ */
+function fromBlueprint(path = "/*"): Record<string, string> {
   const headers: Record<string, string> = {};
   const block = blueprint.slice(blueprint.indexOf("\n    headers:"));
-  const entries = block.matchAll(/\n\s{6}- path:.*\r?\n\s{8}name:\s*(.+?)\r?\n\s{8}value:\s*"?([^"\r\n]+)"?/g);
-  for (const [, name, value] of entries) headers[name.trim().toLowerCase()] = value.trim();
+  for (const entry of block.split(/\r?\n\s{6}- path:/).slice(1)) {
+    if (entry.slice(0, entry.indexOf("\n")).trim() !== path) continue;
+    const name = /(?:^|\n)\s{8}name:\s*([^\r\n]+)/.exec(entry)?.[1]?.trim();
+    const raw = /(?:^|\n)\s{8}value:\s*([^\r\n]+)/.exec(entry)?.[1]?.trim() ?? "";
+    if (name) headers[name.toLowerCase()] = raw.replace(/^["']|["']$/g, "");
+  }
   return headers;
 }
 
@@ -69,10 +82,36 @@ describe("security headers", () => {
     expect(Object.keys(blueprintHeaders).filter((name) => !notShared.includes(name)).sort()).toEqual(expected);
   });
 
+  it("embeds third-party frames without granting them credentials", () => {
+    // `require-corp` would refuse to load Google's map frame and Keycloak's silent sign-in page,
+    // because neither grants permission through Cross-Origin-Resource-Policy. `credentialless` is
+    // the value for a page that embeds third-party content: the cross-origin no-cors requests go
+    // out without credentials, and the gallery's own images from the API are public reads that need
+    // none. The frames keep their own browsing context, cookies included, so the silent sign-in
+    // check still works.
+    expect(fromNginx()["cross-origin-embedder-policy"]).toBe("credentialless");
+    expect(fromBlueprint()["cross-origin-embedder-policy"]).toBe("credentialless");
+  });
+
+  it("clears the browser's data on the sign-out response, and nowhere else", () => {
+    // Clear-Site-Data belongs on the response that ends a session; sent site-wide it would drop the
+    // visitor's language on any page load.
+    expect(fromBlueprint("/logout")["clear-site-data"]).toBe('"cache", "cookies", "storage"');
+    expect(fromBlueprint()["clear-site-data"]).toBeUndefined();
+    // The container deployment serves the same path from nginx, and a location-level add_header
+    // drops the inherited ones, so it includes them again there.
+    expect(nginx).toContain("location = /logout {");
+    expect(nginx).toContain(`add_header Clear-Site-Data '"cache", "cookies", "storage"' always;`);
+    // ...and the file it includes twice has to be in the image, or the container starts without any
+    // of these headers at all.
+    expect(nginx.match(/include \/etc\/nginx\/security-headers\.conf;/g) ?? []).toHaveLength(2);
+    expect(dockerfile).toContain("COPY security-headers.conf /etc/nginx/security-headers.conf");
+  });
+
   it("keeps the gallery type in the browser's cache on both deployments", () => {
     // Render's default for a file it does not fingerprint is max-age=0, which revalidates both
     // preloaded faces on every visit.
-    expect(fromBlueprint()["cache-control"]).toContain("max-age=31536000");
+    expect(fromBlueprint("/fonts/*")["cache-control"]).toContain("max-age=31536000");
     expect(nginx).toContain("expires max;");
   });
 

@@ -43,12 +43,15 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     login: (from?: string) => keycloak.login({ redirectUri: returnTo(from) }),
     loginWithGoogle: (from?: string) =>
       keycloak.login({ idpHint: GOOGLE_IDENTITY_PROVIDER, redirectUri: returnTo(from) }),
-    // Signing out ends the concierge conversation and drops the cached public data, so the
-    // next person to use the browser starts from a clean slate.
+    // Signing out ends the concierge conversation and drops the cached public data, so the next
+    // person to use the browser starts from a clean slate. Keycloak then returns the browser to
+    // /logout, the one response that carries Clear-Site-Data (see nginx.conf and the blueprint):
+    // that is what clears the parts this app cannot reach - the HTTP cache, the cookies and the
+    // storage it does not own.
     logout: () => {
       clearChatSession();
       clearCache();
-      return keycloak.logout();
+      return keycloak.logout({ redirectUri: returnTo("/logout") });
     },
     register, updateProfile,
   }), [authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles]);

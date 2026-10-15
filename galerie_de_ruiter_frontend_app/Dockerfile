@@ -39,6 +39,9 @@ ENV CSP_API_ORIGIN=$VITE_JAVA_API_URL \
 # The server config is a template: the nginx image substitutes the environment variables above
 # into it at start-up.
 COPY nginx.conf /etc/nginx/templates/default.conf.template
+# The security headers are included by that config (server level and the sign-out location), so the
+# file has to be in the image; nginx resolves an include path against its own prefix.
+COPY security-headers.conf /etc/nginx/security-headers.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

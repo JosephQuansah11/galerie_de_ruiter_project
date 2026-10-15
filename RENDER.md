@@ -42,13 +42,15 @@ takes effect when the Blueprint is synced in the Render dashboard
 same values can be entered by hand under *Headers* for the service.
 
 `galerie_de_ruiter_frontend_app/nginx.conf` sends the same set for the
-container deployment, and
+container deployment - the headers themselves live in
+`galerie_de_ruiter_frontend_app/security-headers.conf`, which that config includes
+twice, because the sign-out response needs them too and a location-level
+`add_header` drops the inherited ones - and
 `galerie_de_ruiter_frontend_app/src/securityHeaders.test.ts` fails when the two
 lists drift apart. See *Security headers* in the frontend README for what each
-header is for, and for the two the audit asks for that are deliberately absent
-(`Cross-Origin-Embedder-Policy` would break the map and sign-in frames;
-`Clear-Site-Data` belongs on a logout response, and this site has no
-server-side logout).
+header is for, and for why `Cross-Origin-Embedder-Policy` is `credentialless`
+(`require-corp` would block the map and the silent sign-in frame) and why
+`Clear-Site-Data` sits on `/logout` rather than on the whole site.
 
 ## Secrets and first-time setup
 

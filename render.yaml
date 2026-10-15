@@ -226,6 +226,9 @@ services:
         name: Strict-Transport-Security
         value: max-age=31536000
       - path: /*
+        name: Cross-Origin-Embedder-Policy
+        value: credentialless
+      - path: /*
         name: X-Frame-Options
         value: SAMEORIGIN
       - path: /*
@@ -258,3 +261,11 @@ services:
       - path: /fonts/*
         name: Cache-Control
         value: public, max-age=31536000, immutable
+      # Signing out ends the Keycloak session, and Keycloak then returns the browser to /logout (see
+      # the redirectUri in AuthContext.logout). That one response tells the browser to drop what it
+      # holds for the gallery's origin - cookies, storage (the chosen language, the remembered city,
+      # the cached responses, the chat session) and the HTTP cache - which is the part the app
+      # cannot clear itself. This is why the header is on a path rather than on the whole site.
+      - path: /logout
+        name: Clear-Site-Data
+        value: '"cache", "cookies", "storage"'

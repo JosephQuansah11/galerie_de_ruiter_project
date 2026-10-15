@@ -1,0 +1,83 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import i18n from "@/i18n";
+
+/**
+ * What the document says about the gallery before the bundle has run.
+ *
+ * The application draws every page from JavaScript, so a crawler that reads the document and stops
+ * - and a visitor whose browser cannot run it - has only what `index.html` carries. An audit read
+ * exactly that and reported four things about the landing page: 43 words, no structured data, two
+ * top-level headings, and a description that did not name the gallery's trade or its town. The
+ * tests below are those four findings, so that a rewrite of the document has to keep answering
+ * them.
+ *
+ * They read the template rather than a build, so they run in a second and fail before a deploy.
+ * The one thing they cannot see is what the minifier makes of it: `npm run build` writes
+ * `dist/index.html`, and the JSON-LD block is the thing to look at there, because a data block
+ * that comes out as JavaScript is a data block a search engine cannot read.
+ */
+const appRoot = join(__dirname, "..");
+const indexHtml = readFileSync(join(appRoot, "index.html"), "utf8");
+/** The origin the build fills the template in with, from the one module that decides it. */
+const origin = /PRODUCTION_ORIGIN\s*=\s*"([^"]+)"/.exec(readFileSync(join(appRoot, "site.config.mjs"), "utf8"))![1];
+const document = new DOMParser().parseFromString(indexHtml, "text/html");
+/** The document is written in the gallery's own language, the one it can know before it is read. */
+const gallery = i18n.getFixedT("nl-BE");
+const content = (selector: string) => document.querySelector(selector)?.getAttribute("content") ?? undefined;
+
+describe("the document, read without the bundle", () => {
+  it("describes the gallery the way the landing page will", () => {
+    const description = content('meta[name="description"]');
+    // The same sentence the page sets at runtime: a visitor must not watch it change, and a search
+    // engine must not have to choose between two descriptions of one page.
+    expect(description).toBe(gallery("metaHomeDescription"));
+    expect(content('meta[property="og:description"]')).toBe(description);
+    // A result shows about 160 characters of it; anything past that is written and never read.
+    expect(description!.length).toBeLessThanOrEqual(160);
+  });
+
+  it("has one top-level heading", () => {
+    // The first screen carries it. The <noscript> block used to carry a second one, which is the
+    // page with two top-level headings that the audit reported.
+    expect(document.querySelectorAll("h1")).toHaveLength(1);
+    expect(document.querySelector("noscript h1")).toBeNull();
+  });
+
+  it("carries structured data a search engine can read", () => {
+    const block = document.querySelector('script[type="application/ld+json"]');
+    expect(block).not.toBeNull();
+    // The template writes the origin in at build time, so the placeholder stands in for it here -
+    // and parsing it is also what proves the block is JSON rather than something that merely looks
+    // like it.
+    const json = JSON.parse(block!.textContent!.replaceAll("<%= htmlWebpackPlugin.options.siteUrl %>", origin)) as Record<string, unknown>;
+    type Node = Record<string, unknown>;
+    const nodes = json["@graph"] as Node[];
+    expect(json["@context"]).toBe("https://schema.org");
+
+    const galleryNode = nodes.find((node) => node["@type"] === "ArtGallery")!;
+    const address = galleryNode.address as Node;
+    expect(galleryNode.name).toBe("Galerie de Ruiter");
+    expect(address.addressLocality).toBe("Waasmunster");
+    expect(address.addressCountry).toBe("BE");
+    expect(String(galleryNode.url)).toMatch(new RegExp(`^${origin}/`));
+    // The street address and the opening hours are records the gallery edits, shown on /map and
+    // /about, so the document must not carry a copy: the copy is what goes stale.
+    expect(galleryNode.streetAddress).toBeUndefined();
+    expect(galleryNode.openingHoursSpecification).toBeUndefined();
+
+    const siteNode = nodes.find((node) => node["@type"] === "WebSite")!;
+    expect(siteNode.inLanguage).toBe("nl-BE");
+    expect(String(siteNode.url)).toBe(`${origin}/`);
+    // The two nodes name each other, which is how a search engine reads the site as the gallery's.
+    expect((siteNode.publisher as Node)["@id"]).toBe(galleryNode["@id"]);
+  });
+
+  it("says enough about the gallery to be worth reading", () => {
+    const words = (document.getElementById("root")?.textContent ?? "").trim().split(/\s+/).filter(Boolean);
+    // The audit's threshold, and a floor rather than a target: a page of forty words gives a search
+    // engine nothing to work out what it is about. The copy is the gallery's own account of itself,
+    // in its own language, for the crawler and the visitor that cannot run the bundle.
+    expect(words.length).toBeGreaterThanOrEqual(300);
+  });
+});

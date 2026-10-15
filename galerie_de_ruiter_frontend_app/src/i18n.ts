@@ -1074,7 +1074,7 @@ const cataloguePagingLabels: Record<string, Record<string, string>> = {
 const pageMetaLabels: Record<string, Record<string, string>> = {
   en: {
     metaHomeTitle: "Galerie de Ruiter – antiques, art and vintage design",
-    metaHomeDescription: "Galerie de Ruiter shows antiques and art with a past life. Browse the collection, read the story behind each piece and talk to the gallery.",
+    metaHomeDescription: "Discover unique antiques, art and vintage design at Galerie de Ruiter in Waasmunster. Browse our collection and let our experts advise you.",
     metaChatTitle: "Chat with Galerie de Ruiter",
     metaAboutTitle: "About Galerie de Ruiter – antiques, art and vintage design",
     metaAboutDescription: "The story of Galerie de Ruiter: a pop-up gallery for antiques, art and design, and where to find it.",
@@ -1091,7 +1091,7 @@ const pageMetaLabels: Record<string, Record<string, string>> = {
   },
   fr: {
     metaHomeTitle: "Galerie de Ruiter – antiquités, art et design vintage",
-    metaHomeDescription: "La Galerie de Ruiter présente des antiquités et des œuvres d'art qui ont déjà vécu. Parcourez la collection, découvrez l'histoire de chaque pièce et parlez à la galerie.",
+    metaHomeDescription: "Découvrez des antiquités, de l'art et du design vintage uniques à la Galerie de Ruiter à Waasmunster. Parcourez notre collection et laissez nos experts vous conseiller.",
     metaChatTitle: "Discuter avec la Galerie de Ruiter",
     metaAboutTitle: "À propos de la Galerie de Ruiter – antiquités, art et design vintage",
     metaAboutDescription: "L'histoire de la Galerie de Ruiter : une galerie éphémère d'antiquités, d'art et de design, et où la trouver.",
@@ -1108,7 +1108,7 @@ const pageMetaLabels: Record<string, Record<string, string>> = {
   },
   "nl-NL": {
     metaHomeTitle: "Galerie de Ruiter – antiek, kunst en vintage design",
-    metaHomeDescription: "Galerie de Ruiter toont antiek en kunst met een verleden. Bekijk de collectie, lees het verhaal achter elk stuk en praat met de galerie.",
+    metaHomeDescription: "Ontdek unieke antiek, kunst en vintage design bij Galerie de Ruiter in Waasmunster. Bekijk onze collectie en laat u adviseren door onze experts.",
     metaChatTitle: "Chat met Galerie de Ruiter",
     metaChatDescription: "Stel Galerie de Ruiter je vragen over de collectie of over een bepaald stuk, en vraag een bezoek of een online afspraak aan.",
     metaLoginTitle: "Aanmelden — Galerie de Ruiter",
@@ -1125,7 +1125,7 @@ const pageMetaLabels: Record<string, Record<string, string>> = {
   },
   "nl-BE": {
     metaHomeTitle: "Galerie de Ruiter – antiek, kunst en vintage design",
-    metaHomeDescription: "Galerie de Ruiter toont antiek en kunst met een verleden. Bekijk de collectie, lees het verhaal achter elk stuk en praat met de galerie.",
+    metaHomeDescription: "Ontdek unieke antiek, kunst en vintage design bij Galerie de Ruiter in Waasmunster. Bekijk onze collectie en laat u adviseren door onze experts.",
     metaChatTitle: "Chat met Galerie de Ruiter",
     metaChatDescription: "Stel Galerie de Ruiter je vragen over de collectie of over een bepaald stuk, en vraag een bezoek of een online afspraak aan.",
     metaLoginTitle: "Aanmelden — Galerie de Ruiter",
@@ -1142,7 +1142,7 @@ const pageMetaLabels: Record<string, Record<string, string>> = {
   },
   de: {
     metaHomeTitle: "Galerie de Ruiter – Antiquitäten, Kunst und Vintage-Design",
-    metaHomeDescription: "Die Galerie de Ruiter zeigt Antiquitäten und Kunst mit Vergangenheit. Durchstöbern Sie die Sammlung, lesen Sie die Geschichte hinter jedem Stück und sprechen Sie mit der Galerie.",
+    metaHomeDescription: "Entdecken Sie einzigartige Antiquitäten, Kunst und Vintage-Design bei der Galerie de Ruiter in Waasmunster. Sehen Sie sich unsere Sammlung an und lassen Sie sich von unseren Experten beraten.",
     metaChatTitle: "Mit der Galerie de Ruiter chatten",
     metaAboutTitle: "Über die Galerie de Ruiter – Antiquitäten, Kunst und Vintage-Design",
     metaAboutDescription: "Die Geschichte der Galerie de Ruiter: eine Pop-up-Galerie für Antiquitäten, Kunst und Design, und wo Sie sie finden.",

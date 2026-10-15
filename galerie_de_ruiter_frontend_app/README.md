@@ -41,8 +41,18 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 
 ## Search engines
 
-The app is one HTML page, so what a crawler can reach is decided in three places:
+The app is one HTML page, so what a crawler can reach is decided in five places:
 
+- **`index.html`** — the document a crawler that runs nothing is served. It carries the
+  description, the structured data (an `ArtGallery` and a `WebSite` node in one
+  `application/ld+json` block), the landing page's own copy inside `#root`, and one `<h1>`.
+  The copy is not written for a search engine: it is the gallery's account of itself, in the
+  gallery's language, for the crawler and for the visitor whose browser cannot run the bundle, and
+  React replaces it on the first render (see `src/FirstScreen.test.tsx`). The street address and
+  the opening hours are deliberately absent from the copy *and* from the structured data: they are
+  records the gallery edits and they are shown on `/map` and `/about`, so a copy in the document
+  would be the copy that goes stale. `src/staticDocument.test.ts` pins all of it, including that
+  the description is the one the landing page sets at runtime (`metaHomeDescription`).
 - **`src/hooks/usePageMeta.ts`** — every page sets its own `<title>`, `<meta name="description">`,
   `<link rel="canonical">` and Open Graph tags. Pages call it with their own translated copy;
   the strings live in `pageMetaLabels` in `src/i18n.ts`. The canonical URL is built from the
@@ -57,7 +67,12 @@ The app is one HTML page, so what a crawler can reach is decided in three places
   submissions used, so it keeps answering) plus the absolute `Sitemap:` and `Agentmap:` lines in
   `dist/robots.txt`.
   It lists the pages
-  a visitor reaches without an account: `/dashboard`, `/about`, `/map` and `/dashboard/chat`.
+  a visitor reaches without an account: `/home`, `/about`, `/map` and `/chat`.
+- **the routes, on both deployments** — `render.yaml` names the application's routes one by one and
+  `nginx.conf` names them in one regular expression, so a path the router does not draw is a 404
+  rather than the landing page with a 200. `public/404.html` (with `public/404.css`) is the page a
+  visitor gets, and `src/spaRoutes.test.ts` reads the router and both files, so a route that no rule
+  covers fails a test instead of 404ing for a visitor who follows a deep link.
 
 **What a visitor may do.** The landing page, the gallery story, the pop-up's address and the
 concierge chat are readable without an account, and they are the pages a crawler may index.

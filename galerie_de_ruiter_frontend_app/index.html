@@ -10,10 +10,12 @@
 
     <!-- The gallery's own language is Belgian Dutch; LanguageContext swaps this to the
          visitor's choice once the bundle has run, so a crawler that does not run it still
-         reads the right language. -->
+         reads the right language. `src/staticDocument.test.ts` fails if this drifts from the
+         description the landing page sets at runtime (metaHomeDescription in src/i18n.ts),
+         because the visitor would then watch the description change under them. -->
     <meta
         name="description"
-        content="Galerie de Ruiter toont antiek en kunst met een verleden. Bekijk de collectie en praat met de galerie."
+        content="Ontdek unieke antiek, kunst en vintage design bij Galerie de Ruiter in Waasmunster. Bekijk onze collectie en laat u adviseren door onze experts."
     />
     <meta name="theme-color" content="#841a23" />
 
@@ -22,9 +24,45 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Galerie de Ruiter" />
     <meta property="og:title" content="Galerie de Ruiter — antiek en kunst" />
-    <meta property="og:description" content="Galerie de Ruiter toont antiek en kunst met een verleden. Bekijk de collectie en praat met de galerie." />
+    <meta property="og:description" content="Ontdek unieke antiek, kunst en vintage design bij Galerie de Ruiter in Waasmunster. Bekijk onze collectie en laat u adviseren door onze experts." />
     <meta property="og:url" content="<%= htmlWebpackPlugin.options.siteUrl %>/" />
     <meta property="og:image" content="<%= htmlWebpackPlugin.options.siteUrl %>/logo512.png" />
+
+    <!-- What the gallery is, in the shape a search engine reads without running the bundle: an
+         ArtGallery (schema.org) for the gallery itself, and a WebSite for the domain. The street
+         address and the opening hours are deliberately absent: they are records the gallery edits
+         and they are shown on /map and /about, so a copy here would be the copy that goes stale.
+         The city and the country are what does not move. The two nodes reference each other by
+         `@id`, which is how a search engine knows the site belongs to the gallery. -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "ArtGallery",
+                    "@id": "<%= htmlWebpackPlugin.options.siteUrl %>/#galerie",
+                    "name": "Galerie de Ruiter",
+                    "description": "Pop-upgalerie voor antiek, kunst en vintage design in Waasmunster, België.",
+                    "url": "<%= htmlWebpackPlugin.options.siteUrl %>/home",
+                    "logo": "<%= htmlWebpackPlugin.options.siteUrl %>/logo512.png",
+                    "image": "<%= htmlWebpackPlugin.options.siteUrl %>/logo512.png",
+                    "address": {
+                        "@type": "PostalAddress",
+                        "addressLocality": "Waasmunster",
+                        "addressCountry": "BE"
+                    }
+                },
+                {
+                    "@type": "WebSite",
+                    "@id": "<%= htmlWebpackPlugin.options.siteUrl %>/#website",
+                    "url": "<%= htmlWebpackPlugin.options.siteUrl %>/",
+                    "name": "Galerie de Ruiter",
+                    "inLanguage": "nl-BE",
+                    "publisher": { "@id": "<%= htmlWebpackPlugin.options.siteUrl %>/#galerie" }
+                }
+            ]
+        }
+    </script>
 
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/logo192.png" />
@@ -104,6 +142,41 @@
                             <a class="btn btn-outline-dark" href="/chat">Praat met de galerie</a>
                         </div>
                     </div>
+                    <!-- The gallery's own account of itself, in the gallery's own language: what a
+                         crawler that runs nothing is served, and what a visitor without
+                         JavaScript sees. React replaces the whole of #root on its first render,
+                         so a visitor with the bundle gets the application's landing page and
+                         never this - the copy is here because the document, not the bundle, is
+                         what a crawler is handed. The address, the opening hours and the
+                         collection are records the gallery edits, so they are pointed at rather
+                         than copied here, where they would be the copies that go stale. The
+                         classes are the application's own, so a visitor without scripting sees
+                         the gallery's page rather than an unstyled one. -->
+                    <section class="welcome-story" aria-labelledby="welcome-story-title">
+                        <span class="catalogue-artist">ONS VERHAAL</span>
+                        <h2 id="welcome-story-title">Een plek voor objecten met een verhaal.</h2>
+                        <div class="welcome-story-copy">
+                            <p>Galerie De Ruiter is een pop-upstore in Waasmunster: een tijdelijke plek waar de collectie samenkomt. Antiek, kunst, vintage design en objecten met een verleden, zorgvuldig verzameld voor hun volgende hoofdstuk.</p>
+                            <p>Wat begon als een hobby en een zoektocht naar mooie items is uitgegroeid tot een eclectische mix. Het motto van Dirk is &ldquo;Entrez sans frapper&rdquo;: binnenkomen zonder te kloppen, rustig rondkijken en op zoek gaan naar het voorwerp van je dromen.</p>
+                            <p>Na bijna dertig jaar met die passie bezig te zijn, heeft Dirk een uitgebreide kennis opgebouwd van alles wat hij verkoopt. Elk stuk is geselecteerd om zijn materiële kwaliteit, karakter en het gesprek dat het op gang brengt, en met plezier vertelt hij er meer over.</p>
+                            <p>Bezoek de huidige locatie, stel je vragen en vind het juiste stuk voor je huis. Waar de galerie is en wanneer ze open is, staat op de <a href="/map">locatiepagina</a>; het verhaal achter de galerie staat op de pagina <a href="/about">over de galerie</a>.</p>
+                            <p>De collectie zelf bekijk je met een account: <a href="/antiques">de catalogus</a> toont foto&rsquo;s, prijzen en het verhaal achter elk object. Vragen over een bepaald stuk? De <a href="/chat">galeriechat</a> staat voor iedereen open, en daar vraag je ook een bezoek of een afspraak aan.</p>
+                            <p>De galerie verkoopt niet online en rekent op deze site niet af. Een aankoop regel je door contact op te nemen met de galerie, en de chat is daarvoor de kortste weg.</p>
+                        </div>
+                    </section>
+                    <div class="welcome-grid">
+                        <article>
+                            <span class="catalogue-artist">ONZE FILOSOFIE</span>
+                            <h2>Nieuwsgierigheid, zorgvuldig uitgekozen.</h2>
+                            <p>Een eclectisch interieur brengt verjonging en een andere kijk. Een goed object kan je laten wegdromen.</p>
+                        </article>
+                        <article>
+                            <span class="catalogue-artist">POP-UP WINKEL</span>
+                            <h2>Ontmoet de collectie in persoon.</h2>
+                            <p>Leven met kunst en design is een manier om jezelf te personaliseren en te verrijken.</p>
+                            <a class="btn btn-link" href="/map">Bekijk locatie</a>
+                        </article>
+                    </div>
                 </section>
             </main>
         </div>
@@ -114,7 +187,10 @@
          own description of itself, not copy written for a search engine. -->
     <noscript>
         <div class="noscript-page">
-            <h1>Galerie de Ruiter</h1>
+            <!-- A paragraph rather than a heading: the document already has its one <h1> above,
+                 in the first screen, and a second one here is a page with two top-level
+                 headings - which is what the heading-order audit reports. -->
+            <p class="noscript-lead">Galerie de Ruiter</p>
             <p>
                 Galerie de Ruiter toont antiek en kunst met een verleden. De collectie en de
                 galeriechat worden door de applicatie getoond; zet JavaScript aan om ze te bekijken.

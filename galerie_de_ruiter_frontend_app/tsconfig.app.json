@@ -17,6 +17,8 @@
     "jsx": "react-jsx",
 
     "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,

@@ -26,6 +26,7 @@ const ardFile = read("public", ".well-known", "ard.json");
 const robots = read("public", "robots.txt");
 const document = read("index.html");
 const webpack = read("webpack.config.js");
+const sitemapScript = read("scripts", "generate-sitemap.mjs");
 // The origin the site is built for, from the one module that decides it (see site.config.mjs).
 const origin = /PRODUCTION_ORIGIN\s*=\s*"([^"]+)"/.exec(read("site.config.mjs"))![1];
 const host = new URL(origin).host;
@@ -109,8 +110,17 @@ describe("the agent catalog", () => {
 });
 
 describe("advertising the catalog", () => {
-  it("names it in robots.txt, with a path that resolves against any origin", () => {
-    expect(robots).toContain("Agentmap: /.well-known/ai-catalog.json");
+  it("names it in robots.txt, at the path a consumer is required to consult", () => {
+    // `Agentmap:` is how Agentic Resource Discovery advertises a manifest from robots.txt, and its
+    // value is an absolute URL - the form `Sitemap:` takes as well, and the reason neither line is
+    // written in public/robots.txt: the origin is only known at build time, when the script below
+    // appends them. The line names /.well-known/ard.json, the path a conforming consumer must
+    // fetch; /.well-known/ai-catalog.json is the predecessor path it may check but need not.
+    expect(robots).not.toMatch(/^(Agentmap|Sitemap):/im);
+    expect(sitemapScript).toContain("Agentmap: ${siteUrl}/.well-known/ard.json");
+    expect(sitemapScript).toContain("Sitemap: ${siteUrl}/sitemap_index.xml");
+    // A line left in the file by an earlier build is stale, so it is replaced rather than kept.
+    expect(sitemapScript).toMatch(/\/\^\(Sitemap\|Agentmap\):/i);
   });
 
   it("names it in the document, so a crawler does not have to guess the path", () => {

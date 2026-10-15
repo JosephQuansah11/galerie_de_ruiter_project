@@ -3,8 +3,8 @@
 # Everything behind an account is closed to crawlers: those routes answer with the sign-in
 # page, so crawling them only spends the crawl budget. What a visitor reaches without an
 # account - the landing page, the gallery story, the pop-up's address and the concierge chat -
-# is listed in sitemap.xml, whose URL is appended below at build time by
-# scripts/generate-sitemap.mjs.
+# is listed in sitemap.xml, whose URL - and the `Agentmap:` line that points at the catalog - are
+# appended below at build time by scripts/generate-sitemap.mjs.
 #
 # When the collection opens to visitors, drop the /antiques line and add the pieces to the
 # sitemap.
@@ -23,12 +23,11 @@ Allow:/home
 # The sign-in and registration pages stay crawlable on purpose: they carry a noindex tag, and
 # a crawler that is not allowed to fetch them would never see it.
 #
-# The `Sitemap:` line is appended below at build time by scripts/generate-sitemap.mjs, from the
-# site origin in site.config.mjs, so this file stays origin-independent.
+# The `Agentmap:` and `Sitemap:` lines are appended below at build time by
+# scripts/generate-sitemap.mjs, from the site origin in site.config.mjs, so this file stays
+# origin-independent. Both take an absolute URL, which is why neither is written here by hand.
 #
 # `Agentmap` is the Agentic Resource Discovery convention for pointing at the manifest that says
-# what this domain offers agents. It is a relative path on purpose: the manifest sits at
-# /.well-known/ai-catalog.json (and at /.well-known/ard.json, the path the current specification
-# names), and a crawler resolves it against the origin it fetched this file from.
-Agentmap: /.well-known/ai-catalog.json
+# what this domain offers agents. It names /.well-known/ard.json, the path a conforming consumer
+# must fetch; /.well-known/ai-catalog.json is the predecessor path, which it may check but need not.
 

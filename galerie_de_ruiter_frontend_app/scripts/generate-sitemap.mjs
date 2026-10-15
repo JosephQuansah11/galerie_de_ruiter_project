@@ -1,6 +1,6 @@
 /**
  * Writes the two files a search engine looks for into the built site: `sitemap.xml` and the
- * `Sitemap:` line inside `robots.txt`.
+ * `Sitemap:` and `Agentmap:` lines inside `robots.txt`.
  *
  * The site origin comes from `site.config.mjs`, the same module `webpack.config.js` reads for the
  * social preview tags. Its default is the production origin, and SITE_URL overrides it, so the
@@ -75,18 +75,27 @@ for (const name of ["sitemap_index.xml", "sitemap.xml"]) {
   writeFileSync(path.join(distDir, name), sitemap, "utf8");
 }
 
-// The crawler only finds the sitemap through an absolute URL, so the line is added here rather
-// than kept in public/robots.txt, which has to stay origin-independent. A line already in the
-// file is stale - this build knows the origin it was made for - so it is replaced, not kept.
+// A crawler only finds either of these through an absolute URL, so the lines are added here rather
+// than kept in public/robots.txt, which has to stay origin-independent. A line already in the file
+// is stale - this build knows the origin it was made for - so it is replaced, not kept.
+//
+// `Agentmap:` is how Agentic Resource Discovery advertises the manifest from robots.txt, and its
+// value is an absolute URL, like the `Sitemap:` line under it. It names /.well-known/ard.json,
+// because that is the path a conforming consumer must fetch: /.well-known/ai-catalog.json is the
+// predecessor path the specification superseded, which a consumer may check but need not.
 const robotsTarget = path.join(distDir, "robots.txt");
 const robotsSource = existsSync(robotsTarget) ? robotsTarget : path.join(appRoot, "public", "robots.txt");
 if (existsSync(robotsSource)) {
   const robots = readFileSync(robotsSource, "utf8")
     .split(/\r?\n/)
-    .filter((line) => !/^Sitemap:/i.test(line))
+    .filter((line) => !/^(Sitemap|Agentmap):/i.test(line))
     .join("\n")
     .trimEnd();
-  writeFileSync(robotsTarget, `${robots}\n\nSitemap: ${siteUrl}/sitemap_index.xml\n`, "utf8");
+  writeFileSync(
+    robotsTarget,
+    `${robots}\n\nAgentmap: ${siteUrl}/.well-known/ard.json\nSitemap: ${siteUrl}/sitemap_index.xml\n`,
+    "utf8",
+  );
 } else {
   console.warn("generate-sitemap: no robots.txt to add the Sitemap line to");
 }

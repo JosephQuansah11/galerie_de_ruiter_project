@@ -2,8 +2,9 @@
  * The site's public origin, in one place.
  *
  * Two build steps need it: `webpack.config.js` writes the absolute `og:url`/`og:image` of the
- * preview tags, and `scripts/generate-sitemap.mjs` writes `sitemap.xml` plus the `Sitemap:` line
- * in `robots.txt`. Both run before the site exists anywhere, so the origin cannot be taken from
+ * preview tags, and `scripts/generate-sitemap.mjs` writes `sitemap.xml` plus the absolute
+ * `Agentmap:` and `Sitemap:` lines in `robots.txt`. Both run before the site exists anywhere, so
+ * the origin cannot be taken from
  * the request; it has to be known at build time.
  *
  * `SITE_URL` (or `VITE_SITE_URL`) overrides it, for a staging deploy or a local build. The

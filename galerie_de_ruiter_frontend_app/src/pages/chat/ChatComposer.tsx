@@ -12,8 +12,10 @@ export function ChatComposer({ draft, sending, disabled, onChange, onSubmit }: {
   onSubmit: (event: FormEvent) => void;
 }) {
   const { t } = useTranslation();
-  return <form className="chat-composer" onSubmit={onSubmit}>
-    <Form.Control value={draft} onChange={(event) => onChange(event.target.value)} placeholder={t(disabled ? "chatConnectingShort" : "writeMessage")} aria-label={t("chatMessage")} maxLength={2000} disabled={disabled} />
+  return <form className="chat-composer" onSubmit={onSubmit}
+    toolname="askGallery"
+    tooldescription="Asks the gallery's own concierge a question and shows its answer in the chat. It knows what the gallery shows, where the pop-up is and when it is open, and can take an appointment request.">
+    <Form.Control value={draft} onChange={(event) => onChange(event.target.value)} placeholder={t(disabled ? "chatConnectingShort" : "writeMessage")} aria-label={t("chatMessage")} maxLength={2000} disabled={disabled} toolparamdescription="The question, in the visitor's own words." />
     <Button className="btn btn-dark" type="submit" disabled={Boolean(disabled) || sending || !draft.trim()} aria-label={t("sendMessage")} text={<Send size={17} />} />
   </form>;
 }

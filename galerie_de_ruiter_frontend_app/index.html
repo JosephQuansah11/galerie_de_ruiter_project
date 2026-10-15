@@ -30,31 +30,66 @@
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" />
 
-    <!-- The gallery type comes from Google Fonts. The preconnects open the two connections
-         while the parser is still reading this file, and the stylesheet is fetched with
-         media="print" so it never holds up the first paint. The bundle flips it to media="all"
-         as soon as it runs — an inline onload handler would need 'unsafe-inline' in the CSP. The
-         noscript copy keeps the type for clients that do not run the app's JavaScript. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        id="gallery-fonts"
-        rel="stylesheet"
-        media="print"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&amp;family=DM+Sans:wght@400;500;600;700&amp;display=swap"
-    />
-    <noscript>
-        <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&amp;family=DM+Sans:wght@400;500;600;700&amp;display=swap"
-        />
-    </noscript>
+    <!-- The gallery type ships with the app (src/styles/_fonts.scss), so the first paint no longer
+         waits on two more origins: the stylesheet used to come from fonts.googleapis.com and the
+         files from fonts.gstatic.com. These two are the faces the first screen needs - the hero
+         heading in Cormorant Garamond 400, the body copy in DM Sans 400 - so they are asked for
+         alongside the stylesheet rather than after the bundle runs. `crossorigin` is required
+         even for a same-origin font, or the browser fetches it a second time. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/cormorant-garamond-400.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/dm-sans-400.woff2" crossorigin />
 
     <title>Galerie de Ruiter — antiek en kunst</title>
 </head>
 
 <body>
-    <div id="root"></div>
+    <!-- The first screen, drawn from the document itself. React replaces it as soon as the bundle
+         runs, so a visitor sees the gallery instead of an empty page while the stylesheet, the
+         bundle and the account check are still in flight. It mirrors the real markup class for
+         class, which is what keeps the swap from moving anything: the logo declares its own
+         276x578 pixels, the copy is the Belgian Dutch the page falls back to, and the two buttons
+         sit in the same two-column grid. Only the icons, the categories and the account menu are
+         left to the bundle.
+
+         The heading carries the pop-up's city, because that is the heading the page settles on
+         once the location record is in: a heading that only grew when the city arrived would
+         report a later largest-contentful-paint for the same text. -->
+    <div id="root">
+        <div class="container container-div">
+            <nav id="Navbar" class="navbar navbar-dark navbar-expanded navbar-expand-xl fixed-top" aria-label="Hoofdnavigatie">
+                <a class="navbar-brand-div navbar-brand" href="/home"><span class="navbar-wordmark">GALERIE DE RUITER</span></a>
+                <button class="navbar-toggler" type="button" aria-controls="main-navigation" aria-expanded="false" aria-label="Hoofdnavigatie"><span class="navbar-toggler-icon"></span></button>
+                <div id="main-navigation" class="navbar-collapse collapse">
+                    <div class="main-navbar-links navbar-nav"><div class="icons-list">
+                        <a class="nav-link nav-item-link" href="/chat"><span class="nav-icon" aria-hidden="true"></span><span>Chat met de galerie</span></a>
+                        <a class="nav-link nav-item-link" href="/about"><span class="nav-icon" aria-hidden="true"></span><span>Over de galerie</span></a>
+                        <a class="nav-link nav-item-link" href="/map"><span class="nav-icon" aria-hidden="true"></span><span>Locatie</span></a>
+                    </div></div>
+                    <div class="icons-list-user-profile">
+                        <a class="nav-link nav-item-link" href="/login"><span class="nav-icon" aria-hidden="true"></span><span>Inloggen</span></a>
+                    </div>
+                </div>
+            </nav>
+            <main class="app-main main-content">
+                <section class="welcome-page">
+                    <div class="welcome-hero">
+                        <figure class="welcome-hero-logo">
+                            <img src="/images/galerie_de_ruiter.png" alt="Galerie de Ruiter" class="welcome-logo" width="276" height="578" />
+                        </figure>
+                        <div class="welcome-hero-copy">
+                            <span class="catalogue-artist">GALERIE DE RUITER</span>
+                            <h1>Galerie de Ruiter – antiek, kunst en vintage design in Waasmunster</h1>
+                            <p>Antiek, kunst, vintage design en objecten met een verhaal, zorgvuldig verzameld voor hun volgende hoofdstuk.</p>
+                        </div>
+                        <div class="welcome-actions">
+                            <a class="btn btn-dark" href="/antiques">Ontdek de collectie</a>
+                            <a class="btn btn-outline-dark" href="/chat">Praat met de galerie</a>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
 
     <!-- Every page is drawn by the bundle, so a client that does not run JavaScript - and the
          first pass of a crawler - would otherwise see an empty document. This is the gallery's

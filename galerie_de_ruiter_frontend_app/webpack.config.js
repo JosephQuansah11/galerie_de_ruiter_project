@@ -58,7 +58,13 @@ export default {
       test: /\.s[ac]ss$/i,
       use: [
         MiniCssExtractPlugin.loader, // or "style-loader" in development
-        "css-loader",
+        {
+          // The gallery type lives in public/fonts, which is copied to the site root as it is, so
+          // a /fonts/ url is left exactly as written and fetched by the browser. Anything else
+          // keeps the default: webpack resolves it and emits the file it points at.
+          loader: "css-loader",
+          options: { url: { filter: (url) => !url.startsWith("/fonts/") } },
+        },
         {
           loader: "sass-loader",
           options: {

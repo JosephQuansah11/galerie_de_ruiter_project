@@ -1,5 +1,6 @@
 // The stylesheet entry point. These imports are the cascade order of the compiled CSS, so the
 // order of the lines matters more than their content: the design layer is deliberately last.
+@import "fonts"; // the gallery type, self-hosted, before anything asks for it
 @import "navigation"; // bootstrap, then the navigation bar's own rules
 @import "antique-pages";
 @import "location";

@@ -24,6 +24,13 @@ export function useAuthInitialization({ setAuthenticated, setLoading, setProfile
      */
     const requestedPath = `${window.location.pathname}${window.location.search}`;
     keycloak.init({ onLoad: "check-sso", pkceMethod: "S256", checkLoginIframe: false,
+      /**
+       * The silent check has to answer inside the page. Without an iframe to ask through,
+       * keycloak-js navigates the top-level document to the identity provider and back, so
+       * every visit loaded the document, the stylesheet and the bundle a second time before
+       * anything could be painted.
+       */
+      silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
       redirectUri: `${window.location.origin}${requestedPath === "/login" ? "/home" : requestedPath}` }).then((isAuthenticated) => {
       setAuthenticated(isAuthenticated); syncToken(keycloak.token);
       if (!isAuthenticated) return;

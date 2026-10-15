@@ -1,0 +1,12 @@
+// The first screen that index.html draws before the bundle runs, and React replaces the moment it
+// mounts (see `#root` in index.html and src/FirstScreen.test.tsx). Its markup mirrors the real
+// components class for class, so the swap does not move anything; this is the one place it cannot:
+// the navigation's icons are SVGs that only the bundle can draw, so the document carries an empty
+// span in their place. `#Navbar .nav-icon` sizes the real ones with `flex: 0 0 1.2rem`, which an
+// empty span only inherits if its link is a flex box, so the placeholder reserves the same room
+// on its own. Without it the four navigation labels would sit about 24px to the left of where the
+// application draws them and shift when it arrives.
+#Navbar .nav-icon:empty {
+  display: inline-block;
+  min-width: 1.2rem;
+}

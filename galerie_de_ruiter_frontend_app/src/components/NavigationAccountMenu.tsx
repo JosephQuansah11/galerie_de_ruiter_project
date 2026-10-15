@@ -9,6 +9,10 @@ export function NavigationAccountMenu({ onNavigate }: { onNavigate: () => void }
   const auth = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  // The account check runs behind the first paint now, so the menu lands in an empty slot once
+  // the answer is in. Drawing the sign-in link here would flash "Sign in" at a visitor who is
+  // already signed in, and the slot is the last item in the bar, so nothing moves around it.
+  if (auth.loading) return <div className="icons-list-user-profile" aria-hidden="true" />;
   // A visitor without an account gets a sign-in link instead of an empty profile menu.
   if (!auth.authenticated) {
     return <div className="icons-list-user-profile">

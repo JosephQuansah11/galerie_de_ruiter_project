@@ -139,6 +139,42 @@ The parts were cut at rule boundaries from the original single files, and their 
 verbatim, so splitting them did not change the compiled CSS: only long `@media` blocks were
 emitted as several consecutive blocks with the same query, which renders identically.
 
+## Speed
+
+The first paint of the landing page is what a mobile visitor waits for, so the pieces that hold it
+back are the ones this repository is careful about. Measured on the deployed site with Lighthouse's
+mobile settings the first contentful paint was 2.8 s and the largest contentful paint 5.6 s, and
+four things were behind that. All four are fixed:
+
+- **The document carries the first screen.** `#root` in `index.html` holds the landing page's
+  navigation and hero, with the logo's 276×578 pixels declared, so the browser can paint the
+  gallery before the bundle has run. React replaces the markup when it mounts, and
+  `src/FirstScreen.test.tsx` holds the copy to the Belgian Dutch the page falls back to, so the
+  swap cannot change the text under the visitor.
+- **The account check no longer gates the paint.** `ProtectedLayout` used to draw a "checking
+  session" screen until Keycloak answered, which put the whole page behind a round trip to the
+  identity provider. It draws the shell immediately now; the routes that need an account wait for
+  the answer themselves, and the account menu fills an empty slot when it arrives.
+- **The silent sign-in check stays inside the page.** `keycloak-js` is given a
+  `silentCheckSsoRedirectUri`, so it asks through a hidden iframe
+  (`public/silent-check-sso.html`, which loads `silent-check-sso.js`) instead of navigating the
+  top-level document to Keycloak and back. That navigation made the browser load the document, the
+  stylesheet and the bundle a second time before anything could be painted. The trade is that a
+  browser which blocks third-party cookies cannot answer through the iframe; a returning
+  signed-in visitor then has to open the sign-in page once, where Keycloak's own session takes
+  them straight through without a password.
+- **The gallery type is self-hosted.** `public/fonts` holds the latin subsets and
+  `src/styles/_fonts.scss` declares them; `index.html` preloads the two faces of the first screen
+  (Cormorant Garamond 400 for the heading, DM Sans 400 for the body copy). The type used to come
+  from `fonts.googleapis.com` and `fonts.gstatic.com`, which cost two extra origins and arrived late
+  enough to swap the text after it had already been painted.
+
+Still open, in order of size: the compiled stylesheet is one ~314 KB file of which Lighthouse finds
+roughly 289 KiB unused, because `_navigation.scss` imports all of Bootstrap and the chrome of every
+screen ships with the landing page. Splitting it per route is the next big lever, but the cascade
+order in `App.scss` is load-bearing, so it needs care. `keycloak-js` also sits in the eager vendor
+chunk (about 30 KB gzipped); a dynamic import would take it off the critical path.
+
 ## Security headers
 
 `nginx.conf` sends these on every response (the container deployment; see below for the static
@@ -146,7 +182,7 @@ one):
 
 | Header | Value |
 |---|---|
-| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: <API>; connect-src 'self' <API> <Keycloak> https://nominatim.openstreetmap.org; frame-src https://www.openstreetmap.org <Keycloak>; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'` |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: blob: <API>; connect-src 'self' <API> <Keycloak> https://nominatim.openstreetmap.org; frame-src 'self' https://www.openstreetmap.org <Keycloak>; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'` |
 | `Content-Security-Policy-Report-Only` | `require-trusted-types-for 'script'; trusted-types default` |
 | `Strict-Transport-Security` | `max-age=31536000` |
 | `X-Frame-Options` | `DENY` |
@@ -155,9 +191,13 @@ one):
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
 
 `script-src 'self'` — no `'unsafe-inline'`, no `'unsafe-eval'` — is what makes the policy worth
-having: the app ships no inline script and no `eval`. The one inline handler the page used to
-have (the `onload` that flipped the font stylesheet from `media="print"`) is now done by the
-bundle in `src/index.tsx`.
+having: the app ships no inline script and no `eval`. The scripts that live outside the bundle are
+files for that reason: `public/silent-check-sso.js`, which the hidden sign-in iframe loads, is
+`<script src>` rather than an inline block. `frame-src` therefore lists `'self'` beside the map and
+Keycloak, and `style-src`/`font-src` no longer list the Google Fonts origins, because the gallery
+type is served from this origin now (see *Speed*). The one inline handler the page used to have
+(the `onload` that flipped the font stylesheet from `media="print"`) went with the Google Fonts
+stylesheet it was flipping.
 
 **The API and Keycloak origins come from the environment**, so the policy always matches the
 bundle: the image sets `CSP_API_ORIGIN` and `CSP_KEYCLOAK_ORIGIN` from the same build arguments

@@ -10,10 +10,6 @@ import "@/styles/App.scss";
  */
 const storedLanguage = localStorage.getItem("galerie-language") ?? "nl-BE";
 
-// The font stylesheet sits in index.html with media="print" so it never blocks the first paint.
-// Flipping it here applies it, without the inline handler a Content-Security-Policy would block.
-document.getElementById("gallery-fonts")?.setAttribute("media", "all");
-
 void ensureLanguage(storedLanguage)
   .then(() => i18n.changeLanguage(storedLanguage))
   .finally(() => createRoot(document.getElementById("root")!).render(<App />));

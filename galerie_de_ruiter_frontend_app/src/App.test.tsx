@@ -42,9 +42,11 @@ describe("App shell", () => {
     renderPage(<App />, { auth: false, router: false });
 
     expect(await screen.findByRole("heading", { level: 1, name: i18n.t("welcomeTitle") })).toBeInTheDocument();
-    // The shell is available to a visitor, with a sign-in link where the profile menu sits.
+    // The shell is available to a visitor, with a sign-in link where the profile menu sits. The
+    // page no longer waits for the account check, so the link arrives with the answer rather
+    // than with the heading.
+    expect(await screen.findByText(i18n.t("navSignIn"))).toBeInTheDocument();
     expect(screen.getByText(i18n.t("navGalleryChat"))).toBeInTheDocument();
-    expect(screen.getByText(i18n.t("navSignIn"))).toBeInTheDocument();
   });
 
   it("sends the old landing-page address on to the new one", async () => {

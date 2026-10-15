@@ -1,0 +1,50 @@
+// The gallery type, served from the gallery's own origin. It used to come from Google Fonts: a
+// stylesheet on fonts.googleapis.com that the bundle had to switch on, and the files themselves
+// on fonts.gstatic.com. Two more origins cost a DNS lookup, a TLS handshake and a round trip each
+// on a slow phone, and the late arrival swapped the text after it had already been painted, which
+// is what the largest-contentful-paint measurement sees. The files live in public/fonts (written
+// by a one-off helper, not by the build) and index.html preloads the two the first screen needs.
+//
+// Only the latin subset ships. It carries Latin-1, so the Dutch the gallery writes in - é, ë, ï -
+// is covered, and anything outside its range falls back to Georgia or the system UI face.
+@font-face {
+  font-family: "Cormorant Garamond"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/fonts/cormorant-garamond-400.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url("/fonts/cormorant-garamond-500.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("/fonts/cormorant-garamond-600.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "DM Sans"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/fonts/dm-sans-400.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "DM Sans"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url("/fonts/dm-sans-500.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "DM Sans"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("/fonts/dm-sans-600.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "DM Sans"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("/fonts/dm-sans-700.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}

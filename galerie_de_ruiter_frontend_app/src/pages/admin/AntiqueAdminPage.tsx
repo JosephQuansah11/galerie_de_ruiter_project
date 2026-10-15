@@ -14,7 +14,7 @@ import { DescriptionLimitHint } from "../antiques/DescriptionLimitHint";
 import { ANTIQUE_DESCRIPTION_MAX_LENGTH } from "../antiques/descriptionLimits";
 import { MODEL_MAX_SIZE_MB, isUploadableModel } from "../antiques/modelUploadLimits";
 import { useAntiqueImageEditing } from "./antiques/useAntiqueImageEditing";
-import { logRequestFailure, managementErrorKey, modelUploadErrorKey } from "../antiques/antiqueSaveErrors";
+import { managementErrorKey, modelUploadErrorKey } from "../antiques/antiqueSaveErrors";
 
 export default function AntiqueAdminPage() {
   const { t } = useTranslation();
@@ -73,7 +73,6 @@ export default function AntiqueAdminPage() {
         } catch (error) {
           // The details were saved and only the model is missing. Claiming "the antique
           // could not be updated" here is what made the old message so misleading.
-          logRequestFailure(`3D model upload ${editModelFile.name}`, error);
           setActionError(modelUploadErrorKey(error));
           return;
         }
@@ -93,7 +92,6 @@ export default function AntiqueAdminPage() {
           .filter((imageId): imageId is string => Boolean(imageId));
         if (order.length > 0) await reorderAntiqueImages(editing.id, order);
       } catch (error) {
-        logRequestFailure("antique image update", error);
         setActionError(managementErrorKey(error));
         return;
       }
@@ -102,7 +100,6 @@ export default function AntiqueAdminPage() {
       // Reload so the list shows the photographs that were just added or removed.
       void getAllAntiques().then((items) => setAntiques(items)).catch(() => undefined);
     } catch (error) {
-      logRequestFailure("antique update", error);
       setActionError(managementErrorKey(error));
     } finally {
       setSavingEdit(false);
@@ -116,7 +113,6 @@ export default function AntiqueAdminPage() {
       await deleteAntiqueRequest(antique.id);
       setAntiques((current) => current.filter((item) => item.id !== antique.id));
     } catch (error) {
-      logRequestFailure("antique delete", error);
       setActionError(managementErrorKey(error));
     } finally {
       setDeletingId(undefined);
@@ -129,7 +125,6 @@ export default function AntiqueAdminPage() {
       const updated = await setAntiqueSoldRequest(antique.id, !antique.sold);
       setAntiques((current) => current.map((item) => item.id === updated.id ? updated : item));
     } catch (error) {
-      logRequestFailure("antique sold update", error);
       setActionError(managementErrorKey(error));
     } finally {
       setSoldSavingId(undefined);

@@ -3,7 +3,7 @@ import { addAntique, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backe
 import type { AntiqueForm } from "@/models/antiques/Antique";
 import { publishContentUpdate } from "@/services/contentUpdates";
 import { useImageSelection } from "./useImageSelection";
-import { logRequestFailure, modelUploadErrorKey, saveErrorKey } from "./antiqueSaveErrors";
+import { modelUploadErrorKey, saveErrorKey } from "./antiqueSaveErrors";
 import { isUploadableModel } from "./modelUploadLimits";
 
 type Draft = Omit<AntiqueForm, "price"> & { price: string };
@@ -87,7 +87,6 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
         await uploadAntiqueModel(antiqueId, modelFile);
         setModelUploaded(true);
       } catch (error) {
-        logRequestFailure(`3D model upload ${modelFile.name}`, error);
         // The model is stored by the gallery API itself, so a network failure is an upload
         // failure - not a separate "model service" being unreachable.
         setMessage(modelUploadErrorKey(error));

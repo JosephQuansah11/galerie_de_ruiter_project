@@ -41,16 +41,3 @@ export function managementErrorKey(error: unknown): string {
   if (base === "antiqueSavePermissionError" || base === "antiqueSaveConnectionError") return base;
   return "antiqueManagementActionFailed";
 }
-
-/** Leaves the precise cause in the console; the UI copy stays friendly. */
-export function logRequestFailure(what: string, error: unknown): void {
-  if (!axios.isAxiosError(error)) {
-    console.error(`[${what}] unexpected failure`, error);
-    return;
-  }
-  const status = error.response?.status;
-  console.error(
-    `[${what}] ${status === undefined ? "no response (network failure or timeout)" : `HTTP ${status}`}`,
-    error.response?.data ?? error.message,
-  );
-}

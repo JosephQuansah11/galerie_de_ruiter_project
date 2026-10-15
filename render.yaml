@@ -216,8 +216,9 @@ services:
     #
     # `style-src-attr 'unsafe-inline'` is not decoration: the charts size their bars, the theme
     # picker draws its swatches and the photo carousel positions its slides with style attributes,
-    # which `style-src 'self'` alone would block. Cross-Origin-Embedder-Policy is deliberately
-    # absent - requiring it would block the map and sign-in frames, which grant nothing.
+    # which `style-src 'self'` alone would block. Cross-Origin-Embedder-Policy is `credentialless`
+    # rather than `require-corp`: the map frame and the silent sign-in frame send no CORP header, so
+    # requiring one would block both, and neither grants anything the page does not already have.
     headers:
       - path: /*
         name: Content-Security-Policy

@@ -28,6 +28,10 @@ describe("App shell", () => {
     expect(screen.getByRole("button", { name: new RegExp(i18n.t("continueKeycloak"), "i") })).toBeInTheDocument();
     // Nobody asked for anything behind an account, so there is nothing to explain.
     expect(screen.queryByText(i18n.t("signInRequired"))).not.toBeInTheDocument();
+    // Sign-in is one of the two routes outside the application shell, so it brings its own
+    // landmark: without one its content is in no landmark at all, which is what a screen reader
+    // navigates by.
+    expect(screen.getByRole("main")).toBeInTheDocument();
   });
 
   it("lets a visitor read the gallery story", async () => {

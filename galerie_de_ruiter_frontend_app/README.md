@@ -205,10 +205,10 @@ one):
 
 | Header | Value |
 |---|---|
-| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: <API>; connect-src 'self' <API> <Keycloak> https://maps.googleapis.com; frame-src 'self' https://www.google.com <Keycloak>; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests` |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: <API>; connect-src 'self' <API> <Keycloak> https://maps.googleapis.com; frame-src 'self' https://www.google.com <Keycloak>; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests` |
 | `Content-Security-Policy-Report-Only` | `require-trusted-types-for 'script'; trusted-types default` |
 | `Strict-Transport-Security` | `max-age=31536000` |
-| `X-Frame-Options` | `DENY` |
+| `X-Frame-Options` | `SAMEORIGIN` |
 | `Cross-Origin-Opener-Policy` | `same-origin` |
 | `Cross-Origin-Resource-Policy` | `same-origin` |
 | `X-Content-Type-Options` | `nosniff` |
@@ -236,6 +236,14 @@ attributes, so an injected `<style>` element is still refused. The built documen
 free of inline `<style>` blocks, inline event handlers, `javascript:` URLs and `eval`; the one
 `new Function` in the bundle is webpack's own `globalThis` fallback, which every browser of the last
 few years short-circuits and which is wrapped in a `try`/`catch` for the ones that do not.
+
+`frame-ancestors 'self'` and `X-Frame-Options: SAMEORIGIN` are the other way round from what a
+hardening checklist suggests, and for a measured reason: the gallery frames one of its own pages.
+keycloak-js loads `public/silent-check-sso.html` in a hidden iframe for the silent sign-in check, so
+`'none'` and `DENY` blocked the check itself — the browser logged *"Framing … violates …
+frame-ancestors 'none'"* and a returning signed-in visitor looked signed out. `'self'` still stops a
+foreign page framing the gallery, which is the clickjacking risk, and `src/securityHeaders.test.ts`
+pins both values so the tighter-looking setting cannot come back.
 
 Two headers from the audit are deliberately absent. `Cross-Origin-Embedder-Policy` would require
 every cross-origin subresource to opt in, and the map frame and the sign-in frames grant nothing, so

@@ -221,13 +221,13 @@ services:
     headers:
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://galerie-java-api.onrender.com; connect-src 'self' https://galerie-java-api.onrender.com https://galerie-keycloak.onrender.com https://maps.googleapis.com; frame-src 'self' https://www.google.com https://galerie-keycloak.onrender.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+        value: "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://galerie-java-api.onrender.com; connect-src 'self' https://galerie-java-api.onrender.com https://galerie-keycloak.onrender.com https://maps.googleapis.com; frame-src 'self' https://www.google.com https://galerie-keycloak.onrender.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
       - path: /*
         name: Strict-Transport-Security
         value: max-age=31536000
       - path: /*
         name: X-Frame-Options
-        value: DENY
+        value: SAMEORIGIN
       - path: /*
         name: Cross-Origin-Opener-Policy
         value: same-origin
@@ -252,3 +252,9 @@ services:
       - path: /*
         name: X-XSS-Protection
         value: "0"
+      # The gallery type keeps its name and is never edited in place, and Render's default for a file
+      # it does not fingerprint is max-age=0: without this every visit revalidates both preloaded
+      # faces, which is two round trips before the text can settle.
+      - path: /fonts/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable

@@ -62,8 +62,18 @@ describe("security headers", () => {
     // the report-only Trusted Types policy is staged for the container deployment, which has a
     // report endpoint and an nginx to move the directives in.
     const containerOnly = ["x-content-type-options", "content-security-policy-report-only"];
+    // The cache header is not a security header and each side sets it with its own tool: nginx
+    // with `expires`, Render with a path-specific header. It is checked separately below.
+    const notShared = ["cache-control"];
     const expected = Object.keys(nginxHeaders).filter((name) => !containerOnly.includes(name)).sort();
-    expect(Object.keys(blueprintHeaders).sort()).toEqual(expected);
+    expect(Object.keys(blueprintHeaders).filter((name) => !notShared.includes(name)).sort()).toEqual(expected);
+  });
+
+  it("keeps the gallery type in the browser's cache on both deployments", () => {
+    // Render's default for a file it does not fingerprint is max-age=0, which revalidates both
+    // preloaded faces on every visit.
+    expect(fromBlueprint()["cache-control"]).toContain("max-age=31536000");
+    expect(nginx).toContain("expires max;");
   });
 
   it("sends the same policy from both", () => {
@@ -73,7 +83,7 @@ describe("security headers", () => {
   it("sends the same value for every shared header", () => {
     const nginxHeaders = fromNginx();
     for (const [name, value] of Object.entries(fromBlueprint())) {
-      if (name === "content-security-policy") continue;
+      if (name === "content-security-policy" || name === "cache-control") continue;
       expect([name, value]).toEqual([name, nginxHeaders[name]]);
     }
   });
@@ -99,6 +109,16 @@ describe("security headers", () => {
     expect(directive(policy, "font-src")).toBe("font-src 'self'");
     expect(policy.join("; ")).not.toContain("fonts.googleapis.com");
     expect(policy.join("; ")).not.toContain("fonts.gstatic.com");
+  });
+
+  it("lets the gallery frame its own silent sign-in page, and nothing else", () => {
+    const policy = cspOf(fromNginx());
+    // keycloak-js loads public/silent-check-sso.html in a hidden iframe, so 'none' - the value a
+    // hardening checklist suggests - blocks the check itself and a returning signed-in visitor
+    // looks signed out. 'self' is the tightest value that works, and SAMEORIGIN is its partner for
+    // browsers that only understand the older header.
+    expect(directive(policy, "frame-ancestors")).toBe("frame-ancestors 'self'");
+    expect(fromNginx()["x-frame-options"]).toBe("SAMEORIGIN");
   });
 
   it("allows the style attributes the pages set", () => {

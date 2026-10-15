@@ -327,6 +327,15 @@ bundle: the image sets `CSP_API_ORIGIN` and `CSP_KEYCLOAK_ORIGIN` from the same 
 the frontend was built with, and `docker-compose.production.yml` passes them explicitly. Override
 them if the browser-facing origins differ from the ones the frontend was built against.
 
+**The photographs and the 3D models come from the API**, so the API is the service that has to allow
+this origin to embed them: it sends `Cross-Origin-Resource-Policy: cross-origin`, because
+`same-origin` and `same-site` are compared against the embedding page - this one - and this page is a
+different host *and* a different site from the API. That header is what a page setting
+`Cross-Origin-Embedder-Policy: require-corp` consults before it renders a cross-origin resource; this
+site sets `credentialless`, which loads such resources without requiring it, so the API's header is
+what keeps the gallery's images working in the stricter case as well. See *API response headers* in
+the repository README.
+
 ### The static deployment (Render)
 
 `render.yaml` publishes the frontend as a Render **static site**, which does not run nginx, so the

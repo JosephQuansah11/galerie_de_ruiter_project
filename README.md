@@ -95,6 +95,27 @@ Codespaces. GitHub repository hosting itself does not keep Docker containers or
 databases running; public production deployments need a container host and
 persistent PostgreSQL service, such as the resources declared in `render.yaml`.
 
+## API response headers
+
+The API serves the gallery's photographs, avatars and 3D models to a frontend that runs on another
+origin - the static site on the gallery's own domain - so it has one thing to say about that
+relationship itself:
+
+| Header | Value | Why |
+|---|---|---|
+| `Cross-Origin-Resource-Policy` | `cross-origin` | The gallery's own pages are cross-origin to this service, so `same-origin` and `same-site` would block every photograph. `cross-origin` is what stops a page that sets `Cross-Origin-Embedder-Policy: require-corp` from having the gallery's images refused as resources it may not load. |
+
+`SecurityConfiguration` sets it on every response, and `CrossOriginResourcePolicyTest` pins both the
+value and the two values that would break the catalogue. Everything else the API sends is Spring
+Security's default (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`) plus the `nosniff`
+Render adds itself.
+
+**What `cross-origin` costs:** another site may embed the gallery's photographs. That is the trade,
+and it is the one the gallery wants - its images are public reads and its links are meant to be
+shareable. A policy that allowed only the gallery would have to be `same-site`, which compares
+registrable domains and therefore needs the API and the frontend to share one (for example
+`api.galeriederuiter.be` beside `www.galeriederuiter.be`). Nothing needs that today.
+
 ## Production Docker stack
 
 The production Compose file runs the frontend, Spring API, Keycloak, Ollama,

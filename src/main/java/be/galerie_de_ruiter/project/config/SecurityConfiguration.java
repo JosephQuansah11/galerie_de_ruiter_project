@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -45,6 +46,15 @@ public class SecurityConfiguration {
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+			// The API is embedded from another origin: the gallery's frontend is a static site on
+			// the gallery's own domain, and the images and the 3D models are served from here. A page
+			// that sets `Cross-Origin-Embedder-Policy: require-corp` refuses to render a cross-origin
+			// resource that declares no policy, so this declares one - and it has to be
+			// `cross-origin`, because `same-origin` and `same-site` are compared against the
+			// frontend, which is both a different host and a different site from this service. See
+			// "API response headers" in the README for what that trade costs.
+			.headers(headers -> headers.addHeaderWriter(
+				new StaticHeadersWriter("Cross-Origin-Resource-Policy", "cross-origin")))
 			.csrf(csrf -> csrf
 				.csrfTokenRepository(csrfTokenRepository())
 				// The chat endpoints are public and are called before a session exists, so they

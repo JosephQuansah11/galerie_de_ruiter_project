@@ -43,6 +43,7 @@
     "display.on.consent.screen": "true",
     "ssf.enabled": "false",
     "pkce.code.challenge.method": "S256",
+    "post.logout.redirect.uris": "http://localhost:3000/*##http://localhost:5173/*",
     "dpop.bound.access.tokens": "false"
   },
   "authenticationFlowBindingOverrides": {},

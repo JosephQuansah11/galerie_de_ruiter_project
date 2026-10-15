@@ -78,6 +78,42 @@ logout redirect URIs**. The realm file in `keycloak/realms` carries them for a f
 deploy does not re-import a realm that already exists, so the running Keycloak is edited by hand
 (*RENDER.md* has the steps).
 
+### Keycloak realm files
+
+The Keycloak image imports `keycloak/realms/galerie-production-realm.json`
+(`--import-realm`), and `prepareDevKeycloakRealm` builds the development import from the realm file
+and the two client exports beside it. Both paths end in Keycloak's own JSON reader, which **fails on
+a field its representation does not know** - and because `--import-realm` parses the file before it
+decides whether the realm is already there, that failure is not "the import was skipped": it is
+*"Failed to run import ... Exited with status 1"* and a container that never serves.
+
+Two things follow from that.
+
+**Fields live where the representation puts them, not where the admin console shows them.** The
+post-logout redirect URIs are the clearest example: the console has a *Valid post logout redirect
+URIs* box, but a client representation has no `postLogoutRedirectUris` field. Keycloak keeps them in
+the client's attributes:
+
+```json
+"attributes": {
+  "post.logout.redirect.uris": "https://galeriederuiter.cloud-ip.cc/*##https://galerie-frontend.onrender.com/*"
+}
+```
+
+`##` separates several URIs inside that one string, and an array there is rejected with *"Cannot
+deserialize value of type java.lang.String from Array value"*. A top-level `postLogoutRedirectUris`
+field is what stopped the deploy of 15 October 2026; `KeycloakRealmFilesTest` now reads every file
+in `keycloak/realms` with Keycloak's own classes and a mapper that refuses unknown fields, so the
+same mistake fails a test run instead - and `build.gradle` declares those files as inputs of the
+`test` task, because Gradle tracks a test by its classes and would otherwise answer from the
+previous run.
+
+**The import only fills an empty Keycloak.** It runs with the `IGNORE_EXISTING` strategy, so a realm
+that is already in the database is left exactly as it is. Editing a realm file therefore changes what
+a *fresh* install gets; the running realm is changed in the console (or by the API's own
+provisioners, which is why the Google provider and the realm's administrator are set from the
+environment rather than from the file).
+
 ### Local chat model
 
 The Spring API talks to the Ollama service at `OLLAMA_BASE_URL` (default

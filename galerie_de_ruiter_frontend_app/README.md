@@ -315,9 +315,12 @@ session. Sent on every response it would clear the visitor's language on any pag
 the header belongs on a logout response and not in the site-wide set.
 
 That redirect is a Keycloak *post-logout* redirect, so the client has to allow it: the gallery's
-domain is listed in `postLogoutRedirectUris` in `keycloak/realms/galerie-production-realm.json`, and
-a Keycloak whose client lists no post-logout URIs falls back to the redirect URIs. If signing out
-ever answers with *"Invalid redirect uri"*, that is the setting to look at.
+domain is listed in the frontend client's `post.logout.redirect.uris` **attribute** in
+`keycloak/realms/galerie-production-realm.json`, with `##` between URIs. That attribute is where
+Keycloak keeps them - the field is not part of the client representation, and one there stops the
+container with *"Unrecognized field"* (see *Keycloak realm files* in the repository README). A
+Keycloak whose client lists no post-logout URIs falls back to the redirect URIs. If signing out ever
+answers with *"Invalid redirect uri"*, that is the setting to look at.
 
 **The API and Keycloak origins come from the environment**, so the policy always matches the
 bundle: the image sets `CSP_API_ORIGIN` and `CSP_KEYCLOAK_ORIGIN` from the same build arguments

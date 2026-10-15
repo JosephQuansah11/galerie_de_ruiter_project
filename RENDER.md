@@ -35,6 +35,12 @@ sign-out that returns through `/logout` fails with it. The realm file in `keyclo
 reference for a fresh import; a deploy does not re-import it into a Keycloak that already holds the
 realm.
 
+If the `galerie-keycloak` deploy fails with *"Failed to run import"* and *"Unrecognized field"*, the
+realm file in `keycloak/realms` carries a field Keycloak's client representation does not know, and
+the container exits before it serves anything - the fix is the field, not the service. *Keycloak
+realm files* in the repository README says where each setting belongs and which test now catches it
+before a deploy does.
+
 `GET /api/auth/providers` reports the realm's enabled providers by alias. The sign-in page asks it
 before it offers the Google button, so a deployment without the provider shows no button that would
 lead to a Keycloak error page (the page keeps the button when the API cannot answer, because the

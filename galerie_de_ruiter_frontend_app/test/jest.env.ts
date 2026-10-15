@@ -14,6 +14,9 @@ process.env.VITE_KEYCLOAK_URL = "http://keycloak.test";
 process.env.VITE_KEYCLOAK_REALM = "test-realm";
 process.env.VITE_KEYCLOAK_CLIENT_ID = "test-client";
 process.env.VITE_REACT_APP_URL = "http://app.test";
+// The gallery maps through Google now (src/services/googleMaps.ts). A key is set here so the
+// location page renders its frame in tests; the tests that cover the keyless build clear it.
+process.env.VITE_GOOGLE_MAPS_API_KEY = "test-maps-key";
 
 /* jsdom omits a few browser APIs the application touches. */
 if (typeof window !== "undefined") {
@@ -44,6 +47,14 @@ if (typeof window !== "undefined") {
   }
   if (!URL.revokeObjectURL) {
     URL.revokeObjectURL = () => undefined;
+  }
+
+  // jsdom implements no `fetch`, and the gallery now asks Google's geocoder from the browser
+  // (src/services/googleMaps.ts). A stub that rejects keeps the app's own failure handling
+  // exercised, and gives the tests something to spy on: without it, `jest.spyOn(globalThis,
+  // "fetch")` throws before the test body runs.
+  if (typeof globalThis.fetch === "undefined") {
+    globalThis.fetch = (() => Promise.reject(new Error("fetch is not stubbed in this test"))) as unknown as typeof fetch;
   }
 
   window.scrollTo = () => undefined;

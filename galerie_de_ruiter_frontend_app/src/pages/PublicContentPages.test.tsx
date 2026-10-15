@@ -70,8 +70,12 @@ describe("Location page", () => {
 
     expect(await screen.findByText("De Ruiter 12, Waasmunster")).toBeInTheDocument();
     expect(screen.getByText("Thursday to Sunday, 11:00 - 18:00")).toBeInTheDocument();
-    expect(screen.getByTitle(i18n.t("locationMapTitle"))).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: new RegExp(i18n.t("openInMap"), "i") })).toHaveAttribute("href", expect.stringContaining("openstreetmap.org"));
+    // The frame is Google's Embed API, and the link beside it is the Maps URL scheme; the address
+    // is what both search for, so the pin lands on the gallery rather than on bare coordinates.
+    expect(screen.getByTitle(i18n.t("locationMapTitle"))).toHaveAttribute("src",
+      expect.stringContaining("google.com/maps/embed/v1/place"));
+    expect(screen.getByRole("link", { name: new RegExp(i18n.t("openInMap"), "i") })).toHaveAttribute("href",
+      expect.stringContaining("google.com/maps/search"));
   });
 
   it("names itself in the head, because a visitor and a crawler both reach it", async () => {

@@ -85,12 +85,16 @@ describe("security headers", () => {
     // Every request the browser makes goes to the API, so both img-src and connect-src need it.
     expect(directive(policy, "img-src")).toContain(api);
     expect(directive(policy, "connect-src")).toContain(api);
-    // Keycloak answers the sign-in check and frames the silent one.
+    // Keycloak answers the sign-in check, frames the silent one and hosts the Google button.
     expect(directive(policy, "connect-src")).toContain(keycloak);
     expect(directive(policy, "frame-src")).toContain(keycloak);
-    // The silent check's iframe is the gallery's own page, and the map is OpenStreetMap's.
+    // The map is a Google Embed frame, and the administrator's address lookup calls Google's
+    // geocoder, so both directives have to name Google and neither may name OpenStreetMap any more.
+    expect(directive(policy, "frame-src")).toContain("https://www.google.com");
+    expect(directive(policy, "connect-src")).toContain("https://maps.googleapis.com");
+    // The silent check's iframe is the gallery's own page.
     expect(directive(policy, "frame-src")).toContain("'self'");
-    expect(directive(policy, "frame-src")).toContain("https://www.openstreetmap.org");
+    expect(policy.join("; ")).not.toMatch(/openstreetmap|nominatim/i);
     // The type is self-hosted now, so no font origin may creep back in.
     expect(directive(policy, "font-src")).toBe("font-src 'self'");
     expect(policy.join("; ")).not.toContain("fonts.googleapis.com");

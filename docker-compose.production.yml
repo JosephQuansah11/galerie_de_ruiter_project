@@ -137,6 +137,9 @@ services:
         VITE_KEYCLOAK_CLIENT_ID: ${VITE_KEYCLOAK_CLIENT_ID:-movie_project_frontend_client}
         VITE_RECONSTRUCTION_API_URL: ${VITE_RECONSTRUCTION_API_URL:?Set VITE_RECONSTRUCTION_API_URL}
         VITE_PYTHON_API_URL: ${VITE_PYTHON_API_URL:?Set VITE_PYTHON_API_URL}
+      # Optional: without a Google Maps browser key the location page shows the address and a Maps
+      # link instead of a frame (see "Google Maps" in the frontend README).
+      VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-}
         # The local reference stack serves the frontend on port 3000, so that is the origin its
         # sitemap and preview tags should name. Render sets SITE_URL to the public domain instead.
         SITE_URL: ${SITE_URL:-http://localhost:3000}

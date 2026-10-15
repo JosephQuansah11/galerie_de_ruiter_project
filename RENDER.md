@@ -18,6 +18,20 @@ Keycloak uses the `standard` web-service plan (2 GiB RAM) because its startup
 exceeded the 512 MiB available on the `starter` plan. This service-plan change
 increases costs; review the current price in Render before syncing.
 
+## Sign in with Google
+
+Set `GOOGLE_IDP_CLIENT_ID` and `GOOGLE_IDP_CLIENT_SECRET` on `galerie-java-api`; both are
+`sync: false` in the blueprint, so the dashboard asks for them. The API creates the realm's Google
+identity provider from them on every start, and leaves the realm alone when neither is set. The
+authorized redirect URI in the Google Cloud console is
+`https://galerie-keycloak.onrender.com/realms/movie_project_keycloak/broker/google/endpoint`. See
+*Sign in with Google* in the repository README for the OAuth client itself.
+
+The frontend also needs `VITE_GOOGLE_MAPS_API_KEY` (also `sync: false`): a browser key for the Maps
+Embed API and the Geocoding API, restricted by HTTP referrer to
+`https://galeriederuiter.cloud-ip.cc/*`. Without it the location page shows the address and a link
+to Google Maps instead of a frame.
+
 ## Security headers
 
 A static site has nothing running at the origin to add response headers, so

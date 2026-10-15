@@ -87,6 +87,7 @@ const enTranslation: Record<string, string> = {
         "The interactive model will appear here when the gallery has completed its six-view scan.",
       welcomeBack: "Welcome back",
       continueKeycloak: "Continue with Keycloak",
+      continueGoogle: "Continue with Google",
       createAccount: "Create an account",
 
       // New keys
@@ -135,7 +136,7 @@ const enTranslation: Record<string, string> = {
       scanCodeText: "Scan this code to open the gallery online.",
       locationIntro:
         "See the current collection in person, meet the owner and take your time with the objects.",
-      openInMap: "Open in map",
+      openInMap: "Open in Google Maps",
       galerieConcierge: "GALERIE CONCIERGE",
       chatIntro:
         "Ask about a piece, arrange a visit, or continue directly with the owner.",
@@ -349,6 +350,8 @@ const enTranslation: Record<string, string> = {
       findingCoordinates: "Finding coordinates...",
       noMatchingAddress: "No matching address found.",
       coordinatesFound: "Coordinates found.",
+      addressLookupUnavailable:
+        "The address lookup is not available right now. Enter coordinates manually.",
       addressLookupFailed:
         "Address lookup failed. Enter coordinates manually.",
       latitude: "Latitude",
@@ -522,6 +525,7 @@ const nlBeTranslation: Record<string, string> = {
         "Het interactieve model verschijnt hier zodra de galerie de scan vanuit zes hoeken heeft voltooid.",
       welcomeBack: "Welkom terug",
       continueKeycloak: "Doorgaan met Keycloak",
+      continueGoogle: "Doorgaan met Google",
       createAccount: "Account aanmaken",
 
       // New keys – Belgian Dutch (mostly same as nl-NL, with small differences)
@@ -570,7 +574,7 @@ const nlBeTranslation: Record<string, string> = {
       scanCodeText: "Scan deze code om de galerie online te openen.",
       locationIntro:
         "Bekijk de huidige collectie in persoon, ontmoet de eigenaar en neem de tijd met de objecten.",
-      openInMap: "Open in kaart",
+      openInMap: "Open in Google Maps",
       galerieConcierge: "GALERIE CONCIERGE",
       chatIntro:
         "Vraag naar een stuk, plan een bezoek of ga direct verder met de eigenaar.",
@@ -784,6 +788,8 @@ const nlBeTranslation: Record<string, string> = {
       findingCoordinates: "Coördinaten zoeken...",
       noMatchingAddress: "Geen overeenkomend adres gevonden.",
       coordinatesFound: "Coördinaten gevonden.",
+      addressLookupUnavailable:
+        "Het adres opzoeken is nu niet beschikbaar. Voer de coördinaten handmatig in.",
       addressLookupFailed:
         "Adreszoekopdracht mislukt. Voer coördinaten handmatig in.",
       latitude: "Breedtegraad",

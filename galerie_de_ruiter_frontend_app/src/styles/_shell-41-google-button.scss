@@ -1,0 +1,28 @@
+// Google's button on the sign-in page: the mark, then the label. It is deliberately quieter than
+// the gallery's own sign-in button - Google is an alternative way in, not the gallery's own
+// identity - but it carries the same width and padding, so the two read as a pair.
+.google-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.85rem 1.2rem;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--theme-radius, 0.55rem);
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.google-button:hover,
+.google-button:focus-visible {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0.4rem 1rem rgba(60, 31, 37, 0.12);
+}
+
+// The mark is Google's; it must keep its proportions rather than be stretched by the flex row.
+.google-mark {
+  flex: 0 0 auto;
+}

@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Button } from "@/components/ReactButton";
+import { GoogleMark } from "@/components/GoogleMark";
 
 export function LoginPage() {
   const auth = useAuth()
@@ -21,6 +22,11 @@ export function LoginPage() {
   {requestedPath && <p className="auth-notice">{t("signInRequired")}</p>}
   <Button className="primary-button" onClick={() => auth.login(requestedPath)}>
   <LogIn size={26} />{t("continueKeycloak")}
+  </Button>
+  {/* Most visitors already have a Google account, so it gets its own button: it names the provider,
+      which takes them straight to Google instead of to a Keycloak page with Google on it. */}
+  <Button className="google-button" onClick={() => auth.loginWithGoogle(requestedPath)}>
+  <GoogleMark size={22} />{t("continueGoogle")}
   </Button>
   <Link className="quiet-button auth-login" to="/register">
   <UserPlus size={26} />{t("createAccount")}

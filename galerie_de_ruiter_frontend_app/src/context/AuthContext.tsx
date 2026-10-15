@@ -11,6 +11,16 @@ import { clearCache } from "@/services/apiCache";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+/**
+ * The alias the realm's Google identity provider is created under (see the API's
+ * `KeycloakGoogleIdentityProviderProvisioner`). Naming it in the sign-in request is what makes the
+ * button a Google button: Keycloak skips its own login page and goes straight to Google.
+ */
+const GOOGLE_IDENTITY_PROVIDER = "google";
+
+/** Where a sign-in returns to: the page the visitor asked for, or the landing page. */
+const returnTo = (from?: string) => `${window.location.origin}${from ?? "/home"}`;
+
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -30,7 +40,9 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const value = useMemo(() => ({
     authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles,
     isAdmin: roles.some((role) => role.replace(/^ROLE_/i, "").toUpperCase() === "ADMIN"),
-    login: (from?: string) => keycloak.login({ redirectUri: `${window.location.origin}${from ?? "/home"}` }),
+    login: (from?: string) => keycloak.login({ redirectUri: returnTo(from) }),
+    loginWithGoogle: (from?: string) =>
+      keycloak.login({ idpHint: GOOGLE_IDENTITY_PROVIDER, redirectUri: returnTo(from) }),
     // Signing out ends the concierge conversation and drops the cached public data, so the
     // next person to use the browser starts from a clean slate.
     logout: () => {

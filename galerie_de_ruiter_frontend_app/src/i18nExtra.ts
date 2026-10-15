@@ -92,6 +92,7 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
         "Le modèle interactif apparaîtra ici lorsque la galerie aura terminé son scan en six vues.",
       welcomeBack: "Bon retour",
       continueKeycloak: "Continuer avec Keycloak",
+      continueGoogle: "Continuer avec Google",
       createAccount: "Créer un compte",
 
       // New keys – French
@@ -140,7 +141,7 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       scanCodeText: "Scannez ce code pour ouvrir la galerie en ligne.",
       locationIntro:
         "Découvrez la collection actuelle en personne, rencontrez le propriétaire et prenez le temps avec les objets.",
-      openInMap: "Ouvrir dans la carte",
+      openInMap: "Ouvrir dans Google Maps",
       galerieConcierge: "CONCIERGERIE DE LA GALERIE",
       chatIntro:
         "Posez une question sur une pièce, organisez une visite ou continuez directement avec le propriétaire.",
@@ -353,6 +354,8 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       findingCoordinates: "Recherche des coordonnées...",
       noMatchingAddress: "Aucune adresse correspondante trouvée.",
       coordinatesFound: "Coordonnées trouvées.",
+      addressLookupUnavailable:
+        "La recherche d'adresse n'est pas disponible pour le moment. Saisissez les coordonnées manuellement.",
       addressLookupFailed:
         "Échec de la recherche d'adresse. Entrez les coordonnées manuellement.",
       latitude: "Latitude",
@@ -527,6 +530,7 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
         "Het interactieve model verschijnt hier zodra de galerie de scan vanuit zes hoeken heeft voltooid.",
       welcomeBack: "Welkom terug",
       continueKeycloak: "Doorgaan met Keycloak",
+      continueGoogle: "Doorgaan met Google",
       createAccount: "Account aanmaken",
 
       // New keys – Dutch (Netherlands)
@@ -575,7 +579,7 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       scanCodeText: "Scan deze code om de galerie online te openen.",
       locationIntro:
         "Bekijk de huidige collectie in persoon, ontmoet de eigenaar en neem de tijd met de objecten.",
-      openInMap: "Open in kaart",
+      openInMap: "Open in Google Maps",
       galerieConcierge: "GALERIE CONCIERGE",
       chatIntro:
         "Vraag naar een stuk, plan een bezoek of ga direct verder met de eigenaar.",
@@ -789,6 +793,8 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       findingCoordinates: "Coördinaten zoeken...",
       noMatchingAddress: "Geen overeenkomend adres gevonden.",
       coordinatesFound: "Coördinaten gevonden.",
+      addressLookupUnavailable:
+        "Het adres opzoeken is nu niet beschikbaar. Voer de coördinaten handmatig in.",
       addressLookupFailed:
         "Adreszoekopdracht mislukt. Voer coördinaten handmatig in.",
       latitude: "Breedtegraad",
@@ -964,6 +970,7 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
         "Das interaktive Modell erscheint hier, sobald die Galerie den Sechs-Seiten-Scan abgeschlossen hat.",
       welcomeBack: "Willkommen zurück",
       continueKeycloak: "Mit Keycloak fortfahren",
+      continueGoogle: "Mit Google fortfahren",
       createAccount: "Konto erstellen",
 
       // New keys – German
@@ -1012,7 +1019,7 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       scanCodeText: "Scannen Sie diesen Code, um die Galerie online zu öffnen.",
       locationIntro:
         "Sehen Sie die aktuelle Kollektion persönlich, treffen Sie den Inhaber und nehmen Sie sich Zeit für die Objekte.",
-      openInMap: "In Karte öffnen",
+      openInMap: "In Google Maps öffnen",
       galerieConcierge: "GALERIE CONCIERGE",
       chatIntro:
         "Fragen Sie nach einem Stück, vereinbaren Sie einen Besuch oder setzen Sie das Gespräch direkt mit dem Inhaber fort.",
@@ -1226,6 +1233,8 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       findingCoordinates: "Koordinaten werden gesucht...",
       noMatchingAddress: "Keine passende Adresse gefunden.",
       coordinatesFound: "Koordinaten gefunden.",
+      addressLookupUnavailable:
+        "Die Adresssuche ist derzeit nicht verfügbar. Geben Sie die Koordinaten manuell ein.",
       addressLookupFailed:
         "Adresssuche fehlgeschlagen. Geben Sie die Koordinaten manuell ein.",
       latitude: "Breitengrad",

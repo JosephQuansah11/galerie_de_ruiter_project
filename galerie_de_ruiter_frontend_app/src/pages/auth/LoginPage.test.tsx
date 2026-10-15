@@ -11,6 +11,7 @@ const mockAuth = {
   roles: [] as string[],
   isAdmin: false,
   login: jest.fn(),
+  loginWithGoogle: jest.fn(),
   logout: jest.fn(),
   register: jest.fn(),
   updateProfile: jest.fn(),
@@ -31,6 +32,17 @@ describe("Sign-in page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("continueKeycloak"), "i") }));
     expect(mockAuth.login).toHaveBeenCalled();
+  });
+
+  it("offers Google as the third-party way in", async () => {
+    renderPage(<LoginPage />, { auth: false });
+    await flushPromises();
+
+    // The button names the provider, which is what sends the visitor to Google rather than to
+    // Keycloak's own page with a Google button on it.
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("continueGoogle"), "i") }));
+    expect(mockAuth.loginWithGoogle).toHaveBeenCalled();
+    expect(mockAuth.login).not.toHaveBeenCalled();
   });
 
   it("links to registration and to the gallery chat", async () => {

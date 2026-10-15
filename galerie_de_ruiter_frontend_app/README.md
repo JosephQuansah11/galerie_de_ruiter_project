@@ -175,6 +175,29 @@ screen ships with the landing page. Splitting it per route is the next big lever
 order in `App.scss` is load-bearing, so it needs care. `keycloak-js` also sits in the eager vendor
 chunk (about 30 KB gzipped); a dynamic import would take it off the critical path.
 
+## Google Maps
+
+The location page frames the gallery's address on Google Maps, and the administrator's address
+lookup turns a typed address into coordinates through Google's geocoder. Both read one browser key,
+`VITE_GOOGLE_MAPS_API_KEY`, and `src/services/googleMaps.ts` is the only place that does:
+
+- **Maps Embed API** for the frame (`https://www.google.com/maps/embed/v1/place`). It is an iframe
+  rather than the Maps JavaScript API on purpose: the landing page just spent its critical path on a
+  first paint, and a frame costs the page no JavaScript of its own. It loads lazily, because it sits
+  below the address on a phone.
+- **Geocoding API** for the lookup behind *Find coordinates* on the admin's location screen.
+
+The key ships in the bundle, so it is not a secret: restrict it in the Google Cloud console by
+**HTTP referrer** to the gallery's origins (`https://galeriederuiter.cloud-ip.cc/*`, and
+`http://localhost:3000/*` while developing) and enable only those two APIs on it.
+
+Without a key the gallery still works. The location page shows the address, the opening hours and an
+*Open in Google Maps* link — the Maps URL scheme needs no key, which is why that link is never
+conditional — and the admin's lookup says the lookup is unavailable rather than failing silently.
+`src/services/googleMaps.test.ts` covers both builds. The OpenStreetMap embed and its Nominatim
+lookup that this replaced are gone from the code and from the policy, and
+`src/securityHeaders.test.ts` fails if either name comes back.
+
 ## Security headers
 
 `nginx.conf` sends these on every response (the container deployment; see below for the static
@@ -182,7 +205,7 @@ one):
 
 | Header | Value |
 |---|---|
-| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: <API>; connect-src 'self' <API> <Keycloak> https://nominatim.openstreetmap.org; frame-src 'self' https://www.openstreetmap.org <Keycloak>; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests` |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: <API>; connect-src 'self' <API> <Keycloak> https://maps.googleapis.com; frame-src 'self' https://www.google.com <Keycloak>; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests` |
 | `Content-Security-Policy-Report-Only` | `require-trusted-types-for 'script'; trusted-types default` |
 | `Strict-Transport-Security` | `max-age=31536000` |
 | `X-Frame-Options` | `DENY` |

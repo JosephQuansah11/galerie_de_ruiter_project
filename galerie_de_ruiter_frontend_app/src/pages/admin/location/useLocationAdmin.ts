@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { getStoreLocation, updateStoreLocation, type StoreLocation } from "@/apis/backend_api";
 import { publishContentUpdate } from "@/services/contentUpdates";
+import { geocodeAddress } from "@/services/googleMaps";
 
 type LocationForm = Omit<StoreLocation, "id">;
 export function useLocationAdmin() {
@@ -19,13 +20,17 @@ export function useLocationAdmin() {
   const lookupAddress = async () => {
     if (!form.address.trim()) return;
     setLookupMessage("findingCoordinates");
-    try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(form.address)}`, { headers: { Accept: "application/json" } });
-      const results = await response.json() as Array<{ lat: string; lon: string }>;
-      if (!results[0]) return setLookupMessage("noMatchingAddress");
-      setForm((current) => ({ ...current, latitude: Number(results[0].lat), longitude: Number(results[0].lon) }));
-      setLookupMessage("coordinatesFound");
-    } catch { setLookupMessage("addressLookupFailed"); }
+    // Google's geocoder, in place of the Nominatim lookup this used to call. Each outcome has its
+    // own message: a typo, a key that needs attention, and a connection that failed are three
+    // different things for an administrator to act on.
+    const outcome = await geocodeAddress(form.address.trim());
+    if (outcome.status === "found") {
+      setForm((current) => ({ ...current, latitude: outcome.latitude, longitude: outcome.longitude }));
+      return setLookupMessage("coordinatesFound");
+    }
+    if (outcome.status === "none") return setLookupMessage("noMatchingAddress");
+    if (outcome.status === "unavailable") return setLookupMessage("addressLookupUnavailable");
+    return setLookupMessage("addressLookupFailed");
   };
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setSaving(true);

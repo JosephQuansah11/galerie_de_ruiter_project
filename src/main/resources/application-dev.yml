@@ -35,3 +35,9 @@ keycloak:
     last-name: ${KEYCLOAK_REALM_ADMIN_LAST_NAME:admin}
     email: ${KEYCLOAK_REALM_ADMIN_EMAIL:admin@example.com}
     password: ${KEYCLOAK_REALM_ADMIN_PASSWORD:1IamAdmin3}
+  google-idp:
+    # Google sign-in: the API creates (or updates) the realm's Google identity provider from these
+    # values on every start. Copy them into .env to sign in with a Google account locally.
+    required: ${GOOGLE_IDP_REQUIRED:false}
+    client-id: ${GOOGLE_IDP_CLIENT_ID:}
+    client-secret: ${GOOGLE_IDP_CLIENT_SECRET:}

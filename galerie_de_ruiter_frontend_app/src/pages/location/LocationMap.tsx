@@ -1,14 +1,20 @@
 import { Navigation } from "lucide-react";
 import type { StoreLocation } from "@/apis/backend_api";
+import { googleMapsEmbedUrl, googleMapsLink } from "@/services/googleMaps";
 
 type Props = { location: StoreLocation; title: string; linkText: string };
 
+/**
+ * The gallery's place on Google Maps. The frame only appears when the build carries a Maps key
+ * (see src/services/googleMaps.ts); without one the address, the opening hours beside it and the
+ * link below are still enough to find the pop-up, which is why the link is never conditional.
+ * The frame loads lazily because it sits below the address on a phone.
+ */
 export function LocationMap({ location, title, linkText }: Props) {
-  const { latitude, longitude } = location;
-  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${longitude - 0.025}%2C${latitude - 0.015}%2C${longitude + 0.025}%2C${latitude + 0.015}&layer=mapnik&marker=${latitude}%2C${longitude}`;
-  const externalUrl = `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`;
+  const embedUrl = googleMapsEmbedUrl(location);
   return <div className="map-frame">
-    <iframe id="galerie-de-ruiter-location-map" title={title} src={mapUrl} />
-    <a href={externalUrl} target="_blank" rel="noreferrer"><Navigation size={15} /> {linkText}</a>
+    {embedUrl && <iframe id="galerie-de-ruiter-location-map" title={title} src={embedUrl}
+      loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />}
+    <a href={googleMapsLink(location)} target="_blank" rel="noreferrer"><Navigation size={15} /> {linkText}</a>
   </div>;
 }

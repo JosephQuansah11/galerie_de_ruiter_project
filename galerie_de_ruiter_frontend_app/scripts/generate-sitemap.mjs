@@ -1,6 +1,6 @@
 /**
  * Writes the two files a search engine looks for into the built site: `sitemap.xml` and the
- * `Sitemap:` and `Agentmap:` lines inside `robots.txt`.
+ * `Sitemap:` line inside `robots.txt`.
  *
  * The site origin comes from `site.config.mjs`, the same module `webpack.config.js` reads for the
  * social preview tags. Its default is the production origin, and SITE_URL overrides it, so the
@@ -82,10 +82,11 @@ for (const name of ["sitemap_index.xml", "sitemap.xml"]) {
 // than kept in public/robots.txt, which has to stay origin-independent. A line already in the file
 // is stale - this build knows the origin it was made for - so it is replaced, not kept.
 //
-// `Agentmap:` is how Agentic Resource Discovery advertises the manifest from robots.txt, and its
-// value is an absolute URL, like the `Sitemap:` line under it. It names /.well-known/ard.json,
-// because that is the path a conforming consumer must fetch: /.well-known/ai-catalog.json is the
-// predecessor path the specification superseded, which a consumer may check but need not.
+// The `Agentmap:` line an earlier build wrote here is removed and not written again: the gallery does
+// not advertise the Agent Discovery manifest from robots.txt. Nothing is lost by that - the manifest
+// is still served at /.well-known/ard.json, and the document names it with <link rel="ard">, the
+// relation a conforming consumer must honour. A line left behind by an older build would outlive the
+// decision, which is why the filter above names it.
 const robotsTarget = path.join(distDir, "robots.txt");
 const robotsSource = existsSync(robotsTarget) ? robotsTarget : path.join(appRoot, "public", "robots.txt");
 if (existsSync(robotsSource)) {
@@ -96,7 +97,7 @@ if (existsSync(robotsSource)) {
     .trimEnd();
   writeFileSync(
     robotsTarget,
-    `${robots}\n\nAgentmap: ${siteUrl}/.well-known/ard.json\nSitemap: ${siteUrl}/sitemap_index.xml\n`,
+    `${robots}\n\nSitemap: ${siteUrl}/sitemap_index.xml\n`,
     "utf8",
   );
 } else {

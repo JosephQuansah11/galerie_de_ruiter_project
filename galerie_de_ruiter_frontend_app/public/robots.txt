@@ -3,13 +3,14 @@
 # Everything behind an account is closed to crawlers: those routes answer with the sign-in
 # page, so crawling them only spends the crawl budget. What a visitor reaches without an
 # account - the first list of the collection, the landing page, the gallery story, the pop-up's
-# address and the concierge chat - is listed in sitemap.xml, whose URL - and the `Agentmap:` line
-# that points at the catalog - are appended below at build time by scripts/generate-sitemap.mjs.
+# address and the concierge chat - is listed in sitemap.xml, whose URL is appended below at build
+# time by scripts/generate-sitemap.mjs.
 #
-# The collection is half open: the list is public and belongs in the sitemap, while a piece's own
-# page answers with the sign-in page - so only the list is allowed here, and the trailing slash on
-# the line below is what keeps `/antiques` itself out of it. Opening the pieces to visitors means
-# dropping that line and adding them to the sitemap.
+# The collection is half open: the list is public and belongs in the sitemap, and a piece's own page
+# is allowed here as well - but it still answers with the sign-in page, which carries noindex, so it
+# is not in the sitemap either. Indexing the pieces means dropping `/antiques/:id` from the
+# RequireAccount group in src/ProtectedRoutes.tsx and adding them to publicPages in the sitemap
+# script; robots.txt is already open to them.
 User-agent: *
 
 Disallow: /admin
@@ -27,11 +28,12 @@ Allow: /chat
 # The sign-in and registration pages stay crawlable on purpose: they carry a noindex tag, and
 # a crawler that is not allowed to fetch them would never see it.
 #
-# The `Agentmap:` and `Sitemap:` lines are appended below at build time by
-# scripts/generate-sitemap.mjs, from the site origin in site.config.mjs, so this file stays
-# origin-independent. Both take an absolute URL, which is why neither is written here by hand.
+# The `Sitemap:` line is appended below at build time by scripts/generate-sitemap.mjs, from the site
+# origin in site.config.mjs, so this file stays origin-independent. It takes an absolute URL, which is
+# why it is not written here by hand.
 #
-# `Agentmap` is the Agentic Resource Discovery convention for pointing at the manifest that says
-# what this domain offers agents. It names /.well-known/ard.json, the path a conforming consumer
-# must fetch; /.well-known/ai-catalog.json is the predecessor path, which it may check but need not.
+# An `Agentmap:` line is not added, and one left by an earlier build is removed. The Agent Discovery
+# manifest is still served at /.well-known/ard.json; the document advertises it with <link rel="ard">,
+# the relation a conforming consumer must honour, so robots.txt does not have to name it - and a line
+# kept only because a build once wrote it would outlive whoever decided against it.
 

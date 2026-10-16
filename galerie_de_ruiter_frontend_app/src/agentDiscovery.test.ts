@@ -112,15 +112,15 @@ describe("the agent catalog", () => {
 });
 
 describe("advertising the catalog", () => {
-  it("names it in robots.txt, at the path a consumer is required to consult", () => {
-    // `Agentmap:` is how Agentic Resource Discovery advertises a manifest from robots.txt, and its
-    // value is an absolute URL - the form `Sitemap:` takes as well, and the reason neither line is
-    // written in public/robots.txt: the origin is only known at build time, when the script below
-    // appends them. The line names /.well-known/ard.json, the path a conforming consumer must
-    // fetch; /.well-known/ai-catalog.json is the predecessor path it may check but need not.
+  it("keeps the robots file to the sitemap, and leaves the Agentmap line out", () => {
+    // Agentic Resource Discovery used to be advertised from robots.txt with an `Agentmap:` line. The
+    // gallery removed it on purpose, so the build writes the sitemap line only - and keeps filtering
+    // an `Agentmap:` line, because a deployed robots.txt from an earlier build still carries one and
+    // a stale line would outlive the decision. The manifest is not hidden by this: the document names
+    // it with <link rel="ard">, which is the relation a conforming consumer must honour (see below).
     expect(robots).not.toMatch(/^(Agentmap|Sitemap):/im);
-    expect(sitemapScript).toContain("Agentmap: ${siteUrl}/.well-known/ard.json");
     expect(sitemapScript).toContain("Sitemap: ${siteUrl}/sitemap_index.xml");
+    expect(sitemapScript).not.toContain("Agentmap: ${siteUrl}");
     // A line left in the file by an earlier build is stale, so it is replaced rather than kept.
     expect(sitemapScript).toMatch(/\/\^\(Sitemap\|Agentmap\):/i);
   });

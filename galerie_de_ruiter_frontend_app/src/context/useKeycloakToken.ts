@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { UserProfile } from "@/types/types";
-import { setAuthToken } from "@/apis/authPromise";
+import { setAuthToken, setUnauthorizedHandler } from "@/apis/authPromise";
 import { clearKeycloakSession, writeKeycloakSession } from "@/services/keycloakSession";
 import { keycloak } from "./keycloakClient";
 
@@ -35,7 +35,18 @@ export function useKeycloakToken(setAuthenticated: Dispatch<SetStateAction<boole
     keycloak.onAuthRefreshSuccess = () => { syncToken(keycloak.token); storeSession(); };
     keycloak.onAuthLogout = () => { clearKeycloakSession(); setAuthenticated(false); setProfile(undefined); setRoles([]); syncToken(undefined); };
     keycloak.onTokenExpired = () => { void refreshToken(true); };
-    return () => { keycloak.onAuthRefreshSuccess = undefined; keycloak.onAuthLogout = undefined; keycloak.onTokenExpired = undefined; };
+    // The API refused the token: it is no good to anyone now, so the app stops presenting it and
+    // becomes a visitor again rather than retrying a token that will keep being refused (see the
+    // interceptor in src/apis/authPromise.ts, which retries the one request without it).
+    const forgetRefusedToken = () => {
+      keycloak.clearToken(); clearKeycloakSession();
+      setAuthenticated(false); setProfile(undefined); setRoles([]); syncToken(undefined);
+    };
+    setUnauthorizedHandler(forgetRefusedToken);
+    return () => {
+      keycloak.onAuthRefreshSuccess = undefined; keycloak.onAuthLogout = undefined; keycloak.onTokenExpired = undefined;
+      setUnauthorizedHandler(undefined);
+    };
   }, [refreshToken, setAuthenticated, setProfile, setRoles, syncToken, storeSession]);
   useEffect(() => {
     if (!keycloak.authenticated) return;

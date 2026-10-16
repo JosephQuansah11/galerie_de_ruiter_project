@@ -276,9 +276,13 @@ services:
     # the sign-in button stopped working. `credentialless` does not help; that frame is still
     # refused. Nothing here needs crossOriginIsolated, which is all COEP buys.
     headers:
+      # `blob:` is in connect-src because the gallery's own 3D models travel as blob URLs: the
+      # admin's model picker previews a file that has not been uploaded yet, and three.js reads that
+      # URL with fetch, which connect-src governs. A blob URL belongs to this origin by
+      # construction, so it adds no origin to the allowlist.
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://galerie-java-api.onrender.com; connect-src 'self' https://galerie-java-api.onrender.com https://galerie-keycloak.onrender.com https://maps.googleapis.com; frame-src 'self' https://www.google.com https://galerie-keycloak.onrender.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+        value: "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://galerie-java-api.onrender.com; connect-src 'self' https://galerie-java-api.onrender.com https://galerie-keycloak.onrender.com https://maps.googleapis.com blob:; frame-src 'self' https://www.google.com https://galerie-keycloak.onrender.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
       - path: /*
         name: Strict-Transport-Security
         value: max-age=31536000; includeSubDomains

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Center, ContactShadows, Environment, OrbitControls } from "@react-three/drei";
+import { Center, ContactShadows, Environment, Lightformer, OrbitControls } from "@react-three/drei";
 // Filters the three.js console notice the Canvas mount triggers. It lives here rather than with
 // the entry module so three.js travels with the viewer: importing it at start-up fetched the
 // whole library on every page, even for visitors who never open a model.
@@ -17,7 +17,19 @@ export function ThreeDScene({ modelUrl }: { modelUrl: string }) {
     <ambientLight intensity={0.7} />
     <directionalLight position={[4, 6, 4]} intensity={2} />
     <directionalLight position={[-4, 2, -3]} intensity={0.8} />
-    <Suspense fallback={<LoadingModel />}><Center><LoadedModel modelUrl={modelUrl} /></Center><Environment preset="studio" /></Suspense>
+    <Suspense fallback={<LoadingModel />}><Center><LoadedModel modelUrl={modelUrl} /></Center>
+      {/* The reflections are built here rather than taken from one of drei's presets:
+          `Environment preset="studio"` fetches an HDR from `raw.githack.com`, which the site's
+          Content-Security-Policy blocks - rightly, since it is someone else's server - and which
+          left the model without its lighting wherever that request failed. Light shapes cost no
+          request at all and give the same reflections. */}
+      <Environment resolution={256}>
+        <Lightformer intensity={2} position={[0, 5, -9]} rotation-x={Math.PI / 2} scale={[10, 10, 1]} />
+        <Lightformer intensity={1.2} position={[-5, 1, -1]} rotation-y={Math.PI / 2} scale={[20, 1, 1]} />
+        <Lightformer intensity={1.2} position={[5, 1, -1]} rotation-y={-Math.PI / 2} scale={[20, 1, 1]} />
+        <Lightformer intensity={0.8} position={[0, -5, 0]} rotation-x={-Math.PI / 2} scale={[10, 10, 1]} />
+      </Environment>
+    </Suspense>
     <ContactShadows position={[0, -1, 0]} opacity={0.35} scale={10} blur={2} />
     <OrbitControls enableDamping dampingFactor={0.08} autoRotate autoRotateSpeed={1.5} minDistance={1} maxDistance={10} />
   </Canvas>;

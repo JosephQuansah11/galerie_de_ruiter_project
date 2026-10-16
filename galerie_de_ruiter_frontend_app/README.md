@@ -266,6 +266,15 @@ four things were behind that. All four are fixed:
   handed to `init`, which refreshes them against the token endpoint before it answers, so a reload
   and a new tab are the same signed-in visitor. A visitor who has no stored tokens but still has a
   Keycloak session does not see the form either, because Keycloak answers with the session it has.
+- **A refused token no longer empties the gallery.** The app sends its bearer token with every
+  request, and the API answers 401 to a token it cannot decode or that has expired — on the public
+  endpoints as well, because the resource server fails the request before authorization is consulted.
+  One stale token therefore used to take the whole site down for someone who was signed in: no
+  collection, no piece pages. The axios instance now drops the refused token and the session behind
+  it (through `setUnauthorizedHandler`) and retries that one request without it, so the pages a
+  visitor may read keep loading and the visitor is simply signed out again.
+  `src/apis/authPromise.test.ts` pins both halves: the retry that recovers, and the 401 that is
+  reported as it is when the request carried no token to blame.
 - **The gallery type is self-hosted.** `public/fonts` holds the latin subsets and
   `src/styles/_fonts.scss` declares them; `index.html` preloads the two faces of the first screen
   (Cormorant Garamond 400 for the heading, DM Sans 400 for the body copy). The type used to come
@@ -439,14 +448,17 @@ require-trusted-types-for <- trusted-types-sink
   script-sample: "HTMLScriptElement src|/js/437.3e9055e85ae60a2cddd6.js"
 ```
 
-That is `script.src = …` for a lazily loaded route, which every navigation needs. To enforce it:
+That is `script.src = …` for a lazily loaded route, which every navigation needs. `webpack.config.js`
+now passes `output.trustedTypes: { policyName: "default" }`, so webpack creates that policy and sets
+`src` through it, which is exactly what the report-only header allows (`trusted-types default`) — the
+report is clean. A policy named `galerie`, the first draft of this plan, would need the header widened
+to allow that name as well; `default` is the name a browser calls on its own, and one policy name to
+keep in step between a config file and two header files is one too many.
 
-1. add `output.trustedTypes: { policyName: "galerie" }` to `webpack.config.js`, so webpack
-   creates and uses a policy for the script elements it adds;
-2. put `require-trusted-types-for 'script'; trusted-types 'default' galerie` into the enforced
-   `Content-Security-Policy` in `nginx.conf`;
-3. re-run the collector against the built site on the landing page **and** on a lazy route
-   (`/login`), plus a page that mounts the 3D viewer, and only then remove the report-only header.
+What is left of the rollout is the last step: move `require-trusted-types-for 'script'; trusted-types
+default` into the enforced `Content-Security-Policy` in `security-headers.conf` and `render.yaml`,
+after re-running the collector against the built site on the landing page **and** on a lazy route
+(`/login`), plus a page that mounts the 3D viewer — and then delete the report-only header.
 
 ### Rolling out HSTS
 

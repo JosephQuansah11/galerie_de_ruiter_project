@@ -25,6 +25,13 @@ export default {
     filename: "js/[name].[contenthash].js",
     publicPath: "/",
     clean: true,
+    // Trusted Types. The site sends `require-trusted-types-for 'script'` in report-only mode (see
+    // security-headers.conf, and "Trusted Types is staged" in the README), and the one violation a
+    // real page reported was webpack's own chunk loader setting `script.src` for a lazily loaded
+    // route. Naming the policy `default` is what makes the browser hand that assignment to the
+    // policy the header already allows, so the violation is gone and the two directives can be
+    // moved into the enforced policy whenever the gallery wants them enforced.
+    trustedTypes: { policyName: "default" },
   },
 
   resolve: {

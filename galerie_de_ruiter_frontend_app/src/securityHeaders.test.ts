@@ -160,6 +160,9 @@ describe("security headers", () => {
     // geocoder, so both directives have to name Google and neither may name OpenStreetMap any more.
     expect(directive(policy, "frame-src")).toContain("https://www.google.com");
     expect(directive(policy, "connect-src")).toContain("https://maps.googleapis.com");
+    // The gallery's own 3D models travel as blob URLs - the admin's model picker previews a file
+    // before it is uploaded, and three.js reads that URL with fetch - which connect-src governs.
+    expect(directive(policy, "connect-src")).toContain("blob:");
     // 'self' stays in frame-src: the gallery frames nothing of its own today, and a same-origin
     // frame is the one thing that value cannot break.
     expect(directive(policy, "frame-src")).toContain("'self'");

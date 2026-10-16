@@ -94,7 +94,7 @@ if (existsSync(robotsSource)) {
     .trimEnd();
   writeFileSync(
     robotsTarget,
-    `${robots}\n\nAgentmap: ${siteUrl}/.well-known/ard.json\nSitemap: ${siteUrl}/sitemap_index.xml\n`,
+    `${robots}\n\nSitemap: ${siteUrl}/sitemap_index.xml\n`,
     "utf8",
   );
 } else {

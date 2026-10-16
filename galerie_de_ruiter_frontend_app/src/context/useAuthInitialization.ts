@@ -8,6 +8,12 @@ import { keycloak } from "./keycloakClient";
 type Setup = { setAuthenticated: Dispatch<SetStateAction<boolean>>; setLoading: Dispatch<SetStateAction<boolean>>;
   setProfile: Dispatch<SetStateAction<UserProfile | undefined>>; setRoles: Dispatch<SetStateAction<string[]>>;
   syncToken: (token?: string) => void };
+/**
+ * The roles the API's `SecurityConfiguration` accepts on `GET /api/me`. It lives here rather than
+ * being discovered, because a request this app knows will be refused is one it should not send:
+ * see the note where it is used.
+ */
+const PROFILE_ROLES = ["USER", "ADMIN"];
 export function useAuthInitialization({ setAuthenticated, setLoading, setProfile, setRoles, syncToken }: Setup) {
   const { t, i18n } = useTranslation();
   const initialized = useRef(false);
@@ -66,11 +72,21 @@ export function useAuthInitialization({ setAuthenticated, setLoading, setProfile
         realm_access?: { roles?: string[] }; resource_access?: Record<string, { roles?: string[] }> } | undefined;
       const roles = [...(data?.realm_access?.roles ?? []), ...Object.values(data?.resource_access ?? {}).flatMap((item) => item.roles ?? [])];
       setRoles([...new Set(roles)]); fallbackUsername.current = !data?.preferred_username;
+      /**
+       * The roles the API accepts on `/api/me` (see its `SecurityConfiguration`). It refuses a token
+       * that carries neither of them with 403 - the resource server checks the role before the
+       * endpoint runs - and the realm hands a role to nobody automatically, so a visitor who has just
+       * registered holds a token this call cannot use. Asking anyway put a failed request in the
+       * console on every page load for someone who is perfectly well signed in, and it answered
+       * nothing for them either. The name, the email and the picture already came from the token
+       * above, and the profile row is still created the first time they save anything.
+       */
+      const canReadProfile = roles.some((role) => PROFILE_ROLES.includes(role.replace(/^ROLE_/i, "").toUpperCase()));
       // The first and last name travel in the token, so the WhatsApp hand-off can name the
       // visitor even before the profile row exists — or when that row holds no names yet.
       setProfile({ username: data?.preferred_username ?? t("member"), email: data?.email,
         firstName: data?.given_name, lastName: data?.family_name });
-      if (keycloak.token) syncCurrentUser(keycloak.token).then((user) => {
+      if (keycloak.token && canReadProfile) syncCurrentUser(keycloak.token).then((user) => {
         fallbackUsername.current = !user.username;
         setProfile((current) => ({ ...user, firstName: user.firstName ?? current?.firstName,
           lastName: user.lastName ?? current?.lastName, username: user.username || i18n.t("member") }));

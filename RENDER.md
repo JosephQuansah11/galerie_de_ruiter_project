@@ -34,6 +34,16 @@ the container exits before it serves anything - the fix is the field, not the se
 realm files* in the repository README says where each setting belongs and which test now catches it
 before a deploy does.
 
+The realm file defines the `USER` and `ADMIN` realm roles but grants neither of them automatically, so
+a fresh Keycloak hands a new account no role at all. Nothing in the API needs `USER` any more - the
+only rule that asked for it was `GET /api/me`, which now asks for a signed-in visitor - but the
+gallery's own account needs `ADMIN` before the admin screens work, because those writes are gated on
+it in the API. Assign it under *Users* → the account → *Role mapping* → *Assign role* → filter by
+*realm roles* → `ADMIN`, then have that person sign out and back in: the role travels in the token
+that was issued at sign-in, so the old token keeps saying what it said. Until then they are a
+signed-in visitor with no role, which the app handles without sending a request it knows will be
+refused (see *Accounts and profiles* in the frontend README).
+
 The frontend also needs `VITE_GOOGLE_MAPS_API_KEY` (also `sync: false`): a browser key for the Maps
 Embed API and the Geocoding API, restricted by HTTP referrer to
 `https://galeriederuiter.cloud-ip.cc/*`. Without it the location page shows the address and a link

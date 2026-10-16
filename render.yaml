@@ -90,6 +90,11 @@ services:
 
   - type: web
     name: galerie-java-api
+    # The API has to build the branch the code is on. Without this line the service follows the
+    # repository's default branch, which does not carry the API's commits - so auto-deploy watches a
+    # branch that never changes and the service keeps serving the build it was created with, however
+    # many times the API's code is pushed.
+    branch: frontend
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .

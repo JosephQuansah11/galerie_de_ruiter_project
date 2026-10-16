@@ -2,14 +2,29 @@ import { act, render, screen } from "@testing-library/react";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { keycloak } from "./keycloakClient";
 import { readKeycloakSession, writeKeycloakSession } from "@/services/keycloakSession";
+import { syncCurrentUser } from "@/pages/auth/authApi";
+
+/**
+ * The API refuses `GET /api/me` with 403 to a token that carries none of the roles it accepts, and
+ * the realm hands a role to nobody on its own (see the README). The app asks on every page load, so
+ * the rule is worth pinning: it must not ask when the only possible answer is a refusal.
+ */
+jest.mock("@/pages/auth/authApi", () => ({
+  syncCurrentUser: jest.fn().mockResolvedValue({ username: "member" }),
+  updateCurrentUser: jest.fn(),
+  registerUser: jest.fn(),
+}));
 
 /** The inert Keycloak double, with the parts a stored session needs made reachable. */
-const double = keycloak as unknown as { token?: string; refreshToken?: string; idToken?: string };
+const double = keycloak as unknown as {
+  token?: string; refreshToken?: string; idToken?: string; tokenParsed?: unknown;
+};
 
 afterEach(() => {
   double.token = undefined;
   double.refreshToken = undefined;
   double.idToken = undefined;
+  double.tokenParsed = undefined;
 });
 
 /**
@@ -102,5 +117,34 @@ describe("the session on a fresh page load", () => {
 
     // Otherwise every page load would present the same dead session and fail the same way.
     expect(readKeycloakSession()).toBeUndefined();
+  });
+});
+
+describe("asking the API who the visitor is", () => {
+  /** A signed-in page load whose token carries exactly these realm roles. */
+  const signedInWith = (roles: string[]) => {
+    (keycloak.init as unknown as jest.Mock).mockResolvedValueOnce(true);
+    double.token = "access";
+    double.tokenParsed = { preferred_username: "joseph", realm_access: { roles } };
+  };
+
+  it("asks when the token carries a role the endpoint accepts", async () => {
+    signedInWith(["USER"]);
+
+    render(<AuthProvider><SignOut /></AuthProvider>);
+    await act(async () => { await Promise.resolve(); });
+
+    expect(syncCurrentUser).toHaveBeenCalledWith("access");
+  });
+
+  it("does not ask when it carries none, because the only answer would be a refusal", async () => {
+    signedInWith([]);
+
+    render(<AuthProvider><SignOut /></AuthProvider>);
+    await act(async () => { await Promise.resolve(); });
+
+    // A 403 the app already knows it will get is not worth a request, and the browser reports the
+    // failed call in the console where the gallery reads it as something being broken.
+    expect(syncCurrentUser).not.toHaveBeenCalled();
   });
 });

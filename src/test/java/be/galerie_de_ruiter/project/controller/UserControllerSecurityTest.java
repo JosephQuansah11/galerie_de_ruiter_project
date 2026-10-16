@@ -9,10 +9,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
+import be.galerie_de_ruiter.project.domain.User;
 import be.galerie_de_ruiter.project.service.UserService;
 import be.galerie_de_ruiter.project.service.OllamaChatService;
 import be.galerie_de_ruiter.project.service.AntiqueService;
@@ -56,6 +59,29 @@ class UserControllerSecurityTest {
     @Test
     void unauthenticatedRequestsAreRejected() throws Exception {
         mvc.perform(get("/api/admin/users"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void aSignedInVisitorWithoutARoleCanReadTheirOwnProfile() throws Exception {
+        // "Who am I" is not a privileged question: the endpoint answers with the caller's own profile,
+        // looked up by the token subject, and creates that row when it is missing. A role gate here
+        // refused a visitor the realm had not handed a role to - which is every visitor who has just
+        // registered - and because the app asks on every page load, each of them got a failed request
+        // in the browser console. Saving a profile was never gated this way.
+        when(users.findOrCreate(eq("no-role-subject"), eq("visitor"), nullable(String.class)))
+                .thenReturn(new User("no-role-subject", "visitor@example.com", "Visitor"));
+
+        mvc.perform(get("/api/me").with(jwt().jwt(builder -> builder
+                        .claim("sub", "no-role-subject")
+                        .claim("preferred_username", "visitor"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.displayName").value("Visitor"));
+    }
+
+    @Test
+    void anAnonymousRequestCannotReadAProfile() throws Exception {
+        mvc.perform(get("/api/me"))
                 .andExpect(status().isUnauthorized());
     }
 

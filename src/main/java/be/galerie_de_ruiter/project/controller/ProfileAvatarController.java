@@ -37,7 +37,11 @@ public class ProfileAvatarController {
     @GetMapping
     public ResponseEntity<byte[]> get(@AuthenticationPrincipal Jwt jwt) {
         User user = users.getByKeycloakSubject(requireSubject(jwt));
-        if (user == null || user.getAvatarImage() == null) return ResponseEntity.notFound().build();
+        // "No avatar yet" is an answer, not an error: the account menu falls back to the visitor's
+        // initials. It used to be 404, which the browser reports as a failed request in the console
+        // on every page load for every signed-in visitor who has not uploaded a picture - and the
+        // frontend already reads 204 as "nothing to show" (see loadProfileAvatar).
+        if (user == null || user.getAvatarImage() == null) return ResponseEntity.noContent().build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "private, max-age=300")
                 .contentType(MediaType.parseMediaType(user.getAvatarContentType()))

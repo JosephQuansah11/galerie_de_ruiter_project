@@ -9,7 +9,7 @@ export function LanguageSwitcher() {
     const selected = languages.find((item) => item.code === code);
     if (selected) setLanguage(selected.code);
   };
-  return <select value={language} onChange={(event) => changeLanguage(event.target.value)}
+  return <select id="language-switcher" value={language} onChange={(event) => changeLanguage(event.target.value)}
     aria-label={i18n.t("language")}>
     {languages.map((lang) => <option key={lang.code} value={lang.code}>{lang.label}</option>)}
   </select>;

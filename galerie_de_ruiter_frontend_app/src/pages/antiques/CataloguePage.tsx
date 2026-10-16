@@ -56,7 +56,7 @@ export function CataloguePage(props: Props) {
     <div className="catalogue-controls">
       <Form className="catalogue-search" role="search" onSubmit={(event) => event.preventDefault()}>
         <span className="catalogue-search-icon" aria-hidden="true"><Search size={18} /></span>
-        <Form.Control aria-label={t("searchAntiques")} value={props.query} onChange={(event) => props.onQueryChange(event.target.value)} placeholder={t("searchPlaceholder")} />
+        <Form.Control id="catalogue-search" aria-label={t("searchAntiques")} value={props.query} onChange={(event) => props.onQueryChange(event.target.value)} placeholder={t("searchPlaceholder")} />
         {hasQuery && <button type="button" className="catalogue-search-clear" aria-label={t("clearSearch")} onClick={() => props.onQueryChange("")}>
           <X size={16} aria-hidden="true" />
         </button>}

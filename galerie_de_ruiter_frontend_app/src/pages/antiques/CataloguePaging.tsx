@@ -19,9 +19,9 @@ type Props = {
 export function CataloguePaging({ pageSize, page, pageCount, onPageSize, onPage }: Props) {
   const { t } = useTranslation();
   return <div className="catalogue-paging">
-    <label className="catalogue-paging-size">
+    <label className="catalogue-paging-size" htmlFor="catalogue-page-size">
       <span>{t("itemsPerPage")}</span>
-      <select value={pageSize} aria-label={t("itemsPerPage")} onChange={(event) => onPageSize(Number(event.target.value))}>
+      <select id="catalogue-page-size" value={pageSize} aria-label={t("itemsPerPage")} onChange={(event) => onPageSize(Number(event.target.value))}>
         {CATALOGUE_PAGE_SIZES.map((size) => <option key={size} value={size}>{size === 0 ? t("allPieces") : size}</option>)}
       </select>
     </label>

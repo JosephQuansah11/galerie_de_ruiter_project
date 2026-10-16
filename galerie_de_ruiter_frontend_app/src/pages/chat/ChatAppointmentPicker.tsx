@@ -56,18 +56,18 @@ export function ChatAppointmentPicker({
     tooldescription="Asks the gallery for an appointment - a visit at the pop-up in Waasmunster, or an online call about a piece. The gallery answers in the chat and confirms the time.">
     <strong>{t("chatAppointmentHeading")}</strong>
     <div className="chat-appointment-fields">
-      <label>{t("chatAppointmentDate")}
-        <input type="date" name="date" value={date} min={today} required disabled={disabled}
+      <label htmlFor="chat-appointment-date">{t("chatAppointmentDate")}
+        <input id="chat-appointment-date" type="date" name="date" value={date} min={today} required disabled={disabled}
           toolparamdescription="The day of the appointment, in the gallery's own time zone (Europe/Brussels)."
           onChange={(event) => { setDate(event.target.value); setError(""); }} />
       </label>
-      <label>{t("chatAppointmentTime")}
-        <input type="time" name="time" value={time} min={minimumTime} required disabled={disabled}
+      <label htmlFor="chat-appointment-time">{t("chatAppointmentTime")}
+        <input id="chat-appointment-time" type="time" name="time" value={time} min={minimumTime} required disabled={disabled}
           toolparamdescription="The time of day of the appointment, in the gallery's own time zone (Europe/Brussels)."
           onChange={(event) => { setTime(event.target.value); setError(""); }} />
       </label>
-      <label>{t("chatAppointmentType")}
-        <select name="type" value={type} disabled={disabled} toolparamdescription="VISIT comes to the pop-up; ONLINE meets the gallery over a call."
+      <label htmlFor="chat-appointment-type">{t("chatAppointmentType")}
+        <select id="chat-appointment-type" name="type" value={type} disabled={disabled} toolparamdescription="VISIT comes to the pop-up; ONLINE meets the gallery over a call."
           onChange={(event) => setType(event.target.value as ChatAppointmentSelection["type"])}>
           <option value="VISIT">{t("appointmentVisit")}</option>
           <option value="ONLINE">{t("appointmentOnline")}</option>

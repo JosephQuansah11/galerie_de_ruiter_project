@@ -92,7 +92,14 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.POST, "/api/chat").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/chat/warmup").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/chat/status").permitAll()
-				.requestMatchers(HttpMethod.GET, "/api/me").hasAnyRole("USER", "ADMIN")
+				// "Who am I" is not a privileged question: the endpoint answers with the caller's own
+				// profile, looked up by the token's subject, and creates that row when it is missing.
+				// Requiring a role here meant a visitor who had just registered was refused their own
+				// profile with 403 until someone granted them a role by hand - and because the app asks
+				// on every page load, that put a failed request in the browser console for anyone the
+				// realm had not handed a role to. Saving a profile was never gated this way, so the
+				// gate only ever stopped people reading what they were allowed to write.
+				.requestMatchers(HttpMethod.GET, "/api/me").authenticated()
 				.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
 				// .requestMatchers(HttpMethod.GET, "http://localhost:11434/api/chat").permitAll()
 				.anyRequest().authenticated())

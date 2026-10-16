@@ -52,7 +52,10 @@ The app is one HTML page, so what a crawler can reach is decided in five places:
   the opening hours are deliberately absent from the copy *and* from the structured data: they are
   records the gallery edits and they are shown on `/map` and `/about`, so a copy in the document
   would be the copy that goes stale. `src/staticDocument.test.ts` pins all of it, including that
-  the description is the one the landing page sets at runtime (`metaHomeDescription`).
+  the description is the one the landing page sets at runtime (`metaHomeDescription`). The head also
+  carries `google-site-verification`, the tag that proves the domain to Search Console: the test pins
+  its value too, because a rebuild that dropped it would be reported as a lost property rather than
+  as a missing tag.
 - **`src/hooks/usePageMeta.ts`** — every page sets its own `<title>`, `<meta name="description">`,
   `<link rel="canonical">` and Open Graph tags. Pages call it with their own translated copy;
   the strings live in `pageMetaLabels` in `src/i18n.ts`. The canonical URL is built from the
@@ -131,6 +134,11 @@ curl -s https://galeriederuiter.cloud-ip.cc/robots.txt
 Both should name the public origin. Then, in Search Console, submit
 `https://galeriederuiter.cloud-ip.cc/sitemap_index.xml` under *Sitemaps*, and use *URL inspection* →
 *Request indexing* for `/`, `/about` and `/map`.
+
+The property is verified with the `google-site-verification` tag in `index.html` rather than with a
+DNS record or an uploaded file, so nothing outside a deploy has to stay in place for it - and it is
+the same origin the sitemap and the canonical URLs name. A rewrite of the head that dropped the tag
+would take the property with it, which is why `src/staticDocument.test.ts` pins the value.
 
 Those are the pages that can be indexed. Everything else needs an account and answers with the
 sign-in page, which carries `noindex`, so a crawler that follows `/antiques` finds the login page
@@ -312,6 +320,48 @@ says the lookup is unavailable rather than failing silently.
 `src/services/googleMaps.test.ts` covers both builds. The OpenStreetMap embed and its Nominatim
 lookup that this replaced are gone from the code and from the policy, and
 `src/securityHeaders.test.ts` fails if either name comes back.
+
+## Accounts and profiles
+
+Signing in is Keycloak's job; what the app knows about the visitor is the API's. The two meet at one
+endpoint, `GET /api/me`, which the app asks on every page load so that the profile screen and the
+account menu show what the gallery's own database holds rather than only what the token says.
+
+- **`GET /api/me` needs a signed-in visitor, not a role.** It answers with the caller's own profile,
+  looked up by the token's subject, and creates that row when it is missing - so being signed in is
+  the whole requirement. It used to require `USER` or `ADMIN`, and the realm defines both roles but
+  grants neither to a new account: every visitor who registered was refused their own profile with
+  403 until someone granted them a role by hand, and because the app asks on every page load, each of
+  them got a failed request in the browser console. A role belongs on what a role guards - the
+  `ADMIN` writes - which is where the rest of `SecurityConfiguration` puts it.
+  `UserControllerSecurityTest` pins both halves: a token carrying no role is answered, an anonymous
+  request is not.
+- **The app does not send a request it knows will be refused.** `src/context/useAuthInitialization.ts`
+  reads the roles out of the token and asks `/api/me` only when it carries one the endpoint accepts
+  (`PROFILE_ROLES`), so a realm that has granted nothing yet costs the visitor nothing. Their name,
+  email and picture already came from the token, and the profile row is still created the first time
+  they save something. `AuthContext.test.tsx` pins both cases.
+- **"No avatar yet" is an answer, not an error.** `GET /api/me/avatar` answered 404 for a visitor who
+  has not uploaded a picture, which the browser reports as a failed request in the console on every
+  page load - the one line the gallery saw in a console that was otherwise clean. It answers 204 now,
+  which says the same thing without the failure, and the frontend read both all along
+  (`loadProfileAvatar`). `ProfileAvatarControllerTest` pins it, together with the picture it does
+  send and the visitor whose row does not exist yet.
+
+## Forms and their labels
+
+An audit reported that a form field had no `id`. A control without one cannot be named by a
+`<label for>` or reached through a fragment, and assistive technology falls back to the placeholder,
+which is a hint rather than a name. Every control on a page a visitor reaches carries one now: the
+chat composer (`chat-message`), the three fields of the appointment request (`chat-appointment-date`,
+`-time`, `-type`), the collection search (`catalogue-search`), the page size (`catalogue-page-size`),
+and the language switcher (`language-switcher`, which is labelled by `aria-label` and so needs the id
+rather than a `<label>`).
+
+Still open: the admin screens keep their `Form.Group`/`Form.Label` pairs, and most of those groups
+declare no `controlId`, so Bootstrap cannot wire the label to the control inside it. `LocationCoordinates`
+and `HomeAdminPage` show the shape the rest should follow - `controlId` on the group, or an explicit
+`id` on the control - and the audit does not reach those screens, because they need an account.
 
 ## Security headers
 

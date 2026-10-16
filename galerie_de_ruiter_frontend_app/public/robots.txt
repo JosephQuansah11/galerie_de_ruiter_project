@@ -13,7 +13,6 @@
 User-agent: *
 
 Disallow: /admin
-Disallow: /antiques/
 Disallow: /cart
 Disallow: /wishlist
 Disallow: /profile

@@ -179,14 +179,14 @@ supersedes.
 `Cross-Origin-Resource-Policy: cross-origin` (see *Security headers*), because a crawler reading the
 manifest from its own origin makes a cross-origin request.
 
-**Why the manifest was reported as malformed.** This is a single-page application: `render.yaml`
-rewrites `/*` to `/index.html`, and `nginx.conf` falls back to it with `try_files`. A path with no
-file behind it therefore answers `200` with the HTML document, so a crawler that asked for
-`ai-catalog.json` before it existed got `<!DOCTYPE html>` where JSON was expected — *"Malformed JSON
-in manifest: SyntaxError: Unexpected token '<'"*. Render and nginx both serve a real file before the
-fallback, so shipping the file is the whole fix; `src/agentDiscovery.test.ts` fails if the file, its
-fields, the paths that advertise it, or the webpack `globOptions.dot` that copies a dot directory go
-missing.
+**Why the manifest was reported as malformed.** This is a single-page application: the server hands
+the shell to the paths the application draws and answers anything else with a 404 (see *Search
+engines*), and before those files existed the manifest path was one of the paths answered with the
+shell — `200` and the HTML document — so a crawler that asked for `ai-catalog.json` got
+`<!DOCTYPE html>` where JSON was expected: *"Malformed JSON in manifest: SyntaxError: Unexpected
+token '<'"*. Render and nginx both serve a real file before any rule is considered, so shipping the
+file is the whole fix; `src/agentDiscovery.test.ts` fails if the file, its fields, the paths that
+advertise it, or the webpack `globOptions.dot` that copies a dot directory go missing.
 
 The gallery runs no MCP server and publishes no agent card, so the catalog lists one entry: the guide
 above, typed `text/markdown`. An entry for an MCP server or an agent card goes in when there is one
@@ -223,6 +223,18 @@ Two rules keep the folder navigable:
 The parts were cut at rule boundaries from the original single files, and their text was copied
 verbatim, so splitting them did not change the compiled CSS: only long `@media` blocks were
 emitted as several consecutive blocks with the same query, which renders identically.
+
+### Adding a theme
+
+A theme is a palette, not a stylesheet. `src/context/themes.ts` holds the eight the preferences
+screen offers, `src/context/themeStyles.ts` writes their ten colours onto the document as `--theme-*`
+variables, and the rules read those variables rather than a colour of their own - so a new palette is
+an entry in `themes` and one in `themeTranslationKeys`, plus a label in each of the five languages
+(`src/i18n.ts` for English and Belgian Dutch, `src/i18nExtra.ts` for the rest). `isDark: true` is the
+whole of what makes a palette dark: it adds the `theme-dark` class the dark rules hang off, and
+nothing else has to change. `src/context/themes.test.ts` fails when a palette is missing one of the
+ten colours, when a theme has no label, or when a label is missing from a language.
+
 
 ## Speed
 

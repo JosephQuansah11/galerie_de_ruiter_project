@@ -228,6 +228,9 @@ const enTranslation: Record<string, string> = {
       themeRosePaper: "Rose paper",
       themeOxblood: "Oxblood",
       themeBlush: "Blush",
+      themeGreyWhite: "Grey & white",
+      themeBlueGold: "Blue & gold",
+      themeEarthGrey: "Earth & grey",
       loginIntro:
         "Enter a considered collection of antiques, art, and design pieces chosen for their next chapter.",
       signInRequired: "This part of the gallery needs an account. Sign in to continue.",
@@ -664,6 +667,9 @@ const nlBeTranslation: Record<string, string> = {
       themeRosePaper: "Roze papier",
       themeOxblood: "Ossenbloedrood",
       themeBlush: "Blush",
+      themeGreyWhite: "Grijs en wit",
+      themeBlueGold: "Blauw en goud",
+      themeEarthGrey: "Aarde en grijs",
       loginIntro:
         "Betreed een doordachte collectie van antiek, kunst en designstukken gekozen voor hun volgende hoofdstuk.",
       signInRequired: "Dit deel van de galerie vraagt een account. Meld je aan om verder te gaan.",

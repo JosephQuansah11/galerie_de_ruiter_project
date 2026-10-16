@@ -231,6 +231,9 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       themeRosePaper: "Papier rose",
       themeOxblood: "Rouge bordeaux",
       themeBlush: "Rose poudré",
+      themeGreyWhite: "Gris et blanc",
+      themeBlueGold: "Bleu et or",
+      themeEarthGrey: "Terre et gris",
       loginIntro:
         "Entrez dans une collection réfléchie d'antiquités, d'art et de pièces de design choisies pour leur prochain chapitre.",
       signInRequired: "Cette partie de la galerie demande un compte. Connectez-vous pour continuer.",
@@ -669,6 +672,9 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       themeRosePaper: "Roze papier",
       themeOxblood: "Ossenbloedrood",
       themeBlush: "Blush",
+      themeGreyWhite: "Grijs en wit",
+      themeBlueGold: "Blauw en goud",
+      themeEarthGrey: "Aarde en grijs",
       loginIntro:
         "Betreed een doordachte collectie van antiek, kunst en designstukken gekozen voor hun volgende hoofdstuk.",
       signInRequired: "Dit deel van de galerie vraagt een account. Meld je aan om verder te gaan.",
@@ -1107,6 +1113,9 @@ const extraLanguages: Record<string, { translation: Record<string, string> }> = 
       themeRosePaper: "Rosenpapier",
       themeOxblood: "Ochsenblutrot",
       themeBlush: "Puderrosa",
+      themeGreyWhite: "Grau und Weiß",
+      themeBlueGold: "Blau und Gold",
+      themeEarthGrey: "Erde und Grau",
       signInRequired: "Dieser Teil der Galerie erfordert ein Konto. Melden Sie sich an, um fortzufahren.",
       loginIntro:
         "Betreten Sie eine sorgfältig ausgewählte Kollektion von Antiquitäten, Kunst und Designstücken für ihr nächstes Kapitel.",

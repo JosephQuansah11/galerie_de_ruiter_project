@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { flushPromises, renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
+import { themes } from "@/context/themes";
 import { PreferencesPage } from "./PreferencesPage";
 
 afterEach(async () => {
@@ -58,6 +59,24 @@ describe("Preferences page", () => {
     expect(wine).toHaveAttribute("aria-pressed", "false");
     expect(deepWine).toHaveTextContent(i18n.t("active"));
     expect(localStorage.getItem("selectedTheme")).toBe("dark");
+  });
+
+  it("offers the palettes the gallery added, and applies the one that is chosen", async () => {
+    renderPage(<PreferencesPage />);
+    await flushPromises();
+
+    for (const key of ["themeGreyWhite", "themeBlueGold", "themeEarthGrey"]) {
+      expect(screen.getByRole("button", { name: new RegExp(i18n.t(key), "i") })).toBeInTheDocument();
+    }
+
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("themeBlueGold"), "i") }));
+
+    await waitFor(() => expect(localStorage.getItem("selectedTheme")).toBe("blueGold"));
+    // The palette reaches the document as the variables every stylesheet reads.
+    const root = document.documentElement.style;
+    expect(root.getPropertyValue("--theme-primary")).toBe(themes.blueGold.colors.primary);
+    expect(root.getPropertyValue("--theme-background")).toBe(themes.blueGold.colors.background);
+    expect(root.getPropertyValue("--theme-nav-end")).toBe(themes.blueGold.colors.navEnd);
   });
 
   it("switches between the dark and light interface", async () => {

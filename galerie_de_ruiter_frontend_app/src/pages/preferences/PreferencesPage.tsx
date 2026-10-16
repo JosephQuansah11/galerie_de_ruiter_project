@@ -1,16 +1,9 @@
 import { Button } from "@/components/ReactButton";
 import { Check, Languages, Moon, RotateCcw, Sun } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
+import { themeTranslationKeys } from '../../context/themes'
 import { languages, useLanguage } from '../../context/LanguageContext'
 import { useTranslation } from 'react-i18next'
-
-const themeTranslationKeys: Record<string, string> = {
-  default: 'themeWineWhite',
-  dark: 'themeDeepWine',
-  ocean: 'themeRosePaper',
-  forest: 'themeOxblood',
-  sunset: 'themeBlush',
-}
 
 export function PreferencesPage() {
   const { t } = useTranslation()

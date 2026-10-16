@@ -79,6 +79,26 @@ describe("Preferences page", () => {
     expect(root.getPropertyValue("--theme-nav-end")).toBe(themes.blueGold.colors.navEnd);
   });
 
+  it("keeps the palette when the interface switches between light and dark", async () => {
+    renderPage(<PreferencesPage />);
+    await flushPromises();
+
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("themeBlueGold"), "i") }));
+    await waitFor(() => expect(localStorage.getItem("selectedTheme")).toBe("blueGold"));
+
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("darkMode"), "i") }));
+
+    // The dark form of the same palette, not another one.
+    await waitFor(() => expect(localStorage.getItem("selectedTheme")).toBe("blueGoldDark"));
+    expect(document.body.classList.contains("theme-dark")).toBe(true);
+    expect(document.documentElement.style.getPropertyValue("--theme-background")).toBe(themes.blueGoldDark.colors.background);
+
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("lightMode"), "i") }));
+
+    await waitFor(() => expect(localStorage.getItem("selectedTheme")).toBe("blueGold"));
+    expect(document.documentElement.style.getPropertyValue("--theme-background")).toBe(themes.blueGold.colors.background);
+  });
+
   it("switches between the dark and light interface", async () => {
     renderPage(<PreferencesPage />);
     await flushPromises();

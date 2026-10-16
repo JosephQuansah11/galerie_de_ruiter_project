@@ -226,14 +226,16 @@ emitted as several consecutive blocks with the same query, which renders identic
 
 ### Adding a theme
 
-A theme is a palette, not a stylesheet. `src/context/themes.ts` holds the eight the preferences
+A theme is a palette, not a stylesheet. `src/context/themes.ts` holds the fourteen the preferences
 screen offers, `src/context/themeStyles.ts` writes their ten colours onto the document as `--theme-*`
 variables, and the rules read those variables rather than a colour of their own - so a new palette is
-an entry in `themes` and one in `themeTranslationKeys`, plus a label in each of the five languages
+two entries in `themes` (the light form and the dark form of the same palette, each naming the other
+in `counterpart`) and two in `themeTranslationKeys`, plus a label for each in the five languages
 (`src/i18n.ts` for English and Belgian Dutch, `src/i18nExtra.ts` for the rest). `isDark: true` is the
 whole of what makes a palette dark: it adds the `theme-dark` class the dark rules hang off, and
 nothing else has to change. `src/context/themes.test.ts` fails when a palette is missing one of the
-ten colours, when a theme has no label, or when a label is missing from a language.
+ten colours, when a light palette has no dark form, when the two do not name each other, or when a
+label is missing from a language.
 
 
 ## Speed

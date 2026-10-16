@@ -27,6 +27,21 @@ describe("the gallery themes", () => {
     for (const [id, theme] of Object.entries(themes)) expect(theme.id).toBe(id);
   });
 
+  it("gives every palette a dark form and a light form", () => {
+    // The gallery's rule: a palette is offered in both modes, so the switch has somewhere to go.
+    const light = Object.values(themes).filter((theme) => !theme.isDark);
+    const dark = Object.values(themes).filter((theme) => theme.isDark);
+    expect(light.length).toBeGreaterThan(0);
+    expect(dark).toHaveLength(light.length);
+    for (const theme of Object.values(themes)) {
+      const counterpart = themes[theme.counterpart];
+      expect({ id: theme.id, counterpart: counterpart?.id }).toEqual({ id: theme.id, counterpart: theme.counterpart });
+      // The other mode, naming this one back: the light/dark switch moves along this pair.
+      expect({ id: theme.id, otherMode: counterpart.isDark === !theme.isDark }).toEqual({ id: theme.id, otherMode: true });
+      expect({ id: theme.id, mutual: counterpart.counterpart === theme.id }).toEqual({ id: theme.id, mutual: true });
+    }
+  });
+
   it("gives every theme a label in every language", () => {
     for (const id of Object.keys(themes)) {
       const key = themeTranslationKeys[id];

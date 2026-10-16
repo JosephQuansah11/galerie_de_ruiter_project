@@ -26,7 +26,7 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
     theme,
     availableThemes: Object.values(themes),
     setTheme: (nextThemeId: string) => { if (themes[nextThemeId]) setThemeId(nextThemeId) },
-    toggleDarkMode: () => setThemeId(theme.isDark ? 'default' : 'dark'),
+    toggleDarkMode: () => setThemeId(themes[theme.id].counterpart),
     resetTheme: () => setThemeId('default'),
   }), [theme])
 

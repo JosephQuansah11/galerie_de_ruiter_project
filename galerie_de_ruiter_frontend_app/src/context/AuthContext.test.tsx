@@ -1,6 +1,16 @@
 import { act, render, screen } from "@testing-library/react";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { keycloak } from "./keycloakClient";
+import { readKeycloakSession, writeKeycloakSession } from "@/services/keycloakSession";
+
+/** The inert Keycloak double, with the parts a stored session needs made reachable. */
+const double = keycloak as unknown as { token?: string; refreshToken?: string; idToken?: string };
+
+afterEach(() => {
+  double.token = undefined;
+  double.refreshToken = undefined;
+  double.idToken = undefined;
+});
 
 /**
  * Signing out is two things. The app drops what it holds in memory, and Keycloak ends the session
@@ -21,6 +31,15 @@ describe("signing out", () => {
 
     expect(keycloak.logout as unknown as jest.Mock)
       .toHaveBeenCalledWith({ redirectUri: `${window.location.origin}/logout` });
+  });
+
+  it("leaves nothing of the session in the browser", async () => {
+    writeKeycloakSession({ token: "access", refreshToken: "refresh" });
+    render(<AuthProvider><SignOut /></AuthProvider>);
+
+    await act(async () => { screen.getByRole("button", { name: "sign out" }).click(); });
+
+    expect(readKeycloakSession()).toBeUndefined();
   });
 });
 
@@ -43,5 +62,45 @@ describe("the session check on load", () => {
     expect(options.silentCheckSsoRedirectUri).toBeUndefined();
     // The session status is not polled either, which is the adapter's other iframe.
     expect(options.checkLoginIframe).toBe(false);
+  });
+});
+
+/**
+ * A stored session is the other half of that rule. The page still asks nobody for a session, but it
+ * does start from the tokens the last page left behind, and the adapter refreshes them before `init`
+ * answers - so a reload and a new tab are the same signed-in visitor rather than a visitor again.
+ */
+describe("the session on a fresh page load", () => {
+  it("hands the stored session back to the adapter", async () => {
+    writeKeycloakSession({ token: "access", refreshToken: "refresh" });
+
+    render(<AuthProvider><SignOut /></AuthProvider>);
+    await act(async () => { await Promise.resolve(); });
+
+    const options = (keycloak.init as unknown as jest.Mock).mock.calls[0][0] as Record<string, unknown>;
+    expect(options.token).toBe("access");
+    expect(options.refreshToken).toBe("refresh");
+  });
+
+  it("writes the session it was handed, so the next load has one", async () => {
+    (keycloak.init as unknown as jest.Mock).mockResolvedValueOnce(true);
+    double.token = "access";
+    double.refreshToken = "rotated";
+
+    render(<AuthProvider><SignOut /></AuthProvider>);
+    await act(async () => { await Promise.resolve(); });
+
+    expect(readKeycloakSession()).toEqual({ token: "access", refreshToken: "rotated", idToken: undefined });
+  });
+
+  it("forgets a session Keycloak refused to refresh", async () => {
+    writeKeycloakSession({ token: "access", refreshToken: "stale" });
+    (keycloak.init as unknown as jest.Mock).mockRejectedValueOnce(new Error("refresh refused"));
+
+    render(<AuthProvider><SignOut /></AuthProvider>);
+    await act(async () => { await Promise.resolve(); });
+
+    // Otherwise every page load would present the same dead session and fail the same way.
+    expect(readKeycloakSession()).toBeUndefined();
   });
 });

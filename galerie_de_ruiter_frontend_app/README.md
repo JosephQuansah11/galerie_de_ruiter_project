@@ -261,8 +261,11 @@ four things were behind that. All four are fixed:
   (`.../3p-cookies/step1.html`) in a hidden iframe of its own. That frame is cross-origin, Keycloak
   serves it with no `Cross-Origin-Resource-Policy` - not a header this site can add - and the browser
   refused it under the site's own `Cross-Origin-Embedder-Policy`: `init` rejected on its ten-second
-  timeout and the sign-in button did nothing at all. The visitor is now simply signed out until they
-  sign in, which is one navigation; a visitor who still has a Keycloak session does not see the form.
+  timeout and the sign-in button did nothing at all. The page still asks nobody for a session, and it
+  no longer needs to: the tokens are kept in `localStorage` (`src/services/keycloakSession.ts`) and
+  handed to `init`, which refreshes them against the token endpoint before it answers, so a reload
+  and a new tab are the same signed-in visitor. A visitor who has no stored tokens but still has a
+  Keycloak session does not see the form either, because Keycloak answers with the session it has.
 - **The gallery type is self-hosted.** `public/fonts` holds the latin subsets and
   `src/styles/_fonts.scss` declares them; `index.html` preloads the two faces of the first screen
   (Cormorant Garamond 400 for the heading, DM Sans 400 for the body copy). The type used to come
@@ -365,9 +368,19 @@ alternative the guidance offers, refuses that frame too. The only thing COEP buy
 `Clear-Site-Data` is on one path, not on the site: `/logout`. Signing out ends the Keycloak session,
 and `AuthContext.logout` sends the browser back through `/logout`, so that one response tells the
 browser to drop everything it holds for the gallery's origin — `"cache"`, `"cookies"` and
-`"storage"`, which is the chosen language, the remembered city, the cached responses and the chat
-session. Sent on every response it would clear the visitor's language on any page load, which is why
-the header belongs on a logout response and not in the site-wide set.
+`"storage"`, which is the chosen language, the remembered city, the cached responses, the chat
+session and the stored sign-in session (`AuthContext.logout` removes that last one itself, before the
+redirect, so it is gone even if the response never arrives). Sent on every response it would clear
+the visitor's language on any page load, which is why the header belongs on a logout response and not
+in the site-wide set.
+
+Keeping a session across page loads means keeping a refresh token in the browser:
+`src/services/keycloakSession.ts` writes it to `localStorage`, where it stays until the visitor signs
+out or Keycloak refuses to refresh it. `script-src 'self'` without `'unsafe-inline'` is what makes
+that acceptable here — the app ships no inline script, so nothing else runs on this origin to read it
+— and a refresh token that has been rotated or revoked is worth nothing to whoever did. The
+alternative, asking Keycloak for the session on every page load, is the third-party-cookie check that
+broke sign-in (see *Speed*).
 
 That redirect is a Keycloak *post-logout* redirect, so the client has to allow it: the gallery's
 domain is listed in the frontend client's `post.logout.redirect.uris` **attribute** in

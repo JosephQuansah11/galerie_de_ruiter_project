@@ -7,6 +7,7 @@ import { useAuthInitialization } from "./useAuthInitialization";
 import { useKeycloakToken } from "./useKeycloakToken";
 import { registerUser, updateCurrentUser } from "@/pages/auth/authApi";
 import { clearChatSession } from "@/services/chatSession";
+import { clearKeycloakSession } from "@/services/keycloakSession";
 import { clearCache } from "@/services/apiCache";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -34,13 +35,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles,
     isAdmin: roles.some((role) => role.replace(/^ROLE_/i, "").toUpperCase() === "ADMIN"),
     login: (from?: string) => keycloak.login({ redirectUri: returnTo(from) }),
-    // Signing out ends the concierge conversation and drops the cached public data, so the next
-    // person to use the browser starts from a clean slate. Keycloak then returns the browser to
-    // /logout, the one response that carries Clear-Site-Data (see nginx.conf and the blueprint):
-    // that is what clears the parts this app cannot reach - the HTTP cache, the cookies and the
-    // storage it does not own.
+    // Signing out ends the concierge conversation, drops the cached public data and forgets the
+    // stored session, so the next person to use the browser starts from a clean slate. Keycloak
+    // then returns the browser to /logout, the one response that carries Clear-Site-Data (see
+    // nginx.conf and the blueprint): that is what clears the parts this app cannot reach - the HTTP
+    // cache, the cookies and the storage it does not own.
     logout: () => {
       clearChatSession();
+      clearKeycloakSession();
       clearCache();
       return keycloak.logout({ redirectUri: returnTo("/logout") });
     },

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { UserProfile } from "@/types/types";
 import { setAuthToken } from "@/apis/authPromise";
+import { clearKeycloakSession, writeKeycloakSession } from "@/services/keycloakSession";
 import { keycloak } from "./keycloakClient";
 
 export function useKeycloakToken(setAuthenticated: Dispatch<SetStateAction<boolean>>,
@@ -8,6 +9,16 @@ export function useKeycloakToken(setAuthenticated: Dispatch<SetStateAction<boole
   const [token, setToken] = useState<string>();
   const refreshing = useRef<Promise<boolean> | undefined>(undefined);
   const syncToken = useCallback((next?: string) => { setToken(next); setAuthToken(next); }, []);
+  /**
+   * The stored session has to follow the adapter: Keycloak rotates the refresh token whenever it
+   * refreshes one, so the copy a page load starts from is only worth having if it is written again
+   * here. See src/services/keycloakSession.ts.
+   */
+  const storeSession = useCallback(() => {
+    if (keycloak.token && keycloak.refreshToken) {
+      writeKeycloakSession({ token: keycloak.token, refreshToken: keycloak.refreshToken, idToken: keycloak.idToken });
+    }
+  }, []);
   const refreshToken = useCallback(async (force = false) => {
     if (!keycloak.authenticated) return false;
     if (refreshing.current) return refreshing.current;
@@ -21,11 +32,11 @@ export function useKeycloakToken(setAuthenticated: Dispatch<SetStateAction<boole
     return task;
   }, [setAuthenticated, setProfile, setRoles, syncToken]);
   useEffect(() => {
-    keycloak.onAuthRefreshSuccess = () => syncToken(keycloak.token);
-    keycloak.onAuthLogout = () => { setAuthenticated(false); setProfile(undefined); setRoles([]); syncToken(undefined); };
+    keycloak.onAuthRefreshSuccess = () => { syncToken(keycloak.token); storeSession(); };
+    keycloak.onAuthLogout = () => { clearKeycloakSession(); setAuthenticated(false); setProfile(undefined); setRoles([]); syncToken(undefined); };
     keycloak.onTokenExpired = () => { void refreshToken(true); };
     return () => { keycloak.onAuthRefreshSuccess = undefined; keycloak.onAuthLogout = undefined; keycloak.onTokenExpired = undefined; };
-  }, [refreshToken, setAuthenticated, setProfile, setRoles, syncToken]);
+  }, [refreshToken, setAuthenticated, setProfile, setRoles, syncToken, storeSession]);
   useEffect(() => {
     if (!keycloak.authenticated) return;
     const timer = window.setInterval(() => void refreshToken(true), 30 * 60 * 1000);

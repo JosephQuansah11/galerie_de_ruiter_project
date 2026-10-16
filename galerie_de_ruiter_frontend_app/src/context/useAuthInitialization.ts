@@ -2,6 +2,7 @@ import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 import type { UserProfile } from "@/types/types";
 import { syncCurrentUser } from "@/pages/auth/authApi";
+import { clearKeycloakSession, readKeycloakSession, writeKeycloakSession } from "@/services/keycloakSession";
 import { keycloak } from "./keycloakClient";
 
 type Setup = { setAuthenticated: Dispatch<SetStateAction<boolean>>; setLoading: Dispatch<SetStateAction<boolean>>;
@@ -24,8 +25,10 @@ export function useAuthInitialization({ setAuthenticated, setLoading, setProfile
      */
     const requestedPath = `${window.location.pathname}${window.location.search}`;
     /**
-     * No `onLoad`, so nothing about the page waits on the identity provider: the visitor is treated
-     * as signed out until they sign in.
+     * No `onLoad`: nothing here navigates to the identity provider while the page loads. A stored
+     * session is handed to the adapter instead, which refreshes it against the token endpoint
+     * before `init` answers - so a reload and a new tab are the same signed-in visitor, without a
+     * redirect and without asking anyone else for a cookie.
      *
      * `onLoad: "check-sso"` is what this used to ask for, with `silentCheckSsoRedirectUri` naming a
      * page of ours for the adapter to answer through. Such a check only works where third-party
@@ -47,10 +50,17 @@ export function useAuthInitialization({ setAuthenticated, setLoading, setProfile
      * `checkLoginIframe: false` keeps the adapter from polling the session status in a second
      * iframe, and `redirectUri` names where the visitor comes back to.
      */
-    keycloak.init({ pkceMethod: "S256", checkLoginIframe: false,
+    const stored = readKeycloakSession();
+    keycloak.init({ pkceMethod: "S256", checkLoginIframe: false, ...(stored ?? {}),
       redirectUri: `${window.location.origin}${requestedPath === "/login" ? "/" : requestedPath}` }).then((isAuthenticated) => {
       setAuthenticated(isAuthenticated); syncToken(keycloak.token);
       if (!isAuthenticated) return;
+      // The session now outlives this page load. Keycloak rotates the refresh token as it refreshes
+      // it, so the stored copy is written again every time the adapter reports a new one (see
+      // useKeycloakToken) - this is the copy a fresh page load starts from.
+      if (keycloak.token && keycloak.refreshToken) {
+        writeKeycloakSession({ token: keycloak.token, refreshToken: keycloak.refreshToken, idToken: keycloak.idToken });
+      }
       const data = keycloak.tokenParsed as { preferred_username?: string; email?: string;
         given_name?: string; family_name?: string;
         realm_access?: { roles?: string[] }; resource_access?: Record<string, { roles?: string[] }> } | undefined;
@@ -65,6 +75,11 @@ export function useAuthInitialization({ setAuthenticated, setLoading, setProfile
         setProfile((current) => ({ ...user, firstName: user.firstName ?? current?.firstName,
           lastName: user.lastName ?? current?.lastName, username: user.username || i18n.t("member") }));
       }).catch(() => undefined);
-    }).catch(() => setAuthenticated(false)).finally(() => setLoading(false));
+    }).catch(() => {
+      // A stored session that Keycloak refused to refresh is dropped, so the next page load does
+      // not present it again: the visitor starts from signed out, as if it had never been stored.
+      clearKeycloakSession();
+      setAuthenticated(false);
+    }).finally(() => setLoading(false));
   }, [i18n, setAuthenticated, setLoading, setProfile, setRoles, syncToken, t]);
 }

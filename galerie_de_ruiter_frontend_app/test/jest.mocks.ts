@@ -8,6 +8,8 @@ jest.mock("@/context/keycloakClient", () => {
   const keycloak = {
     authenticated: false,
     token: undefined,
+    refreshToken: undefined,
+    idToken: undefined,
     tokenParsed: undefined,
     init: jest.fn().mockResolvedValue(false),
     login: jest.fn().mockResolvedValue(undefined),

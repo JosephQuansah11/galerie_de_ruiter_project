@@ -1,0 +1,35 @@
+// The footer every page ends with, part three: the profiles it keeps, the line the page closes on,
+// and how the whole thing folds on a phone. Part of the same split as parts one and two, because no
+// stylesheet here is taller than a screenful (see src/styles/stylesheetBudget.test.ts).
+
+.site-footer-profiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// One chip per account: the mark and the name beside it, so the link says where it goes even before
+// the icon is recognised.
+.site-footer-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.site-footer-rights {
+  flex: 1 0 100%;
+  color: var(--theme-text-secondary);
+  opacity: 0.85;
+}
+
+// A phone gets one column: the brand, the profiles and the link groups stack instead of squeezing.
+@media (max-width: 575.98px) {
+  .site-footer-top,
+  .site-footer-columns {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}

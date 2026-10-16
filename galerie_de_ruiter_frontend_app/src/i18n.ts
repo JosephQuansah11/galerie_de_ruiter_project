@@ -1157,6 +1157,7 @@ const footerLabels: Record<string, Record<string, string>> = {
     footerExplore: "Explore the gallery",
     footerFollow: "Follow the gallery",
     footerInstagram: "Follow us on Instagram",
+    footerGallery: "The gallery",
     footerRights: "© {{year}} Galerie de Ruiter",
   },
   fr: {
@@ -1164,6 +1165,7 @@ const footerLabels: Record<string, Record<string, string>> = {
     footerExplore: "Découvrir la galerie",
     footerFollow: "Suivre la galerie",
     footerInstagram: "Suivez-nous sur Instagram",
+    footerGallery: "La galerie",
     footerRights: "© {{year}} Galerie de Ruiter",
   },
   "nl-NL": {
@@ -1171,6 +1173,7 @@ const footerLabels: Record<string, Record<string, string>> = {
     footerExplore: "Ontdek de galerie",
     footerFollow: "Volg de galerie",
     footerInstagram: "Volg ons op Instagram",
+    footerGallery: "De galerie",
     footerRights: "© {{year}} Galerie de Ruiter",
   },
   "nl-BE": {
@@ -1178,6 +1181,7 @@ const footerLabels: Record<string, Record<string, string>> = {
     footerExplore: "Ontdek de galerie",
     footerFollow: "Volg de galerie",
     footerInstagram: "Volg ons op Instagram",
+    footerGallery: "De galerie",
     footerRights: "© {{year}} Galerie de Ruiter",
   },
   de: {
@@ -1185,6 +1189,7 @@ const footerLabels: Record<string, Record<string, string>> = {
     footerExplore: "Die Galerie entdecken",
     footerFollow: "Der Galerie folgen",
     footerInstagram: "Folgen Sie uns auf Instagram",
+    footerGallery: "Die Galerie",
     footerRights: "© {{year}} Galerie de Ruiter",
   },
 };

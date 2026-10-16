@@ -35,6 +35,16 @@ describe("the footer", () => {
     }
   });
 
+  it("groups the links the way the footer reads them", () => {
+    renderPage(<SiteFooter />);
+
+    // Three landmarks, each named: the gallery's own links, the gallery itself, and the profiles.
+    // Named navigations are what let a screen reader jump straight to the group a visitor wants.
+    expect(screen.getByRole("navigation", { name: i18n.t("footerExplore") })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: i18n.t("footerGallery") })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: i18n.t("footerFollow") })).toBeInTheDocument();
+  });
+
   it("closes with the year", () => {
     renderPage(<SiteFooter />);
 

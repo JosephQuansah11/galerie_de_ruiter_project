@@ -1146,11 +1146,54 @@ const routeLabels: Record<string, Record<string, string>> = {
   de: { loadingPage: "Seite wird geladen..." },
 };
 
+/**
+ * Footer labels. The footer is part of the shell, so these are the words every page ends with: what
+ * the gallery is, the pages a visitor can read without an account, and the Instagram profile.
+ * Merged from one place like the blocks above so every language stays in step.
+ */
+const footerLabels: Record<string, Record<string, string>> = {
+  en: {
+    footerTagline: "Antiques, art and vintage design in Waasmunster, Belgium.",
+    footerExplore: "Explore the gallery",
+    footerFollow: "Follow the gallery",
+    footerInstagram: "Follow us on Instagram",
+    footerRights: "© {{year}} Galerie de Ruiter",
+  },
+  fr: {
+    footerTagline: "Antiquités, art et design vintage à Waasmunster, en Belgique.",
+    footerExplore: "Découvrir la galerie",
+    footerFollow: "Suivre la galerie",
+    footerInstagram: "Suivez-nous sur Instagram",
+    footerRights: "© {{year}} Galerie de Ruiter",
+  },
+  "nl-NL": {
+    footerTagline: "Antiek, kunst en vintage design in Waasmunster, België.",
+    footerExplore: "Ontdek de galerie",
+    footerFollow: "Volg de galerie",
+    footerInstagram: "Volg ons op Instagram",
+    footerRights: "© {{year}} Galerie de Ruiter",
+  },
+  "nl-BE": {
+    footerTagline: "Antiek, kunst en vintage design in Waasmunster, België.",
+    footerExplore: "Ontdek de galerie",
+    footerFollow: "Volg de galerie",
+    footerInstagram: "Volg ons op Instagram",
+    footerRights: "© {{year}} Galerie de Ruiter",
+  },
+  de: {
+    footerTagline: "Antiquitäten, Kunst und Vintage-Design in Waasmunster, Belgien.",
+    footerExplore: "Die Galerie entdecken",
+    footerFollow: "Der Galerie folgen",
+    footerInstagram: "Folgen Sie uns auf Instagram",
+    footerRights: "© {{year}} Galerie de Ruiter",
+  },
+};
+
 /** Applies the label maps above; a language that misses a key still reads in English. */
 function translationFor(language: string, keys: Record<string, string>): Record<string, string> {
   const translation = { ...keys };
   for (const labels of [engagementLabels, chatAccessLabels, availabilityLabels, imageUploadLabels,
-    aboutEditorLabels, cataloguePagingLabels, pageMetaLabels, routeLabels]) {
+    aboutEditorLabels, cataloguePagingLabels, pageMetaLabels, routeLabels, footerLabels]) {
     Object.assign(translation, labels[language] ?? labels.en);
   }
   return translation;

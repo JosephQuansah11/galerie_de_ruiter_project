@@ -1,0 +1,50 @@
+// The footer every page ends with, part one: the block itself and the gallery's own words beside
+// it. It reads its colours from the theme tokens, so it follows the palette a visitor picked along
+// with the rest of the shell - all fourteen of them.
+//
+// It is the last thing in the shell rather than in a page, so no page has to remember it, and it
+// carries only what does not go stale: the pages a visitor can read, the Instagram profile and the
+// year. The address and the opening hours live on the location screen and stay there.
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.75rem 2.5rem;
+  width: 100%;
+  margin-top: 2.5rem;
+  padding: 1.75rem 1.25rem 2.5rem 0;
+  border-top: 1px solid var(--theme-border);
+  color: var(--theme-text-secondary);
+  font-size: 0.9rem;
+
+  a {
+    color: var(--theme-text);
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--theme-primary);
+      text-decoration: underline;
+    }
+  }
+}
+
+.site-footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 24rem;
+}
+
+.site-footer-wordmark {
+  color: var(--theme-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+}
+
+.site-footer-tagline {
+  line-height: 1.5;
+}

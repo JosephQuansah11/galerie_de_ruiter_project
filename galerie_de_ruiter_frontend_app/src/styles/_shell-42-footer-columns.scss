@@ -1,0 +1,39 @@
+// The footer every page ends with, part two: the two columns of it, the Instagram profile and the
+// line the page closes on. Kept apart from part one because no stylesheet here is taller than a
+// screenful (see src/styles/stylesheetBudget.test.ts).
+
+.site-footer-links,
+.site-footer-social {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 10rem;
+}
+
+.site-footer-heading {
+  color: var(--theme-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.site-footer-instagram {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.site-footer-rights {
+  flex: 1 0 100%;
+  color: var(--theme-text-secondary);
+  opacity: 0.85;
+}
+
+// A phone gets one column: the brand, the links and the profile stack instead of squeezing.
+@media (max-width: 575.98px) {
+  .site-footer {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}

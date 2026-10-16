@@ -76,6 +76,9 @@ describe("the document, read without the bundle", () => {
     // /about, so the document must not carry a copy: the copy is what goes stale.
     expect(galleryNode.streetAddress).toBeUndefined();
     expect(galleryNode.openingHoursSpecification).toBeUndefined();
+    // Its Instagram profile, as the same entity, so a search engine can tie the two together. The
+    // footer links to the profile as well, but a link from a page says far less than this does.
+    expect(galleryNode.sameAs).toEqual(["https://www.instagram.com/galerie_de_ruiter/"]);
 
     const siteNode = nodes.find((node) => node["@type"] === "WebSite")!;
     expect(siteNode.inLanguage).toBe("nl-BE");

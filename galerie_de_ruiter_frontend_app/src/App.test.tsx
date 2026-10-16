@@ -50,7 +50,9 @@ describe("App shell", () => {
     // page no longer waits for the account check, so the link arrives with the answer rather
     // than with the heading.
     expect(await screen.findByText(i18n.t("navSignIn"))).toBeInTheDocument();
-    expect(screen.getByText(i18n.t("navGalleryChat"))).toBeInTheDocument();
+    // The label appears twice now: the navigation shows it to a visitor, and the footer repeats the
+    // four pages a visitor can reach without an account. So this asks for the link, not one element.
+    expect(screen.getAllByRole("link", { name: i18n.t("navGalleryChat") }).length).toBeGreaterThan(0);
   });
 
   it.each(["/home", "/dashboard"])("sends the old landing-page address %s on to the root", async (route) => {

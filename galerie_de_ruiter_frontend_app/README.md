@@ -354,9 +354,10 @@ An audit reported that a form field had no `id`. A control without one cannot be
 `<label for>` or reached through a fragment, and assistive technology falls back to the placeholder,
 which is a hint rather than a name. Every control on a page a visitor reaches carries one now: the
 chat composer (`chat-message`), the three fields of the appointment request (`chat-appointment-date`,
-`-time`, `-type`), the collection search (`catalogue-search`), the page size (`catalogue-page-size`),
-and the language switcher (`language-switcher`, which is labelled by `aria-label` and so needs the id
-rather than a `<label>`).
+`-time`, `-type`), the collection search (`catalogue-search`) and the page size
+(`catalogue-page-size`). The language switcher (`language-switcher`) has one too, for the day a screen
+puts it back: it is labelled by `aria-label` rather than a `<label>`, and nothing renders it today, so
+it is not in the bundle.
 
 Still open: the admin screens keep their `Form.Group`/`Form.Label` pairs, and most of those groups
 declare no `controlId`, so Bootstrap cannot wire the label to the control inside it. `LocationCoordinates`

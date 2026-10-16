@@ -27,6 +27,13 @@ type Props = {
   setCategory: (category: string) => void;
   /** Whether the visitor has an account: a visitor sees the first page of the list and no more. */
   signedIn: boolean;
+  /**
+   * True while the account check is still on its way. Neither the paging controls nor the
+   * invitation belongs on screen then: the answer decides which of the two it is, and showing the
+   * wrong one for a moment is showing a signed-in visitor a restriction that does not apply to
+   * them.
+   */
+  checkingSession: boolean;
 };
 
 export function CataloguePage(props: Props) {
@@ -62,7 +69,7 @@ export function CataloguePage(props: Props) {
     <CatalogueStatus loading={props.loading} error={props.error} categoriesLoading={props.categoriesLoading} categoriesError={props.categoriesError} empty={!props.filteredAntiques.length} hasQuery={Boolean(props.query)} />
     {!props.loading && !props.error && <>
       <AntiqueList antiques={visible} />
-      {props.filteredAntiques.length > 0 && (props.signedIn
+      {props.filteredAntiques.length > 0 && !props.checkingSession && (props.signedIn
         ? <CataloguePaging pageSize={pageSize} page={currentPage} pageCount={pageCount}
           onPageSize={setPageSize} onPage={setPage} />
         // The invitation belongs there only when there is something past the first page.

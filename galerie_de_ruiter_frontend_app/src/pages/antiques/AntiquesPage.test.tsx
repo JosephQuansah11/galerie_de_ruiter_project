@@ -32,8 +32,15 @@ const pieces: Antique[] = [
   { id: "2", title: "Brass reading lamp", category: "Lighting", description: "Art deco", price: null },
 ];
 
+/** Twenty pieces, so the collection runs past the twelve a page holds. */
+const twenty = () => Array.from({ length: 20 }, (_, index) => ({
+  id: `p${index}`, title: `Piece ${index + 1}`, category: null, description: "A piece", price: 10,
+}));
+
 beforeEach(() => {
   mockAuth.authenticated = true;
+  mockAuth.isAdmin = false;
+  mockAuth.loading = false;
   mockedAntiques.mockResolvedValue(pieces);
   mockedCategories.mockResolvedValue([
     { id: "c1", name: "Mirrors", visible: true, itemCount: 1, children: [] },
@@ -191,5 +198,29 @@ describe("Catalogue page", () => {
     fireEvent.click(screen.getAllByRole("button", { name: new RegExp(i18n.t("add"), "i") })[0]);
 
     expect(await screen.findByText("the sign-in page")).toBeInTheDocument();
+  });
+
+  it("gives an administrator the whole collection, like any other account", async () => {
+    mockAuth.isAdmin = true;
+    mockedAntiques.mockResolvedValueOnce(twenty());
+
+    renderPage(<AntiquesPage />, { shopping: true });
+    await screen.findByText("Piece 1");
+
+    expect(document.querySelectorAll(".catalogue-row")).toHaveLength(12);
+    expect(screen.getByText(i18n.t("pageOf", { page: 1, pages: 2 }))).toBeInTheDocument();
+    expect(screen.queryByText(i18n.t("collectionSignInHint"))).not.toBeInTheDocument();
+  });
+
+  it("shows neither the paging controls nor the invitation while the account check runs", async () => {
+    // The check decides which of the two belongs on screen; until it answers, neither does.
+    mockAuth.loading = true;
+    mockedAntiques.mockResolvedValueOnce(twenty());
+
+    renderPage(<AntiquesPage />, { shopping: true });
+    await screen.findByText("Piece 1");
+
+    expect(screen.queryByLabelText(i18n.t("itemsPerPage"))).not.toBeInTheDocument();
+    expect(screen.queryByText(i18n.t("collectionSignInHint"))).not.toBeInTheDocument();
   });
 });

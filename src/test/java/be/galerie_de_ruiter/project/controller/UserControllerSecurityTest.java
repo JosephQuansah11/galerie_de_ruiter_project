@@ -17,7 +17,7 @@ import static org.mockito.Mockito.verify;
 
 import be.galerie_de_ruiter.project.domain.User;
 import be.galerie_de_ruiter.project.service.UserService;
-import be.galerie_de_ruiter.project.service.OllamaChatService;
+import be.galerie_de_ruiter.project.service.GalleryChatService;
 import be.galerie_de_ruiter.project.service.AntiqueService;
 import be.galerie_de_ruiter.project.dto.ChatRequest;
 import be.galerie_de_ruiter.project.dto.ChatResponse;
@@ -48,7 +48,7 @@ class UserControllerSecurityTest {
     private UserService users;
 
     @MockitoBean
-    private OllamaChatService chat;
+    private GalleryChatService chat;
 
     @MockitoBean
     private AntiqueService antiques;

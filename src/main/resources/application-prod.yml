@@ -42,21 +42,6 @@ keycloak:
     email: ${KEYCLOAK_REALM_ADMIN_EMAIL:}
     password: ${KEYCLOAK_REALM_ADMIN_PASSWORD:admin}
 
-ollama:
-  base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
-  model: ${OLLAMA_MODEL:llama3.2:3b}
-  # Keep the model resident for the whole chat session instead of reloading per prompt.
-  keep-alive: ${OLLAMA_KEEP_ALIVE:30m}
-  # Download the configured model the first time the chat page asks for it, so a fresh
-  # installation never needs a manual "ollama pull". That same model is then pinned for the
-  # whole session and kept resident by the chat page heartbeat.
-  auto-pull: ${OLLAMA_AUTO_PULL:true}
-  pull-retry: ${OLLAMA_PULL_RETRY:60s}
-  pull-timeout: ${OLLAMA_PULL_TIMEOUT:30m}
-  touch-interval: ${OLLAMA_TOUCH_INTERVAL:10m}
-  # Upper bound for one model reply, so a stalled model fails with a clear error instead of hanging.
-  reply-timeout: ${OLLAMA_REPLY_TIMEOUT:3m}
-
 app:
   security:
     # The Render frontend and API are served from different origins, so the CSRF

@@ -53,9 +53,6 @@ import org.springframework.test.web.servlet.MvcResult;
 @EnabledIfEnvironmentVariable(named = "RUN_PRODUCTION_SMOKE", matches = "true")
 class ProductionProfileSmokeTest {
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final AtomicReference<String> ollamaSystemPrompt = new AtomicReference<>();
-    private static final AtomicReference<String> ollamaModel = new AtomicReference<>();
-    private static HttpServer ollama;
 
     @Autowired
     private MockMvc mvc;
@@ -80,16 +77,6 @@ class ProductionProfileSmokeTest {
         properties.add("KEYCLOAK_ADMIN_USERNAME", () -> "smoke-admin");
         properties.add("KEYCLOAK_ADMIN_PASSWORD", () -> "smoke-password");
         properties.add("FRONTEND_ORIGIN", () -> "http://localhost:3000");
-        properties.add("OLLAMA_BASE_URL", ProductionProfileSmokeTest::startOllamaStub);
-        properties.add("OLLAMA_MODEL", () -> "smoke-model");
-    }
-
-    @AfterAll
-    static void stopOllamaStub() {
-        if (ollama != null) {
-            ollama.stop(0);
-            ollama = null;
-        }
     }
 
     @Test
@@ -241,25 +228,28 @@ class ProductionProfileSmokeTest {
                 .andExpect(jsonPath("$.description").value("Updated smoke description"))
                 .andExpect(jsonPath("$.price").value(140.75));
 
-        // The chat interface confirms the model connection before it sends a prompt.
+        // The chat interface asks whether the assistant is ready. There is no model to load, so the
+        // answer is ready and names the template assistant rather than a model.
         mvc.perform(get("/api/chat/status"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.ready").value(true))
-                .andExpect(jsonPath("$.model").value("smoke-model"));
+                .andExpect(jsonPath("$.model").value("gallery-templates"));
 
-        mvc.perform(post("/api/chat")
+        // A question about how much is in the gallery is answered from the catalogue itself: the reply
+        // carries the count, and the link names the collection page it came from.
+        MvcResult chatReply = mvc.perform(post("/api/chat")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                        {"message":"How many categories are available and tell me about Updated production smoke antique by Smoke Artist.","history":[]}
+                                        {"message":"How many pieces are in the pop-up gallery?","history":[],"language":"en"}
                                 """))
                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.message").value("There are 7 visible categories."))
-                                .andExpect(jsonPath("$.sources[0].url").isString());
-        assertThat(ollamaModel).hasValue("smoke-model");
-        assertThat(ollamaSystemPrompt.get())
-                .contains("There are 7 visible catalogue categories:")
-                .contains("Updated production smoke antique")
-                .contains("Smoke Artist")
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString(
+                        String.valueOf(antiqueRepository.count()))))
+                .andExpect(jsonPath("$.sources[0].url").value("/antiques"))
+                .andReturn();
+        // Nothing but the gallery's own public records goes into an answer, so the administrator's
+        // credentials cannot appear in one.
+        assertThat(chatReply.getResponse().getContentAsString())
                 .doesNotContain("smoke-admin@example.test")
                 .doesNotContain("production-smoke-password");
 
@@ -272,7 +262,7 @@ class ProductionProfileSmokeTest {
                                         """))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.appointmentConfirmed").value(false))
-                        .andExpect(jsonPath("$.appointmentHandoffRequired").value(true))
+                        .andExpect(jsonPath("$.appointmentHandoffRequired").value(false))
                         .andExpect(jsonPath("$.appointmentAt").doesNotExist());
         assertThat(appointments.existsByKeycloakSubjectAndStartsAtAndType(
                         appointmentSubject, LocalDateTime.parse("2099-05-10T11:00:00"), "VISIT")).isFalse();
@@ -347,59 +337,4 @@ class ProductionProfileSmokeTest {
         return glb.array();
     }
 
-    private static synchronized String startOllamaStub() {
-        if (ollama == null) {
-            try {
-                ollama = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-                ollama.createContext("/api/tags", exchange -> {
-                    try {
-                        byte[] response = JSON.writeValueAsBytes(Map.of(
-                                "models", java.util.List.of(Map.of("name", "smoke-model"))));
-                        exchange.getResponseHeaders().set("Content-Type", "application/json");
-                        exchange.sendResponseHeaders(200, response.length);
-                        exchange.getResponseBody().write(response);
-                    } catch (Exception exception) {
-                        byte[] response = exception.getMessage().getBytes(StandardCharsets.UTF_8);
-                        exchange.sendResponseHeaders(500, response.length);
-                        exchange.getResponseBody().write(response);
-                    } finally {
-                        exchange.close();
-                    }
-                });
-                ollama.createContext("/api/chat", exchange -> {
-                    try {
-                        JsonNode request = JSON.readTree(exchange.getRequestBody());
-                        ollamaModel.set(request.path("model").asText());
-                        ollamaSystemPrompt.set(request.path("messages").path(0).path("content").asText());
-                        boolean appointment = request.path("messages")
-                                .path(request.path("messages").size() - 1)
-                                .path("content").asText().contains("appointment");
-                        Map<String, Object> modelReply = new java.util.LinkedHashMap<>();
-                        modelReply.put("reply", appointment
-                                ? "Your appointment is confirmed."
-                                : "There are 7 visible categories.");
-                        modelReply.put("appointmentAt", appointment ? "2099-05-10T11:00:00" : null);
-                        modelReply.put("appointmentType", appointment ? "VISIT" : null);
-                        modelReply.put("appointmentConfirmed", appointment);
-                        String modelContent = JSON.writeValueAsString(modelReply);
-                        byte[] response = JSON.writeValueAsBytes(Map.of(
-                                "message", Map.of("content", modelContent)));
-                        exchange.getResponseHeaders().set("Content-Type", "application/json");
-                        exchange.sendResponseHeaders(200, response.length);
-                        exchange.getResponseBody().write(response);
-                    } catch (Exception exception) {
-                        byte[] response = exception.getMessage().getBytes(StandardCharsets.UTF_8);
-                        exchange.sendResponseHeaders(500, response.length);
-                        exchange.getResponseBody().write(response);
-                    } finally {
-                        exchange.close();
-                    }
-                });
-                ollama.start();
-            } catch (IOException exception) {
-                throw new IllegalStateException("Could not start the isolated Ollama test stub.", exception);
-            }
-        }
-        return "http://127.0.0.1:" + ollama.getAddress().getPort();
-    }
 }

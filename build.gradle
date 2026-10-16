@@ -151,3 +151,10 @@ tasks.named("bootRun") {
 tasks.named("compileJava") {
     options.compilerArgs.add("-parameters")
 }
+
+// The chat's templates carry the accented characters of all five languages the site ships. Without
+// this, the compiler reads the sources in the platform's own charset - which is UTF-8 on the Linux
+// images and not on a Windows machine - and the same source would produce different text.
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+}

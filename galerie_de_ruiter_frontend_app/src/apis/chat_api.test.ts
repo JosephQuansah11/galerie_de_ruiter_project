@@ -1,5 +1,5 @@
 import axiosInstance from "@/apis/authPromise";
-import { sendChatMessage, warmUpChat } from "./chat_api";
+import { sendChatMessage } from "./chat_api";
 
 jest.mock("@/apis/apiConfig", () => ({ apiBaseUrl: "https://galerie-java-api.test" }));
 jest.mock("@/apis/authPromise", () => ({
@@ -8,29 +8,44 @@ jest.mock("@/apis/authPromise", () => ({
 }));
 
 const mockedPost = axiosInstance.post as jest.Mock;
-const timeoutOf = (call: number) => (mockedPost.mock.calls[call][2] as { timeout: number }).timeout;
+const replyBody = { message: "hi", appointmentConfirmed: false, appointmentHandoffRequired: false, sources: [] };
 
 /**
- * The shared client aborts a request after 15 seconds, which cancelled every reply from the
- * CPU-hosted model while the fast status probe still reported "ready". The chat calls must set
- * their own, longer window so the reply is not cut off mid-generation.
+ * The chat request as the API expects it.
+ *
+ * It used to carry a three-minute timeout of its own, because a CPU-hosted model needed that long to
+ * answer and the shared 15-second window cancelled every reply. The assistant now answers from the
+ * gallery's own records, so the request is only about the question: the recent turns, the appointment
+ * a visitor picked in the picker, and their language, which is what the reply comes back in.
  */
-describe("chat API request timeouts", () => {
-  it("gives a model reply a window far longer than the 15s shared default", async () => {
-    mockedPost.mockResolvedValue({
-      data: { message: "hi", appointmentConfirmed: false, appointmentHandoffRequired: false, sources: [] },
+describe("the chat request", () => {
+  it("sends the question, the history, the appointment and the visitor's language", async () => {
+    mockedPost.mockResolvedValue({ data: replyBody });
+
+    await sendChatMessage("How many pieces are there?", [{ role: "user", text: "Hello" }],
+      { at: "2030-11-01T10:00", type: "VISIT" }, "en");
+
+    expect(mockedPost.mock.calls[0][0]).toBe("https://galerie-java-api.test/api/chat");
+    expect(mockedPost.mock.calls[0][1]).toEqual({
+      message: "How many pieces are there?",
+      history: [{ role: "user", text: "Hello" }],
+      appointmentSelection: { at: "2030-11-01T10:00", type: "VISIT" },
+      language: "en",
     });
-
-    await sendChatMessage("Hello");
-
-    expect(timeoutOf(0)).toBeGreaterThanOrEqual(120000);
+    // No window of its own any more: a reply is a database read, and the shared one is generous.
+    expect(mockedPost.mock.calls[0][2]).toBeUndefined();
   });
 
-  it("gives the warm-up enough time to load the model", async () => {
-    mockedPost.mockResolvedValue({ data: { ready: true, model: "llama3.2:3b", detail: "" } });
+  it("sends only the question when that is all the visitor gave", async () => {
+    mockedPost.mockResolvedValue({ data: replyBody });
 
-    await warmUpChat();
+    await sendChatMessage("Hallo");
 
-    expect(timeoutOf(0)).toBeGreaterThanOrEqual(60000);
+    expect(mockedPost.mock.calls[0][1]).toEqual({
+      message: "Hallo",
+      history: [],
+      appointmentSelection: undefined,
+      language: undefined,
+    });
   });
 });

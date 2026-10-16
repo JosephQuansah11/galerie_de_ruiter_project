@@ -14,21 +14,5 @@ public interface AntiqueRepository extends JpaRepository<Antique, UUID> {
     @EntityGraph(attributePaths = {"images", "artist", "category"})
     List<Antique> findAll();
 
-    @Query("""
-            select a.id as id,
-                   a.title as title,
-                   d.firstName as artistFirstName,
-                   d.middleName as artistMiddleName,
-                   d.lastName as artistLastName,
-                   a.description as description,
-                   a.price as price,
-                   c.name as category,
-                   a.sold as sold
-            from Antique a
-            left join a.artist d
-            left join a.category c
-            """)
-    List<ChatCatalogueProjection> findChatCatalogueEntries();
-
     List<Antique> findByArtistId(UUID artistId);
 }

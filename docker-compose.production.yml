@@ -53,24 +53,6 @@ services:
       keycloak-database:
         condition: service_healthy
 
-  ollama:
-    build:
-      context: ./services/ollama
-    restart: unless-stopped
-    environment:
-      OLLAMA_HOST: 0.0.0.0:11434
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
-    volumes:
-      - ollama-models:/root/.ollama
-    expose:
-      - "11434"
-    healthcheck:
-      test: ["CMD-SHELL", "ollama show \"$${OLLAMA_MODEL}\" >/dev/null 2>&1"]
-      interval: 10s
-      timeout: 5s
-      start_period: 45s
-      retries: 50
-
   java-api:
     build:
       context: .
@@ -97,8 +79,6 @@ services:
       KEYCLOAK_REALM_ADMIN_USERNAME: ${KEYCLOAK_REALM_ADMIN_USERNAME:?Set KEYCLOAK_REALM_ADMIN_USERNAME}
       KEYCLOAK_REALM_ADMIN_EMAIL: ${KEYCLOAK_REALM_ADMIN_EMAIL:-}
       KEYCLOAK_REALM_ADMIN_PASSWORD: ${KEYCLOAK_REALM_ADMIN_PASSWORD:?Set KEYCLOAK_REALM_ADMIN_PASSWORD}
-      OLLAMA_BASE_URL: http://ollama:11434
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
       MODELS_STORAGE_DIR: /app/data/models
     volumes:
       - models-data:/app/data/models
@@ -107,8 +87,6 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_started
-      ollama:
-        condition: service_healthy
 
   frontend:
     build:
@@ -142,5 +120,4 @@ services:
 volumes:
   postgres-data:
   keycloak-postgres-data:
-  ollama-models:
   models-data:

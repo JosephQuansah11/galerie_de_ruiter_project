@@ -3,7 +3,7 @@ package be.galerie_de_ruiter.project.controller;
 import be.galerie_de_ruiter.project.dto.ChatConnectionStatus;
 import be.galerie_de_ruiter.project.dto.ChatRequest;
 import be.galerie_de_ruiter.project.dto.ChatResponse;
-import be.galerie_de_ruiter.project.service.OllamaChatService;
+import be.galerie_de_ruiter.project.service.GalleryChatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,10 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
 public class ChatController {
-    private final OllamaChatService chat;
+    private final GalleryChatService chat;
 
     /**
-     * Lets the chat interface confirm the model connection before it sends a prompt.
+     * Lets the chat interface confirm the assistant is reachable before it sends a prompt. It always
+     * answers ready, because the replies come from the gallery's own records rather than from a model
+     * that has to be loaded first.
      */
     @GetMapping("/status")
     public ChatConnectionStatus status() {
@@ -29,8 +31,8 @@ public class ChatController {
     }
 
     /**
-     * Establishes the model connection for the current session when the visitor opens
-     * the chat page, so the first prompt is not answered by a cold model.
+     * Kept for the chat interface, which asks for it when the visitor opens the page. There is
+     * nothing to warm up.
      */
     @PostMapping("/warmup")
     public ChatConnectionStatus warmUp() {

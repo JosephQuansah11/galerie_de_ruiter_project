@@ -56,23 +56,11 @@ services:
       - key: KC_BOOTSTRAP_ADMIN_PASSWORD
         sync: false
 
-  - type: pserv
-    name: galerie-ollama
-    runtime: docker
-    dockerfilePath: ./services/ollama/Dockerfile
-    dockerContext: ./services/ollama
-    plan: pro
-    autoDeploy: true
-    disk:
-      name: ollama-models
-      mountPath: /root/.ollama
-      sizeGB: 5
-    envVars:
-      - key: OLLAMA_HOST
-        value: 0.0.0.0:11434
-      - key: OLLAMA_MODEL
-        value: llama3.2:3b
-
+  # galerie-ollama (services/ollama) used to run here: a private Ollama service with a 5 GB model
+  # disk, holding the language model the chat answered from. The chat now answers from the gallery's
+  # own records (see GalleryChatService), so the service, its disk and the model download are gone -
+  # a private service on a `pro` plan plus 5 GB of disk, for a model nothing calls. A blueprint sync
+  # deletes both.
   - type: web
     name: galerie-java-api
     # The API has to build the branch the code is on. Without this line the service follows the
@@ -148,13 +136,6 @@ services:
         value: ""
       - key: KEYCLOAK_REALM_ADMIN_PASSWORD
         sync: false
-      - key: OLLAMA_BASE_URL
-        fromService:
-          type: pserv
-          name: galerie-ollama
-          property: hostport
-      - key: OLLAMA_MODEL
-        value: llama3.2:3b
 
   - type: web
     name: galerie-frontend

@@ -1,6 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { Spinner } from "react-bootstrap";
-import { RefreshCw } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useGalleryChat } from "./chat/useGalleryChat";
 import { ChatHeader } from "./chat/ChatHeader";
@@ -10,35 +8,24 @@ import { ChatQuickOptions } from "./chat/ChatQuickOptions";
 import { ChatAppointmentPicker } from "./chat/ChatAppointmentPicker";
 import { useState } from "react";
 
+/**
+ * The gallery chat. There is no model behind it any more: the assistant answers from the gallery's own
+ * records, so there is no connection to establish, no status to report and nothing to wait for - the
+ * composer is ready with the page. What the page offers is what it always offered: the collection, the
+ * location and the opening hours, and a request for a visit or an online appointment.
+ */
 export default function ChatPage() {
   const { t, i18n } = useTranslation();
-  const chat = useGalleryChat();
+  // The reply comes back in the visitor's language, so the assistant is told which one it is.
+  const chat = useGalleryChat(i18n.language);
   const [showAppointmentPicker, setShowAppointmentPicker] = useState(false);
-  // A colour-coded dot that always shows whether the assistant service (Ollama) is reachable,
-  // so the visitor can tell "starting up" from "running" at a glance.
-  const assistantStatus = chat.checkingConnection ? "checking" : chat.ready ? "online" : "offline";
   // The chat is one URL now: it used to answer on `/dashboard/chat` too, and that address
   // redirects here, so the canonical points at the page a visitor actually reads.
   usePageMeta({ title: t("metaChatTitle"), description: t("metaChatDescription"), canonicalPath: "/chat" });
   return <section className="chat-page">
     <ChatHeader appointment={chat.appointment} />
-    <div className={`chat-assistant-status is-${assistantStatus}`} role="status" aria-live="polite">
-      <span className="chat-status-dot" aria-hidden="true" />
-      <span>{t(assistantStatus === "online" ? "chatStatusOnline" : assistantStatus === "checking" ? "chatStatusChecking" : "chatStatusOffline")}</span>
-    </div>
-    {!chat.ready && <div className="chat-status" role="status" aria-live="polite">
-      <Spinner animation="border" size="sm" />
-      <div className="chat-status-copy">
-        <strong>{t(chat.checkingConnection ? "chatConnecting" : "chatNotReady")}</strong>
-        {chat.connectionDetail && <span>{chat.connectionDetail}</span>}
-      </div>
-      {!chat.checkingConnection && <button type="button" className="chat-status-retry"
-        onClick={() => void chat.checkConnection()}>
-        <RefreshCw size={15} />{t("chatRetry")}
-      </button>}
-    </div>}
     <ChatThread messages={chat.messages} sending={chat.sending} />
-    <ChatQuickOptions disabled={!chat.ready || chat.sending} onPrompt={(prompt) => void chat.sendText(prompt)}
+    <ChatQuickOptions disabled={chat.sending} onPrompt={(prompt) => void chat.sendText(prompt)}
       onAppointment={() => setShowAppointmentPicker((visible) => !visible)} />
     {showAppointmentPicker && <ChatAppointmentPicker disabled={chat.sending}
       onCancel={() => setShowAppointmentPicker(false)}
@@ -52,6 +39,6 @@ export default function ChatPage() {
         {" · "}{chat.appointment.type === "VISIT" ? t("appointmentVisit") : t("appointmentOnline")}</span>
       <span>{t("chatAppointmentNote")}</span>
     </div>}
-    <ChatComposer draft={chat.draft} sending={chat.sending} disabled={!chat.ready} onChange={chat.setDraft} onSubmit={chat.send} />
+    <ChatComposer draft={chat.draft} sending={chat.sending} disabled={chat.sending} onChange={chat.setDraft} onSubmit={chat.send} />
   </section>;
 }

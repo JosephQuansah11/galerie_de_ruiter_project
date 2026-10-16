@@ -19,11 +19,13 @@
     />
     <meta name="theme-color" content="#841a23" />
 
-    <!-- Search Console proves the gallery owns this domain by reading this tag. It is a public
-         identifier rather than a secret, and a rewrite of the head that dropped it would leave the
-         property unverified - which Search Console reports as a lost property, not as a missing tag.
-         `src/staticDocument.test.ts` fails if it goes. -->
+    <!-- The search engines that can verify this domain verify it by reading a tag: Search Console
+         looks for google-site-verification, Bing Webmaster Tools for msvalidate.01. Both are public
+         identifiers rather than secrets, and a rewrite of the head that dropped either would leave
+         that property unverified - which is reported as a lost property, not as a missing tag.
+         `src/staticDocument.test.ts` fails if either goes. -->
     <meta name="google-site-verification" content="IaJnT_8DR-TKcufSWA6b6NXIpdTr0HWM_ESjn8dTZZk" />
+    <meta name="msvalidate.01" content="AAC8AEE642559AB3391A1E00FD2ABCAB" />
 
     <!-- How a shared link to the gallery looks. Pages replace the title and description at
          runtime; these are the site-wide defaults. -->

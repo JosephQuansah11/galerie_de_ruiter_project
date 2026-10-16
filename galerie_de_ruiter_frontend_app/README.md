@@ -53,9 +53,9 @@ The app is one HTML page, so what a crawler can reach is decided in five places:
   records the gallery edits and they are shown on `/map` and `/about`, so a copy in the document
   would be the copy that goes stale. `src/staticDocument.test.ts` pins all of it, including that
   the description is the one the landing page sets at runtime (`metaHomeDescription`). The head also
-  carries `google-site-verification`, the tag that proves the domain to Search Console: the test pins
-  its value too, because a rebuild that dropped it would be reported as a lost property rather than
-  as a missing tag.
+  carries the two tags that prove the domain to the search engines - `google-site-verification` for
+  Search Console and `msvalidate.01` for Bing Webmaster Tools: the test pins both values, because a
+  rebuild that dropped one would be reported as a lost property rather than as a missing tag.
 - **`src/hooks/usePageMeta.ts`** — every page sets its own `<title>`, `<meta name="description">`,
   `<link rel="canonical">` and Open Graph tags. Pages call it with their own translated copy;
   the strings live in `pageMetaLabels` in `src/i18n.ts`. The canonical URL is built from the
@@ -138,7 +138,9 @@ Both should name the public origin. Then, in Search Console, submit
 The property is verified with the `google-site-verification` tag in `index.html` rather than with a
 DNS record or an uploaded file, so nothing outside a deploy has to stay in place for it - and it is
 the same origin the sitemap and the canonical URLs name. A rewrite of the head that dropped the tag
-would take the property with it, which is why `src/staticDocument.test.ts` pins the value.
+would take the property with it, which is why `src/staticDocument.test.ts` pins the value. Bing
+Webmaster Tools verifies the same origin the same way, through the `msvalidate.01` tag beside it, and
+that one is pinned by the same test.
 
 Those are the pages that can be indexed. Everything else needs an account and answers with the
 sign-in page, which carries `noindex`, so a crawler that follows `/antiques` finds the login page

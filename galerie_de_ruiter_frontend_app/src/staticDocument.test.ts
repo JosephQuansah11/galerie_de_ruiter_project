@@ -38,11 +38,14 @@ describe("the document, read without the bundle", () => {
     expect(description!.length).toBeLessThanOrEqual(160);
   });
 
-  it("carries the tag that proves the domain to Search Console", () => {
-    // The gallery verifies the domain by serving this tag. A rewrite of the head that dropped it
-    // would leave the property unverified, which Search Console reports as a lost property rather
-    // than as a missing tag - so the value is pinned here rather than left to the head's history.
+  it("carries the tags that prove the domain to the search engines", () => {
+    // The gallery verifies the domain by serving these tags: Search Console reads
+    // google-site-verification, Bing Webmaster Tools reads msvalidate.01. A rewrite of the head that
+    // dropped either would leave that property unverified, which is reported as a lost property
+    // rather than as a missing tag - so both values are pinned here rather than left to the head's
+    // history.
     expect(content('meta[name="google-site-verification"]')).toBe("IaJnT_8DR-TKcufSWA6b6NXIpdTr0HWM_ESjn8dTZZk");
+    expect(content('meta[name="msvalidate.01"]')).toBe("AAC8AEE642559AB3391A1E00FD2ABCAB");
   });
 
   it("has one top-level heading", () => {

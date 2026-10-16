@@ -14,7 +14,8 @@
 .app-main.main-content {
   width: 100%;
   min-height: calc(100dvh - var(--top-nav-height));
-  height: calc(100dvh - var(--top-nav-height));
+  // height: auto so the window scrolls the page: capped, this box was never passed and the footer below it was unreachable.
+  height: auto;
   margin: var(--top-nav-height) 0 0;
   padding: 0;
   overflow-y: auto;

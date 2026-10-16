@@ -1,0 +1,8 @@
+// The shell itself: a column at least as tall as the viewport, so the footer that closes it sits
+// on the floor of a short page and follows the content of a long one (see _shell-41-footer).
+
+.container-div {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}

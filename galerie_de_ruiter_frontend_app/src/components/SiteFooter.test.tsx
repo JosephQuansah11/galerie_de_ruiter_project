@@ -45,6 +45,18 @@ describe("the footer", () => {
     expect(screen.getByRole("navigation", { name: i18n.t("footerFollow") })).toBeInTheDocument();
   });
 
+  it("sits at the end of the page and outside the main landmark", async () => {
+    renderPage(<ProtectedLayout />);
+
+    const footer = await screen.findByRole("contentinfo");
+    const main = screen.getByRole("main");
+    // Outside <main>: a footer inside it would be part of the page's own content, and a screen
+    // reader would read it as the last thing the page says rather than as the end of the shell.
+    expect(main.contains(footer)).toBe(false);
+    // And the last thing in the shell, with every page drawn before it.
+    expect(footer.parentElement?.lastElementChild).toBe(footer);
+  });
+
   it("closes with the year", () => {
     renderPage(<SiteFooter />);
 

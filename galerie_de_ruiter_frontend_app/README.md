@@ -160,6 +160,28 @@ and adding the pieces to `publicPages` in the sitemap script (the API's `GET /ap
 them, so the script can fetch them at build time). The API already answers `GET /api/antiques`
 without a token, so this is a frontend decision, not a backend one.
 
+### IndexNow
+
+Bing, Yandex, Seznam and Naver share one submission, so a URL announced to `api.indexnow.org`
+reaches all of them. A static site has nowhere to announce from but its build, which is what
+`scripts/generate-sitemap.mjs` does: once the sitemap is written it posts the same URL set.
+
+```json
+{ "host": "galeriederuiter.cloud-ip.cc", "key": "…", "keyLocation": "…", "urlList": ["…"] }
+```
+
+The key was generated in Bing Webmaster Tools, and the file that proves the domain owns it is
+`public/413098dae5154255acb93dd6e4e9ad9c.txt` - at the site root, named after the key, containing the
+key and nothing else. `src/indexNow.test.ts` reads both, so rotating the key in one place cannot leave
+the other behind: the submissions would answer 403 while every other check stayed green.
+
+It submits only from a build for the production origin, never from localhost, because a staging build
+names URLs a crawler cannot fetch and announcing those is worse than saying nothing. `INDEXNOW=off`
+silences a production build as well, which is what the CI workflow does - it builds the site on every
+push, and each of those builds would otherwise announce content nobody has deployed. A submission is
+a courtesy rather than a step: every answer is logged (200 accepted, 202 accepted while the key is
+still being checked, 403 key mismatch, 429 too many) and none of them can fail the build.
+
 ## Agent discovery
 
 Two files describe the gallery to AI agents. Neither is generated: they are written by hand in

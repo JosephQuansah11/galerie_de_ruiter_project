@@ -13,7 +13,9 @@ import { fileURLToPath } from "node:url";
 import { PRODUCTION_ORIGIN, resolveSiteUrl } from "../site.config.mjs";
 
 const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const distDir = path.join(appRoot, "dist");
+// The output directory. `src/indexNow.test.ts` overrides it so that running the script there cannot
+// overwrite the files a build wrote into dist/.
+const distDir = process.env.SITEMAP_DIST_DIR ? path.resolve(process.env.SITEMAP_DIST_DIR) : path.join(appRoot, "dist");
 
 /**
  * The pages a visitor reaches without an account. Everything else answers with the sign-in
@@ -94,7 +96,7 @@ if (existsSync(robotsSource)) {
     .trimEnd();
   writeFileSync(
     robotsTarget,
-    `${robots}\n\nSitemap: ${siteUrl}/sitemap_index.xml\n`,
+    `${robots}\n\nAgentmap: ${siteUrl}/.well-known/ard.json\nSitemap: ${siteUrl}/sitemap_index.xml\n`,
     "utf8",
   );
 } else {
@@ -102,3 +104,58 @@ if (existsSync(robotsSource)) {
 }
 
 console.log(`generate-sitemap: ${publicPages.length} URLs for ${siteUrl} (sitemap_index.xml)`);
+
+/**
+ * IndexNow: the URL set above, announced to the search engines that take part in it. One POST to
+ * api.indexnow.org reaches all of them, because they agreed to share submissions.
+ *
+ * The key is the one the gallery generated in Bing Webmaster Tools, and the file that proves the
+ * domain owns it is `public/<key>.txt` - served from the site root, so an engine can read the key
+ * back and accept a submission. `src/indexNow.test.ts` holds the two together, so rotating the key
+ * in one place cannot leave the other behind.
+ *
+ * Only a build for the production origin submits. A local or staging build names URLs a crawler
+ * cannot fetch, and announcing those is worse than saying nothing - so localhost and any SITE_URL
+ * that is not the gallery's own origin are skipped. INDEXNOW=off silences a production build too,
+ * which is what CI does: the workflow builds the site on every push, and each of those builds would
+ * otherwise announce content that no one has deployed.
+ *
+ * A submission is a courtesy, not a build step. Every outcome is logged and none of them touches the
+ * exit code: the sitemap is already written, and the engines crawl on their own schedule whatever
+ * happens here. The answers are 200 (accepted), 202 (accepted, the key is still being checked), 403
+ * (the key file did not answer with the key) and 429 (too many submissions).
+ */
+const INDEXNOW_KEY = "413098dae5154255acb93dd6e4e9ad9c";
+
+async function submitToIndexNow(urls) {
+  const endpoint = "https://api.indexnow.org/indexnow";
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({
+        host: new URL(siteUrl).host,
+        key: INDEXNOW_KEY,
+        keyLocation: `${siteUrl}/${INDEXNOW_KEY}.txt`,
+        urlList: urls,
+      }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    console.log(`generate-sitemap: IndexNow answered ${response.status} for ${urls.length} URLs`);
+  } catch (error) {
+    console.warn(
+      `generate-sitemap: the IndexNow submission did not go through (${error.message});\n` +
+      `                  the sitemap is written either way, and a crawler finds the pages on its schedule.`,
+    );
+  }
+}
+
+const productionOrigin = PRODUCTION_ORIGIN.replace(/\/$/, "");
+const isProductionBuild = siteUrl.replace(/\/$/, "") === productionOrigin;
+
+if (isProductionBuild && process.env.INDEXNOW !== "off") {
+  await submitToIndexNow(publicPages.map((page) => `${siteUrl}${page.path}`));
+} else {
+  const why = isProductionBuild ? "INDEXNOW=off" : `this build is for ${siteUrl}, not ${productionOrigin}`;
+  console.log(`generate-sitemap: IndexNow not submitted (${why})`);
+}

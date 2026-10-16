@@ -228,35 +228,6 @@ class ProductionProfileSmokeTest {
                 .andExpect(content().contentType("model/gltf-binary"))
                 .andExpect(content().bytes(modelBytes));
 
-        var sixViews = java.util.List.of("front", "back", "left", "right", "top", "bottom").stream()
-                .map(position -> Map.of(
-                        "position", position,
-                        "imageData", Base64.getEncoder().encodeToString(new byte[]{1, 2, 3}),
-                        "contentType", "image/png"))
-                .toList();
-        MvcResult reconstructionSaved = mvc.perform(put("/api/antiques/" + antiqueId + "/reconstruction")
-                        .with(admin)
-                        .cookie(csrfCookie)
-                        .header("X-XSRF-TOKEN", csrfToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(JSON.writeValueAsString(Map.of(
-                                "modelUrl", "/v1/reconstructions/production-smoke/model.glb",
-                                "views", sixViews))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sixViewImages.length()").value(6))
-                .andExpect(jsonPath("$.sixViewImages[0].url").isString())
-                .andExpect(jsonPath("$.imageUrls.length()").value(1))
-                .andReturn();
-        String viewUrl = JSON.readTree(reconstructionSaved.getResponse().getContentAsString())
-                .path("sixViewImages").get(0).path("url").asText();
-        mvc.perform(get(viewUrl))
-                .andExpect(status().isOk())
-                .andExpect(content().bytes(new byte[]{1, 2, 3}));
-        mvc.perform(get("/api/antiques/" + antiqueId + "/reconstruction"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(6))
-                .andExpect(jsonPath("$[0].url").isString());
-
         mvc.perform(put("/api/antiques/" + antiqueId)
                         .with(admin)
                         .cookie(csrfCookie)

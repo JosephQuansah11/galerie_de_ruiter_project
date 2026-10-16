@@ -3,11 +3,8 @@ package be.galerie_de_ruiter.project.service;
 import be.galerie_de_ruiter.project.domain.Antique;
 import be.galerie_de_ruiter.project.domain.AntiqueImage;
 import be.galerie_de_ruiter.project.domain.Designer;
-import be.galerie_de_ruiter.project.dto.AntiqueReconstructionRequest;
-import be.galerie_de_ruiter.project.dto.AntiqueReconstructionRequest.ReconstructionViewDto;
 import be.galerie_de_ruiter.project.dto.AntiqueRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueResponse;
-import be.galerie_de_ruiter.project.dto.AntiqueResponse.SixViewImageResponse;
 import be.galerie_de_ruiter.project.dto.AntiqueUpdateRequest;
 import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueLikeRepository;
@@ -173,76 +170,4 @@ public class AntiqueService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Antique not found: " + id));
     }
 
-@Transactional
-public Antique saveReconstruction(
-        UUID id,
-        AntiqueReconstructionRequest request
-) {
-    Antique antique = antiques.findById(id)
-            .orElseThrow(() ->
-                    new ResourceNotFoundException(
-                            "Antique not found: " + id
-                    )
-            );
-
-//     for (ReconstructionViewDto view : request.views()) {
-
-//         AntiqueImage image = new AntiqueImage(
-//                 antique,
-//                 view.position(),
-//                 view.imageData(),
-//                 view.contentType()
-//         );
-
-//         antiqueImageRepository.save(image);
-//     }
-
-for (ReconstructionViewDto view : request.views()) {
-
-    AntiqueImage image =
-            antiqueImageRepository
-                    .findByAntiqueIdAndPosition(
-                            id,
-                            view.position()
-                    )
-                    .orElseGet(() ->new AntiqueImage(
-                                    antique,
-                                    view.position(),
-                                    view.imageData(),
-                                    view.contentType()
-                            )
-                    );
-
-    image.setImageData(view.imageData());
-    image.setContentType(view.contentType());
-
-    AntiqueImage savedImage = antiqueImageRepository.save(image);
-    if (!antique.getImages().contains(savedImage)) {
-        antique.getImages().add(savedImage);
-    }
-}
-
-
-    if (request.modelUrl() != null) {
-        antique.setModelUrl(request.modelUrl());
-    }
-
-    return antiques.save(antique);
-}
-
-@Transactional
-public AntiqueResponse saveReconstructionResponse(UUID id, AntiqueReconstructionRequest request) {
-    return AntiqueResponse.from(saveReconstruction(id, request));
-}
-
-@Transactional(readOnly = true)
-public List<SixViewImageResponse> getReconstructionImages(UUID antiqueId) {
-    return antiqueImageRepository.findAllByAntiqueId(antiqueId).stream()
-            .filter(image -> List.of("front", "back", "left", "right", "top", "bottom")
-                    .contains(image.getPosition()))
-            .map(image -> new SixViewImageResponse(
-                    image.getPosition(),
-                    "/api/antiques/" + antiqueId + "/image/" + image.getId()))
-            .toList();
-}
 }

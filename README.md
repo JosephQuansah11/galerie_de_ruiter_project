@@ -12,7 +12,7 @@ Install Docker with the Compose plugin and Java 25, then start the backend with:
 
 On macOS/Linux, run `./gradlew bootRun`. The Gradle task starts the development
 PostgreSQL and Keycloak containers, waits for them to be ready, and then starts
-the reconstruction API and Spring Boot using the `dev` profile. The Keycloak development realm is imported
+Spring Boot using the `dev` profile. The Keycloak development realm is imported
 automatically. The import is assembled from
 `keycloak/realms/movie_project_keycloak-realm.json`,
 `keycloak/realms/movie_project_frontend_client.json`, and
@@ -22,9 +22,7 @@ this flow. Local development credentials and persisted database volumes are
 defined in `docker-compose.dev.yml`; do not reuse its defaults outside
 development. Keycloak is published on `http://localhost:8082` by default
 (override with `KEYCLOAK_HTTP_PORT` if needed). Point the frontend's
-`VITE_KEYCLOAK_URL` to that address when running it locally. The reconstruction
-API is available at `http://localhost:8000`; its mode defaults to `disabled`
-until a local reconstruction command or external worker is configured.
+`VITE_KEYCLOAK_URL` to that address when running it locally.
 
 Stop the dependencies with `.\gradlew.bat stopDevServices` (or
 `./gradlew stopDevServices`). This keeps the database volumes. To remove the
@@ -119,7 +117,7 @@ registrable domains and therefore needs the API and the frontend to share one (f
 ## Production Docker stack
 
 The production Compose file runs the frontend, Spring API, Keycloak, Ollama,
-the reconstruction API, and two persistent PostgreSQL databases. Supply required
+and two persistent PostgreSQL databases. Supply required
 credentials and public service URLs through the environment or an untracked
 `.env` file, then run:
 
@@ -132,8 +130,8 @@ Required variables include `POSTGRES_PASSWORD`, `KEYCLOAK_DB_PASSWORD`,
 `KEYCLOAK_REALM_ADMIN_USERNAME`, and `KEYCLOAK_REALM_ADMIN_PASSWORD`,
 `PUBLIC_FRONTEND_ORIGIN`, `PUBLIC_KEYCLOAK_URL`,
 `PUBLIC_KEYCLOAK_ISSUER_URI`, and the public frontend URLs used by the Vite
-build (`VITE_JAVA_API_URL`, `VITE_JAVA_BACKEND_URL`, `VITE_API_URL`,
-`VITE_KEYCLOAK_URL`, `VITE_RECONSTRUCTION_API_URL`, and `VITE_PYTHON_API_URL`).
+build (`VITE_JAVA_API_URL`, `VITE_JAVA_BACKEND_URL`, `VITE_API_URL`, and
+`VITE_KEYCLOAK_URL`).
 The Compose stack builds and runs Ollama as a container, pulls `llama3.2:3b`
 on first start, and keeps model files in a persistent volume. The Ollama
 container is not considered healthy until the configured model is available,
@@ -167,7 +165,7 @@ Open Session in View disabled, exercises the public catalogue, admin category
 and antique writes, image persistence, CSRF/CORS behavior, chat context, and
 appointment persistence. It substitutes a local Ollama HTTP stub and does not
 connect to or write to production services. The development startup smoke test
-starts PostgreSQL, Keycloak, and the reconstruction containers with temporary
+starts PostgreSQL and Keycloak with temporary
 credentials. Neither workflow requires production secrets. Render auto-deploys
 the blueprint independently of the Actions workflow, so runtime secrets must be
 entered in the corresponding Render service settings.

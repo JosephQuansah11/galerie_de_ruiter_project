@@ -7,9 +7,15 @@ managed PostgreSQL databases:
 - `galerie-keycloak-db`: separate PostgreSQL database for Keycloak
 - `galerie-keycloak`: public Keycloak service
 - `galerie-ollama`: private Ollama model service
-- `galerie-reconstruction-api`: reconstruction API with a persistent data disk
 - `galerie-java-api`: Spring Boot API
 - `galerie-frontend`: static React frontend with SPA rewrites
+
+The blueprint used to declare `galerie-reconstruction-api`, a Python service that turned six
+photographs into a 3D model, with a 1 GB data disk. Nothing called it - the frontend half of the
+feature was removed before the gallery ever used it, and it ran with `RECONSTRUCTION_MODE=disabled` -
+so it, its disk and its endpoints are gone. Syncing the blueprint deletes the Render service; the
+models the gallery shows are `.glb` files an administrator uploads to `galerie-java-api`, which are
+unrelated to it.
 
 Both PostgreSQL databases use Render's current `basic-256mb` plan rather than
 the retired `starter` plan. Review the database pricing and capacity in Render
@@ -156,11 +162,10 @@ be configured separately in its dashboard.
   tags are built from it; without it the build falls back to the same origin in
   `site.config.mjs`. If it names a host a crawler cannot fetch, Search Console reports every URL
   in the sitemap as "Couldn't fetch".
-- `FRONTEND_ORIGIN` on `galerie-java-api` and `CORS_ORIGINS` on `galerie-reconstruction-api`
-  are the browser origins allowed to call those APIs, so they name the domain the frontend is
-  served on. The backend allows one frontend origin plus the localhost ports, so serving the app
-  from a second hostname as well needs that hostname added to the list in
-  `SecurityConfiguration`/`CORS_ORIGINS`, not just to `render.yaml`.
+- `FRONTEND_ORIGIN` on `galerie-java-api` is the browser origin allowed to call the API, so it names
+  the domain the frontend is served on. The backend allows one frontend origin plus the localhost
+  ports, so serving the app from a second hostname as well needs that hostname added to the list in
+  `SecurityConfiguration`, not just to `render.yaml`.
 - The frontend environment variables are build-time values for the static site. Trigger a frontend deploy after changing them.
 - The frontend's public Keycloak settings are already declared in `render.yaml`:
   `VITE_KEYCLOAK_URL=https://galerie-keycloak.onrender.com`,
@@ -192,11 +197,10 @@ be configured separately in its dashboard.
 - The Java API receives the `galerie-app-db` internal host, port, database, username, and password through the `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` variables. The Spring profile assembles these into a JDBC URL.
 - If you created a standalone Java web service instead of the `galerie-java-api` blueprint service, add those five variables and link each to the corresponding **internal** property of `galerie-app-db` in that service's environment. Alternatively, set `DATABASE_URL` to a valid JDBC URL beginning `jdbc:postgresql://`. Ensure the database and web service are in the same Render region.
 - The Java API listens on Render's `PORT`.
-- Render health checks use `/health` for the reconstruction service, the
-  `movie_project_keycloak` realm's OpenID Connect metadata endpoint for
-  Keycloak, and `/actuator/health` for Spring Boot. Keycloak's health endpoints
-  are served on its separate management port by default, so Render checks the
-  realm metadata on the public HTTP port instead.
+- Render health checks use the `movie_project_keycloak` realm's OpenID Connect
+  metadata endpoint for Keycloak, and `/actuator/health` for Spring Boot. Keycloak's
+  health endpoints are served on its separate management port by default, so Render
+  checks the realm metadata on the public HTTP port instead.
 - The frontend uses SPA fallback so React routes such as `/antiques/:id` work after refresh.
 
 ## Local production-like compose

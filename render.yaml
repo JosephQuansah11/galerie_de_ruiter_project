@@ -9,26 +9,11 @@ databases:
     plan: basic-256mb
 
 services:
-  - type: web
-    name: galerie-reconstruction-api
-    runtime: docker
-    dockerfilePath: ./services/reconstruction-api/Dockerfile
-    dockerContext: ./services/reconstruction-api
-    plan: starter
-    healthCheckPath: /health
-    autoDeploy: true
-    disk:
-      name: reconstruction-data
-      mountPath: /app/data
-      sizeGB: 1
-    envVars:
-      - key: RECONSTRUCTION_MODE
-        value: disabled
-      - key: CORS_ORIGINS
-        value: https://galeriederuiter.cloud-ip.cc
-      - key: DATA_DIR
-        value: /app/data
-
+  # galerie-reconstruction-api (services/reconstruction-api) used to run here: a Python service that
+  # turned six photographs into a 3D model. The frontend half of it was removed before the gallery
+  # ever used it, so nothing called the service and it ran with RECONSTRUCTION_MODE=disabled. The
+  # service, its 1 GB data disk, the endpoints it fed and the copy that named it are gone with it -
+  # and a blueprint sync deletes the Render service itself.
   - type: web
     name: galerie-keycloak
     runtime: docker

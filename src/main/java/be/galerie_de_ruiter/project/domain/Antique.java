@@ -63,9 +63,6 @@ public class Antique {
      * is on offer, and empty for pieces that were sold before the column existed.
      */
     private Instant soldAt;
-    // // JSON array of {position, url} produced by the reconstruction service, persisted so every user sees the same six views.
-    // @Column(columnDefinition = "bytea")
-    // private List<byte[]> sixViewImages;
 
     @ManyToOne
     private Category category;
@@ -195,12 +192,4 @@ public class Antique {
     public Instant getSoldAt() {
         return soldAt;
     }
-
-    // public List<byte[]> getSixViewImages() {
-    //     return sixViewImages;
-    // }
-
-    // public void setSixViewImages(List<byte[]> sixViewImagesJson) {
-    //     this.sixViewImages= sixViewImagesJson;
-    // }
 }

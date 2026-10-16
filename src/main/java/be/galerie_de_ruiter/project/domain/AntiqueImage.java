@@ -94,7 +94,11 @@ public class AntiqueImage {
             Comparator.comparingInt(AntiqueImage::displayOrderNumber)
                     .thenComparing(image -> String.valueOf(image.getId()));
 
-    /** The six-view scan positions, which are not part of the gallery's photograph order. */
+    /**
+     * The six-view scan positions. The reconstruction service that wrote them is retired, and this
+     * stays because rows an earlier build stored are still in the database: `AntiqueResponse` uses it
+     * to keep those out of a piece's photographs, so one can never surface as a gallery image.
+     */
     private static final Set<String> SIX_VIEW_POSITIONS = Set.of("front", "back", "left", "right", "top", "bottom");
 
     public static boolean isSixViewPosition(String position) {

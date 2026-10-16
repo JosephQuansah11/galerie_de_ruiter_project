@@ -82,7 +82,6 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.POST, "/api/antiques/*/views").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api/antiques/*/likes").permitAll()
 				.requestMatchers(HttpMethod.DELETE, "/api/antiques/*/likes").permitAll()
-				.requestMatchers(HttpMethod.GET, "/api/antiques/*/reconstruction").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/location").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/about").permitAll()

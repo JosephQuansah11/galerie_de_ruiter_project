@@ -9,7 +9,6 @@ import { languages } from "./languageOptions";
 import { LanguageContext } from "./languageContextCore";
 export { useLanguage } from "./languageContextCore";
 export { languages } from "./languageOptions";
-export { LanguageSwitcher } from "./LanguageSwitcher";
 type LanguageCode = (typeof languages)[number]["code"];
 
 /**

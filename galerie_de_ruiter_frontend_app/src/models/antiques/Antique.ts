@@ -5,7 +5,6 @@ type Antique = {
   modelUrl?: string | null;
   imageUrls?: string[];
   imageUrl?: string | null;
-  sixViewImages?: { position: string; url: string }[];
   artist?: {
     id?: string;
     name?: string;

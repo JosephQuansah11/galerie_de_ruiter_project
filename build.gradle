@@ -85,10 +85,10 @@ tasks.register("prepareDevKeycloakRealm") {
 
 tasks.register("startDevServices", Exec) {
 	group = "application"
-	description = "Starts the local PostgreSQL, Keycloak, and reconstruction API dependencies for bootRun."
+	description = "Starts the local PostgreSQL and Keycloak dependencies for bootRun."
 	dependsOn tasks.named("prepareDevKeycloakRealm")
 	commandLine "docker", "compose", "-f", devComposeFile.asFile.absolutePath,
-			"up", "--detach", "--wait", "database", "keycloak-database", "keycloak", "reconstruction-api"
+			"up", "--detach", "--wait", "database", "keycloak-database", "keycloak"
 }
 
 tasks.register("waitForDevKeycloak") {

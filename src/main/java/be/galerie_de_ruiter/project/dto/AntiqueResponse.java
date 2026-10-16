@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public record AntiqueResponse(UUID id, String title, DesignerResponse artist, String description, BigDecimal price,
                               String category, String modelUrl, String imageUrl, List<String> imageUrls,
-                              List<SixViewImageResponse> sixViewImages, long viewCount, long likeCount, boolean sold) {
+                              long viewCount, long likeCount, boolean sold) {
 
     public static AntiqueResponse from(Antique antique) {
         return new AntiqueResponse(
@@ -22,7 +22,6 @@ public record AntiqueResponse(UUID id, String title, DesignerResponse artist, St
                 antique.getModelUrl(),
                 imageUrls(antique).stream().findFirst().orElse(null),
                 imageUrls(antique),
-                parseSixViewImages(antique),
                 antique.getViewCount(),
                 antique.getLikeCount(),
                 antique.isSold()
@@ -31,22 +30,13 @@ public record AntiqueResponse(UUID id, String title, DesignerResponse artist, St
 
     private static List<String> imageUrls(Antique antique) {
         return antique.getImages().stream()
+                // The six-view scan positions never appear among a piece's photographs. The
+                // reconstruction endpoints that wrote them are retired (see render.yaml), and this
+                // filter stays so that any row an earlier build stored stays out of the gallery.
                 .filter(image -> !AntiqueImage.isSixViewPosition(image.getPosition()))
                 .sorted(AntiqueImage.BY_DISPLAY_ORDER)
                 .map(AntiqueImage::getId)
                 .map(imageId -> "/api/antiques/" + antique.getId() + "/image/" + imageId)
                 .toList();
-    }
-
-    private static List<SixViewImageResponse> parseSixViewImages(Antique antique) {
-        return antique.getImages().stream()
-                .filter(image -> AntiqueImage.isSixViewPosition(image.getPosition()))
-                .map(image -> new SixViewImageResponse(
-                        image.getPosition(),
-                        "/api/antiques/" + antique.getId() + "/image/" + image.getId()))
-                .toList();
-    }
-
-    public record SixViewImageResponse(String position, String url) {
     }
 }

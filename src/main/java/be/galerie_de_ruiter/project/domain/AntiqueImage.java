@@ -6,6 +6,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -19,7 +20,13 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "antique_images")
+@Table(name = "antique_images", indexes = {
+        // Every image request looks a picture up by its piece, and the six-view upload looks it up by
+        // piece and position. Without these, each lookup scans the whole table - which is also the
+        // table the photographs live in, so it is the largest one in the database.
+        @Index(name = "idx_antique_images_antique", columnList = "antique_id"),
+        @Index(name = "idx_antique_images_antique_position", columnList = "antique_id, position")
+})
 public class AntiqueImage {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

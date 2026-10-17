@@ -49,6 +49,17 @@ public class AntiqueImage {
     @Column(nullable = false)
     private String contentType;
 
+    /**
+     * Where the photograph lives when it is not in this row: the object key in the gallery's bucket
+     * (for example {@code antiques/<antiqueId>/<imageId>.jpg}).
+     *
+     * <p>Null means the bytes are still in {@link #data}, which is how every image starts and how a
+     * gallery that has not been migrated keeps working. Both readers understand it, so the copy out
+     * to storage can happen one picture at a time without a moment where anything is missing.</p>
+     */
+    @Column(name = "storage_key")
+    private String storageKey;
+
     public AntiqueImage() {
     }
 
@@ -130,5 +141,14 @@ public class AntiqueImage {
 
     public String getPosition() {
         return position;
+    }
+
+    /** The object key in the gallery's bucket, or null while the bytes are still in this row. */
+    public String getStorageKey() {
+        return storageKey;
+    }
+
+    public void setStorageKey(String storageKey) {
+        this.storageKey = storageKey;
     }
 }

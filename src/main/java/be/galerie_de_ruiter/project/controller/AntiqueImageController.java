@@ -111,8 +111,18 @@ public class AntiqueImageController {
                 .toList();
     }
 
+    /**
+     * A photograph is immutable: its id names these bytes and nothing else, and a new picture is a
+     * new row. The browser - and any cache in front of the API - can therefore keep it for a year
+     * without asking again, which is what makes a long catalogue cheap to browse after the first
+     * visit instead of re-downloading every picture every time.
+     */
     private ResponseEntity<byte[]> imageResponse(AntiqueImage image) {
         MediaType type = MediaType.parseMediaType(image.getContentType());
-        return ResponseEntity.ok().contentType(type).body(image.getData());
+        return ResponseEntity.ok()
+                .contentType(type)
+                .header(org.springframework.http.HttpHeaders.CACHE_CONTROL,
+                        "public, max-age=31536000, immutable")
+                .body(image.getData());
     }
 }

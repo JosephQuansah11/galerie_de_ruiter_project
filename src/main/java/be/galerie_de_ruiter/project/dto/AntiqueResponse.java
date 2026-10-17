@@ -12,6 +12,8 @@ public record AntiqueResponse(UUID id, String title, DesignerResponse artist, St
                               long viewCount, long likeCount, boolean sold) {
 
     public static AntiqueResponse from(Antique antique) {
+        // One pass over the images, not two: the first photograph and the list are the same order.
+        List<String> imageUrls = imageUrls(antique);
         return new AntiqueResponse(
                 antique.getId(),
                 antique.getTitle(),
@@ -20,8 +22,8 @@ public record AntiqueResponse(UUID id, String title, DesignerResponse artist, St
                 antique.getPrice(),
                 antique.getCategory() == null ? null : antique.getCategory().getName(),
                 antique.getModelUrl(),
-                imageUrls(antique).stream().findFirst().orElse(null),
-                imageUrls(antique),
+                imageUrls.stream().findFirst().orElse(null),
+                imageUrls,
                 antique.getViewCount(),
                 antique.getLikeCount(),
                 antique.isSold()

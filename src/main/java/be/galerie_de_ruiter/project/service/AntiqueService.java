@@ -5,6 +5,7 @@ import be.galerie_de_ruiter.project.domain.AntiqueImage;
 import be.galerie_de_ruiter.project.domain.Designer;
 import be.galerie_de_ruiter.project.dto.AntiqueRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueResponse;
+import be.galerie_de_ruiter.project.dto.DesignerResponse;
 import be.galerie_de_ruiter.project.dto.AntiqueUpdateRequest;
 import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueLikeRepository;
@@ -21,7 +22,9 @@ import lombok.RequiredArgsConstructor;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -58,7 +61,44 @@ public class AntiqueService {
 
     @Transactional(readOnly = true)
     public List<AntiqueResponse> findAllResponses() {
-        return antiques.findAll().stream().map(AntiqueResponse::from).toList();
+        // Two queries that never touch a photograph's bytes: the listing columns, and the ids and
+        // positions of the pictures. Loading the antiques with their `images` collection - what this
+        // used to do - read every picture of every piece out of PostgreSQL just to name them, and that
+        // took sixteen seconds on the deployed catalogue while every other endpoint took a third of a
+        // second. The bytes are still served, one picture at a time, by the image endpoints.
+        Map<UUID, List<AntiqueImageRepository.CatalogueImage>> imagesByAntique = antiqueImageRepository
+                .findCatalogueImages().stream()
+                .collect(Collectors.groupingBy(AntiqueImageRepository.CatalogueImage::getAntiqueId));
+        return antiques.findCatalogueRows().stream()
+                .map(row -> catalogueResponse(row, imagesByAntique.getOrDefault(row.getId(), List.of())))
+                .toList();
+    }
+
+    /** One catalogue row as the API has always answered it, with its photographs named, not sent. */
+    private static AntiqueResponse catalogueResponse(AntiqueRepository.CatalogueRow row,
+            List<AntiqueImageRepository.CatalogueImage> images) {
+        List<String> imageUrls = images.stream()
+                .filter(image -> !AntiqueImage.isSixViewPosition(image.getPosition()))
+                .sorted(Comparator.comparingInt((AntiqueImageRepository.CatalogueImage image) ->
+                                displayOrderNumber(image.getDisplayOrder()))
+                        .thenComparing(image -> String.valueOf(image.getImageId())))
+                .map(image -> "/api/antiques/" + row.getId() + "/image/" + image.getImageId())
+                .toList();
+        DesignerResponse artist = row.getArtistId() == null ? null : new DesignerResponse(
+                row.getArtistId(), row.getArtistFirstName(), row.getArtistLastName(), row.getArtistMiddleName());
+        return new AntiqueResponse(row.getId(), row.getTitle(), artist, row.getDescription(), row.getPrice(),
+                row.getCategory(), row.getModelUrl(), imageUrls.stream().findFirst().orElse(null), imageUrls,
+                row.getViewCount(), row.getLikeCount(), row.isSold());
+    }
+
+    /** The display order as a number, as the entity compares it: blank or odd sorts last. */
+    private static int displayOrderNumber(String displayOrder) {
+        if (displayOrder == null || displayOrder.isBlank()) return Integer.MAX_VALUE;
+        try {
+            return Integer.parseInt(displayOrder.trim());
+        } catch (NumberFormatException notANumber) {
+            return Integer.MAX_VALUE;
+        }
     }
 
     @Transactional

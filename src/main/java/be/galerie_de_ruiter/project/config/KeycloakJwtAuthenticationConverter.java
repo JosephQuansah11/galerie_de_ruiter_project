@@ -18,6 +18,8 @@ public final class KeycloakJwtAuthenticationConverter extends JwtAuthenticationC
     private static final String RESOURCE_ACCESS = "resource_access";
     private static final String ROLES_ACCESS = "roles_access";
     private static final String RESOURCES_ACCESS = "resources_access";
+    /** Supabase keeps claims the user cannot edit here; {@code user_metadata} is writable by them. */
+    private static final String APP_METADATA = "app_metadata";
 
     public KeycloakJwtAuthenticationConverter() {
         setPrincipalClaimName("preferred_username");
@@ -35,6 +37,7 @@ public final class KeycloakJwtAuthenticationConverter extends JwtAuthenticationC
                     rolesFromClaim(jwt.getClaim(REALM_ACCESS)),
                     rolesFromClaim(jwt.getClaim(ROLES_ACCESS)),
                     rolesFromResourceClaim(jwt.getClaim(RESOURCE_ACCESS)),
+                    rolesFromClaim(jwt.getClaim(APP_METADATA)),
                     rolesFromResourceClaim(jwt.getClaim(RESOURCES_ACCESS)))
                     .flatMap(stream -> stream);
 

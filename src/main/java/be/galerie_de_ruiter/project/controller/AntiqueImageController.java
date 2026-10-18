@@ -6,6 +6,7 @@ import be.galerie_de_ruiter.project.dto.AntiqueImageOrderRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueImageResponse;
 import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueRepository;
+import be.galerie_de_ruiter.project.service.ImageStorage;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,6 +34,8 @@ import org.springframework.web.server.ResponseStatusException;
 public class AntiqueImageController {
     private final AntiqueRepository antiques;
     private final AntiqueImageRepository images;
+    /** The bucket, for photographs that have been copied out; inert until a key exists. */
+    private final ImageStorage storage;
 
     @GetMapping
     @Transactional(readOnly = true)
@@ -116,13 +119,21 @@ public class AntiqueImageController {
      * new row. The browser - and any cache in front of the API - can therefore keep it for a year
      * without asking again, which is what makes a long catalogue cheap to browse after the first
      * visit instead of re-downloading every picture every time.
+     *
+     * <p>The bytes come from the bucket when the row has been copied out, and from the row itself
+     * otherwise - so a half-finished copy is a working gallery rather than a broken one. A row that
+     * has a key but whose object cannot be read falls back to its own bytes for the same reason:
+     * storage having a bad minute must not make a picture disappear from the shop window.</p>
      */
     private ResponseEntity<byte[]> imageResponse(AntiqueImage image) {
         MediaType type = MediaType.parseMediaType(image.getContentType());
+        byte[] bytes = image.getStorageKey() == null
+                ? image.getData()
+                : storage.get(image.getStorageKey()).orElseGet(image::getData);
         return ResponseEntity.ok()
                 .contentType(type)
                 .header(org.springframework.http.HttpHeaders.CACHE_CONTROL,
                         "public, max-age=31536000, immutable")
-                .body(image.getData());
+                .body(bytes);
     }
 }

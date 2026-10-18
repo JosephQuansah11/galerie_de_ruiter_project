@@ -42,8 +42,14 @@ public class AntiqueImage {
     @Column (nullable = false)
     private String position;
 
+    /**
+     * The photograph itself - unless it lives in the bucket, in which case this is null and
+     * {@link #storageKey} says where it is. The column is nullable for exactly that reason: a
+     * gallery whose pictures are in R2 keeps only metadata here. A row that has neither is a
+     * broken row, and nothing creates one.
+     */
     @JdbcTypeCode(SqlTypes.LONGVARBINARY)
-    @Column(nullable = false, columnDefinition = "bytea")
+    @Column(columnDefinition = "bytea")
     private byte[] data;
 
     @Column(nullable = false)

@@ -92,6 +92,18 @@ public class AntiqueImageController {
         // should not be the reason a visitor downloads six megabytes for a tile.
         photo.setThumbnail(thumbnails.create(bytes));
         AntiqueImage saved = images.save(photo);
+        // The photograph goes to the bucket, and the row keeps only its key - the bytes never
+        // belong in the database once there is somewhere better for them. The id has to exist
+        // first, which is why this happens after the save. If the bucket is not configured, or the
+        // object cannot be confirmed there, the row keeps its copy and nothing is lost.
+        if (storage.isEnabled()) {
+            String key = storage.put(id, saved.getId(), bytes, image.getContentType());
+            if (storage.exists(key)) {
+                saved.setStorageKey(key);
+                saved.setImageData(null);
+                saved = images.save(saved);
+            }
+        }
         return AntiqueImageResponse.from(saved, id);
     }
 

@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -40,5 +41,17 @@ public class ImageStorageAdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ImageStorageMigration.Report migrateToStorage() {
         return migration.copyAll();
+    }
+
+    /**
+     * Frees the copy of every photograph that is already in the bucket. Without {@code confirm=true}
+     * it only counts and reports, which is the way to see the size of the saving before making it.
+     * A photograph whose object cannot be found in the bucket keeps its bytes and is reported.
+     */
+    @PostMapping("/release-stored-bytes")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ImageStorageMigration.Release releaseStoredBytes(
+            @RequestParam(name = "confirm", defaultValue = "false") boolean confirm) {
+        return migration.releaseStoredBytes(confirm);
     }
 }

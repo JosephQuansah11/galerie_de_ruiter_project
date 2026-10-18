@@ -50,6 +50,27 @@ public interface AntiqueImageRepository extends JpaRepository<AntiqueImage, UUID
             """)
     List<UUID> findIdsNotInStorage();
 
+    /**
+     * The photographs that are in the bucket <em>and</em> still carrying a copy in their row, as
+     * ids, keys and byte counts - never the bytes. Selecting the entities here would read the whole
+     * database copy into memory just to decide whether to delete it.
+     */
+    @org.springframework.data.jpa.repository.Query("""
+            select i.id as id, i.storageKey as storageKey, length(i.data) as bytes
+            from AntiqueImage i
+            where i.storageKey is not null and i.data is not null
+            """)
+    List<StoredRow> findStoredWithBytes();
+
+    /** One row of {@link #findStoredWithBytes()}. */
+    interface StoredRow {
+        UUID getId();
+
+        String getStorageKey();
+
+        Long getBytes();
+    }
+
 
     /** One row of {@link #findCatalogueImages()}. */
     interface CatalogueImage {

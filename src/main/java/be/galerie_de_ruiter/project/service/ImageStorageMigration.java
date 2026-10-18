@@ -94,7 +94,47 @@ public class ImageStorageMigration {
                         failedHere.getClass().getSimpleName() + ": " + failedHere.getMessage()));
             }
         }
-
         return new Report(pending.size(), copied, failed);
+    }
+
+    /**
+     * What a release run did - or, in a dry run, what it would do.
+     */
+    public record Release(boolean dryRun, int candidates, long bytes, int released, List<Failed> failed) {
+    }
+
+    /**
+     * Frees the database copy of every photograph that is safely in the bucket.
+     *
+     * <p>This is the one irreversible step in the migration, so it is deliberately awkward to
+     * trigger: without {@code confirm} it only counts and reports, and even with it a row is freed
+     * only when its object is confirmed present under its key. A photograph whose object cannot be
+     * found keeps its bytes and is listed instead - the database is the last copy, not the first
+     * thing to throw away.</p>
+     */
+    public Release releaseStoredBytes(boolean confirm) {
+        if (!storage.isEnabled()) {
+            throw new IllegalStateException(
+                    "Object storage is not configured, so there is nothing to release to.");
+        }
+        List<AntiqueImageRepository.StoredRow> candidates = images.findStoredWithBytes();
+        long bytes = candidates.stream().mapToLong(row -> row.getBytes() == null ? 0 : row.getBytes()).sum();
+        int released = 0;
+        List<Failed> failed = new ArrayList<>();
+
+        for (AntiqueImageRepository.StoredRow row : candidates) {
+            if (!storage.exists(row.getStorageKey())) {
+                failed.add(new Failed(row.getId(), "the object is not in the bucket, so the row keeps its copy"));
+                continue;
+            }
+            if (!confirm) continue;
+            AntiqueImage image = images.findById(row.getId()).orElse(null);
+            if (image == null) continue;
+            image.setImageData(null);
+            images.save(image);
+            released++;
+        }
+
+        return new Release(!confirm, candidates.size(), bytes, released, failed);
     }
 }

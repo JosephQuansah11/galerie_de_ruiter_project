@@ -1,31 +1,41 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import type { UserProfile, UserProfileUpdate } from "@/types/types";
 import type { AuthContextValue } from "./authTypes";
-import { keycloak } from "./keycloakClient";
 import { useAvatar } from "./useAvatar";
 import { useAuthInitialization } from "./useAuthInitialization";
-import { useKeycloakToken } from "./useKeycloakToken";
-import { registerUser, updateCurrentUser } from "@/pages/auth/authApi";
+import { useSupabaseSession } from "./useSupabaseSession";
+import { updateCurrentUser } from "@/pages/auth/authApi";
+import { signIn as signInWithSupabase, signUp } from "@/services/supabaseAuth";
 import { clearChatSession } from "@/services/chatSession";
-import { clearKeycloakSession } from "@/services/keycloakSession";
 import { clearCache } from "@/services/apiCache";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-/** Where a sign-in returns to: the page the visitor asked for, or the landing page. */
-const returnTo = (from?: string) => `${window.location.origin}${from ?? "/"}`;
+/**
+ * Sends the visitor to the sign-in page, carrying the page they asked for. `login` keeps this name
+ * and this job because a dozen components already call it - they simply arrive at a form now
+ * instead of leaving the site for the identity provider's page.
+ */
+const toSignIn = (from?: string) =>
+  window.location.assign(from ? `/login?from=${encodeURIComponent(from)}` : "/login");
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile>();
   const [roles, setRoles] = useState<string[]>([]);
-  const { token, syncToken } = useKeycloakToken(setAuthenticated, setProfile, setRoles);
+  const { token, adopt, endSession } = useSupabaseSession({ setAuthenticated, setProfile, setRoles });
   const { avatarUrl, refreshAvatar } = useAvatar(authenticated, token);
-  useAuthInitialization({ setAuthenticated, setLoading, setProfile, setRoles, syncToken });
+  useAuthInitialization({ setLoading, setProfile, setRoles, token });
+  /** Signs in where the visitor stands: no navigation, so the form can show an error instead. */
+  const signIn = async (usernameOrEmail: string, password: string) => {
+    adopt(await signInWithSupabase(usernameOrEmail, password));
+  };
   const register = async (registration: UserProfile & { password: string }) => {
-    await registerUser(registration);
-    await keycloak.login({ loginHint: registration.username });
+    const session = await signUp(registration.username ?? registration.email ?? "", registration.password);
+    // A project that confirms addresses by email returns no session: the caller shows "check your
+    // inbox" and the visitor signs in once they have.
+    if (session) adopt(session);
   };
   const updateProfile = async (details: UserProfileUpdate) => {
     if (!token) throw new Error("A signed-in user is required to update profile details.");
@@ -34,7 +44,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const value = useMemo(() => ({
     authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles,
     isAdmin: roles.some((role) => role.replace(/^ROLE_/i, "").toUpperCase() === "ADMIN"),
-    login: (from?: string) => keycloak.login({ redirectUri: returnTo(from) }),
+    login: toSignIn,
     // Signing out ends the concierge conversation, drops the cached public data and forgets the
     // stored session, so the next person to use the browser starts from a clean slate. Keycloak
     // then returns the browser to /logout, the one response that carries Clear-Site-Data (see
@@ -42,11 +52,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     // cache, the cookies and the storage it does not own.
     logout: () => {
       clearChatSession();
-      clearKeycloakSession();
       clearCache();
-      return keycloak.logout({ redirectUri: returnTo("/logout") });
+      return endSession();
     },
-    register, updateProfile,
+    signIn, register, updateProfile,
   }), [authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

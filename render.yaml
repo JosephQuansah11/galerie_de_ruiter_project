@@ -1,4 +1,4 @@
-databases:
+﻿databases:
   - name: galerie-app-db
     databaseName: galerie
     user: galerie_app
@@ -253,7 +253,7 @@ services:
       # construction, so it adds no origin to the allowlist.
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://galerie-java-api.onrender.com; connect-src 'self' https://galerie-java-api.onrender.com https://galerie-keycloak.onrender.com https://maps.googleapis.com blob:; frame-src 'self' https://www.google.com https://galerie-keycloak.onrender.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+        value: "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://galerie-java-api.onrender.com; connect-src 'self' https://bgmxpublcoldebamstbj.supabase.co https://galerie-java-api.onrender.com https://galerie-keycloak.onrender.com https://maps.googleapis.com blob:; frame-src 'self' https://www.google.com https://galerie-keycloak.onrender.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
       - path: /*
         name: Strict-Transport-Security
         value: max-age=31536000; includeSubDomains

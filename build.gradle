@@ -24,6 +24,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 	implementation 'org.mapstruct:mapstruct:1.6.3'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	// Object storage for the photographs: an R2 bucket speaks the S3 API. Nothing uses it until a
+	// row carries a storage key, and the client is only built when the four STORAGE_* settings exist.
+	implementation platform("software.amazon.awssdk:bom:2.25.60")
+	implementation "software.amazon.awssdk:s3"
 	 implementation "org.keycloak:keycloak-admin-client:26.0.12"
     implementation "org.keycloak:keycloak-authz-client:26.0.12"
     implementation "org.keycloak:keycloak-policy-enforcer:26.0.12"

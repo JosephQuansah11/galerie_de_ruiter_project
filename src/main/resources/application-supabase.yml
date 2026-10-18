@@ -1,0 +1,29 @@
+# Supabase Auth, ready to be switched on and inert until it is.
+#
+# Activating this profile - SPRING_PROFILES_ACTIVE=prod,supabase - is the moment the API accepts
+# Supabase's tokens instead of Keycloak's. Until then nothing here is read, so the running gallery
+# is unaffected by the file's presence.
+#
+# Two settings, not one, on purpose:
+#
+#   jwk-set-uri  Supabase publishes its signing keys at /auth/v1/.well-known/jwks.json, which is not
+#                the path issuer-uri auto-discovers, so the key set has to be named explicitly.
+#   issuer-uri   still validated, so a token minted by some other Supabase project - or by anything
+#                else that signs with a key it can publish - is refused.
+#
+# Roles arrive in app_metadata (see KeycloakJwtAuthenticationConverter): Supabase keeps user_metadata
+# writable by its owner, so a role there would be a role anyone can grant themselves.
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SUPABASE_ISSUER_URI}
+          jwk-set-uri: ${SUPABASE_JWK_SET_URI}
+
+# The admin client is not needed for validating tokens; it is here because assigning the gallery's
+# admin role is a server-side write to auth.users.raw_app_meta_data, and this is where the service
+# would find the credentials for it. Unused by the resource server itself.
+supabase:
+  service-url: ${SUPABASE_URL:}
+  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}

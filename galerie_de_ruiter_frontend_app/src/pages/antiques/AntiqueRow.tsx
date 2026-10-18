@@ -7,7 +7,7 @@ import { useShopping } from "@/context/ShoppingContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { formatEuroAmount } from "@/i18n";
 import type Antique from "@/models/antiques/Antique";
-import { resolveAntiqueImageUrl } from "@/models/antiques/Antique";
+import { resolveAntiqueThumbnailUrl } from "@/models/antiques/Antique";
 import { summarizeDescription } from "./summarizeDescription";
 
 /**
@@ -36,7 +36,7 @@ export function AntiqueRow({ antique }: { antique: Antique }) {
     else navigate("/login", { state: { from: `${location.pathname}${location.search}` } });
   };
   return <article className={`catalogue-card catalogue-row${antique.sold ? " is-sold" : ""}`} onClick={() => navigate(`/antiques/${antique.id}`)}>
-    <div className="catalogue-card-image" aria-hidden="true">{imageUrl ? <img src={resolveAntiqueImageUrl(imageUrl)} alt="" width={800} height={600} /> : antique.title.slice(0, 1).toUpperCase()}
+    <div className="catalogue-card-image" aria-hidden="true">{imageUrl ? <img src={resolveAntiqueThumbnailUrl(imageUrl)} alt="" width={800} height={600} /> : antique.title.slice(0, 1).toUpperCase()}
       {antique.sold && <span className="catalogue-sold-badge">{t("sold")}</span>}</div>
     <div className="catalogue-card-content">
       <span className="catalogue-artist">{artist}</span>

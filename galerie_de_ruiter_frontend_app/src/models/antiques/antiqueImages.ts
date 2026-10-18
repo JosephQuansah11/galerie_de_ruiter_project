@@ -15,6 +15,22 @@ export const resolveAntiqueImageUrl = (imageUrl?: string | null): string | undef
 };
 
 /**
+ * The small copy of a photograph, for a grid or a list: the same image path with `/thumbnail`
+ * appended (`/api/antiques/{id}/image/{imageId}/thumbnail`).
+ *
+ * A grid tile has no use for a six-megabyte original - the API makes a 400-pixel copy about forty
+ * kilobytes for it, and the original is fetched only when a piece is opened.
+ *
+ * A path that names no image id (`/api/antiques/{id}/image`, which means "the first photograph")
+ * has no thumbnail route, so it is returned untouched and the caller gets the original.
+ */
+export const resolveAntiqueThumbnailUrl = (imageUrl?: string | null): string | undefined => {
+  const full = resolveAntiqueImageUrl(imageUrl);
+  if (!full) return undefined;
+  return /\/image\/[^/?#]+$/.test(full) ? `${full}/thumbnail` : full;
+};
+
+/**
  * The image id at the end of an antique image path (`/api/antiques/{id}/image/{imageId}`).
  * The admin edit screen uses it to remove one photograph without refetching the piece.
  */

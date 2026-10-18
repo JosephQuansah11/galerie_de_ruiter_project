@@ -1,4 +1,4 @@
-import { GALLERY_EMAIL_DOMAIN, isSupabaseConfigured, signIn, signOut, toEmail, refresh } from "./supabaseAuth";
+import { GALLERY_EMAIL_DOMAIN, configureSupabase, isSupabaseConfigured, signIn, signOut, toEmail, refresh } from "./supabaseAuth";
 
 describe("supabaseAuth", () => {
   const originalFetch = global.fetch;
@@ -13,6 +13,9 @@ describe("supabaseAuth", () => {
 
   beforeEach(() => {
     calls.length = 0;
+    // A project, so the client has somewhere to send to. Without one it refuses, which is the
+    // behaviour the last test below checks.
+    configureSupabase({ url: "https://project.supabase.co", key: "anon-key" });
   });
 
   afterAll(() => {
@@ -63,7 +66,9 @@ describe("supabaseAuth", () => {
     await expect(signOut({ accessToken: "a", refreshToken: "r", expiresAt: 0, userId: "u" })).resolves.toBeUndefined();
   });
 
-  it("reports an unconfigured project instead of pretending to sign in", () => {
-    expect(typeof isSupabaseConfigured()).toBe("boolean");
+  it("refuses to pretend to sign in when no project is configured", async () => {
+    configureSupabase({ url: "", key: "" });
+    expect(isSupabaseConfigured()).toBe(false);
+    await expect(signIn("de-ruiter", "admin")).rejects.toThrow("authNotConfigured");
   });
 });

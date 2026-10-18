@@ -1,8 +1,17 @@
-import { apiBaseUrl } from "@/apis/apiConfig";
+﻿/**
+ * Where the project lives and the key the browser may hold. A function replaces it rather than the
+ * constants being read directly, so a test can point the client at a project - and so a runtime
+ * configuration would have somewhere to land later.
+ */
+let config = {
+  url: (import.meta.env.VITE_SUPABASE_URL ?? "").trim().replace(/\/$/, ""),
+  key: import.meta.env.VITE_SUPABASE_ANON_KEY ?? "",
+};
 
-/** Where the API lives; only used to say so when a Supabase project is missing. */
-export const apiOrigin = apiBaseUrl;
-
+/** Points the client at a project. The app never calls this; the tests do. */
+export const configureSupabase = (next: { url: string; key: string }): void => {
+  config = { url: next.url.trim().replace(/\/$/, ""), key: next.key };
+};
 /**
  * Signing in, against Supabase Auth rather than Keycloak.
  *
@@ -14,14 +23,12 @@ export const apiOrigin = apiBaseUrl;
  * Nothing here is a secret. The anonymous key is published to the browser by design and only ever
  * exchanges credentials for a token; the API verifies what comes back with Supabase's public keys.
  */
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL ?? "").trim().replace(/\/$/, "");
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? "";
 
 /** The domain the gallery's own accounts live under, so a bare username is enough to sign in. */
 export const GALLERY_EMAIL_DOMAIN = "galerie-de-ruiter.be";
 
 /** Whether a Supabase project is configured at all; without one, the pages say so instead of failing. */
-export const isSupabaseConfigured = (): boolean => supabaseUrl.length > 0 && anonKey.length > 0;
+export const isSupabaseConfigured = (): boolean => config.url.length > 0 && config.key.length > 0;
 
 /** A signed-in session, in the shape the rest of the app already understands. */
 export type SupabaseSession = {
@@ -72,11 +79,11 @@ async function post(path: string, body: unknown, accessToken?: string): Promise<
     // like a wrong password.
     throw new Error("authNotConfigured");
   }
-  const response = await fetch(`${supabaseUrl}${path}`, {
+  const response = await fetch(`${config.url}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      apikey: anonKey,
+      apikey: config.key,
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
     body: JSON.stringify(body),

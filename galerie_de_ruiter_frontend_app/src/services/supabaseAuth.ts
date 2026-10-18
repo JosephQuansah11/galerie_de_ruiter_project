@@ -1,5 +1,8 @@
 import { apiBaseUrl } from "@/apis/apiConfig";
 
+/** Where the API lives; only used to say so when a Supabase project is missing. */
+export const apiOrigin = apiBaseUrl;
+
 /**
  * Signing in, against Supabase Auth rather than Keycloak.
  *
@@ -11,7 +14,7 @@ import { apiBaseUrl } from "@/apis/apiConfig";
  * Nothing here is a secret. The anonymous key is published to the browser by design and only ever
  * exchanges credentials for a token; the API verifies what comes back with Supabase's public keys.
  */
-const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL ?? apiBaseUrl).replace(/\/$/, "");
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL ?? "").trim().replace(/\/$/, "");
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? "";
 
 /** The domain the gallery's own accounts live under, so a bare username is enough to sign in. */
@@ -64,6 +67,11 @@ export const toEmail = (usernameOrEmail: string): string => {
 };
 
 async function post(path: string, body: unknown, accessToken?: string): Promise<TokenResponse> {
+  if (!isSupabaseConfigured()) {
+    // Nothing to call: the build had no project URL. Saying so beats a network error that looks
+    // like a wrong password.
+    throw new Error("authNotConfigured");
+  }
   const response = await fetch(`${supabaseUrl}${path}`, {
     method: "POST",
     headers: {
@@ -75,7 +83,10 @@ async function post(path: string, body: unknown, accessToken?: string): Promise<
   });
   const json = (await response.json().catch(() => ({}))) as TokenResponse;
   if (!response.ok) {
-    throw new Error(json.error_code ?? json.error ?? json.message ?? json.msg ?? "signInFailed");
+    const code = json.error_code ?? json.error ?? json.message ?? json.msg ?? `http${response.status}`;
+    // Logged as well as thrown: the message on screen is translated, and the code is what says why.
+    console.warn("supabase auth refused", response.status, code, json);
+    throw new Error(code);
   }
   return json;
 }

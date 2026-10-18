@@ -40,11 +40,9 @@ export function LoginPage() {
       navigate(requestedPath ?? "/", { replace: true })
     } catch (failure) {
       const code = failure instanceof Error ? failure.message : "signInFailed"
-      setError(t(`authError_${code}`, {
-        defaultValue: code === "invalid_credentials"
-          ? t("signInFailed", { defaultValue: "That username and password do not match." })
-          : t("signInFailed", { defaultValue: "Signing in failed. Please try again." }),
-      }))
+      // The code is shown, not just logged: it is what distinguishes "no project configured" from
+      // "wrong password" from "address not confirmed", and each needs a different fix.
+      setError(`${t(`authError_${code}`, { defaultValue: t("signInFailed", { defaultValue: "Signing in failed. Please try again." }) })} (${code})`)
     } finally {
       setBusy(false)
     }

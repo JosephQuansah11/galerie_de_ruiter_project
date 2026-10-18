@@ -60,6 +60,17 @@ public class AntiqueImage {
     @Column(name = "storage_key")
     private String storageKey;
 
+    /**
+     * A small copy of the photograph - 400 pixels on its longest side - for grids and lists.
+     *
+     * <p>It stays in the row, and deliberately: at about forty kilobytes it is the one thing here
+     * small enough to keep next to its metadata, and it saves the catalogue a round trip to the
+     * bucket for every tile it draws. The full picture is fetched only when a piece is opened.</p>
+     */
+    @JdbcTypeCode(SqlTypes.LONGVARBINARY)
+    @Column(columnDefinition = "bytea")
+    private byte[] thumbnail;
+
     public AntiqueImage() {
     }
 
@@ -150,5 +161,14 @@ public class AntiqueImage {
 
     public void setStorageKey(String storageKey) {
         this.storageKey = storageKey;
+    }
+
+    /** The small copy used by grids, or null until one has been generated. */
+    public byte[] getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(byte[] thumbnail) {
+        this.thumbnail = thumbnail;
     }
 }

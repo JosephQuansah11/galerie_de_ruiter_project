@@ -75,6 +75,8 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.GET, "/api/antiques").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/antiques/*/image").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/antiques/*/image/*").permitAll()
+				// The small copy a grid draws. Public for the same reason the pictures are.
+				.requestMatchers(HttpMethod.GET, "/api/antiques/*/image/*/thumbnail").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/antiques/{id}/image/{imageId}").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/antiques/*/model").permitAll()
 				// The public counters are open to anonymous visitors on purpose: the gallery

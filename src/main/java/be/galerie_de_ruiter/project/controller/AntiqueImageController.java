@@ -7,6 +7,7 @@ import be.galerie_de_ruiter.project.dto.AntiqueImageResponse;
 import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueRepository;
 import be.galerie_de_ruiter.project.service.ImageStorage;
+import be.galerie_de_ruiter.project.service.ThumbnailService;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -36,6 +37,8 @@ public class AntiqueImageController {
     private final AntiqueImageRepository images;
     /** The bucket, for photographs that have been copied out; inert until a key exists. */
     private final ImageStorage storage;
+    /** The small copy that grids load instead of the original. */
+    private final ThumbnailService thumbnails;
 
     @GetMapping
     @Transactional(readOnly = true)
@@ -55,6 +58,24 @@ public class AntiqueImageController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    /**
+     * The small copy a grid draws instead of the original - about forty kilobytes against up to six
+     * megabytes.
+     *
+     * <p>Generated on the first request and kept: from the row while the picture still lives there,
+     * from the bucket once it has been copied out. That means the hundred photographs already in the
+     * gallery need no separate job - browsing the catalogue fills them in - and each one is paid for
+     * exactly once.</p>
+     */
+    @GetMapping("/{imageId}/thumbnail")
+    @Transactional
+    public ResponseEntity<byte[]> thumbnail(@PathVariable UUID id, @PathVariable UUID imageId) {
+        return images.findById(imageId)
+                .filter(image -> image.getAntique().getId().equals(id))
+                .map(this::thumbnailResponse)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
@@ -65,7 +86,12 @@ public class AntiqueImageController {
         Antique antique = antiques.findById(id).orElseThrow();
         // A new photograph lands at the end of the gallery's order; the admin can move it after.
         String order = String.valueOf(images.countByAntiqueId(id));
-        AntiqueImage saved = images.save(new AntiqueImage(antique, order, order, image.getBytes(), image.getContentType()));
+        byte[] bytes = image.getBytes();
+        AntiqueImage photo = new AntiqueImage(antique, order, order, bytes, image.getContentType());
+        // Made once, now, while the bytes are already in hand: a gallery that uploads a picture
+        // should not be the reason a visitor downloads six megabytes for a tile.
+        photo.setThumbnail(thumbnails.create(bytes));
+        AntiqueImage saved = images.save(photo);
         return AntiqueImageResponse.from(saved, id);
     }
 
@@ -112,6 +138,27 @@ public class AntiqueImageController {
                 .filter(image -> !AntiqueImage.isSixViewPosition(image.getPosition()))
                 .sorted(AntiqueImage.BY_DISPLAY_ORDER)
                 .toList();
+    }
+
+    /** One photograph's small copy; public because the catalogue's tiles are public. */
+    private ResponseEntity<byte[]> thumbnailResponse(AntiqueImage image) {
+        byte[] small = image.getThumbnail();
+        if (small == null) {
+            byte[] original = image.getStorageKey() == null
+                    ? image.getData()
+                    : storage.get(image.getStorageKey()).orElseGet(image::getData);
+            small = thumbnails.create(original);
+            if (small != null) {
+                image.setThumbnail(small);
+                images.save(image);
+            }
+        }
+        if (small == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .header(org.springframework.http.HttpHeaders.CACHE_CONTROL,
+                        "public, max-age=31536000, immutable")
+                .body(small);
     }
 
     /**

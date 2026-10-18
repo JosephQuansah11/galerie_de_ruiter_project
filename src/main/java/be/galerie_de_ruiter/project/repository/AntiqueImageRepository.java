@@ -37,6 +37,20 @@ public interface AntiqueImageRepository extends JpaRepository<AntiqueImage, UUID
             """)
     List<CatalogueImage> findCatalogueImages();
 
+    /**
+     * The photographs whose bytes are still in their row, as ids only.
+     *
+     * <p>Ids, not rows: this is the table the photographs live in, so selecting the entities would
+     * read every remaining picture out of PostgreSQL before the copy job has moved a single one. The
+     * job loads each row on its own instead, which keeps its memory flat however many there are.</p>
+     */
+    @org.springframework.data.jpa.repository.Query("""
+            select i.id from AntiqueImage i
+            where i.storageKey is null
+            """)
+    List<UUID> findIdsNotInStorage();
+
+
     /** One row of {@link #findCatalogueImages()}. */
     interface CatalogueImage {
         UUID getAntiqueId();

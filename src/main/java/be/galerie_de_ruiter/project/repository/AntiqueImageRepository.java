@@ -52,11 +52,15 @@ public interface AntiqueImageRepository extends JpaRepository<AntiqueImage, UUID
 
     /**
      * The photographs that are in the bucket <em>and</em> still carrying a copy in their row, as
-     * ids, keys and byte counts - never the bytes. Selecting the entities here would read the whole
-     * database copy into memory just to decide whether to delete it.
+     * ids and keys only.
+     *
+     * <p>Ids, not rows: the bytes are exactly what this query exists to get rid of, so selecting
+     * them - even their lengths - would read the whole database copy into memory to decide whether
+     * to delete it. How much the database is holding is a question for PostgreSQL, not for this
+     * query: {@code select pg_size_pretty(pg_total_relation_size('antique_images'))}.</p>
      */
     @org.springframework.data.jpa.repository.Query("""
-            select i.id as id, i.storageKey as storageKey, length(i.data) as bytes
+            select i.id as id, i.storageKey as storageKey
             from AntiqueImage i
             where i.storageKey is not null and i.data is not null
             """)
@@ -67,8 +71,6 @@ public interface AntiqueImageRepository extends JpaRepository<AntiqueImage, UUID
         UUID getId();
 
         String getStorageKey();
-
-        Long getBytes();
     }
 
 

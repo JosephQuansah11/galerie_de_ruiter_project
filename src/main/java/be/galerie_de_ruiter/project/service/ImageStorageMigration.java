@@ -100,7 +100,7 @@ public class ImageStorageMigration {
     /**
      * What a release run did - or, in a dry run, what it would do.
      */
-    public record Release(boolean dryRun, int candidates, long bytes, int released, List<Failed> failed) {
+    public record Release(boolean dryRun, int candidates, int released, List<Failed> failed) {
     }
 
     /**
@@ -118,7 +118,6 @@ public class ImageStorageMigration {
                     "Object storage is not configured, so there is nothing to release to.");
         }
         List<AntiqueImageRepository.StoredRow> candidates = images.findStoredWithBytes();
-        long bytes = candidates.stream().mapToLong(row -> row.getBytes() == null ? 0 : row.getBytes()).sum();
         int released = 0;
         List<Failed> failed = new ArrayList<>();
 
@@ -135,6 +134,6 @@ public class ImageStorageMigration {
             released++;
         }
 
-        return new Release(!confirm, candidates.size(), bytes, released, failed);
+        return new Release(!confirm, candidates.size(), released, failed);
     }
 }

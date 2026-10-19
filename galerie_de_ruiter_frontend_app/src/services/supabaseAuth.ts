@@ -133,3 +133,32 @@ export async function signOut(session: SupabaseSession): Promise<void> {
     // A revoked or expired token is already signed out; the caller clears its own state regardless.
   }
 }
+
+/**
+ * Sets a new password for the signed-in account.
+ *
+ * The identity provider owns this, not the gallery: it holds the password and knows how to store it,
+ * and the profile row never sees one. The access token is the proof that the person asking is the
+ * account being changed, which is why the current password is not needed here - but the form asks
+ * for it anyway, because someone who left a browser signed in should not be able to lock its owner
+ * out.
+ *
+ * Throws an Error whose message is a code ("weak_password", "same_password", "http401").
+ */
+export async function updatePassword(session: SupabaseSession, password: string): Promise<void> {
+  if (!isSupabaseConfigured()) throw new Error("authNotConfigured");
+  const response = await fetch(`${config.url}/auth/v1/user`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: config.key,
+      Authorization: `Bearer ${session.accessToken}`,
+    },
+    body: JSON.stringify({ password }),
+  });
+  if (response.ok) return;
+  const json = (await response.json().catch(() => ({}))) as TokenResponse;
+  const code = json.error_code ?? json.error ?? json.msg ?? json.message ?? `http${response.status}`;
+  console.warn("supabase password change refused", response.status, code, json);
+  throw new Error(code);
+}

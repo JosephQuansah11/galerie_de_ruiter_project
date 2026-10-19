@@ -1,4 +1,4 @@
-import { GALLERY_EMAIL_DOMAIN, configureSupabase, isSupabaseConfigured, signIn, signOut, toEmail, refresh } from "./supabaseAuth";
+import { GALLERY_EMAIL_DOMAIN, configureSupabase, isSupabaseConfigured, signIn, signOut, toEmail, refresh, updatePassword } from "./supabaseAuth";
 
 describe("supabaseAuth", () => {
   const originalFetch = global.fetch;
@@ -70,5 +70,24 @@ describe("supabaseAuth", () => {
     configureSupabase({ url: "", key: "" });
     expect(isSupabaseConfigured()).toBe(false);
     await expect(signIn("de-ruiter", "admin")).rejects.toThrow("authNotConfigured");
+  });
+
+  it("changes the password with the session's token, not with a password grant", async () => {
+    reply(200, {});
+    const session = { accessToken: "a", refreshToken: "r", expiresAt: 0, userId: "u1" };
+
+    await updatePassword(session, "a-longer-passphrase");
+
+    expect(calls[0].url).toContain("/auth/v1/user");
+    expect(calls[0].init.method).toBe("PUT");
+    expect((calls[0].init.headers as Record<string, string>).Authorization).toBe("Bearer a");
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({ password: "a-longer-passphrase" });
+  });
+
+  it("surfaces why a password was refused, so the form can say it", async () => {
+    reply(422, { error_code: "weak_password" });
+
+    await expect(updatePassword({ accessToken: "a", refreshToken: "r", expiresAt: 0, userId: "u" }, "short"))
+      .rejects.toThrow("weak_password");
   });
 });

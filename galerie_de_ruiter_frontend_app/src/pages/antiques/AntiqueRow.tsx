@@ -11,9 +11,9 @@ import { resolveAntiqueMediumUrl, resolveAntiqueThumbnailUrl } from "@/models/an
 import { summarizeDescription } from "./summarizeDescription";
 
 /**
- * One piece in the catalogue, laid out as a compact row: a small thumbnail with the piece's
- * short story beside it. The description is trimmed to a preview here; the full story stays
- * on the piece's own page.
+ * One piece in the catalogue, laid out as a row: a photograph large enough to read the object,
+ * with the piece's short story beside it. The description is trimmed to a preview here; the full
+ * story stays on the piece's own page.
  *
  * The list is open to a visitor without an account; saving a piece and putting it in the basket
  * are not. Those two buttons send the visitor to the sign-in page with this list as the page to
@@ -41,7 +41,7 @@ export function AntiqueRow({ antique }: { antique: Antique }) {
     <div className="catalogue-card-image" aria-hidden="true">{imageUrl ? <img
       src={thumbnailUrl}
       srcSet={thumbnailUrl && mediumUrl ? `${thumbnailUrl} 400w, ${mediumUrl} 800w` : undefined}
-      sizes="(max-width: 700px) 92vw, 360px"
+      sizes="(max-width: 520px) 120px, (max-width: 900px) 20vw, 208px"
       alt=""
       loading="lazy"
       decoding="async"

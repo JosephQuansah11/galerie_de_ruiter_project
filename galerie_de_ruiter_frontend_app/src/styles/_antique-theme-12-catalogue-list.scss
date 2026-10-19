@@ -19,9 +19,13 @@
 }
 
 .catalogue-row .catalogue-card-image {
-  flex: 0 0 clamp(5.5rem, 14vw, 8rem);
-  width: clamp(5.5rem, 14vw, 8rem);
-  height: clamp(5.5rem, 14vw, 8rem);
+  // Fill the frame with the photograph instead of putting a 4:3 picture in a square and leaving
+  // a quarter of the box empty. The larger clamp nearly reaches the row's content height on a
+  // desktop while still leaving the story room on a phone.
+  flex: 0 0 clamp(7.5rem, 20vw, 13rem);
+  width: clamp(7.5rem, 20vw, 13rem);
+  height: auto;
+  aspect-ratio: 4 / 3;
   font: 2rem Georgia, serif;
 }
 

@@ -52,12 +52,16 @@ export function CataloguePage(props: Props) {
     ? props.filteredAntiques
     : props.filteredAntiques.slice((currentPage - 1) * effectivePageSize, currentPage * effectivePageSize);
   return <section className="catalogue-page">
-    <CatalogueHeading count={props.antiques.length} />
+    <CatalogueHeading count={props.antiques.length} shown={props.filteredAntiques.length} query={props.query} />
     <div className="catalogue-controls">
       <Form className="catalogue-search" role="search" onSubmit={(event) => event.preventDefault()}>
         <span className="catalogue-search-icon" aria-hidden="true"><Search size={18} /></span>
         <Form.Control id="catalogue-search" aria-label={t("searchAntiques")} value={props.query} onChange={(event) => props.onQueryChange(event.target.value)} placeholder={t("searchPlaceholder")} />
-        {hasQuery && <button type="button" className="catalogue-search-clear" aria-label={t("clearSearch")} onClick={() => props.onQueryChange("")}>
+        {hasQuery && <button type="button" className="catalogue-search-clear" aria-label={t("clearSearch")}
+          // Clearing the search and the category together is what "clear everything" means; leaving
+          // the category behind is how a visitor ends up looking at four pieces after clearing
+          // everything, and concluding the results did not clear.
+          onClick={() => { props.onQueryChange(""); props.setCategory(t("allPieces")); }}>
           <X size={16} aria-hidden="true" />
         </button>}
         <button type="submit" className="catalogue-search-submit">
@@ -78,7 +82,22 @@ export function CataloguePage(props: Props) {
   </section>;
 }
 
-function CatalogueHeading({ count }: { count: number }) {
+/**
+ * The heading answers the question a search asks: how many pieces match what I typed, out of how
+ * many there are. Before this it always reported the whole collection, so a search that found four
+ * pieces still said "66 pieces listed" above them, which looks like a filter that did not apply.
+ */
+function CatalogueHeading({ count, shown, query }: { count: number; shown: number; query: string }) {
   const { t } = useTranslation();
-  return <div className="catalogue-heading"><div><Badge bg="dark" className="catalogue-kicker">{t("collection")}</Badge><h1>{t("collectionTitle")}</h1><p>{t("collectionIntro")}</p></div><div className="catalogue-count"><strong>{count}</strong><span>{t("piecesListed")}</span></div></div>;
+  const searching = query.trim().length > 0;
+  return <div className="catalogue-heading"><div>
+    <Badge bg="dark" className="catalogue-kicker">{searching ? t("search", { defaultValue: "Search" }) : t("collection")}</Badge>
+    <h1>{searching ? t("searchResultsTitle", { defaultValue: "Results for “{{query}}”", query: query.trim() }) : t("collectionTitle")}</h1>
+    <p>{searching
+      ? t("searchResultsIntro", { defaultValue: "{{shown}} of {{total}} pieces match.", shown, total: count })
+      : t("collectionIntro")}</p>
+  </div><div className="catalogue-count">
+    <strong>{searching ? shown : count}</strong>
+    <span>{searching ? t("resultsFound", { defaultValue: "results" }) : t("piecesListed")}</span>
+  </div></div>;
 }

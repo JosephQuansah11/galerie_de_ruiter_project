@@ -87,12 +87,12 @@ than a new image pipeline.
 ## Keycloak
 
 The live client in the running Keycloak (`movie_project_frontend_client`) must also list
-`https://galeriederuiter.cloud-ip.cc/*` in **Valid redirect URIs** *and* in **Valid post logout
-redirect URIs**. Keycloak refuses to return the browser to an origin its client does not declare, so
-without them a sign-in started on the gallery's own domain fails at the redirect back - and the
-sign-out that returns through `/logout` fails with it. The realm file in `keycloak/realms` is a
-reference for a fresh import; a deploy does not re-import it into a Keycloak that already holds the
-realm.
+`https://galeriederuiterantieks.gripe/*` and `https://galeriederuiter.cloud-ip.cc/*` in **Valid
+redirect URIs** *and* in **Valid post logout redirect URIs**. Keycloak refuses to return the browser
+to an origin its client does not declare, so without them a sign-in started on either domain fails
+at the redirect back - and the sign-out that returns through `/logout` fails with it. The realm file
+in `keycloak/realms` is a reference for a fresh import; a deploy does not re-import it into a
+Keycloak that already holds the realm.
 
 If the `galerie-keycloak` deploy fails with *"Failed to run import"* and *"Unrecognized field"*, the
 realm file in `keycloak/realms` carries a field Keycloak's client representation does not know, and
@@ -111,9 +111,9 @@ signed-in visitor with no role, which the app handles without sending a request 
 refused (see *Accounts and profiles* in the frontend README).
 
 The frontend also needs `VITE_GOOGLE_MAPS_API_KEY` (also `sync: false`): a browser key for the Maps
-Embed API and the Geocoding API, restricted by HTTP referrer to
-`https://galeriederuiter.cloud-ip.cc/*`. Without it the location page shows the address and a link
-to Google Maps instead of a frame.
+Embed API and the Geocoding API, restricted by HTTP referrer to the gallery's origins
+(`https://galeriederuiterantieks.gripe/*` and `https://galeriederuiter.cloud-ip.cc/*`). Without it
+the location page shows the address and a link to Google Maps instead of a frame.
 
 ## Agent discovery
 
@@ -217,15 +217,21 @@ be configured separately in its dashboard.
   dashboard. In particular, set `KC_BOOTSTRAP_ADMIN_USERNAME`,
   `KC_BOOTSTRAP_ADMIN_PASSWORD`, `KEYCLOAK_ADMIN_USERNAME`,
   `KEYCLOAK_ADMIN_PASSWORD`, and `KEYCLOAK_REALM_ADMIN_PASSWORD`.
-- The frontend's public origin is `SITE_URL=https://galeriederuiter.cloud-ip.cc` in
-  `render.yaml`. `sitemap.xml`, the `Sitemap:` line in `robots.txt` and the `og:url`/`og:image`
-  tags are built from it; without it the build falls back to the same origin in
+- The frontend's public origin is `SITE_URL=https://galeriederuiterantieks.gripe` in
+  `render.yaml`. `sitemap.xml`, the `Sitemap:` line in `robots.txt`, the canonical URLs and the
+  `og:url`/`og:image` tags are built from it; without it the build falls back to the same origin in
   `site.config.mjs`. If it names a host a crawler cannot fetch, Search Console reports every URL
   in the sitemap as "Couldn't fetch".
-- `FRONTEND_ORIGIN` on `galerie-java-api` is the browser origin allowed to call the API, so it names
-  the domain the frontend is served on. The backend allows one frontend origin plus the localhost
-  ports, so serving the app from a second hostname as well needs that hostname added to the list in
-  `SecurityConfiguration`, not just to `render.yaml`.
+- The older `https://galeriederuiter.cloud-ip.cc` stays attached to `galerie-frontend` and serves
+  the same build while the move settles. Every page it serves declares the new origin canonical, so
+  Google consolidates the two hosts instead of indexing them as competitors. Keep both hosts in
+  Render and Cloudflare until search results and Search Console show the new domain; after that,
+  retire the old one - a Cloudflare redirect rule from the old host to the new one is the last step,
+  not the first.
+- `FRONTEND_ORIGIN` on `galerie-java-api` is the comma-separated list of browser origins allowed to
+  call the API, so it names both domains while both are served. The backend also allows the
+  localhost ports. Serving the app from a third hostname means adding it to this value - and a
+  single value still works, for a local run or a one-domain deployment.
 - The frontend environment variables are build-time values for the static site. Trigger a frontend deploy after changing them.
 - The frontend's public Keycloak settings are already declared in `render.yaml`:
   `VITE_KEYCLOAK_URL=https://galerie-keycloak.onrender.com`,

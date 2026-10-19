@@ -30,11 +30,11 @@ containers and local data, run `docker compose -f docker-compose.dev.yml down
 -v`.
 
 Keycloak also has to be able to send the browser back to the gallery. The client the frontend signs
-in with (`movie_project_frontend_client`) must list the gallery's own origin
-(`https://galeriederuiter.cloud-ip.cc/*`) in its **Valid redirect URIs** and in its **Valid post
-logout redirect URIs**. The realm file in `keycloak/realms` carries them for a fresh import, but a
-deploy does not re-import a realm that already exists, so the running Keycloak is edited by hand
-(*RENDER.md* has the steps).
+in with (`movie_project_frontend_client`) must list the gallery's origins
+(`https://galeriederuiterantieks.gripe/*` and, while it stays live, `https://galeriederuiter.cloud-ip.cc/*`)
+in its **Valid redirect URIs** and in its **Valid post logout redirect URIs**. The realm file in
+`keycloak/realms` carries them for a fresh import, but a deploy does not re-import a realm that
+already exists, so the running Keycloak is edited by hand (*RENDER.md* has the steps).
 
 ### Keycloak realm files
 
@@ -54,7 +54,7 @@ the client's attributes:
 
 ```json
 "attributes": {
-  "post.logout.redirect.uris": "https://galeriederuiter.cloud-ip.cc/*##https://galerie-frontend.onrender.com/*"
+  "post.logout.redirect.uris": "https://galeriederuiterantieks.gripe/*##https://galeriederuiter.cloud-ip.cc/*##https://galerie-frontend.onrender.com/*"
 }
 ```
 
@@ -112,7 +112,7 @@ Render adds itself.
 and it is the one the gallery wants - its images are public reads and its links are meant to be
 shareable. A policy that allowed only the gallery would have to be `same-site`, which compares
 registrable domains and therefore needs the API and the frontend to share one (for example
-`api.galeriederuiter.be` beside `www.galeriederuiter.be`). Nothing needs that today.
+`api.galeriederuiterantieks.gripe` beside `www.galeriederuiterantieks.gripe`). Nothing needs that today.
 
 ## Memory
 

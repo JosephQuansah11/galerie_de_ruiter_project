@@ -103,9 +103,9 @@ The site's public origin lives in `site.config.mjs`, in one place, because three
 it: the sitemap (and the `Sitemap:` line in `robots.txt`), the absolute `og:url`/`og:image` of the
 social preview tags, and the canonical URL every page declares — webpack hands that one to the
 bundle as `import.meta.env.SITE_URL`. The static document declares the same origin, so a crawler
-that runs nothing still reads it. It defaults to `https://galeriederuiter.cloud-ip.cc`, so a deploy
-that sets nothing still publishes the right URLs; `SITE_URL` overrides it for a staging deploy or
-a local build:
+that runs nothing still reads it. It defaults to `https://galeriederuiterantieks.gripe`, the domain
+the gallery owns, so a deploy that sets nothing still publishes the right URLs; `SITE_URL` overrides
+it for a staging deploy or a local build:
 
 ```bash
 SITE_URL=http://localhost:3000 npm run build
@@ -114,7 +114,9 @@ docker build --build-arg SITE_URL=https://www.example.be ./galerie_de_ruiter_fro
 ```
 
 `render.yaml` sets `SITE_URL` for the static site. Like the other frontend values in it, it is
-read while the bundle is built, so changing it needs a new deploy.
+read while the bundle is built, so changing it needs a new deploy. Both the new domain and the older
+`galeriederuiter.cloud-ip.cc` serve that one build; the canonical URLs inside it are what tell a search
+engine which host is the gallery.
 
 The `og:image` a shared link shows is `logo512.png`. A 1200×630 image in `public/` pointed at
 from `index.html` makes for a richer preview, which is what a shared link gets instead of a
@@ -127,20 +129,19 @@ among them - come back as *Couldn't fetch*, and the pages stay out of the result
 the site itself is reachable. Check what a deploy actually published before submitting anything:
 
 ```bash
-curl -s https://galeriederuiter.cloud-ip.cc/sitemap_index.xml | grep '<loc>'
-curl -s https://galeriederuiter.cloud-ip.cc/robots.txt
+curl -s https://galeriederuiterantieks.gripe/sitemap_index.xml | grep '<loc>'
+curl -s https://galeriederuiterantieks.gripe/robots.txt
 ```
 
 Both should name the public origin. Then, in Search Console, submit
-`https://galeriederuiter.cloud-ip.cc/sitemap_index.xml` under *Sitemaps*, and use *URL inspection* →
+`https://galeriederuiterantieks.gripe/sitemap_index.xml` under *Sitemaps*, and use *URL inspection* →
 *Request indexing* for `/`, `/about` and `/map`.
 
-The property is verified with the `google-site-verification` tag in `index.html` rather than with a
-DNS record or an uploaded file, so nothing outside a deploy has to stay in place for it - and it is
-the same origin the sitemap and the canonical URLs name. A rewrite of the head that dropped the tag
-would take the property with it, which is why `src/staticDocument.test.ts` pins the value. Bing
-Webmaster Tools verifies the same origin the same way, through the `msvalidate.01` tag beside it, and
-that one is pinned by the same test.
+The new property is verified by its `google-site-verification` TXT record in the Cloudflare zone, so
+nothing in a deploy has to carry a token for it. The older property is verified by the tag in
+`index.html`, which `src/staticDocument.test.ts` pins, and that token is harmless on the new host.
+Both hosts serve pages that name the same canonical origin. Bing Webmaster Tools verifies a domain
+the same way; the `msvalidate.01` tag beside the Google one is pinned by the same test.
 
 Every page the gallery wants indexed is now readable without an account: the landing page, the
 collection list and each piece, the story, the map and the chat. A crawler that follows a catalogue
@@ -155,26 +156,44 @@ canonical and content after it runs. Google renders JavaScript, so those pages c
 prerender of the public routes would make the first HTML route-specific and remove the dependence on
 rendering. That is the next step if ranking on those pages matters.
 
-**A custom domain is still the durable answer.** `galeriederuiter.cloud-ip.cc` is a free subdomain;
-search engines give such hostnames less weight than a domain the gallery owns, and the provider can
-reassign one. When the gallery buys one, change it in one place per system:
+**The gallery owns its domain now.** `https://galeriederuiterantieks.gripe` is the canonical origin:
+`PRODUCTION_ORIGIN` in `site.config.mjs` names it, `SITE_URL` in `render.yaml` names it, and every
+page declares it canonical - including the pages served on the older free subdomain. The old
+`https://galeriederuiter.cloud-ip.cc` is deliberately still attached and still serves this build, so
+existing links and bookmarks keep working while Google moves its index. It is not a second canonical
+site: every response names the new domain, and the sitemap lists only new-domain URLs. Retire the old
+host only once Search Console shows the new property indexed, and make the retirement a redirect
+rather than a deletion, so the links keep working.
+
+The move touches these systems, in this order:
 
 1. `site.config.mjs` (`PRODUCTION_ORIGIN`) and `SITE_URL` in `render.yaml`, then rebuild: the
-   canonical URLs, sitemap, `robots.txt`, Open Graph tags and the static document are built from it.
-2. Render → `galerie-frontend` → Custom Domains: add the apex and `www`, and make one redirect to the
-   other so two hosts never compete.
-3. Google Search Console: add the new property, replace the `google-site-verification` token in
-   `index.html` with the new property's token, submit `/sitemap_index.xml`, and keep the old sitemap
-   until the redirects are in place. Bing Webmaster Tools needs the same for `msvalidate.01`.
-4. Keycloak's frontend client: add the new origin to Valid redirect URIs and Valid post logout
-   redirect URIs (and the realm file's `post.logout.redirect.uris`).
-5. Supabase Auth → URL Configuration: Site URL and additional redirect URLs.
-6. `FRONTEND_ORIGIN` on `galerie-java-api` (CORS), plus the `VITE_*` values and `SITEMAP_API_URL`
-   in `render.yaml`.
-7. `PRODUCTION_HOST` in `src/services/clarity.ts`, and the Google Maps key's HTTP referrer
-   restrictions.
-8. The CSP in `security-headers.conf` and `render.yaml` names origins explicitly; check
-   `connect-src` for the API and Keycloak and `frame-src` for Keycloak.
+   canonical URLs, sitemap, `robots.txt`, Open Graph tags and structured data are built from it.
+   `llms.txt` and the two `/.well-known` manifests are static files, so their URLs were changed by
+   hand in the same commit.
+2. Render → `galerie-frontend` → Custom Domains: add the apex and `www`, with `www` redirecting to
+   the apex. The new host already answers with this build, so this is in place.
+3. Cloudflare: keep the proxied DNS records that point the new host at Render, and leave the old
+   host's record in place for as long as it is served.
+4. Google Search Console: the new property is verified by its `google-site-verification` TXT record;
+   the meta tag in `index.html` verifies the old property and stays. Submit
+   `https://galeriederuiterantieks.gripe/sitemap_index.xml` under *Sitemaps*, and request indexing for
+   `/`, `/about` and `/map`. Keep the old property while the old host is served - it is how those
+   links stay monitored - but there is one sitemap now and it lists only new-domain URLs, so the new
+   property is the one whose coverage matters. Add the new site to Bing Webmaster Tools too; IndexNow
+   announces whichever origin the build was made for.
+5. Keycloak's frontend client: add the new origin to Valid redirect URIs and Valid post logout
+   redirect URIs, and keep the old one while the old host is served. The realm file carries both,
+   and `KeycloakRealmFilesTest` pins them.
+6. `FRONTEND_ORIGIN` on `galerie-java-api`: a comma-separated list with both origins. Also check the
+   `VITE_*` values and `SITEMAP_API_URL` in `render.yaml`.
+7. Supabase Auth → URL Configuration: Site URL and additional redirect URLs, if the Supabase sign-in
+   profile is in use.
+8. `PRODUCTION_HOSTS` in `src/services/clarity.ts` holds both hosts, and the Google Maps key's HTTP
+   referrer restrictions list both origins.
+9. The CSP in `security-headers.conf` and `render.yaml` names origins explicitly. The frontend's own
+   origin is `'self'`, so the move does not change it; check `connect-src` for the API and Keycloak
+   and `frame-src` for Keycloak.
 
 ### IndexNow
 
@@ -183,13 +202,15 @@ reaches all of them. A static site has nowhere to announce from but its build, w
 `scripts/generate-sitemap.mjs` does: once the sitemap is written it posts the same URL set.
 
 ```json
-{ "host": "galeriederuiter.cloud-ip.cc", "key": "…", "keyLocation": "…", "urlList": ["…"] }
+{ "host": "galeriederuiterantieks.gripe", "key": "…", "keyLocation": "…", "urlList": ["…"] }
 ```
 
 The key was generated in Bing Webmaster Tools, and the file that proves the domain owns it is
 `public/413098dae5154255acb93dd6e4e9ad9c.txt` - at the site root, named after the key, containing the
-key and nothing else. `src/indexNow.test.ts` reads both, so rotating the key in one place cannot leave
-the other behind: the submissions would answer 403 while every other check stayed green.
+key and nothing else. The same build serves it from both hosts while the old one is still live, so a
+submission for either origin can read it back. `src/indexNow.test.ts` reads both, so rotating the key
+in one place cannot leave the other behind: the submissions would answer 403 while every other check
+stayed green.
 
 It submits only from a build for the production origin, never from localhost, because a staging build
 names URLs a crawler cannot fetch and announcing those is worse than saying nothing. `INDEXNOW=off`
@@ -356,7 +377,8 @@ lookup turns a typed address into coordinates through Google's geocoder. Both re
 - **Geocoding API** for the lookup behind *Find coordinates* on the admin's location screen.
 
 The key ships in the bundle, so it is not a secret: restrict it in the Google Cloud console by
-**HTTP referrer** to the gallery's origins (`https://galeriederuiter.cloud-ip.cc/*`, and
+**HTTP referrer** to the gallery's origins (`https://galeriederuiterantieks.gripe/*`,
+`https://galeriederuiter.cloud-ip.cc/*` while the old host is still served, and
 `http://localhost:3000/*` while developing) and enable only those two APIs on it.
 
 Without a key the gallery still works. The location page shows the address, the opening hours and an
@@ -633,25 +655,26 @@ vendor tag is never requested — not merely told to behave.
 
 The loader is part of the bundle rather than a snippet pasted into `index.html`, which keeps
 `script-src` free of `'unsafe-inline'`; the script itself comes from
-`https://www.clarity.ms/tag/z0549z8r1v`. That project id belongs to
-`galeriederuiter.cloud-ip.cc` only: the loader refuses every other hostname, so previews, tests and
-localhosts never send data. Withdrawing consent calls Clarity's `consent` command, which deletes its
-cookies and stops tracking until it is granted again.
+`https://www.clarity.ms/tag/z0549z8r1v`. `PRODUCTION_HOSTS` in `src/services/clarity.ts` names the
+gallery's own hosts - the new domain and the older free subdomain while it is still served - and the
+loader refuses every other hostname, so previews, tests and localhosts never send data. Withdrawing
+consent calls Clarity's `consent` command, which deletes its cookies and stops tracking until it is
+granted again.
 
 ### Rolling out HSTS
 
 `max-age=31536000; includeSubDomains` is what the audit asks for, and both parts are safe here: the
-gallery's host is `galeriederuiter.cloud-ip.cc`, so `includeSubDomains` covers subdomains of a name
-the gallery would create itself, and there are none. If that ever changes — a subdomain that has to
-answer over plain HTTP, for example — lower the `max-age` first, then remove `includeSubDomains`.
+gallery's host is `galeriederuiterantieks.gripe`, which it owns, so `includeSubDomains` covers a name
+the gallery controls and on which every subdomain answers over HTTPS. The older
+`galeriederuiter.cloud-ip.cc` sends the same header, but HSTS applies to the host that sent it (and
+its subdomains), so it neither widens nor weakens what the new domain claims. If a subdomain ever has
+to answer over plain HTTP, lower the `max-age` first, then remove `includeSubDomains`.
 
-`preload` is deliberately **not** sent, and the audit's suggestion to add it does not apply to this
-site. Preloading means submitting the domain to the browsers' built-in HSTS list, which can only be
-done for a registrable domain the publisher owns; `galeriederuiter.cloud-ip.cc` is a subdomain of
-`cloud-ip.cc`, so it cannot be submitted, and a `preload` token would claim a commitment nobody can
-honour. If the gallery moves to a domain it owns, add `preload` **after** submitting it at
-[hstspreload.org](https://hstspreload.org/) and confirming the whole domain — apex and every
-subdomain — serves HTTPS.
+`preload` is deliberately **not** sent. Now that the gallery owns a registrable domain it *can* be
+submitted at [hstspreload.org](https://hstspreload.org/), but a `preload` token is a long-lived
+commitment to the apex and every subdomain, and the browsers' list takes time to remove a site from.
+Submit the domain first, confirm the apex and `www` both serve HTTPS, and only then add `preload` to
+both the header and `render.yaml`. The year-long max-age is the part that protects a visitor today.
 
 ## Learn More
 

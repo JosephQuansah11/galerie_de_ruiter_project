@@ -68,12 +68,18 @@ class KeycloakRealmFilesTest {
         ClientRepresentation client = productionFrontendClient();
 
         assertThat(client.getRedirectUris())
+                .contains("https://galeriederuiterantieks.gripe/*")
+                // The older free subdomain keeps signing in until it is retired.
                 .contains("https://galeriederuiter.cloud-ip.cc/*")
                 .contains("https://galerie-frontend.onrender.com/*");
-        assertThat(client.getWebOrigins()).contains("https://galeriederuiter.cloud-ip.cc");
+        assertThat(client.getWebOrigins())
+                .contains("https://galeriederuiterantieks.gripe")
+                .contains("https://galeriederuiter.cloud-ip.cc");
         assertThat(client.getAttributes().get("post.logout.redirect.uris"))
+                .contains("https://galeriederuiterantieks.gripe/*")
                 .contains("https://galeriederuiter.cloud-ip.cc/*")
-                // Two URIs in one attribute: `##` is the separator Keycloak reads them back with.
+                // Two or more URIs in one attribute: `##` is the separator Keycloak reads them
+                // back with.
                 .contains("##");
     }
 

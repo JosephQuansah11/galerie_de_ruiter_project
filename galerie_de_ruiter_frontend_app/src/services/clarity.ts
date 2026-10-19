@@ -12,8 +12,13 @@
  */
 const PROJECT_ID = "z0549z8r1v";
 const CONSENT_KEY = "galerie-analytics-consent";
-/** The one host the gallery's Clarity project belongs to; previews and localhost stay out. */
-const PRODUCTION_HOST = "galeriederuiter.cloud-ip.cc";
+/** The hosts the gallery's Clarity project belongs to; previews and localhost stay out. */
+const PRODUCTION_HOSTS = new Set([
+  // The domain the gallery owns, which every page declares canonical.
+  "galeriederuiterantieks.gripe",
+  // The free subdomain the gallery used before it; still served while the move settles.
+  "galeriederuiter.cloud-ip.cc",
+]);
 const SCRIPT_URL = `https://www.clarity.ms/tag/${PROJECT_ID}?ref=bwt`;
 
 export type AnalyticsChoice = "granted" | "denied";
@@ -22,7 +27,7 @@ type ClarityCommand = ((...args: unknown[]) => void) & { q?: unknown[][] };
 type ClarityWindow = Window & { clarity?: ClarityCommand };
 
 /** Whether this page is the gallery's real site, rather than a preview or a test run. */
-export const isAnalyticsHost = (hostname: string): boolean => hostname === PRODUCTION_HOST;
+export const isAnalyticsHost = (hostname: string): boolean => PRODUCTION_HOSTS.has(hostname);
 
 export const analyticsAvailable = (): boolean =>
   typeof window !== "undefined" && isAnalyticsHost(window.location.hostname);

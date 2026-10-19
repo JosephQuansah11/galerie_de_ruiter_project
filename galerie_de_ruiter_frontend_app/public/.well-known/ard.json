@@ -2,18 +2,18 @@
   "specVersion": "1.0",
   "host": {
     "displayName": "Galerie de Ruiter",
-    "identifier": "galeriederuiter.cloud-ip.cc",
-    "documentationUrl": "https://galeriederuiter.cloud-ip.cc/llms.txt",
-    "logoUrl": "https://galeriederuiter.cloud-ip.cc/logo512.png"
+    "identifier": "galeriederuiterantieks.gripe",
+    "documentationUrl": "https://galeriederuiterantieks.gripe/llms.txt",
+    "logoUrl": "https://galeriederuiterantieks.gripe/logo512.png"
   },
   "entries": [
     {
-      "identifier": "urn:air:galeriederuiter.cloud-ip.cc:guide:llms-txt",
+      "identifier": "urn:air:galeriederuiterantieks.gripe:guide:llms-txt",
       "displayName": "Galerie de Ruiter - agent guide",
       "description": "The gallery's guide for agents: what it shows, which pages a visitor can read without an account, where the pop-up in Waasmunster is, and how to ask the concierge about a piece. The gallery runs no MCP server, publishes no agent card and offers no agent skill, so this guide is the one resource this domain offers agents.",
       "type": "text/markdown",
       "mediaType": "text/markdown",
-      "url": "https://galeriederuiter.cloud-ip.cc/llms.txt",
+      "url": "https://galeriederuiterantieks.gripe/llms.txt",
       "representativeQueries": [
         "where is Galerie de Ruiter and when is it open",
         "does Galerie de Ruiter sell antique furniture and art",

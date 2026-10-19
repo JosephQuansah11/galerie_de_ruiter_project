@@ -11,15 +11,15 @@ current values are.
 
 ## Pages a visitor can read without an account
 
-- [Home](https://galeriederuiter.cloud-ip.cc/): the landing page - what the gallery is, what it
+- [Home](https://galeriederuiterantieks.gripe/): the landing page - what the gallery is, what it
   shows, and where it is.
-- [About](https://galeriederuiter.cloud-ip.cc/about): the gallery's own story, with the address and
+- [About](https://galeriederuiterantieks.gripe/about): the gallery's own story, with the address and
   the opening hours of the pop-up.
-- [Map](https://galeriederuiter.cloud-ip.cc/map): the address, the opening hours, and a Google Maps
+- [Map](https://galeriederuiterantieks.gripe/map): the address, the opening hours, and a Google Maps
   frame of the place.
-- [Chat](https://galeriederuiter.cloud-ip.cc/chat): the concierge, which answers questions about the
+- [Chat](https://galeriederuiterantieks.gripe/chat): the concierge, which answers questions about the
   collection and can take an appointment request for a visit.
-- [Collection](https://galeriederuiter.cloud-ip.cc/antiques): the first list of pieces the gallery
+- [Collection](https://galeriederuiterantieks.gripe/antiques): the first list of pieces the gallery
   has, with photographs and prices. A visitor sees the first page of it and no more.
 
 ## Behind an account
@@ -35,9 +35,9 @@ current values are.
 
 ## For agents
 
-- [Sitemap](https://galeriederuiter.cloud-ip.cc/sitemap_index.xml): the public pages, with the dates
+- [Sitemap](https://galeriederuiterantieks.gripe/sitemap_index.xml): the public pages, with the dates
   they changed.
-- [AI catalog](https://galeriederuiter.cloud-ip.cc/.well-known/ai-catalog.json): what this domain
+- [AI catalog](https://galeriederuiterantieks.gripe/.well-known/ai-catalog.json): what this domain
   offers agents, in the Agentic Resource Discovery format. It is the same document as
-  [/.well-known/ard.json](https://galeriederuiter.cloud-ip.cc/.well-known/ard.json).
-- [robots.txt](https://galeriederuiter.cloud-ip.cc/robots.txt): what may be crawled.
+  [/.well-known/ard.json](https://galeriederuiterantieks.gripe/.well-known/ard.json).
+- [robots.txt](https://galeriederuiterantieks.gripe/robots.txt): what may be crawled.

@@ -18,18 +18,20 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "implicitFlowEnabled": false,
-      "rootUrl": "https://galeriederuiter.cloud-ip.cc",
+      "rootUrl": "https://galeriederuiterantieks.gripe",
       "redirectUris": [
+        "https://galeriederuiterantieks.gripe/*",
         "https://galeriederuiter.cloud-ip.cc/*",
         "https://galerie-frontend.onrender.com/*"
       ],
       "webOrigins": [
+        "https://galeriederuiterantieks.gripe",
         "https://galeriederuiter.cloud-ip.cc",
         "https://galerie-frontend.onrender.com"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "https://galeriederuiter.cloud-ip.cc/*##https://galerie-frontend.onrender.com/*"
+        "post.logout.redirect.uris": "https://galeriederuiterantieks.gripe/*##https://galeriederuiter.cloud-ip.cc/*##https://galerie-frontend.onrender.com/*"
       },
       "defaultClientScopes": [
         "web-origins",

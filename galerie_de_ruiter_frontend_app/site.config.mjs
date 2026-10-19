@@ -11,8 +11,13 @@
  * default is production on purpose: a deploy that forgets the variable must not publish a
  * sitemap whose every URL points at `http://localhost:3000`. That is the sitemap Search Console
  * answers with "Couldn't fetch", and it takes the site out of the search results.
+ *
+ * The gallery owns this domain now. The older `https://galeriederuiter.cloud-ip.cc` still serves
+ * the same build, and every page it serves declares this origin canonical, so a search engine
+ * consolidates the two copies here rather than choosing between them. Remove the old host from
+ * Render and Cloudflare only once the new one has settled in Search Console.
  */
-export const PRODUCTION_ORIGIN = "https://galeriederuiter.cloud-ip.cc";
+export const PRODUCTION_ORIGIN = "https://galeriederuiterantieks.gripe";
 
 /** The origin to build absolute URLs with, without a trailing slash. */
 export function resolveSiteUrl(env = process.env) {

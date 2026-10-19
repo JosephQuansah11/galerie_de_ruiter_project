@@ -3,7 +3,8 @@ import { analyticsChoice, denyAnalytics, grantAnalytics, isAnalyticsHost, startA
 /** The Clarity tag's queue, as the vendor snippet leaves it. */
 const clarityQueue = () => (window as unknown as { clarity?: { q?: unknown[][] } }).clarity?.q;
 
-const GALLERY = "galeriederuiter.cloud-ip.cc";
+const GALLERY = "galeriederuiterantieks.gripe";
+const LEGACY_GALLERY = "galeriederuiter.cloud-ip.cc";
 const KEY = "galerie-analytics-consent";
 const TAG = 'script[data-galerie-clarity]';
 
@@ -14,8 +15,11 @@ beforeEach(() => {
 });
 
 describe("analytics consent", () => {
-  it("only treats the gallery's own host as production", () => {
+  it("only treats the gallery's own hosts as production", () => {
     expect(isAnalyticsHost(GALLERY)).toBe(true);
+    // The older free subdomain still serves the same site while the move settles, so Clarity has
+    // to keep working there too.
+    expect(isAnalyticsHost(LEGACY_GALLERY)).toBe(true);
     expect(isAnalyticsHost("localhost")).toBe(false);
     expect(isAnalyticsHost("galerie-frontend.onrender.com")).toBe(false);
   });

@@ -1,6 +1,8 @@
 package be.galerie_de_ruiter.project.config;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +24,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
+	/**
+	 * The browser origins allowed to call the API, comma-separated.
+	 *
+	 * The gallery serves the same build on the domain it owns and on its older free subdomain, so
+	 * both are named while the move settles. A single value still works, which is what a local run
+	 * and the production smoke test set.
+	 */
 	@Value("${FRONTEND_ORIGIN:http://localhost:5173}")
-	private String frontendOrigin;
+	private String frontendOrigins;
 
 	/**
 	 * When the deployed frontend and API run on different origins the CSRF cookie must
@@ -130,7 +139,14 @@ public class SecurityConfiguration {
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of(frontendOrigin, "http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:11434"));
+		// One entry per origin: the gallery's own domains first, then the ports a developer runs the
+		// frontend on. `distinct()` drops an origin named twice, so a local run that points
+		// FRONTEND_ORIGIN at one of those ports still leaves one entry per origin.
+		configuration.setAllowedOrigins(Stream.concat(
+				Arrays.stream(frontendOrigins.split(",")).map(String::trim).filter(origin -> !origin.isEmpty()),
+				Stream.of("http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:11434"))
+				.distinct()
+				.toList());
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		// X-Visitor-Id carries the anonymous visitor's stable id for the public view/like
 		// counters. Without it in this list the browser blocks the preflight for those

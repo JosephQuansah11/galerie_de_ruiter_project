@@ -117,8 +117,11 @@ services:
         fromDatabase:
           name: galerie-app-db
           property: password
+      # The browser origin allowed to call the API. Two origins while the gallery moves to the
+      # domain it owns: the new domain is canonical, and the older free subdomain still serves the
+      # same build until it is retired. SecurityConfiguration reads this as a comma-separated list.
       - key: FRONTEND_ORIGIN
-        value: https://galeriederuiter.cloud-ip.cc
+        value: https://galeriederuiterantieks.gripe,https://galeriederuiter.cloud-ip.cc
       - key: KEYCLOAK_ISSUER_URI
         value: https://galerie-keycloak.onrender.com/realms/movie_project_keycloak
       - key: PUBLIC_KEYCLOAK_URL
@@ -153,7 +156,7 @@ services:
     autoDeploy: true
     envVars:
       - key: SITE_URL
-        value: https://galeriederuiter.cloud-ip.cc
+        value: https://galeriederuiterantieks.gripe
       - key: VITE_JAVA_API_URL
         value: https://galerie-java-api.onrender.com
       # The sitemap script reads the piece list from the API at build time, so a piece's own page

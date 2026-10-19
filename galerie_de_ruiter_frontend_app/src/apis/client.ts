@@ -1,9 +1,25 @@
 import axios, { type AxiosInstance } from 'axios'
 import { apiBaseUrl } from './apiConfig'
+import { readSession } from '@/context/useSupabaseSession'
 
 export const javaApi = axios.create({
   baseURL: apiBaseUrl,
   withCredentials: true,
+})
+
+/**
+ * Every request to the API carries the signed-in visitor's token.
+ *
+ * It is read from the stored session at the moment of the request rather than being passed in by
+ * each caller, because passing it in is how one call site gets forgotten: the avatar request used to
+ * rely on a cookie and went out bare, so it answered 401 while the request beside it worked. A
+ * caller that has a token of its own still wins - the header is only added when it is absent.
+ */
+javaApi.interceptors.request.use((request) => {
+  if (request.headers?.Authorization) return request
+  const token = readSession()?.accessToken
+  if (token) request.headers.Authorization = `Bearer ${token}`
+  return request
 })
 
 export function bearerHeaders(token: string) {

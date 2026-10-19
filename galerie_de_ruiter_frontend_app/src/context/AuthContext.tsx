@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import type { UserProfile, UserProfileUpdate } from "@/types/types";
 import type { AuthContextValue } from "./authTypes";
 import { useAvatar } from "./useAvatar";
@@ -12,14 +13,18 @@ import { clearCache } from "@/services/apiCache";
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 /**
- * Sends the visitor to the sign-in page, carrying the page they asked for. `login` keeps this name
- * and this job because a dozen components already call it - they simply arrive at a form now
- * instead of leaving the site for the identity provider's page.
+ * Sends the visitor to the sign-in page, carrying the page they asked for.
+ *
+ * `login` keeps this name and this job because a dozen components already call it - they simply
+ * arrive at a form now instead of leaving the site for the identity provider. The move is a route
+ * change, not a document load: a full reload threw away every fetched picture and the whole
+ * JavaScript bundle to show one form, which is what made moving around feel like a refresh.
  */
-const toSignIn = (from?: string) =>
-  window.location.assign(from ? `/login?from=${encodeURIComponent(from)}` : "/login");
+const toSignIn = (navigate: (path: string) => void, from?: string) =>
+  navigate(from ? `/login?from=${encodeURIComponent(from)}` : "/login");
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
+  const navigate = useNavigate();
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile>();
@@ -44,7 +49,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const value = useMemo(() => ({
     authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles,
     isAdmin: roles.some((role) => role.replace(/^ROLE_/i, "").toUpperCase() === "ADMIN"),
-    login: toSignIn,
+    login: (from?: string) => toSignIn(navigate, from),
     // Signing out ends the concierge conversation, drops the cached public data and forgets the
     // stored session, so the next person to use the browser starts from a clean slate. Keycloak
     // then returns the browser to /logout, the one response that carries Clear-Site-Data (see

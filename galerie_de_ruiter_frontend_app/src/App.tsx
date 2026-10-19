@@ -6,5 +6,7 @@ import { AppContent } from "./AppContent";
 import "@/styles/App.scss";
 
 export default function App() {
-  return <ThemeProvider><LanguageProvider><AuthProvider><BrowserRouter><AppContent /></BrowserRouter></AuthProvider></LanguageProvider></ThemeProvider>;
+  // The router wraps the auth provider, not the other way round: the provider's sign-in redirect is
+  // a route change now, and a hook that reaches the router cannot be used above it.
+  return <ThemeProvider><LanguageProvider><BrowserRouter><AuthProvider><AppContent /></AuthProvider></BrowserRouter></LanguageProvider></ThemeProvider>;
 }

@@ -24,6 +24,21 @@ Keycloak uses the `standard` web-service plan (2 GiB RAM) because its startup
 exceeded the 512 MiB available on the `starter` plan. This service-plan change
 increases costs; review the current price in Render before syncing.
 
+## Supabase Auth on the API
+
+The frontend signs in with Supabase, so the Java API must verify Supabase tokens. That only happens
+when the `supabase` Spring profile is active:
+
+- `SPRING_PROFILES_ACTIVE=prod,supabase`
+- `SUPABASE_ISSUER_URI=https://bgmxpublcoldebamstbj.supabase.co/auth/v1`
+- `SUPABASE_JWK_SET_URI=https://bgmxpublcoldebamstbj.supabase.co/auth/v1/.well-known/jwks.json`
+
+The blueprint sets all three. `application-supabase.yml` replaces the Keycloak issuer and key set
+inherited from `application-prod.yml`, names `ES256` (Supabase's algorithm; Spring Boot defaults to
+`RS256`) and reads the project's key set directly. If a Supabase sign-in leaves `/api/me` or
+`/api/me/avatar` answering 401, check these values first: the API is still validating Keycloak
+tokens.
+
 ## Supabase egress
 
 The free plan includes 5 GB of egress per month, and Supabase counts everything that leaves the

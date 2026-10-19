@@ -1,4 +1,4 @@
-# Supabase Auth, ready to be switched on and inert until it is.
+﻿# Supabase Auth, ready to be switched on and inert until it is.
 #
 # Activating this profile - SPRING_PROFILES_ACTIVE=prod,supabase - is the moment the API accepts
 # Supabase's tokens instead of Keycloak's. Until then nothing here is read, so the running gallery
@@ -25,14 +25,6 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${SUPABASE_JWK_SET_URI}
-
-# The admin client is not needed for validating tokens; it is here because assigning the gallery's
-# admin role is a server-side write to auth.users.raw_app_meta_data, and this is where the service
-# would find the credentials for it. Unused by the resource server itself.
-supabase:
-  service-url: ${SUPABASE_URL:}
-  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
-
 
 # The admin client is not needed for validating tokens; it is here because assigning the gallery's
 # admin role is a server-side write to auth.users.raw_app_meta_data, and this is where the service

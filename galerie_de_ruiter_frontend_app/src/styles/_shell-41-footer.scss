@@ -12,6 +12,9 @@
   margin-top: auto;
   padding: 2.5rem 1.25rem 2.5rem 0;
   border-top: 1px solid var(--theme-border);
+  // The navigation and the footer are the frame around the page, so they share one surface: without
+  // this the footer showed the page behind it and read as a separate band below the site.
+  background: linear-gradient(165deg, var(--theme-nav-start), var(--theme-nav-end));
   color: var(--theme-text-secondary);
   font-size: 0.9rem;
 

@@ -8,19 +8,24 @@ export const javaApi = axios.create({
 })
 
 /**
- * Every request to the API carries the signed-in visitor's token.
+ * Adds the signed-in visitor's token to every request a client makes.
  *
  * It is read from the stored session at the moment of the request rather than being passed in by
- * each caller, because passing it in is how one call site gets forgotten: the avatar request used to
- * rely on a cookie and went out bare, so it answered 401 while the request beside it worked. A
- * caller that has a token of its own still wins - the header is only added when it is absent.
+ * each caller, because passing it in is how a call site gets forgotten: the avatar request used to
+ * rely on a cookie and went out bare, and the artist search uses a second client that was not
+ * covered. A caller that has a token of its own still wins - the header is only added when absent.
  */
-javaApi.interceptors.request.use((request) => {
-  if (request.headers?.Authorization) return request
-  const token = readSession()?.accessToken
-  if (token) request.headers.Authorization = `Bearer ${token}`
-  return request
-})
+export function attachSessionToken(client: AxiosInstance): AxiosInstance {
+  client.interceptors.request.use((request) => {
+    if (request.headers?.Authorization) return request
+    const token = readSession()?.accessToken
+    if (token) request.headers.Authorization = `Bearer ${token}`
+    return request
+  })
+  return client
+}
+
+attachSessionToken(javaApi)
 
 export function bearerHeaders(token: string) {
   return { Authorization: `Bearer ${token}` }

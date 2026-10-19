@@ -123,13 +123,11 @@ public class UserService implements UserServiceImplementation {
     @Override
     public User updateProfile(String keycloakSubject, UserProfileUpdateRequest request) {
         User user = requireUser(keycloakSubject);
-        UserRepresentation keycloakUser = keycloakAdminClient.realm(keycloakRealm)
-                .users().get(keycloakSubject).toRepresentation();
-        keycloakUser.setEmail(request.email());
-        keycloakUser.setFirstName(request.firstName());
-        keycloakUser.setLastName(request.lastName());
-        keycloakAdminClient.realm(keycloakRealm).users().get(keycloakSubject).update(keycloakUser);
-
+        // The profile lives here now. This used to tell Keycloak as well, so that both sides held
+        // the same name and address - but the identity provider is no longer the record of a
+        // profile: it holds the address and the password, and this holds the rest. It also could not
+        // work any more, because the subject is a Supabase id and Keycloak has never seen it, which
+        // turned every profile save into a 404 and then a 500.
         user.setEmail(request.email());
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());

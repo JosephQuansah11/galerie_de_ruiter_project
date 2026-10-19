@@ -15,16 +15,16 @@
   // The navigation and the footer are the frame around the page, so they share one surface: without
   // this the footer showed the page behind it and read as a separate band below the site.
   background: linear-gradient(165deg, var(--theme-nav-start), var(--theme-nav-end));
-  color: var(--theme-text-secondary);
+  color: rgba(255, 248, 244, 0.82);
   font-size: 0.9rem;
 
   a {
-    color: var(--theme-text);
+    color: #fffaf7;
     text-decoration: none;
 
     &:hover,
     &:focus-visible {
-      color: var(--theme-primary);
+      color: var(--theme-gold);
       text-decoration: underline;
     }
   }

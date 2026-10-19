@@ -4,12 +4,18 @@
 # Supabase's tokens instead of Keycloak's. Until then nothing here is read, so the running gallery
 # is unaffected by the file's presence.
 #
-# Two settings, not one, on purpose:
+# Only the key set is named, and deliberately not the issuer:
 #
 #   jwk-set-uri  Supabase publishes its signing keys at /auth/v1/.well-known/jwks.json, which is not
 #                the path issuer-uri auto-discovers, so the key set has to be named explicitly.
-#   issuer-uri   still validated, so a token minted by some other Supabase project - or by anything
-#                else that signs with a key it can publish - is refused.
+#
+#   issuer-uri   NOT set. Naming it makes Spring build the decoder from the project's OpenID
+#                discovery document, and that document advertises RS256 while newer Supabase
+#                projects sign with ES256 - so every token fails with "Another algorithm expected,
+#                or no matching key(s) found" even though its signature is valid. Fetching the keys
+#                directly keeps the decoder open to whatever the keys actually are, which is the
+#                correct behaviour: the key set belongs to this one project, so a token signed by
+#                any other party cannot verify against it.
 #
 # Roles arrive in app_metadata (see KeycloakJwtAuthenticationConverter): Supabase keeps user_metadata
 # writable by its owner, so a role there would be a role anyone can grant themselves.
@@ -18,8 +24,15 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${SUPABASE_ISSUER_URI}
           jwk-set-uri: ${SUPABASE_JWK_SET_URI}
+
+# The admin client is not needed for validating tokens; it is here because assigning the gallery's
+# admin role is a server-side write to auth.users.raw_app_meta_data, and this is where the service
+# would find the credentials for it. Unused by the resource server itself.
+supabase:
+  service-url: ${SUPABASE_URL:}
+  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
+
 
 # The admin client is not needed for validating tokens; it is here because assigning the gallery's
 # admin role is a server-side write to auth.users.raw_app_meta_data, and this is where the service

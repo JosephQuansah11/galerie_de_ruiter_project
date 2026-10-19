@@ -271,12 +271,14 @@ export function buildImportGroups(files: File[], records: CsvRecord[], grouping:
   for (const key of ambiguous) {
     issues.push({ key: "csvAmbiguousMatch", params: { value: key } });
   }
-  for (const record of records) {
-    if (used.has(recordId(record))) continue;
-    issues.push({
-      key: "csvRowUnmatched",
-      params: { source: record.source, line: record.line, value: record.file ?? record.title ?? record.priceText ?? "" },
-    });
+  if (groups.length > 0) {
+    for (const record of records) {
+      if (used.has(recordId(record))) continue;
+      issues.push({
+        key: "csvRowUnmatched",
+        params: { source: record.source, line: record.line, value: record.file ?? record.title ?? record.priceText ?? "" },
+      });
+    }
   }
 
   return { groups, imageCount: images.length, csvCount, unsupportedCount, issues };

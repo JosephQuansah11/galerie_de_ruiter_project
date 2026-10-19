@@ -112,6 +112,17 @@ describe("grouping a picked folder", () => {
     expect(build.issues).toEqual([]);
   });
 
+  it("does not call a CSV row unmatched before any images are selected", () => {
+    const build = buildImportGroups(
+      [csv("Root/pieces.csv")],
+      [record({ file: "Mirrors/Carved mirror", title: "Carved mirror", price: 480, line: 2 })],
+      "folder",
+    );
+
+    expect(build.groups).toEqual([]);
+    expect(build.issues.some((issue) => issue.key === "csvRowUnmatched")).toBe(false);
+  });
+
   it("names a CSV row that matched no image", () => {
     const build = buildImportGroups(
       [image("Root/A/front.jpg")],

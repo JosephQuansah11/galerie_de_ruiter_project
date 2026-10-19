@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Registration, UserProfile, UserProfileUpdate } from "@/types/types";
 import type { AuthContextValue } from "./authTypes";
@@ -9,6 +9,7 @@ import { updateCurrentUser } from "@/pages/auth/authApi";
 import { changePassword as changePasswordWithSupabase, signIn as signInWithSupabase, signUp } from "@/services/supabaseAuth";
 import { clearChatSession } from "@/services/chatSession";
 import { clearCache } from "@/services/apiCache";
+import { setUnauthorizedHandler } from "@/apis/authPromise";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -29,9 +30,19 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile>();
   const [roles, setRoles] = useState<string[]>([]);
-  const { token, adopt, endSession } = useSupabaseSession({ setAuthenticated, setProfile, setRoles });
+  const { token, adopt, endSession, forget } = useSupabaseSession({ setAuthenticated, setProfile, setRoles });
   const { avatarUrl, refreshAvatar } = useAvatar(authenticated, token);
   useAuthInitialization({ setLoading, setProfile, setRoles, token });
+  // A token the API refuses is no longer usable: forget it, drop cached responses, and let the
+  // authPromise interceptor retry the public request without it. Otherwise every public page keeps
+  // presenting the same refused token and both the collection and its categories stay empty.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      clearCache();
+      forget();
+    });
+    return () => setUnauthorizedHandler(undefined);
+  }, [forget]);
   /** Signs in where the visitor stands: no navigation, so the form can show an error instead. */
   const signIn = async (usernameOrEmail: string, password: string) => {
     adopt(await signInWithSupabase(usernameOrEmail, password));

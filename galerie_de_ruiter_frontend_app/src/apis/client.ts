@@ -18,8 +18,10 @@ export const javaApi = axios.create({
 export function attachSessionToken(client: AxiosInstance): AxiosInstance {
   client.interceptors.request.use((request) => {
     if (request.headers?.Authorization) return request
-    const token = readSession()?.accessToken
-    if (token) request.headers.Authorization = `Bearer ${token}`
+    const session = readSession()
+    if (session?.accessToken && session.expiresAt > Date.now()) {
+      request.headers.Authorization = `Bearer ${session.accessToken}`
+    }
     return request
   })
   return client

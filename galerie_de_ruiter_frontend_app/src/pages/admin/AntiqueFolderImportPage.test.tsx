@@ -54,9 +54,9 @@ const folder = [
     + "Lamps/Brass lamp;Brass lamp;Art deco;1.250,00\n"),
 ];
 
-async function chooseFolder(): Promise<void> {
+async function chooseFolder(files = folder): Promise<void> {
   const picker = screen.getByLabelText(i18n.t("chooseFolder"));
-  fireEvent.change(picker, { target: { files: fileList(folder) } });
+  fireEvent.change(picker, { target: { files: fileList(files) } });
   await screen.findByDisplayValue("Carved mirror");
 }
 
@@ -81,6 +81,46 @@ describe("the folder import screen", () => {
     expect(screen.getByDisplayValue("480.5")).toBeInTheDocument();
     expect(screen.getByDisplayValue("1250")).toBeInTheDocument();
     expect(screen.getAllByText(i18n.t("csvMatched"))).toHaveLength(2);
+  });
+
+  it("matches a CSV chosen separately from the image folder", async () => {
+    const imagesOnly = folder.filter((file) => file.type.startsWith("image/"));
+    renderPage(<AntiqueFolderImportPage />);
+    await chooseFolder(imagesOnly);
+
+    // The folder names give the rows provisional titles; the prices wait for the CSV.
+    expect(screen.getByDisplayValue("Carved mirror")).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("480.5")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(i18n.t("chooseCsvFiles")), {
+      target: {
+        files: fileList([csv("Root/pieces.csv", "file;title;description;price\n"
+          + "Mirrors/Carved mirror;Carved mirror;Late 19th;480,50\n"
+          + "Lamps/Brass lamp;Brass lamp;Art deco;1.250,00\n")]),
+      },
+    });
+
+    expect(await screen.findByDisplayValue("480.5")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("1250")).toBeInTheDocument();
+    expect(screen.getAllByText(i18n.t("csvMatched"))).toHaveLength(2);
+  });
+
+  it("keeps a separately chosen CSV when the image folder is chosen afterwards", async () => {
+    const imagesOnly = folder.filter((file) => file.type.startsWith("image/"));
+    renderPage(<AntiqueFolderImportPage />);
+
+    fireEvent.change(screen.getByLabelText(i18n.t("chooseCsvFiles")), {
+      target: {
+        files: fileList([csv("Root/pieces.csv", "file;title;description;price\n"
+          + "Mirrors/Carved mirror;Carved mirror;Late 19th;480,50\n"
+          + "Lamps/Brass lamp;Brass lamp;Art deco;1.250,00\n")]),
+      },
+    });
+
+    await chooseFolder(imagesOnly);
+
+    expect(await screen.findByDisplayValue("480.5")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("1250")).toBeInTheDocument();
   });
 
   it("assigns one artist to the selected pieces and creates them with all their photographs", async () => {

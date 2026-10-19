@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Alert, Badge, Card, Form, Spinner } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
-import { FolderOpen, Image as ImageIcon, Search, Upload, X } from "lucide-react";
+import { FolderOpen, FileSpreadsheet, Image as ImageIcon, Search, Upload, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArtistSearch } from "@/pages/antiques/ArtistSearch";
@@ -29,6 +29,7 @@ export default function AntiqueFolderImportPage() {
   const imported = useFolderImport();
   const artistDirectory = useDesignerDirectory(imported.assignArtist);
   const input = useRef<HTMLInputElement>(null);
+  const csvInput = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
@@ -53,7 +54,13 @@ export default function AntiqueFolderImportPage() {
     // The same folder can be picked again after clearing.
     event.currentTarget.value = "";
     artistDirectory.setQuery("");
-    void imported.selectFiles(files);
+    void imported.selectFolder(files);
+  };
+
+  const chooseCsvFiles = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.currentTarget.files ?? []);
+    event.currentTarget.value = "";
+    void imported.selectCsvFiles(files);
   };
 
   return <section className="admin-page folder-import-page">
@@ -61,12 +68,18 @@ export default function AntiqueFolderImportPage() {
     <p className="folder-import-intro">{t("importFolderIntro")}</p>
     <input ref={input} type="file" multiple className="visually-hidden" aria-label={t("chooseFolder")}
       onChange={chooseFolder} tabIndex={-1} />
+    <input ref={csvInput} type="file" multiple accept=".csv,text/csv" className="visually-hidden"
+      aria-label={t("chooseCsvFiles")} onChange={chooseCsvFiles} tabIndex={-1} />
 
     <div className="folder-import-picker">
       <Button className="btn btn-primary" type="button" disabled={imported.reading || imported.importing}
         onClick={() => input.current?.click()}>
         {imported.reading ? <Spinner animation="border" size="sm" /> : <FolderOpen size={17} />}
         {t("chooseFolder")}
+      </Button>
+      <Button className="btn btn-outline-secondary" type="button" disabled={imported.reading || imported.importing}
+        onClick={() => csvInput.current?.click()}>
+        <FileSpreadsheet size={17} /> {t("chooseCsvFiles")}
       </Button>
       {imported.groups.length > 0 && <>
         <span className="folder-import-summary">
@@ -81,16 +94,26 @@ export default function AntiqueFolderImportPage() {
       </>}
     </div>
     <p className="folder-import-hint">{t("chooseFolderHint")}</p>
+    <p className="folder-import-hint">{t("chooseCsvFilesHint")}</p>
+    {imported.groups.length === 0 && (imported.csvCount > 0 || imported.folderName) && <div className="folder-import-picker">
+      {imported.csvCount > 0 && <span className="folder-import-summary">
+        {t("csvFilesSelected", { count: imported.csvCount })}
+      </span>}
+      <Button className="btn btn-outline-secondary" type="button" disabled={imported.importing || imported.reading}
+        onClick={() => { imported.clearFolder(); artistDirectory.setQuery(""); setQuery(""); }}>
+        <X size={16} /> {t("clearFolder")}
+      </Button>
+    </div>}
     <Alert variant="light" className="folder-import-help">{t("importCsvHelp")}</Alert>
 
     {imported.groups.length > 0 && <Form.Group className="folder-import-grouping" controlId="folder-import-grouping">
       <Form.Label>{t("importGrouping")}</Form.Label>
       <div>
         <Form.Check inline type="radio" name="folder-import-grouping" id="folder-import-grouping-folder"
-          label={t("onePiecePerFolder")} checked={imported.grouping === "folder"} disabled={imported.importing}
+          label={t("onePiecePerFolder")} checked={imported.grouping === "folder"} disabled={imported.importing || imported.reading}
           onChange={() => imported.changeGrouping("folder")} />
         <Form.Check inline type="radio" name="folder-import-grouping" id="folder-import-grouping-image"
-          label={t("onePiecePerImage")} checked={imported.grouping === "image"} disabled={imported.importing}
+          label={t("onePiecePerImage")} checked={imported.grouping === "image"} disabled={imported.importing || imported.reading}
           onChange={() => imported.changeGrouping("image")} />
       </div>
       <Form.Text>{t("importGroupingHint")}</Form.Text>

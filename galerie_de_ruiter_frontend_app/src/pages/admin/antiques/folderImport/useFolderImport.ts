@@ -12,7 +12,7 @@ import {
   type ImportGroup,
   type ImportIssue,
 } from "./buildImportGroups";
-import { parseCsvSources, type CsvGrouping, type CsvRecord } from "./csv";
+import { parseCsvSources, type CsvGrouping, type CsvRecord, type CsvSource } from "./csv";
 
 export type ImportStatus = "pending" | "saving" | "saved" | "failed";
 
@@ -58,6 +58,19 @@ function imageErrorKey(error: unknown): string {
   return "antiqueImageUploadFailed";
 }
 
+/** The same file chosen through the folder and through the CSV picker is read once. */
+function fileIdentity(file: File): string {
+  return `${filePath(file)}\u0000${file.size}\u0000${file.lastModified}`;
+}
+
+function mergeFileSets(...sets: File[][]): File[] {
+  const files = new Map<string, File>();
+  for (const file of sets.flat()) {
+    if (!files.has(fileIdentity(file))) files.set(fileIdentity(file), file);
+  }
+  return [...files.values()];
+}
+
 /**
  * Reads a folder in the browser, matches its CSVs to the images and creates the pieces one by one.
  * Nothing is uploaded until `importSelected` is called, so the admin can correct titles, prices and
@@ -65,7 +78,8 @@ function imageErrorKey(error: unknown): string {
  */
 export function useFolderImport() {
   const [groups, setGroups] = useState<ImportGroupDraft[]>([]);
-  const [rawFiles, setRawFiles] = useState<File[]>([]);
+  const [folderFiles, setFolderFiles] = useState<File[]>([]);
+  const [extraCsvFiles, setExtraCsvFiles] = useState<File[]>([]);
   const [records, setRecords] = useState<CsvRecord[]>([]);
   const [parseIssues, setParseIssues] = useState<ImportIssue[]>([]);
   const [issues, setIssues] = useState<ImportIssue[]>([]);
@@ -81,6 +95,12 @@ export function useFolderImport() {
 
   const groupsRef = useRef(groups);
   groupsRef.current = groups;
+  const folderFilesRef = useRef(folderFiles);
+  folderFilesRef.current = folderFiles;
+  const extraCsvFilesRef = useRef(extraCsvFiles);
+  extraCsvFilesRef.current = extraCsvFiles;
+  /** Lets a newer folder/CSV selection cancel an older, still-reading one. */
+  const readRun = useRef(0);
   const previews = useRef<string[]>([]);
   const releasePreviews = () => {
     previews.current.forEach((url) => URL.revokeObjectURL(url));
@@ -109,45 +129,78 @@ export function useFolderImport() {
     setGroups((current) => current.map((group) => group.id === id ? { ...group, ...patch } : group));
   }, []);
 
-  const selectFiles = async (input: FileList | File[] | null): Promise<void> => {
-    const files = Array.from(input ?? []);
-    if (files.length === 0) return;
+  async function readCsvFiles(files: File[]): Promise<{ sources: CsvSource[]; issues: ImportIssue[] }> {
+    const sources: CsvSource[] = [];
+    const issues: ImportIssue[] = [];
+    for (const file of files) {
+      const name = filePath(file);
+      try {
+        const text = await readCsvText(file);
+        // Two files can share a basename when one comes from the folder and one is picked
+        // separately. A distinct source name keeps their row numbers from colliding.
+        const sourceName = sources.some((source) => source.name === name) ? `${name} (${sources.length + 1})` : name;
+        sources.push({ name: sourceName, text });
+      } catch {
+        issues.push({ key: "folderReadError", params: { name } });
+      }
+    }
+    return { sources, issues };
+  }
+
+  /** Re-reads the CSVs and rebuilds the preview from the current folder and CSV selection. */
+  async function rebuild(folder: File[], extras: File[], mode: CsvGrouping): Promise<void> {
+    const run = ++readRun.current;
     setReading(true);
     setNotice(undefined);
     setResult(undefined);
 
-    const sources = [];
-    const readIssues: ImportIssue[] = [];
-    for (const file of files.filter((entry) => !isIgnoredFile(entry) && isCsvFile(entry))) {
-      try {
-        sources.push({ name: file.name, text: await readCsvText(file) });
-      } catch {
-        readIssues.push({ key: "folderReadError", params: { name: file.name } });
-      }
-    }
-    const parsed = parseCsvSources(sources);
+    const combined = mergeFileSets(folder, extras);
+    const csvFiles = combined.filter((file) => !isIgnoredFile(file) && isCsvFile(file));
+    const read = await readCsvFiles(csvFiles);
+    if (run !== readRun.current) return;
+
+    const parsed = parseCsvSources(read.sources);
     const csvIssues: ImportIssue[] = [
-      ...readIssues,
+      ...read.issues,
       ...parsed.issues.map((issue) => ({
         key: issue.key,
         params: { source: issue.source, line: issue.line ?? "", value: issue.value ?? "" },
       })),
     ];
-    const build = buildImportGroups(files, parsed.records, grouping);
-    const firstPath = filePath(files[0]);
-
-    setRawFiles(files);
+    const build = buildImportGroups(combined, parsed.records, mode);
     setRecords(parsed.records);
     setParseIssues(csvIssues);
-    setFolderName(firstPath.includes("/") ? firstPath.split("/")[0] : "");
     applyBuild(build, parsed.records, csvIssues);
     setReading(false);
+  }
+
+  const selectFolder = (input: FileList | File[] | null): void => {
+    const files = Array.from(input ?? []);
+    if (files.length === 0) return;
+    folderFilesRef.current = files;
+    setFolderFiles(files);
+    const firstPath = filePath(files[0]);
+    setFolderName(firstPath.includes("/") ? firstPath.split("/")[0] : "");
+    // The CSV picker is independent: a folder chosen before or after the CSVs keeps both.
+    void rebuild(files, extraCsvFilesRef.current, grouping);
+  };
+
+  const selectCsvFiles = (input: FileList | File[] | null): void => {
+    const files = Array.from(input ?? []).filter((file) => !isIgnoredFile(file) && isCsvFile(file));
+    if (files.length === 0) return;
+    extraCsvFilesRef.current = files;
+    setExtraCsvFiles(files);
+    void rebuild(folderFilesRef.current, files, grouping);
   };
 
   const clearFolder = (): void => {
+    readRun.current += 1;
     releasePreviews();
+    folderFilesRef.current = [];
+    extraCsvFilesRef.current = [];
     setGroups([]);
-    setRawFiles([]);
+    setFolderFiles([]);
+    setExtraCsvFiles([]);
     setRecords([]);
     setParseIssues([]);
     setIssues([]);
@@ -158,14 +211,16 @@ export function useFolderImport() {
     setNotice(undefined);
     setProgress(undefined);
     setResult(undefined);
+    setReading(false);
   };
 
   /** Rebuilds the preview when the admin changes how photographs become pieces. */
   const changeGrouping = (next: CsvGrouping): void => {
     if (next === grouping) return;
     setGroupingState(next);
-    if (rawFiles.length === 0) return;
-    applyBuild(buildImportGroups(rawFiles, records, next), records, parseIssues);
+    const combined = mergeFileSets(folderFilesRef.current, extraCsvFilesRef.current);
+    if (combined.length === 0) return;
+    applyBuild(buildImportGroups(combined, records, next), records, parseIssues);
   };
 
   const updateGroup = (id: string, field: "title" | "description" | "price", value: string): void => {
@@ -254,7 +309,7 @@ export function useFolderImport() {
 
   return {
     groups, grouping, folderName, imageCount, csvCount, issues, reading, importing, notice, setNotice,
-    progress, result, selectFiles, clearFolder, changeGrouping, updateGroup, toggleGroup, toggleAll,
+    progress, result, selectFolder, selectCsvFiles, clearFolder, changeGrouping, updateGroup, toggleGroup, toggleAll,
     assignArtist, importSelected,
   };
 }

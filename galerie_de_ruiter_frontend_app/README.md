@@ -316,11 +316,14 @@ four things were behind that. All four are fixed:
   request, and the API answers 401 to a token it cannot decode or that has expired — on the public
   endpoints as well, because the resource server fails the request before authorization is consulted.
   One stale token therefore used to take the whole site down for someone who was signed in: no
-  collection, no piece pages. The axios instance now drops the refused token and the session behind
-  it (through `setUnauthorizedHandler`) and retries that one request without it, so the pages a
-  visitor may read keep loading and the visitor is simply signed out again.
-  `src/apis/authPromise.test.ts` pins both halves: the retry that recovers, and the 401 that is
-  reported as it is when the request carried no token to blame.
+  collection, no piece pages. The axios instance now checks the stored session's `expiresAt` before
+  sending it, and drops the refused token and the session behind it (through
+  `setUnauthorizedHandler`) before retrying that one request without it, so the pages a visitor may
+  read keep loading and the visitor is simply signed out again. The retry is marked
+  (`retriedWithoutToken`) so the backend client's request interceptor does not put the refused token
+  back. `src/apis/authPromise.test.ts` pins the retry and the 401 that is reported as it is when the
+  request carried no token; `src/apis/backendClient.test.ts` pins the expiry check and the marked
+  retry.
 - **The gallery type is self-hosted.** `public/fonts` holds the latin subsets and
   `src/styles/_fonts.scss` declares them; `index.html` preloads the two faces of the first screen
   (Cormorant Garamond 400 for the heading, DM Sans 400 for the body copy). The type used to come
@@ -413,7 +416,8 @@ and `HomeAdminPage` show the shape the rest should follow - `controlId` on the g
 
 An admin can add a whole collection at once from **Antique inventory → Import folder** (also in the
 admin navigation). The browser reads the chosen folder and all of its subfolders; nothing is
-uploaded until the preview has been checked and **Import** is pressed.
+uploaded until the preview has been checked and **Import** is pressed. CSVs can sit inside the
+folder or be chosen separately with **Choose CSV files** when the spreadsheet is kept elsewhere.
 
 A folder the importer understands looks like this:
 
@@ -442,6 +446,10 @@ Lamps/Brass lamp/front.jpg,Brass reading lamp,Art deco,"1,250.00"
   `omschrijving`, `beschreibung` are the description; `price`, `prijs`, `preis` and `prix` are the
   price. A `name` column is read as filenames when every value looks like one, and as titles
   otherwise.
+- **CSV files** inside the selected folder are read automatically. **Choose CSV files** opens a
+  separate multi-file picker for a spreadsheet kept outside the folder; selecting again replaces
+  that outside selection, while CSVs inside the folder stay in use. Both sets are matched and
+  deduplicated.
 - **Matching** tries the full image path, then the folder path, then an image name, then the
   folder name, then the title. Paths may be written from the item folder (`Mirrors/Carved mirror`),
   so the selected root's own name is not needed. If the same filename exists in two folders, use

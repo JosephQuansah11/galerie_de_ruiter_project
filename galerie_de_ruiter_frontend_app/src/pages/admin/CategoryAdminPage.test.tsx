@@ -50,19 +50,34 @@ describe("Category administration page", () => {
   it("lists the catalogue categories", async () => {
     renderPage(<CategoryAdminPage />);
 
-    expect(await screen.findByText("Mirrors")).toBeInTheDocument();
-    expect(screen.getByText("Lighting")).toBeInTheDocument();
+    expect(await screen.findByText("Mirrors", { selector: "strong" })).toBeInTheDocument();
+    expect(screen.getByText("Lighting", { selector: "strong" })).toBeInTheDocument();
+  });
+
+  it("shows a subcategory inside its main category, once", async () => {
+    const child: Category = { id: "c2", name: "Mirrors", visible: true, parentId: "c1", itemCount: 2, children: [] };
+    const parent: Category = { id: "c1", name: "Furniture", visible: true, itemCount: 5, children: [child] };
+    mockedCategories.mockResolvedValueOnce([parent, child]);
+
+    renderPage(<CategoryAdminPage />);
+
+    const parentLabel = await screen.findByText("Furniture", { selector: "strong" });
+    const childLabel = screen.getByText("Mirrors", { selector: "strong" });
+    expect(parentLabel.closest("li")).toContainElement(childLabel);
+    expect(childLabel.closest("ul")).toHaveClass("category-tree-children");
+    // The flat row and the nested copy are one node, not two.
+    expect(screen.getAllByText("Mirrors", { selector: "strong" })).toHaveLength(1);
   });
 
   it("creates a category from the curator form", async () => {
     renderPage(<CategoryAdminPage />);
-    await screen.findByText("Mirrors");
+    await screen.findByText("Mirrors", { selector: "strong" });
 
     fireEvent.change(screen.getByPlaceholderText(i18n.t("newCategoryName")), { target: { value: "Ceramics" } });
     fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("addCategory"), "i") }));
 
     await waitFor(() => expect(mockedCreate).toHaveBeenCalledWith("Ceramics", undefined));
-    expect(await screen.findByText("Ceramics")).toBeInTheDocument();
+    expect(await screen.findByText("Ceramics", { selector: "strong" })).toBeInTheDocument();
   });
 
   it("keeps the catalogue sections away from visitors without the administrator role", () => {

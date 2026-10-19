@@ -25,6 +25,7 @@ export function DynamicFormField<T extends object>({
     required={field.required}
     type={field.type ?? "text"}
     placeholder={field.placeholder}
+    autoComplete={field.autoComplete}
     value={currentValue}
     onChange={(event) => onChange(event.target.value)}
   />;

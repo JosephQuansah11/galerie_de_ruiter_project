@@ -11,6 +11,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -20,10 +22,15 @@ import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueRepository;
 import be.galerie_de_ruiter.project.repository.DesignerRepository;
 import be.galerie_de_ruiter.project.repository.UserRepository;
+import be.galerie_de_ruiter.project.service.ThumbnailService;
 import be.galerie_de_ruiter.project.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.UUID;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -126,6 +133,32 @@ class AntiqueImageAdminTest {
                 "/api/antiques/" + id + "/image/" + second);
     }
 
+    @Test
+    void servesResponsiveCopiesAtTheirOwnWidthsAndCachesThem() throws Exception {
+        UUID id = createAntique();
+        UUID photo = uploadPhotograph(id, "wide.png", 2000, 1000);
+
+        // The upload made all three copies, so a later request never has to read the original.
+        assertThat(images.findThumbnail(photo, id)).isPresent();
+        assertThat(images.findMedium(photo, id)).isPresent();
+        assertThat(images.findLarge(photo, id)).isPresent();
+
+        assertCopy(id, photo, "medium", ThumbnailService.MEDIUM_EDGE);
+        assertCopy(id, photo, "large", ThumbnailService.LARGE_EDGE);
+    }
+
+    private void assertCopy(UUID id, UUID imageId, String variant, int expectedEdge) throws Exception {
+        mvc.perform(get("/api/antiques/" + id + "/image/" + imageId + "/" + variant))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "public, max-age=31536000, immutable"))
+                .andExpect(content().contentType("image/jpeg"))
+                .andDo(result -> {
+                    BufferedImage copy = ImageIO.read(new ByteArrayInputStream(
+                            result.getResponse().getContentAsByteArray()));
+                    assertThat(Math.max(copy.getWidth(), copy.getHeight())).isEqualTo(expectedEdge);
+                });
+    }
+
     private UUID createAntique() throws Exception {
         Designer artist = designers.save(new Designer("Image", null, "Editor"));
         User creator = usersRepository.save(new User("image-subject", "image@example.com", "Admin"));
@@ -147,6 +180,27 @@ class AntiqueImageAdminTest {
     /** Uploads one photograph and returns its id from the API's answer. */
     private UUID uploadImage(UUID antiqueId, String name) throws Exception {
         MockMultipartFile image = new MockMultipartFile("image", name, "image/jpeg", new byte[] {1, 2, 3});
+
+        MvcResult uploaded = mvc.perform(multipart("/api/antiques/" + antiqueId + "/image")
+                        .file(image)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .with(csrf())
+                        .with(request -> {
+                            request.setMethod("PUT");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        return UUID.fromString(JSON.readTree(uploaded.getResponse().getContentAsString()).path("id").asText());
+    }
+
+    /** Uploads a real, decodable PNG so the responsive copies can be measured. */
+    private UUID uploadPhotograph(UUID antiqueId, String name, int width, int height) throws Exception {
+        BufferedImage source = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(source, "png", png);
+        MockMultipartFile image = new MockMultipartFile("image", name, "image/png", png.toByteArray());
 
         MvcResult uploaded = mvc.perform(multipart("/api/antiques/" + antiqueId + "/image")
                         .file(image)

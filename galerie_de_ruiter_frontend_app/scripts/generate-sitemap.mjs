@@ -31,6 +31,39 @@ const publicPages = [
   { path: "/chat", changefreq: "monthly", priority: "0.6" },
 ];
 
+/**
+ * The API that lists the pieces, when the build can reach it.
+ *
+ * This is deliberately its own variable rather than one of the `VITE_*` values: a local or test
+ * build must not wait on an API that is not running, and the test env sets `VITE_JAVA_API_URL` to a
+ * name that does not resolve. `render.yaml` sets this one for the static deploy.
+ */
+const apiOrigin = (process.env.SITEMAP_API_URL ?? "").trim().replace(/\/+$/, "");
+
+/**
+ * A piece's own page is public and is the gallery's content, so it belongs in the sitemap. The
+ * list comes from the API at build time; without an API the five static pages are still written
+ * rather than failing the build.
+ */
+async function piecePages() {
+  if (!apiOrigin) return [];
+  try {
+    const response = await fetch(`${apiOrigin}/api/antiques`, { signal: AbortSignal.timeout(10_000) });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const items = await response.json();
+    if (!Array.isArray(items)) throw new Error("the answer was not a list");
+    return items
+      .filter((item) => item && typeof item.id === "string" && item.id)
+      .map((item) => ({ path: `/antiques/${item.id}`, changefreq: "weekly", priority: "0.7" }));
+  } catch (error) {
+    console.warn(`generate-sitemap: piece pages were not added (${error.message})`);
+    return [];
+  }
+}
+
+/** Static pages first, then the pieces; a path can only appear once. */
+const pages = [...new Map([...publicPages, ...await piecePages()].map((page) => [page.path, page])).values()];
+
 function escapeXml(value) {
   return value
     .replace(/&/g, "&amp;")
@@ -59,7 +92,7 @@ const lastmod = new Date().toISOString().slice(0, 10);
 const sitemap = [
   '<?xml version="1.0" encoding="UTF-8"?>',
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-  ...publicPages.map((page) => [
+  ...pages.map((page) => [
     "  <url>",
     `    <loc>${escapeXml(`${siteUrl}${page.path}`)}</loc>`,
     `    <lastmod>${lastmod}</lastmod>`,
@@ -104,7 +137,7 @@ if (existsSync(robotsSource)) {
   console.warn("generate-sitemap: no robots.txt to add the Sitemap line to");
 }
 
-console.log(`generate-sitemap: ${publicPages.length} URLs for ${siteUrl} (sitemap_index.xml)`);
+console.log(`generate-sitemap: ${pages.length} URLs for ${siteUrl} (sitemap_index.xml)`);
 
 /**
  * IndexNow: the URL set above, announced to the search engines that take part in it. One POST to
@@ -155,7 +188,7 @@ const productionOrigin = PRODUCTION_ORIGIN.replace(/\/$/, "");
 const isProductionBuild = siteUrl.replace(/\/$/, "") === productionOrigin;
 
 if (isProductionBuild && process.env.INDEXNOW !== "off") {
-  await submitToIndexNow(publicPages.map((page) => `${siteUrl}${page.path}`));
+  await submitToIndexNow(pages.map((page) => `${siteUrl}${page.path}`));
 } else {
   const why = isProductionBuild ? "INDEXNOW=off" : `this build is for ${siteUrl}, not ${productionOrigin}`;
   console.log(`generate-sitemap: IndexNow not submitted (${why})`);

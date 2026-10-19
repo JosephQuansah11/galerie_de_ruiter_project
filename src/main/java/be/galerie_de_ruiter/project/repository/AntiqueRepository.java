@@ -2,18 +2,14 @@ package be.galerie_de_ruiter.project.repository;
 
 import be.galerie_de_ruiter.project.domain.Antique;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface AntiqueRepository extends JpaRepository<Antique, UUID> {
-    @Override
-    @EntityGraph(attributePaths = {"images", "artist", "category"})
-    List<Antique> findAll();
-
     @Query("""
             select a.id as id,
                    a.title as title,
@@ -33,6 +29,42 @@ public interface AntiqueRepository extends JpaRepository<Antique, UUID> {
             left join a.category c
             """)
     List<CatalogueRow> findCatalogueRows();
+
+    /**
+     * The columns the dashboard counts, as rows rather than entities.
+     *
+     * <p>The dashboard only needs counts. {@code findAll()} reads every Antique row - including the
+     * legacy photograph column - into the heap just to add up what was sold; a projection asks for
+     * the columns and nothing else.</p>
+     */
+    @Query("""
+            select a.id as id, a.sold as sold, a.soldAt as soldAt,
+                   a.viewCount as viewCount, a.likeCount as likeCount,
+                   c.id as categoryId, c.name as categoryName, p.name as parentName
+            from Antique a
+            left join a.category c
+            left join c.parent p
+            """)
+    List<StatsRow> findStatsRows();
+
+    /** One piece as the dashboard counts it. */
+    interface StatsRow {
+        UUID getId();
+
+        boolean isSold();
+
+        Instant getSoldAt();
+
+        long getViewCount();
+
+        long getLikeCount();
+
+        UUID getCategoryId();
+
+        String getCategoryName();
+
+        String getParentName();
+    }
 
     /**
      * One piece as a catalogue listing needs it: its own columns, its artist and its category. No

@@ -114,6 +114,27 @@ shareable. A policy that allowed only the gallery would have to be `same-site`, 
 registrable domains and therefore needs the API and the frontend to share one (for example
 `api.galeriederuiter.be` beside `www.galeriederuiter.be`). Nothing needs that today.
 
+## Memory
+
+The API runs on a small instance, so two things are kept out of the heap on purpose: server sessions
+and photographs.
+
+- **No servlet session.** Every request is proved by its bearer token, and the CSRF token is a
+  cookie; `SecurityConfiguration` sets `SessionCreationPolicy.STATELESS`. Under the default policy
+  Spring saves an unauthenticated request in an `HttpSession` before it answers `401`, which gives
+  every crawler - and every browser whose tab expired - a session that stays in the container until
+  it times out. `UserControllerSecurityTest` fails if a refused request leaves a session behind.
+- **List endpoints count in the database, not in memory.** `/api/categories` is drawn on every page
+  and must never initialize `Category.antiques`: that reads every piece, including the legacy
+  photograph column, only to call `size()`. `CategoryRepository.findAllWithCounts()` asks PostgreSQL
+  for the count, and `CategoryApiTest` fails if a category request loads any entity. The dashboard
+  does the same through `AntiqueRepository.findStatsRows()`, and `GalleryStatsServiceTest` fails if
+  it falls back to `findAll()`, which reads every piece row - legacy photographs included - to count
+  them.
+- **A listing that needs an image asks an image endpoint.** Photograph bytes leave the API one
+  picture at a time (`/api/antiques/{id}/image/{imageId}` and its thumbnail), never as a side effect
+  of naming the collection.
+
 ## Production Docker stack
 
 The production Compose file runs the frontend, Spring API, Keycloak, Ollama,

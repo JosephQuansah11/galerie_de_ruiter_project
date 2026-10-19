@@ -61,7 +61,10 @@ public class HomeImageController {
     public ResponseEntity<byte[]> image(@PathVariable UUID imageId) {
         return images.findById(imageId)
                 .map(image -> ResponseEntity.ok()
-                        .header(HttpHeaders.CACHE_CONTROL, "public, max-age=300")
+                        // An upload gets a new id and its bytes never change, so a visitor who has
+                        // seen this photograph may keep it. Five minutes made every slider visit
+                        // fetch it again and put the bytes through the database a second time.
+                        .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
                         .contentType(MediaType.parseMediaType(image.getContentType()))
                         .contentLength(image.getData().length)
                         .body(image.getData()))

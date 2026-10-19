@@ -4,6 +4,25 @@ import i18n from "../../i18n";
 import { themes } from "@/context/themes";
 import { PreferencesPage } from "./PreferencesPage";
 
+const mockAnalytics = {
+  available: jest.fn(() => true),
+  choice: jest.fn((): "granted" | "denied" | null => null),
+  grant: jest.fn(),
+  deny: jest.fn(),
+};
+
+jest.mock("@/services/clarity", () => ({
+  analyticsAvailable: () => mockAnalytics.available(),
+  analyticsChoice: () => mockAnalytics.choice(),
+  grantAnalytics: () => mockAnalytics.grant(),
+  denyAnalytics: () => mockAnalytics.deny(),
+}));
+
+beforeEach(() => {
+  mockAnalytics.available.mockReturnValue(true);
+  mockAnalytics.choice.mockReturnValue(null);
+});
+
 afterEach(async () => {
   await i18n.changeLanguage("en");
   localStorage.clear();
@@ -108,5 +127,32 @@ describe("Preferences page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("lightMode"), "i") }));
     await waitFor(() => expect(document.body.classList.contains("theme-dark")).toBe(false));
+  });
+
+  it("offers analytics where the visitor can change the answer", async () => {
+    renderPage(<PreferencesPage />);
+    await flushPromises();
+
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("analyticsTurnOn") }));
+
+    expect(mockAnalytics.grant).toHaveBeenCalled();
+  });
+
+  it("turns analytics off again, which also clears its cookies", async () => {
+    mockAnalytics.choice.mockReturnValue("granted");
+    renderPage(<PreferencesPage />);
+    await flushPromises();
+
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("analyticsTurnOff") }));
+
+    expect(mockAnalytics.deny).toHaveBeenCalled();
+  });
+
+  it("hides the analytics card where analytics cannot run", async () => {
+    mockAnalytics.available.mockReturnValue(false);
+    renderPage(<PreferencesPage />);
+    await flushPromises();
+
+    expect(screen.queryByText(i18n.t("analyticsSettingsTitle"))).not.toBeInTheDocument();
   });
 });

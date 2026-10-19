@@ -5,6 +5,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -55,6 +56,7 @@ class AboutImageUploadTest {
         String url = JSON.readTree(uploaded.getResponse().getContentAsString()).path("url").asText();
         mvc.perform(get(url))
                 .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "public, max-age=31536000, immutable"))
                 .andExpect(content().contentType("image/png"))
                 .andExpect(content().bytes(PNG));
     }

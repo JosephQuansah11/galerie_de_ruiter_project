@@ -11,8 +11,10 @@ import be.galerie_de_ruiter.project.service.ThumbnailService;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -70,10 +72,41 @@ public class AntiqueImageController {
     @GetMapping("/{imageId}/thumbnail")
     @Transactional
     public ResponseEntity<byte[]> thumbnail(@PathVariable UUID id, @PathVariable UUID imageId) {
-        return images.findById(imageId)
-                .filter(image -> image.getAntique().getId().equals(id))
-                .map(this::thumbnailResponse)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return images.findThumbnail(imageId, id)
+                .map(this::imageBytes)
+                .orElseGet(() -> images.findById(imageId)
+                        .filter(image -> image.getAntique().getId().equals(id))
+                        .map(this::thumbnailResponse)
+                        .orElseGet(() -> ResponseEntity.notFound().build()));
+    }
+
+    /**
+     * The 800-pixel copy for a phone. It is generated on the first request and kept, like the
+     * thumbnail, so a catalogue that predates responsive images fills itself in as it is browsed.
+     */
+    @GetMapping("/{imageId}/medium")
+    @Transactional
+    public ResponseEntity<byte[]> medium(@PathVariable UUID id, @PathVariable UUID imageId) {
+        return images.findMedium(imageId, id)
+                .map(this::imageBytes)
+                .orElseGet(() -> images.findById(imageId)
+                        .filter(image -> image.getAntique().getId().equals(id))
+                        .map(image -> variantResponse(image, null,
+                                ThumbnailService.MEDIUM_EDGE, image::setMedium))
+                        .orElseGet(() -> ResponseEntity.notFound().build()));
+    }
+
+    /** The 1600-pixel copy for a desktop or a high-density screen. */
+    @GetMapping("/{imageId}/large")
+    @Transactional
+    public ResponseEntity<byte[]> large(@PathVariable UUID id, @PathVariable UUID imageId) {
+        return images.findLarge(imageId, id)
+                .map(this::imageBytes)
+                .orElseGet(() -> images.findById(imageId)
+                        .filter(image -> image.getAntique().getId().equals(id))
+                        .map(image -> variantResponse(image, null,
+                                ThumbnailService.LARGE_EDGE, image::setLarge))
+                        .orElseGet(() -> ResponseEntity.notFound().build()));
     }
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -89,8 +122,11 @@ public class AntiqueImageController {
         byte[] bytes = image.getBytes();
         AntiqueImage photo = new AntiqueImage(antique, order, order, bytes, image.getContentType());
         // Made once, now, while the bytes are already in hand: a gallery that uploads a picture
-        // should not be the reason a visitor downloads six megabytes for a tile.
+        // should not be the reason a visitor downloads six megabytes for a tile, a phone download
+        // a desktop original, or a desktop download a camera file.
         photo.setThumbnail(thumbnails.create(bytes));
+        photo.setMedium(thumbnails.create(bytes, ThumbnailService.MEDIUM_EDGE));
+        photo.setLarge(thumbnails.create(bytes, ThumbnailService.LARGE_EDGE));
         AntiqueImage saved = images.save(photo);
         // The photograph goes to the bucket, and the row keeps only its key - the bytes never
         // belong in the database once there is somewhere better for them. The id has to exist
@@ -156,21 +192,47 @@ public class AntiqueImageController {
     private ResponseEntity<byte[]> thumbnailResponse(AntiqueImage image) {
         byte[] small = image.getThumbnail();
         if (small == null) {
-            byte[] original = image.getStorageKey() == null
-                    ? image.getData()
-                    : storage.get(image.getStorageKey()).orElseGet(image::getData);
-            small = thumbnails.create(original);
+            small = thumbnails.create(originalBytes(image));
             if (small != null) {
                 image.setThumbnail(small);
                 images.save(image);
             }
         }
         if (small == null) return ResponseEntity.notFound().build();
+        return imageBytes(small);
+    }
+
+    /**
+     * One of the larger copies, generated on the first request and kept on the row. If it cannot be
+     * made, the original is served instead: a slow or missing encoder must not leave a hole in the
+     * page, and an original is still a usable answer.
+     */
+    private ResponseEntity<byte[]> variantResponse(AntiqueImage image, byte[] existing, int maxEdge,
+            Consumer<byte[]> keep) {
+        byte[] variant = existing;
+        if (variant == null) {
+            variant = thumbnails.create(originalBytes(image), maxEdge);
+            if (variant != null) {
+                keep.accept(variant);
+                images.save(image);
+            }
+        }
+        return variant == null ? imageResponse(image) : imageBytes(variant);
+    }
+
+    /** The original bytes, from the bucket when the row has been copied out and from the row otherwise. */
+    private byte[] originalBytes(AntiqueImage image) {
+        return image.getStorageKey() == null
+                ? image.getData()
+                : storage.get(image.getStorageKey()).orElseGet(image::getData);
+    }
+
+    /** A JPEG copy with the cache header every immutable photograph earns. */
+    private ResponseEntity<byte[]> imageBytes(byte[] bytes) {
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
-                .header(org.springframework.http.HttpHeaders.CACHE_CONTROL,
-                        "public, max-age=31536000, immutable")
-                .body(small);
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
+                .body(bytes);
     }
 
     /**
@@ -185,14 +247,9 @@ public class AntiqueImageController {
      * storage having a bad minute must not make a picture disappear from the shop window.</p>
      */
     private ResponseEntity<byte[]> imageResponse(AntiqueImage image) {
-        MediaType type = MediaType.parseMediaType(image.getContentType());
-        byte[] bytes = image.getStorageKey() == null
-                ? image.getData()
-                : storage.get(image.getStorageKey()).orElseGet(image::getData);
         return ResponseEntity.ok()
-                .contentType(type)
-                .header(org.springframework.http.HttpHeaders.CACHE_CONTROL,
-                        "public, max-age=31536000, immutable")
-                .body(bytes);
+                .contentType(MediaType.parseMediaType(image.getContentType()))
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
+                .body(originalBytes(image));
     }
 }

@@ -21,8 +21,7 @@
 
 .site-footer-rights {
   flex: 1 0 100%;
-  color: var(--theme-text-secondary);
-  opacity: 0.85;
+  color: inherit;
 }
 
 // A phone gets one column: the brand, the profiles and the link groups stack instead of squeezing.

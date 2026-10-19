@@ -53,12 +53,6 @@ public class AntiqueService {
     private final UserService users;
     private final CategoryRepository categoryRepository;
 
-    
-    @Transactional(readOnly = true)
-    public List<Antique> findAll() {
-        return antiques.findAll();
-    }
-
     @Transactional(readOnly = true)
     public List<AntiqueResponse> findAllResponses() {
         // Two queries that never touch a photograph's bytes: the listing columns, and the ids and

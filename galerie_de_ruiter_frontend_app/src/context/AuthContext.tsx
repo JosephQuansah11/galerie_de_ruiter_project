@@ -1,12 +1,12 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import type { UserProfile, UserProfileUpdate } from "@/types/types";
+import type { Registration, UserProfile, UserProfileUpdate } from "@/types/types";
 import type { AuthContextValue } from "./authTypes";
 import { useAvatar } from "./useAvatar";
 import { useAuthInitialization } from "./useAuthInitialization";
-import { useSupabaseSession } from "./useSupabaseSession";
+import { useSupabaseSession, claimsOf } from "./useSupabaseSession";
 import { updateCurrentUser } from "@/pages/auth/authApi";
-import { signIn as signInWithSupabase, signUp } from "@/services/supabaseAuth";
+import { changePassword as changePasswordWithSupabase, signIn as signInWithSupabase, signUp } from "@/services/supabaseAuth";
 import { clearChatSession } from "@/services/chatSession";
 import { clearCache } from "@/services/apiCache";
 
@@ -36,15 +36,29 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const signIn = async (usernameOrEmail: string, password: string) => {
     adopt(await signInWithSupabase(usernameOrEmail, password));
   };
-  const register = async (registration: UserProfile & { password: string }) => {
-    const session = await signUp(registration.username ?? registration.email ?? "", registration.password);
+  const register = async (registration: Registration) => {
+    const session = await signUp(registration);
     // A project that confirms addresses by email returns no session: the caller shows "check your
     // inbox" and the visitor signs in once they have.
-    if (session) adopt(session);
+    if (!session) return false;
+    adopt(session);
+    return true;
   };
   const updateProfile = async (details: UserProfileUpdate) => {
     if (!token) throw new Error("A signed-in user is required to update profile details.");
     setProfile(await updateCurrentUser(token, details));
+  };
+  /**
+   * Changes the password of the account this session belongs to.
+   *
+   * The address is read from the access token, not from `profile.email`: the profile screen edits
+   * the gallery's own copy of the address, which may differ from the one Supabase files the account
+   * under, and proving the current password with the wrong address would look like a wrong password.
+   */
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    const email = claimsOf(token)?.email;
+    if (typeof email !== "string" || !email) throw new Error("authEmailMissing");
+    adopt(await changePasswordWithSupabase(email, currentPassword, newPassword));
   };
   const value = useMemo(() => ({
     authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles,
@@ -60,7 +74,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       clearCache();
       return endSession();
     },
-    signIn, register, updateProfile,
+    signIn, register, updateProfile, changePassword,
   }), [authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -1,4 +1,4 @@
-import { BookOpen, Heart, Home, LayoutDashboard, LibraryBig, Map, MapPin, MessageCircle, Plus, ShoppingBag, Tags } from "lucide-react";
+import { BookOpen, FolderUp, Heart, Home, LayoutDashboard, LibraryBig, Map, MapPin, MessageCircle, Plus, ShoppingBag, Tags } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Nav } from "react-bootstrap";
 import { NavLink } from "react-router-dom";
@@ -35,6 +35,7 @@ export function NavigationLinks({ onNavigate }: { onNavigate: () => void }) {
         { href: "/admin/dashboard", icon: LayoutDashboard, translationKey: "navDashboard" },
         { href: "/admin/antiques", icon: LibraryBig, translationKey: "navAdminAntiques" },
         { href: "/admin/antiques/new", icon: Plus, translationKey: "navAddAntique" },
+        { href: "/admin/antiques/import", icon: FolderUp, translationKey: "importFolder" },
         { href: "/admin/categories", icon: Tags, translationKey: "categories" },
         { href: "/admin/location", icon: MapPin, translationKey: "navEditLocation" },
         { href: "/admin/home", icon: Home, translationKey: "navEditHome" },

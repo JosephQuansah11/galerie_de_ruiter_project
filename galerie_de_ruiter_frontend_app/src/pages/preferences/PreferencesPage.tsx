@@ -1,14 +1,26 @@
+import { useState } from 'react'
 import { Button } from "@/components/ReactButton";
-import { Check, Languages, Moon, RotateCcw, Sun } from 'lucide-react'
+import { BarChart3, Check, Languages, Moon, RotateCcw, Sun } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 import { themeTranslationKeys } from '../../context/themes'
 import { languages, useLanguage } from '../../context/LanguageContext'
 import { useTranslation } from 'react-i18next'
+import { analyticsAvailable, analyticsChoice, denyAnalytics, grantAnalytics, type AnalyticsChoice } from '../../services/clarity'
 
 export function PreferencesPage() {
   const { t } = useTranslation()
   const { theme, availableThemes, setTheme, toggleDarkMode, resetTheme } = useTheme()
   const { language, setLanguage } = useLanguage()
+  const [analytics, setAnalytics] = useState<AnalyticsChoice | null>(analyticsChoice)
+  const toggleAnalytics = () => {
+    if (analytics === 'granted') {
+      denyAnalytics()
+      setAnalytics('denied')
+    } else {
+      grantAnalytics()
+      setAnalytics('granted')
+    }
+  }
   return <div className="page settings-page">
     <section className="page-heading">
       <div>
@@ -69,6 +81,20 @@ export function PreferencesPage() {
         </button>)}
       </div>
     </section>
+
+    {analyticsAvailable() && <section className="settings-card">
+      <div className="settings-card-head">
+        <div className="settings-card-title">
+          <div className="eyebrow">{t("analyticsSettings")}</div>
+          <h2>{t("analyticsSettingsTitle")}</h2>
+          <p>{t("analyticsSettingsText")}</p>
+        </div>
+        <span className="settings-card-icon" aria-hidden="true"><BarChart3 size={20} /></span>
+      </div>
+      <Button className="quiet-button" aria-pressed={analytics === 'granted'} onClick={toggleAnalytics}>
+        {analytics === 'granted' ? t("analyticsTurnOff") : t("analyticsTurnOn")}
+      </Button>
+    </section>}
   </div>
 }
 

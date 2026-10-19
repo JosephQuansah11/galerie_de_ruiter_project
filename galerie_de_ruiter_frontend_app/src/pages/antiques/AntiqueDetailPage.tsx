@@ -29,6 +29,9 @@ export default function AntiqueDetailPage() {
       ? summarizeDescription(antique.description, META_DESCRIPTION_WORDS) || t("metaPieceDescription", { title: antique.title })
       : undefined,
     canonicalPath: `/antiques/${id}`,
+    // A stale or mistyped piece URL is a soft 404: the application cannot return a 404 status for
+    // a client-side route, so it tells a crawler not to index the "not found" answer instead.
+    noindex: !loading && !antique,
   });
   if (loading) return <div className="catalogue-state"><Spinner animation="border" size="sm" /> {t("loadingPiece")}</div>;
   if (error || !antique) return <Alert variant="warning">{t("pieceNotFound")}</Alert>;

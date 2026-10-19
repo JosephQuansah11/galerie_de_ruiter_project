@@ -9,9 +9,9 @@ import { Button } from "@/components/ReactButton";
 /**
  * Signing in, on this page.
  *
- * The gallery's accounts are named by people rather than by addresses, so the first field takes a
- * username - `de-ruiter` - and the auth client turns it into the address the account is filed under.
- * An address typed in full works too, which is what a client who registered with one will do.
+ * A new account signs in with the address it was registered under. The first field also accepts a
+ * bare username, because the gallery's own `de-ruiter` account predates collecting addresses: it is
+ * filed under `de-ruiter@galerie-de-ruiter.be`, so the short name is enough for it.
  *
  * Errors are shown here rather than on another page: a wrong password should not cost the visitor a
  * round trip, and it should not tell them whether the username was right and the password wrong.
@@ -55,7 +55,7 @@ export function LoginPage() {
   <p>{t("loginIntro")}</p>
   {requestedPath && <p className="auth-notice">{t("signInRequired")}</p>}
   <form className="auth-form" onSubmit={submit}>
-    <label className="form-label" htmlFor="signin-username">{t("username", { defaultValue: "Username" })}</label>
+    <label className="form-label" htmlFor="signin-username">{t("signInIdentifier", { defaultValue: "Email or username" })}</label>
     <input id="signin-username" className="form-control" name="username" autoComplete="username"
       value={username} onChange={(event) => setUsername(event.target.value)} required disabled={busy} />
     <label className="form-label" htmlFor="signin-password">{t("password", { defaultValue: "Password" })}</label>

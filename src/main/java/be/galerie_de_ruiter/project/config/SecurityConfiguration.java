@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
@@ -66,7 +67,15 @@ public class SecurityConfiguration {
 				// piece or register that it was seen.
 				.ignoringRequestMatchers("/api/chat", "/api/chat/**", "/api/antiques/*/views", "/api/antiques/*/likes"))
 			// .csrf(csrf->csrf.disable())
-			// .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			// No server session, and therefore nothing in the heap that grows with traffic. Every
+			// request is proved by its bearer token, and the CSRF token lives in a cookie; the API
+			// never reads an HttpSession. The default policy is IF_REQUIRED, and Spring's
+			// ExceptionTranslationFilter saves an unauthenticated request in a session before it
+			// answers 401 - one new session per client that does not send the JSESSIONID cookie
+			// back, which is every crawler, every bot and every browser whose tab has expired. Those
+			// sessions sit in the servlet container until they time out, and a service that never
+			// wanted one ends up with thousands of them.
+			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(authorize -> authorize
 				.requestMatchers(HttpMethod.GET,"/api/admin/users").hasRole("ADMIN")
 				.requestMatchers(HttpMethod.GET, "/api/login").permitAll()
@@ -77,6 +86,9 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.GET, "/api/antiques/*/image/*").permitAll()
 				// The small copy a grid draws. Public for the same reason the pictures are.
 				.requestMatchers(HttpMethod.GET, "/api/antiques/*/image/*/thumbnail").permitAll()
+				// The responsive copies a piece's own page draws.
+				.requestMatchers(HttpMethod.GET, "/api/antiques/*/image/*/medium").permitAll()
+				.requestMatchers(HttpMethod.GET, "/api/antiques/*/image/*/large").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/antiques/{id}/image/{imageId}").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/antiques/*/model").permitAll()
 				// The public counters are open to anonymous visitors on purpose: the gallery

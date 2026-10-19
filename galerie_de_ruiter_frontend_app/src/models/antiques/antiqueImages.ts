@@ -15,20 +15,32 @@ export const resolveAntiqueImageUrl = (imageUrl?: string | null): string | undef
 };
 
 /**
- * The small copy of a photograph, for a grid or a list: the same image path with `/thumbnail`
- * appended (`/api/antiques/{id}/image/{imageId}/thumbnail`).
- *
- * A grid tile has no use for a six-megabyte original - the API makes a 400-pixel copy about forty
- * kilobytes for it, and the original is fetched only when a piece is opened.
+ * A copy of a photograph at one of the sizes the API keeps. A grid tile has no use for a
+ * six-megabyte original - the API makes a 400-pixel copy for it, an 800-pixel copy for a phone on
+ * a piece's own page, and a 1600-pixel copy for a desktop - and the original is fetched only when
+ * a visitor asks for it.
  *
  * A path that names no image id (`/api/antiques/{id}/image`, which means "the first photograph")
- * has no thumbnail route, so it is returned untouched and the caller gets the original.
+ * has no variant route, so it is returned untouched and the caller gets the original.
  */
-export const resolveAntiqueThumbnailUrl = (imageUrl?: string | null): string | undefined => {
+type AntiqueImageVariant = "thumbnail" | "medium" | "large";
+
+const resolveVariantUrl = (imageUrl: string | null | undefined, variant: AntiqueImageVariant): string | undefined => {
   const full = resolveAntiqueImageUrl(imageUrl);
   if (!full) return undefined;
-  return /\/image\/[^/?#]+$/.test(full) ? `${full}/thumbnail` : full;
+  return /\/image\/[^/?#]+$/.test(full) ? `${full}/${variant}` : full;
 };
+
+export const resolveAntiqueThumbnailUrl = (imageUrl?: string | null): string | undefined =>
+  resolveVariantUrl(imageUrl, "thumbnail");
+
+/** The 800-pixel copy a phone draws on a piece's own page. */
+export const resolveAntiqueMediumUrl = (imageUrl?: string | null): string | undefined =>
+  resolveVariantUrl(imageUrl, "medium");
+
+/** The 1600-pixel copy a desktop or a high-density screen draws. */
+export const resolveAntiqueLargeUrl = (imageUrl?: string | null): string | undefined =>
+  resolveVariantUrl(imageUrl, "large");
 
 /**
  * The image id at the end of an antique image path (`/api/antiques/{id}/image/{imageId}`).

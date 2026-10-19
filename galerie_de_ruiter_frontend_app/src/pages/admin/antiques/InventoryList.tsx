@@ -2,7 +2,7 @@ import { Badge } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
 import { BadgeCheck, Image, Pencil, Trash2, Undo2 } from "lucide-react";
 import type Antique from "@/models/antiques/Antique";
-import { resolveAntiqueImageUrl } from "@/models/antiques/Antique";
+import { resolveAntiqueThumbnailUrl } from "@/models/antiques/Antique";
 import { formatEuroAmount } from "@/i18n";
 
 type Props = {
@@ -26,7 +26,7 @@ export function InventoryList({ antiques, onEdit, onDelete, onToggleSold, deleti
   return <div className="inventory-list">{antiques.map((antique) =>
     <article className={`inventory-row${antique.sold ? " is-sold" : ""}`} key={antique.id}>
       <span className="inventory-thumb">
-        {antique.imageUrl ? <img src={resolveAntiqueImageUrl(antique.imageUrl)} alt="" width={400} height={300} />
+        {antique.imageUrl ? <img src={resolveAntiqueThumbnailUrl(antique.imageUrl)} alt="" loading="lazy" decoding="async" width={400} height={300} />
           : <span className="inventory-placeholder"><Image size={20} /></span>}
       </span>
       <span className="inventory-row-copy">

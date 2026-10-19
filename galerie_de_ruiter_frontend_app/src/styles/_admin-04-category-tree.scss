@@ -1,0 +1,13 @@
+// Category administration is a tree, not a flat list: each subcategory sits in a nested list
+// under its parent, with a guide line and a branch mark so the relationship does not depend on
+// colour alone.
+.category-tree { list-style: none; margin: 2rem 0 0; padding: 0; display: grid; gap: 0.6rem; }
+.category-tree-node { min-width: 0; }
+.category-tree-children { list-style: none; margin: 0.6rem 0 0; padding: 0 0 0 1.25rem; border-left: 1px solid var(--theme-border); display: grid; gap: 0.6rem; }
+.category-row > .category-row-title { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; }
+.category-row-branch { flex: 0 0 auto; color: var(--theme-gold); }
+.category-row.is-subcategory { border-left: 2px solid var(--theme-gold); }
+.category-row.is-subcategory > .category-row-title strong { font-weight: 500; }
+@media (max-width: 640px) {
+  .category-tree-children { margin-left: 0.35rem; padding-left: 0.75rem; }
+}

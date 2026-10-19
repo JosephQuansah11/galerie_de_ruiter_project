@@ -74,6 +74,41 @@ public interface AntiqueImageRepository extends JpaRepository<AntiqueImage, UUID
     }
 
 
+    /**
+     * The small copy alone, without the original bytes the row also holds.
+     *
+     * <p>A catalogue asks for this URL on every tile. Selecting the entity would read the whole
+     * photograph - and the medium and large copies - out of the database just to send forty
+     * kilobytes of it, which is database egress on every visit. The projection asks for one
+     * column.</p>
+     */
+    @org.springframework.data.jpa.repository.Query("""
+            select i.thumbnail from AntiqueImage i
+            where i.id = :imageId and i.antique.id = :antiqueId
+            """)
+    Optional<byte[]> findThumbnail(
+            @org.springframework.data.repository.query.Param("imageId") UUID imageId,
+            @org.springframework.data.repository.query.Param("antiqueId") UUID antiqueId);
+
+    /** The 800-pixel copy alone, for the same reason as {@link #findThumbnail}. */
+    @org.springframework.data.jpa.repository.Query("""
+            select i.medium from AntiqueImage i
+            where i.id = :imageId and i.antique.id = :antiqueId
+            """)
+    Optional<byte[]> findMedium(
+            @org.springframework.data.repository.query.Param("imageId") UUID imageId,
+            @org.springframework.data.repository.query.Param("antiqueId") UUID antiqueId);
+
+    /** The 1600-pixel copy alone. */
+    @org.springframework.data.jpa.repository.Query("""
+            select i.large from AntiqueImage i
+            where i.id = :imageId and i.antique.id = :antiqueId
+            """)
+    Optional<byte[]> findLarge(
+            @org.springframework.data.repository.query.Param("imageId") UUID imageId,
+            @org.springframework.data.repository.query.Param("antiqueId") UUID antiqueId);
+
+
     /** One row of {@link #findCatalogueImages()}. */
     interface CatalogueImage {
         UUID getAntiqueId();

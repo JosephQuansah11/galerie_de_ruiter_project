@@ -7,7 +7,13 @@ import CartPage from "./CartPage";
 import WishlistPage from "./WishlistPage";
 import type Antique from "@/models/antiques/Antique";
 
-const antique: Antique = { id: "1", title: "Carved walnut mirror", category: "Mirrors", price: 250 };
+const antique: Antique = {
+  id: "1",
+  title: "Carved walnut mirror",
+  category: "Mirrors",
+  price: 250,
+  imageUrl: "/api/antiques/1/image/9",
+};
 
 /** Seeds the shared basket so the pages render the signed-in shopping state. */
 function BasketSeed({ children, wishlist = false }: { children: ReactNode; wishlist?: boolean }) {
@@ -58,6 +64,14 @@ describe("Cart page", () => {
 
     await waitFor(() => expect(screen.getByText(i18n.t("emptyCart"))).toBeInTheDocument());
   });
+
+  it("uses the small copy of the photograph in the basket row", async () => {
+    renderPage(<BasketSeed><CartPage /></BasketSeed>, { shopping: true });
+    await screen.findByText("Carved walnut mirror");
+
+    const image = document.querySelector(".shopping-thumb img");
+    expect(image?.getAttribute("src")).toContain("/api/antiques/1/image/9/thumbnail");
+  });
 });
 
 describe("Wishlist page", () => {
@@ -83,5 +97,13 @@ describe("Wishlist page", () => {
     fireEvent.click(screen.getByRole("button", { name: i18n.t("removeFromWishlist", { title: "Carved walnut mirror" }) }));
 
     await waitFor(() => expect(screen.getByText(i18n.t("wishlistEmpty"))).toBeInTheDocument());
+  });
+
+  it("uses the small copy of the photograph in the saved row", async () => {
+    renderPage(<BasketSeed wishlist><WishlistPage /></BasketSeed>, { shopping: true });
+    await screen.findByText("Carved walnut mirror");
+
+    const image = document.querySelector(".shopping-thumb img");
+    expect(image?.getAttribute("src")).toContain("/api/antiques/1/image/9/thumbnail");
   });
 });

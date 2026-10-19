@@ -77,6 +77,21 @@ public class AntiqueImage {
     @Column(columnDefinition = "bytea")
     private byte[] thumbnail;
 
+    /**
+     * The 800-pixel copy used by a phone on a piece's own page.
+     *
+     * <p>Null until it is asked for: an existing row fills it on the first request and keeps it, so
+     * no migration job has to touch every photograph at once.</p>
+     */
+    @JdbcTypeCode(SqlTypes.LONGVARBINARY)
+    @Column(columnDefinition = "bytea")
+    private byte[] medium;
+
+    /** The 1600-pixel copy for a desktop or a high-density screen. Generated on first request. */
+    @JdbcTypeCode(SqlTypes.LONGVARBINARY)
+    @Column(columnDefinition = "bytea")
+    private byte[] large;
+
     public AntiqueImage() {
     }
 
@@ -176,5 +191,23 @@ public class AntiqueImage {
 
     public void setThumbnail(byte[] thumbnail) {
         this.thumbnail = thumbnail;
+    }
+
+    /** The 800-pixel copy, or null until one has been generated. */
+    public byte[] getMedium() {
+        return medium;
+    }
+
+    public void setMedium(byte[] medium) {
+        this.medium = medium;
+    }
+
+    /** The 1600-pixel copy, or null until one has been generated. */
+    public byte[] getLarge() {
+        return large;
+    }
+
+    public void setLarge(byte[] large) {
+        this.large = large;
     }
 }

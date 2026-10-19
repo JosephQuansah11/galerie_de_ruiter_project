@@ -163,6 +163,14 @@ describe("security headers", () => {
     // The gallery's own 3D models travel as blob URLs - the admin's model picker previews a file
     // before it is uploaded, and three.js reads that URL with fetch - which connect-src governs.
     expect(directive(policy, "connect-src")).toContain("blob:");
+    // Microsoft Clarity is loaded only after the visitor allows analytics, but when it is allowed
+    // its tag, collection endpoints and pixel have to be reachable. The loader is part of the
+    // bundle, so script-src still carries no inline exception.
+    expect(directive(policy, "script-src")).toContain("https://*.clarity.ms");
+    expect(directive(policy, "script-src")).not.toContain("'unsafe-inline'");
+    expect(directive(policy, "connect-src")).toContain("https://*.clarity.ms");
+    expect(directive(policy, "connect-src")).toContain("https://c.bing.com");
+    expect(directive(policy, "img-src")).toContain("https://c.bing.com");
     // 'self' stays in frame-src: the gallery frames nothing of its own today, and a same-origin
     // frame is the one thing that value cannot break.
     expect(directive(policy, "frame-src")).toContain("'self'");

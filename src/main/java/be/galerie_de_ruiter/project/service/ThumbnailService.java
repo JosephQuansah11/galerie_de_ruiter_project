@@ -18,8 +18,8 @@ import org.springframework.stereotype.Service;
  *
  * <p>The gallery's originals are between forty kilobytes and six megabytes - a size that is right
  * for looking at one piece and wrong for drawing a page of tiles. This produces a copy no larger
- * than {@value #MAX_EDGE} pixels on its longest side, as JPEG, which the JDK can write without any
- * dependency.</p>
+ * than {@value #THUMBNAIL_EDGE} pixels on its longest side (and larger copies for the piece's own
+ * page), as JPEG, which the JDK can write without any dependency.</p>
  *
  * <p>Everything that can go wrong is treated as "no thumbnail": an unreadable file, a format the
  * JDK cannot decode, an encoder that is not there. A missing thumbnail must never be the reason a
@@ -28,14 +28,28 @@ import org.springframework.stereotype.Service;
 @Service
 public class ThumbnailService {
     /** The longest side of the small copy, in pixels. A tile is rarely drawn wider than this. */
-    static final int MAX_EDGE = 400;
+    public static final int THUMBNAIL_EDGE = 400;
+    /** The copy a phone draws for a piece's own page: enough for a 400-pixel slot at 2x. */
+    public static final int MEDIUM_EDGE = 800;
+    /** The copy a desktop or a high-density screen draws: enough for an 800-pixel slot at 2x. */
+    public static final int LARGE_EDGE = 1600;
 
     /** JPEG quality: high enough that furniture detail survives, low enough to stay tens of kilobytes. */
     private static final float QUALITY = 0.82f;
 
     /** The small copy of one photograph, or null when one cannot be made. */
     public byte[] create(byte[] original) {
+        return create(original, THUMBNAIL_EDGE);
+    }
+
+    /**
+     * A copy of one photograph with its longest side at most {@code maxEdge} pixels, or null when
+     * one cannot be made. The original is never enlarged: a photograph already smaller is kept at
+     * its own size, which is why a 400-pixel upload costs no more than it has to.
+     */
+    public byte[] create(byte[] original, int maxEdge) {
         if (original == null || original.length == 0) return null;
+        if (maxEdge <= 0) return null;
         BufferedImage source;
         try {
             source = ImageIO.read(new ByteArrayInputStream(original));
@@ -47,7 +61,7 @@ public class ThumbnailService {
         int width = source.getWidth();
         int height = source.getHeight();
         if (width <= 0 || height <= 0) return null;
-        double scale = Math.min(1.0, (double) MAX_EDGE / Math.max(width, height));
+        double scale = Math.min(1.0, (double) maxEdge / Math.max(width, height));
         int targetWidth = Math.max(1, (int) Math.round(width * scale));
         int targetHeight = Math.max(1, (int) Math.round(height * scale));
 

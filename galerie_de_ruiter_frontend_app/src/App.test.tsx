@@ -5,9 +5,9 @@ import App from "./App";
 
 /**
  * `App` provides its own BrowserRouter and AuthProvider, so these tests drive the real
- * shell: the jsdom URL selects the route and the mocked Keycloak double ends the session
- * check without touching the network. That double is signed out, so these also pin down
- * what a visitor without an account may reach.
+ * shell: the jsdom URL selects the route and the stored session is empty, so the account
+ * check finishes without touching the network. That is a visitor who is signed out, which
+ * also pins down what they may reach.
  */
 describe("App shell", () => {
   it("renders the sign-in page for the login route", async () => {
@@ -15,7 +15,10 @@ describe("App shell", () => {
     renderPage(<App />, { auth: false, router: false });
 
     expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent(i18n.t("welcomeBack"));
-    expect(screen.getByRole("button", { name: new RegExp(i18n.t("continueKeycloak"), "i") })).toBeInTheDocument();
+    // The form signs in with an address or the gallery's legacy short username. There is no
+    // identity-provider redirect left to offer.
+    expect(screen.getByLabelText(i18n.t("signInIdentifier"))).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: i18n.t("signIn") })).toBeInTheDocument();
     // Nobody asked for anything behind an account, so there is nothing to explain.
     expect(screen.queryByText(i18n.t("signInRequired"))).not.toBeInTheDocument();
     // Sign-in is one of the two routes outside the application shell, so it brings its own
@@ -83,7 +86,17 @@ describe("App shell", () => {
     expect(screen.queryByText(i18n.t("welcomeBack"))).not.toBeInTheDocument();
   });
 
-  it.each(["/antiques/123", "/wishlist", "/cart", "/profile", "/preferences", "/admin/antiques", "/admin/dashboard"])(
+  it("lets a visitor open a piece's own page", async () => {
+    window.history.pushState({}, "", "/antiques/123");
+    renderPage(<App />, { auth: false, router: false });
+
+    // The piece page is public content: it must answer as the piece page, not as the sign-in
+    // redirect. This test run has no API behind it, so the page it can show is "not found".
+    expect(await screen.findByText(i18n.t("pieceNotFound"))).toBeInTheDocument();
+    expect(screen.queryByText(i18n.t("welcomeBack"))).not.toBeInTheDocument();
+  });
+
+  it.each(["/wishlist", "/cart", "/profile", "/preferences", "/admin/antiques", "/admin/dashboard"])(
     "sends a visitor who opens %s to the sign-in page",
     async (route) => {
       window.history.pushState({}, "", route);
@@ -92,6 +105,10 @@ describe("App shell", () => {
       expect(await screen.findByRole("heading", { level: 1 })).toHaveTextContent(i18n.t("welcomeBack"));
       // Acting on the collection needs an account, and the page says so instead of looking broken.
       expect(screen.getByText(i18n.t("signInRequired"))).toBeInTheDocument();
+      // The requested page travels with the redirect, so signing in comes back to it rather than
+      // dropping the visitor on the landing page.
+      expect(window.location.pathname).toBe("/login");
+      expect(new URLSearchParams(window.location.search).get("from")).toBe(route);
     },
   );
 });

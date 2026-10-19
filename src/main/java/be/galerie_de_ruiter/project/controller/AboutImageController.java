@@ -40,7 +40,10 @@ public class AboutImageController {
     public ResponseEntity<byte[]> image(@PathVariable UUID imageId) {
         return images.findById(imageId)
                 .map(image -> ResponseEntity.ok()
-                        .header(HttpHeaders.CACHE_CONTROL, "public, max-age=300")
+                        // Same as the welcome slider: the id names immutable bytes, so a long
+                        // cache is what keeps the About page from re-reading them every five
+                        // minutes.
+                        .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
                         .contentType(MediaType.parseMediaType(image.getContentType()))
                         .contentLength(image.getData().length)
                         .body(image.getData()))

@@ -24,6 +24,51 @@ Keycloak uses the `standard` web-service plan (2 GiB RAM) because its startup
 exceeded the 512 MiB available on the `starter` plan. This service-plan change
 increases costs; review the current price in Render before syncing.
 
+## Supabase egress
+
+The free plan includes 5 GB of egress per month, and Supabase counts everything that leaves the
+project: Auth, Storage, Database, Realtime, Edge Functions, the pooler and log drains. This
+repository talks to Supabase in two places, and knowing which one is busy is the first step:
+
+- **Auth** - the frontend signs in, refreshes a token about once an hour per open tab and signs out
+  (`src/services/supabaseAuth.ts`); the API fetches the project's JWKS when it verifies a token.
+  Those payloads are kilobytes. A report dominated by Auth means a refresh loop, a shared project,
+  or another client using the same anon key.
+- **Storage** - only when the API's four `STORAGE_*` variables point at Supabase Storage. The
+  gallery's photographs are then read out of the bucket for every image request, so image traffic is
+  Storage egress. `galerie-java-api` already speaks the S3 API; Cloudflare R2 is the cheaper endpoint
+  for photographs because its egress is free. Point `STORAGE_ENDPOINT`, `STORAGE_BUCKET`,
+  `STORAGE_ACCESS_KEY` and `STORAGE_SECRET_KEY` at R2, run the image-copy job, and Supabase stops
+  being on the path of a photograph.
+- **Database** - only when `DATABASE_URL` is set on `galerie-java-api` to the Supabase project. The
+  blueprint gives the API its own `galerie-app-db`, but `application-prod.yml` prefers `DATABASE_URL`
+  when it is present, so a value left in the Render dashboard overrides the blueprint's database
+  without changing a file. Remove it and the API uses `DATABASE_HOST/PORT/NAME/USER/PASSWORD` from
+  `galerie-app-db`.
+
+Realtime, Edge Functions and log drains are not used by this project.
+
+The API's list queries are written not to carry photographs: `CategoryRepository.findAllWithCounts`
+and `AntiqueRepository.findStatsRows` are projections, and the catalogue names images without
+reading their bytes. Before those projections, `/api/categories` loaded every piece - and the legacy
+`image_data` column - on every page load, which is a database egress multiplier if the database is
+Supabase. `CategoryApiTest` and `GalleryStatsServiceTest` fail if that path comes back.
+
+For the images themselves, the API sends `Cache-Control: public, max-age=31536000, immutable` on
+antique, welcome-slider and About photographs. The catalogue and every small card ask for the
+400-pixel `/thumbnail` copy; a piece's own page offers 800-pixel and 1600-pixel copies through
+`srcset`, so a phone never downloads a desktop original and a desktop never downloads a camera file.
+The variants are generated once and kept on the row; existing photographs fill themselves in the
+first time they are requested. `ThumbnailServiceTest`, `AntiqueImageAdminTest` and
+`src/models/antiques/antiqueImages.test.ts` pin the sizes and the URLs.
+
+The service writes JPEG variants because the JDK's `ImageIO` has no AVIF or WebP encoder. Those two
+formats need either a native encoder (`cwebp`, `avifenc`) in the image and more stored variants, or -
+preferably, if the photographs are moving to R2 anyway - a CDN that negotiates them (Cloudflare
+Images, or R2 with Image Resizing). The current `<img srcset>` is the fallback those sources would
+sit beside; the URLs are already split per size, so adding `<picture>` is a frontend change rather
+than a new image pipeline.
+
 ## Keycloak
 
 The live client in the running Keycloak (`movie_project_frontend_client`) must also list

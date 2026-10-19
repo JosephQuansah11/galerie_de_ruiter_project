@@ -14,6 +14,9 @@ ARG VITE_GOOGLE_MAPS_API_KEY=
 # preview tags. Leave it unset and the build uses the production origin from
 # `site.config.mjs`; pass the real origin when building for another host, e.g.
 # --build-arg SITE_URL=https://www.example.be
+# The sitemap script reads the piece list from this API at build time. Leave it unset for a
+# build that has no API to ask; the five static pages are still written.
+ARG SITEMAP_API_URL
 ARG SITE_URL
 ENV VITE_JAVA_API_URL=$VITE_JAVA_API_URL \
     VITE_JAVA_BACKEND_URL=$VITE_JAVA_BACKEND_URL \
@@ -22,6 +25,7 @@ ENV VITE_JAVA_API_URL=$VITE_JAVA_API_URL \
     VITE_KEYCLOAK_REALM=$VITE_KEYCLOAK_REALM \
     VITE_KEYCLOAK_CLIENT_ID=$VITE_KEYCLOAK_CLIENT_ID \
     VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY \
+    SITEMAP_API_URL=$SITEMAP_API_URL \
     SITE_URL=$SITE_URL
 COPY package*.json ./
 RUN npm ci

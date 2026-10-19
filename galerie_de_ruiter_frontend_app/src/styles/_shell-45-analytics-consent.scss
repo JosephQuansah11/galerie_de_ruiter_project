@@ -1,0 +1,7 @@
+// The first-visit question for Microsoft Clarity. It sits above the page so it is reachable
+// without scrolling, and it is the only thing on the site that asks before a third party loads.
+.analytics-consent { position: fixed; left: 50%; bottom: 1rem; z-index: 1080; width: min(calc(100% - 2rem), 48rem); transform: translateX(-50%); display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border: 1px solid var(--theme-border); background: var(--theme-surface); color: var(--theme-text); box-shadow: 0 1rem 2.5rem rgba(60, 31, 37, 0.22); }
+.analytics-consent strong { display: block; font: 1.05rem Georgia, serif; }
+.analytics-consent p { margin: 0.35rem 0 0; color: var(--theme-text-secondary); font-size: 0.86rem; line-height: 1.55; }
+.analytics-consent-actions { display: flex; flex: 0 0 auto; gap: 0.5rem; }
+@media (max-width: 640px) { .analytics-consent { align-items: stretch; flex-direction: column; } .analytics-consent-actions { justify-content: flex-end; } }

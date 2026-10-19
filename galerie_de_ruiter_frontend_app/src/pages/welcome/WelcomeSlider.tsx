@@ -12,9 +12,13 @@ export function WelcomeSlider({ images }: { images: HomeImage[] }) {
   const multiple = images.length > 1;
   return <section className="welcome-slider" aria-label={t("welcomeImages")}>
     <Carousel interval={6000} indicators={multiple} controls={multiple} pause="hover">
-      {images.map((image) => <Carousel.Item key={image.id}>
+      {images.map((image, index) => <Carousel.Item key={image.id}>
         <img className="welcome-slide-image" src={resolveHomeImageUrl(image.url)}
-          alt={image.caption?.trim() || t("welcomeImages")} loading="lazy" width={1280} height={720} />
+          alt={image.caption?.trim() || t("welcomeImages")}
+          loading={index === 0 ? "eager" : "lazy"}
+          fetchPriority={index === 0 ? "high" : "low"}
+          decoding="async"
+          width={1280} height={720} />
         {image.caption?.trim() ? <Carousel.Caption><p>{image.caption}</p></Carousel.Caption> : null}
       </Carousel.Item>)}
     </Carousel>

@@ -1,6 +1,7 @@
 import i18n, { ensureLanguage } from "./i18n";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { startAnalytics } from "./services/clarity";
 import "@/styles/App.scss";
 
 /**
@@ -9,6 +10,10 @@ import "@/styles/App.scss";
  * seeing the fallback language for a moment.
  */
 const storedLanguage = localStorage.getItem("galerie-language") ?? "nl-BE";
+
+// A returning visitor who already allowed analytics gets the tag at page start; a first visit
+// waits for the banner (see AnalyticsConsent).
+startAnalytics();
 
 void ensureLanguage(storedLanguage)
   .then(() => i18n.changeLanguage(storedLanguage))

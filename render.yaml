@@ -149,6 +149,10 @@ services:
         value: https://galeriederuiter.cloud-ip.cc
       - key: VITE_JAVA_API_URL
         value: https://galerie-java-api.onrender.com
+      # The sitemap script reads the piece list from the API at build time, so a piece's own page
+      # is discoverable even before a crawler follows a card's link.
+      - key: SITEMAP_API_URL
+        value: https://galerie-java-api.onrender.com
       - key: VITE_JAVA_BACKEND_URL
         value: https://galerie-java-api.onrender.com
       - key: VITE_API_URL
@@ -253,17 +257,17 @@ services:
       # construction, so it adds no origin to the allowlist.
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://galerie-java-api.onrender.com; connect-src 'self' https://bgmxpublcoldebamstbj.supabase.co https://galerie-java-api.onrender.com https://galerie-keycloak.onrender.com https://maps.googleapis.com blob:; frame-src 'self' https://www.google.com https://galerie-keycloak.onrender.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+        value: "default-src 'self'; script-src 'self' https://*.clarity.ms https://c.bing.com; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://galerie-java-api.onrender.com https://*.clarity.ms https://c.bing.com; connect-src 'self' https://bgmxpublcoldebamstbj.supabase.co https://galerie-java-api.onrender.com https://galerie-keycloak.onrender.com https://maps.googleapis.com https://*.clarity.ms https://c.bing.com blob:; frame-src 'self' https://www.google.com https://galerie-keycloak.onrender.com; worker-src 'self' blob: https://*.clarity.ms; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
       - path: /*
         name: Strict-Transport-Security
         value: max-age=31536000; includeSubDomains
       # Trusted Types is staged in report-only mode, exactly as the container deployment sends it
-      # (see security-headers.conf): the built site reports webpack's own chunk loader setting
-      # `script.src`, which every navigation needs. Give webpack a policy with `output.trustedTypes`
-      # and then move the directive into the enforced policy above.
+      # (see security-headers.conf). Two pieces of code set a script `src`: webpack's chunk loader
+      # and the Clarity loader, each through its own named policy (`default`, `clarity`). Move the
+      # directives into the enforced policy above once the report is clean.
       - path: /*
         name: Content-Security-Policy-Report-Only
-        value: "require-trusted-types-for 'script'; trusted-types default"
+        value: "require-trusted-types-for 'script'; trusted-types default clarity"
       - path: /*
         name: X-Frame-Options
         value: SAMEORIGIN

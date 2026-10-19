@@ -16,6 +16,7 @@ const mockAuth = {
   logout: jest.fn(),
   register: jest.fn(),
   updateProfile: jest.fn(),
+  changePassword: jest.fn(),
   refreshAvatar: jest.fn().mockResolvedValue(undefined),
 };
 
@@ -41,8 +42,19 @@ function submitProfile() {
   fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("updateProfile"), "i") }));
 }
 
+function fillPasswordForm({ current = "old-passphrase", next = "new-passphrase", confirm = next }: { current?: string; next?: string; confirm?: string } = {}) {
+  fireEvent.change(screen.getByLabelText(i18n.t("currentPassword")), { target: { value: current } });
+  fireEvent.change(screen.getByLabelText(i18n.t("newPassword")), { target: { value: next } });
+  fireEvent.change(screen.getByLabelText(i18n.t("confirmPassword")), { target: { value: confirm } });
+}
+
+function submitPasswordForm() {
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("changePasswordButton"), "i") }));
+}
+
 beforeEach(() => {
   mockAuth.updateProfile.mockResolvedValue(undefined);
+  mockAuth.changePassword.mockResolvedValue(undefined);
   mockedUpload.mockResolvedValue(undefined);
   mockAuth.avatarUrl = undefined;
 });
@@ -143,5 +155,48 @@ describe("Profile page", () => {
 
     const alert = await screen.findByText(new RegExp(i18n.t("profileImageUploadFailed")));
     expect(alert).toHaveTextContent("csrf rejected");
+  });
+
+  it("changes the password after confirming the current one, and empties the form", async () => {
+    renderPage(<ProfilePage />, { auth: false });
+
+    fillPasswordForm();
+    submitPasswordForm();
+
+    await waitFor(() => expect(mockAuth.changePassword).toHaveBeenCalledWith("old-passphrase", "new-passphrase"));
+    expect(await screen.findByText(i18n.t("passwordChangeSucceeded"))).toBeInTheDocument();
+    // Nothing keeps a typed password in the DOM once the identity provider has accepted it.
+    expect(screen.getByLabelText(i18n.t("currentPassword"))).toHaveValue("");
+    expect(screen.getByLabelText(i18n.t("newPassword"))).toHaveValue("");
+  });
+
+  it("refuses a confirmation that does not match the new password", async () => {
+    renderPage(<ProfilePage />, { auth: false });
+
+    fillPasswordForm({ confirm: "something-else" });
+    submitPasswordForm();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(i18n.t("passwordMismatch"));
+    expect(mockAuth.changePassword).not.toHaveBeenCalled();
+  });
+
+  it("refuses the same password twice without asking the identity provider", async () => {
+    renderPage(<ProfilePage />, { auth: false });
+
+    fillPasswordForm({ next: "old-passphrase", confirm: "old-passphrase" });
+    submitPasswordForm();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(i18n.t("passwordUnchanged"));
+    expect(mockAuth.changePassword).not.toHaveBeenCalled();
+  });
+
+  it("says when the current password is wrong", async () => {
+    mockAuth.changePassword.mockRejectedValueOnce(new Error("invalid_credentials"));
+    renderPage(<ProfilePage />, { auth: false });
+
+    fillPasswordForm();
+    submitPasswordForm();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(i18n.t("passwordCurrentWrong"));
   });
 });

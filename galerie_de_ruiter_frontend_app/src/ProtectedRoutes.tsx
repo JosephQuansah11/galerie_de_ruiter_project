@@ -18,6 +18,7 @@ const AntiquesPage = lazy(() => import("./pages/antiques/AntiquesPage"));
 const AntiqueDetailPage = lazy(() => import("./pages/antiques/AntiqueDetailPage"));
 const AddNewAntique = lazy(() => import("./pages/antiques/AddNewAntique"));
 const AntiqueAdminPage = lazy(() => import("./pages/admin/AntiqueAdminPage"));
+const AntiqueFolderImportPage = lazy(() => import("./pages/admin/AntiqueFolderImportPage"));
 const CategoryAdminPage = lazy(() => import("./pages/admin/CategoryAdminPage"));
 const LocationAdminPage = lazy(() => import("./pages/admin/LocationAdminPage"));
 const AboutAdminPage = lazy(() => import("./pages/admin/AboutAdminPage"));
@@ -38,9 +39,13 @@ function RequireAccount() {
   const location = useLocation();
   const { t } = useTranslation();
   if (auth.loading) return <div className="loading-screen">{t("checkingSession")}</div>;
-  return auth.authenticated
-    ? <Outlet />
-    : <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
+  if (auth.authenticated) return <Outlet />;
+  // The page the visitor asked for travels in the query, not in router state: that is what the
+  // sign-in form reads, and it survives a reload (router state does not). Without it the form has
+  // nothing to say about why it appeared, and a successful sign-in lands on the landing page
+  // instead of the page that asked for an account.
+  const from = `${location.pathname}${location.search}`;
+  return <Navigate to={`/login?from=${encodeURIComponent(from)}`} replace />;
 }
 
 export function ProtectedRoutes() {
@@ -51,18 +56,19 @@ export function ProtectedRoutes() {
     <Route path="/chat" element={<ChatPage />} />
     <Route path="/about" element={<AboutPage />} />
     <Route path="/map" element={<LocationPage />} />
-    {/* The catalogue list is open too, and a visitor sees the first page of it: an account is what
-        buys going deeper - the pages after the first, a piece's own page, and acting on the
-        collection (see src/pages/antiques/CataloguePage.tsx and AntiqueRow.tsx). */}
+    {/* The catalogue list and a piece's own page are open too: a piece is the gallery's content,
+        and a page a visitor cannot reach without an account is a page a search engine cannot
+        index. The actions on it still belong to an account. */}
     <Route path="/antiques" element={<AntiquesPage />} />
+    <Route path="/antiques/:id" element={<AntiqueDetailPage />} />
 
     {/* Everything else needs a signed-in visitor. */}
     <Route element={<RequireAccount />}>
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/preferences" element={<PreferencesPage />} />
-      <Route path="/antiques/:id" element={<AntiqueDetailPage />} />
       <Route path="/admin/dashboard" element={<DashboardPage />} />
       <Route path="/admin/antiques/new" element={<AddNewAntique />} />
+      <Route path="/admin/antiques/import" element={<AntiqueFolderImportPage />} />
       <Route path="/admin/antiques" element={<AntiqueAdminPage />} />
       <Route path="/admin/categories" element={<CategoryAdminPage />} />
       <Route path="/admin/location" element={<LocationAdminPage />} />

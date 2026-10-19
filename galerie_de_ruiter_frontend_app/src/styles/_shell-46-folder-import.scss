@@ -1,0 +1,38 @@
+// Folder import: the picker, the artist row and the per-piece preview. The preview is a grid of
+// cards rather than a table so each piece keeps its thumbnail, title, description and price
+// together when the list folds on a phone.
+.folder-import-page { width: min(100%, 76rem); }
+.folder-import-intro { max-width: 48rem; color: var(--theme-text-secondary); }
+.folder-import-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; margin: 1.25rem 0 0.5rem; }
+.folder-import-summary { color: var(--theme-text-secondary); font-size: 0.9rem; }
+.folder-import-hint { margin: 0.25rem 0 0.75rem; color: var(--theme-text-secondary); font-size: 0.9rem; }
+.folder-import-help { font-size: 0.88rem; }
+.folder-import-issues { margin: 0.5rem 0 0; padding-left: 1.2rem; }
+.folder-import-grouping { margin: 1.25rem 0; }
+.folder-import-empty { display: grid; gap: 0.5rem; place-items: center; min-height: 9rem; padding: 1.5rem; border: 1px dashed var(--theme-border); color: var(--theme-text-secondary); text-align: center; }
+.folder-import-assign { margin: 1.25rem 0; border: 1px solid var(--theme-border); background: var(--theme-surface); }
+.folder-import-assign-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.folder-import-assign-heading h2 { margin: 0; font: 400 1.4rem Georgia, serif; }
+.folder-import-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem 1rem; margin: 1rem 0; }
+.folder-import-search { display: flex; align-items: center; gap: 0.45rem; flex: 1 1 16rem; max-width: 26rem; padding: 0.25rem 0.6rem; border: 1px solid var(--theme-border); border-radius: 999px; background: var(--theme-surface); }
+.folder-import-search .form-control { border: 0; background: transparent; box-shadow: none; }
+.folder-import-selected { color: var(--theme-text-secondary); font-size: 0.9rem; }
+.folder-import-list { display: grid; gap: 0.75rem; }
+.folder-import-row { display: grid; grid-template-columns: auto 7rem minmax(0, 1fr); align-items: start; gap: 1rem; padding: 0.85rem; border: 1px solid var(--theme-border); border-radius: 0.4rem; background: var(--theme-surface); }
+.folder-import-row.is-saved { opacity: 0.72; }
+.folder-import-row .form-check-input { margin-top: 0.35rem; }
+.folder-import-thumb { width: 7rem; height: 6rem; object-fit: contain; background: var(--theme-background); }
+.folder-import-fields { display: grid; gap: 0.5rem; min-width: 0; }
+.folder-import-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem 0.85rem; color: var(--theme-text-secondary); font-size: 0.82rem; }
+.folder-import-path { overflow-wrap: anywhere; }
+.folder-import-price { width: 8rem; }
+.folder-import-error, .folder-import-validation { color: #a12b36; font-size: 0.85rem; }
+.folder-import-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.25rem; }
+.folder-import-actions .btn { display: inline-flex; align-items: center; gap: 0.4rem; }
+.folder-import-progress { margin: 0.75rem 0 0; color: var(--theme-text-secondary); }
+@media (max-width: 640px) {
+  .folder-import-row { grid-template-columns: auto minmax(0, 1fr); }
+  .folder-import-thumb { grid-column: 2; width: 100%; height: 10rem; }
+  .folder-import-fields { grid-column: 1 / -1; }
+  .folder-import-summary { flex-basis: 100%; }
+}

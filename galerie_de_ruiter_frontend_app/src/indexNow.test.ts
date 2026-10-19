@@ -1,7 +1,11 @@
-import { execFileSync } from "node:child_process";
+import { execFile, execFileSync } from "node:child_process";
+import { createServer } from "node:http";
 import { mkdtempSync, readFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 /**
  * IndexNow ties two files together: the key a build submits, and the text file the search engines
@@ -46,5 +50,43 @@ describe("the IndexNow key", () => {
     // And it still wrote the sitemap, naming the origin it was built for rather than the gallery's.
     expect(readFileSync(join(outputDir, "robots.txt"), "utf8"))
       .toContain("Sitemap: http://localhost:3000/sitemap_index.xml");
+  });
+
+  it("adds every piece the API lists to the sitemap", async () => {
+    // A piece's own page is public content now, so a sitemap that stops at the five static pages
+    // leaves the gallery's inventory to be discovered one card at a time. A local server stands in
+    // for the API; the script is run asynchronously so the server can answer it.
+    const server = createServer((request, response) => {
+      if (request.url === "/api/antiques") {
+        response.writeHead(200, { "Content-Type": "application/json" });
+        response.end(JSON.stringify([{ id: "piece-1" }, { id: "piece-2" }]));
+        return;
+      }
+      response.writeHead(404).end();
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    const port = typeof address === "object" && address ? address.port : 0;
+    const outputDir = mkdtempSync(join(tmpdir(), "galerie-sitemap-pieces-"));
+
+    try {
+      await execFileAsync(process.execPath, [join(appRoot, "scripts", "generate-sitemap.mjs")], {
+        cwd: appRoot,
+        env: {
+          ...process.env,
+          SITE_URL: "http://localhost:3000",
+          SITEMAP_API_URL: `http://127.0.0.1:${port}`,
+          INDEXNOW: "",
+          SITEMAP_DIST_DIR: outputDir,
+        },
+      });
+
+      const sitemap = readFileSync(join(outputDir, "sitemap_index.xml"), "utf8");
+      expect(sitemap).toContain("<loc>http://localhost:3000/antiques</loc>");
+      expect(sitemap).toContain("<loc>http://localhost:3000/antiques/piece-1</loc>");
+      expect(sitemap).toContain("<loc>http://localhost:3000/antiques/piece-2</loc>");
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
   });
 });

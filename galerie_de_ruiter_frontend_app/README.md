@@ -65,9 +65,9 @@ The app is one HTML page, so what a crawler can reach is decided in five places:
   all of them, and the pages it named were reported as *canonical to a different URL* — which asks
   a search engine to drop them from the index. `src/staticDocument.test.ts` checks both ends: the
   document has none, and every page declares one that the router actually serves.
-- **`public/robots.txt`** — everything that answers with the sign-in page (`/admin`, `/antiques/`
-  — the pieces, not the list — `/cart`, `/wishlist`, `/profile`, `/preferences`) is closed to
-  crawlers. `/login` and
+- **`public/robots.txt`** — everything that answers with the sign-in page (`/admin`, `/cart`,
+  `/wishlist`, `/profile`, `/preferences`) is closed to crawlers. A piece's own page is open now,
+  because it is the gallery's content; the actions on it still need an account. `/login` and
   `/register` stay crawlable on purpose: they carry a `noindex` tag and a crawler that may not
   fetch them never sees it.
 - **`scripts/generate-sitemap.mjs`** — runs after webpack (`npm run build`) and writes
@@ -86,18 +86,18 @@ The app is one HTML page, so what a crawler can reach is decided in five places:
   addresses never compete for one page in the index.
 
 **What a visitor may do.** The landing page, the gallery story, the pop-up's address, the concierge
-chat and the first page of the collection are readable without an account, and they are the pages a
-crawler may index. Everything past that needs one: a piece's own page, the pages after the first of
-the collection list, the wishlist, the cart and the profile screens sit behind `RequireAccount` in
-`src/ProtectedRoutes.tsx`, which sends the visitor to the sign-in page with the page they wanted,
-and the sign-in page says why (`signInRequired`). The collection is gated in three places rather
-than one, because the list is public and the actions are not: `src/pages/antiques/CataloguePage.tsx`
-gives a visitor the first page and an invitation to sign in where the paging controls would be,
-`src/pages/antiques/AntiqueRow.tsx` sends the save and basket buttons to the sign-in page with the
-list as the page to come back to, and the like control lives on a piece's own page, which a visitor
-never reaches. The navigation follows the same line: `src/components/NavigationLinks.tsx` shows a
-visitor the four public destinations and hides the rest rather than offering a link that only
-bounces them.
+chat, the first page of the collection and a piece's own page are readable without an account, and
+they are the pages a crawler may index. Everything past that needs one: the pages after the first of
+the collection, the basket, the wishlist, the profile and the admin. On a piece's page the story,
+photographs and price are public; saving it, liking it or putting it in the basket is what sends the
+visitor to sign in. The collection is gated where an action happens rather than at the page:
+`src/pages/antiques/CataloguePage.tsx` gives a visitor the first page and an invitation to sign in
+where the paging controls would be, `src/pages/antiques/AntiqueRow.tsx` and
+`src/pages/antiques/DetailSummary.tsx` send the save, basket and like buttons to the sign-in page
+with the page they are on as the one to come back to, and the admin, basket, wishlist, profile and
+preferences screens sit behind `RequireAccount` in `src/ProtectedRoutes.tsx`. The navigation follows
+the same line: `src/components/NavigationLinks.tsx` shows a visitor the four public destinations and
+hides the rest rather than offering a link that only bounces them.
 
 The site's public origin lives in `site.config.mjs`, in one place, because three build steps need
 it: the sitemap (and the `Sitemap:` line in `robots.txt`), the absolute `og:url`/`og:image` of the
@@ -142,23 +142,39 @@ would take the property with it, which is why `src/staticDocument.test.ts` pins 
 Webmaster Tools verifies the same origin the same way, through the `msvalidate.01` tag beside it, and
 that one is pinned by the same test.
 
-Those are the pages that can be indexed. Everything else needs an account and answers with the
-sign-in page, which carries `noindex`, so a crawler that follows `/antiques` finds the login page
-and leaves; `robots.txt` closes those paths so it does not spend the crawl budget finding that
-out. Indexing the collection itself means making it readable without an account - the note below
-says how.
+Every page the gallery wants indexed is now readable without an account: the landing page, the
+collection list and each piece, the story, the map and the chat. A crawler that follows a catalogue
+card or a related piece follows a real `<a href>`; the sitemap script reads `GET /api/antiques` at
+build time and adds each piece, so a piece is discoverable even before a crawler follows a card.
+Saving, buying and liking still send the visitor to sign in, and the admin, basket, wishlist,
+profile and preferences pages stay behind the account and in `robots.txt`'s Disallow list.
 
-The host is a free `cloud-ip.cc` subdomain. Search engines give such hostnames less weight than
-a domain you own, and the provider can reassign one, so a custom domain is the durable answer;
-nothing in the build depends on which one it is, because `site.config.mjs` is the only place that
-names it.
+**The remaining limit is that this is a client-rendered single page.** The server sends the landing
+document for `/antiques`, `/about`, `/map` and `/chat`; the bundle replaces the title, description,
+canonical and content after it runs. Google renders JavaScript, so those pages can be indexed, but a
+prerender of the public routes would make the first HTML route-specific and remove the dependence on
+rendering. That is the next step if ranking on those pages matters.
 
-The collection is half open today: the list is public and belongs in the sitemap, while a piece's own
-page is not. Opening the pieces to visitors means removing the `Disallow: /antiques/` line from
-`robots.txt`, dropping `/antiques/:id` from the `RequireAccount` group in `src/ProtectedRoutes.tsx`
-and adding the pieces to `publicPages` in the sitemap script (the API's `GET /api/antiques` lists
-them, so the script can fetch them at build time). The API already answers `GET /api/antiques`
-without a token, so this is a frontend decision, not a backend one.
+**A custom domain is still the durable answer.** `galeriederuiter.cloud-ip.cc` is a free subdomain;
+search engines give such hostnames less weight than a domain the gallery owns, and the provider can
+reassign one. When the gallery buys one, change it in one place per system:
+
+1. `site.config.mjs` (`PRODUCTION_ORIGIN`) and `SITE_URL` in `render.yaml`, then rebuild: the
+   canonical URLs, sitemap, `robots.txt`, Open Graph tags and the static document are built from it.
+2. Render → `galerie-frontend` → Custom Domains: add the apex and `www`, and make one redirect to the
+   other so two hosts never compete.
+3. Google Search Console: add the new property, replace the `google-site-verification` token in
+   `index.html` with the new property's token, submit `/sitemap_index.xml`, and keep the old sitemap
+   until the redirects are in place. Bing Webmaster Tools needs the same for `msvalidate.01`.
+4. Keycloak's frontend client: add the new origin to Valid redirect URIs and Valid post logout
+   redirect URIs (and the realm file's `post.logout.redirect.uris`).
+5. Supabase Auth → URL Configuration: Site URL and additional redirect URLs.
+6. `FRONTEND_ORIGIN` on `galerie-java-api` (CORS), plus the `VITE_*` values and `SITEMAP_API_URL`
+   in `render.yaml`.
+7. `PRODUCTION_HOST` in `src/services/clarity.ts`, and the Google Maps key's HTTP referrer
+   restrictions.
+8. The CSP in `security-headers.conf` and `render.yaml` names origins explicitly; check
+   `connect-src` for the API and Keycloak and `frame-src` for Keycloak.
 
 ### IndexNow
 
@@ -310,6 +326,13 @@ four things were behind that. All four are fixed:
   (Cormorant Garamond 400 for the heading, DM Sans 400 for the body copy). The type used to come
   from `fonts.googleapis.com` and `fonts.gstatic.com`, which cost two extra origins and arrived late
   enough to swap the text after it had already been painted.
+- **Pictures are sized for the slot and cached for a year.** Every card, related strip, basket,
+  wishlist and admin inventory row asks for the 400-pixel `/thumbnail` copy (about 40 KB), and the
+  catalogue card offers 400w/800w through `srcset`. A piece's own page offers 800w and 1600w
+  copies and fetches the original only when a visitor asks for it. Antique, welcome-slider and About
+  image responses send `Cache-Control: public, max-age=31536000, immutable`, so a returning visitor
+  does not download them again. The main piece image and the first slider slide load eagerly with
+  `fetchpriority="high"`; everything below the fold is lazy and decodes off the main thread.
 
 Still open, in order of size: the compiled stylesheet is one ~314 KB file of which Lighthouse finds
 roughly 289 KiB unused, because `_navigation.scss` imports all of Bootstrap and the chrome of every
@@ -386,15 +409,72 @@ declare no `controlId`, so Bootstrap cannot wire the label to the control inside
 and `HomeAdminPage` show the shape the rest should follow - `controlId` on the group, or an explicit
 `id` on the control - and the audit does not reach those screens, because they need an account.
 
-## Security headers
+## Importing a folder of pieces
+
+An admin can add a whole collection at once from **Antique inventory → Import folder** (also in the
+admin navigation). The browser reads the chosen folder and all of its subfolders; nothing is
+uploaded until the preview has been checked and **Import** is pressed.
+
+A folder the importer understands looks like this:
+
+```text
+Collection/                 <- the folder the admin picks
+  pieces.csv                <- one or more CSVs, at any depth
+  Mirrors/
+    Carved mirror/
+      front.jpg
+      back.jpg
+      details/close.jpg
+  Lamps/
+    Brass lamp/
+      front.jpg
+```
+
+```csv
+file,title,description,price
+Mirrors/Carved mirror,Carved walnut mirror,Late 19th century,480.50
+Lamps/Brass lamp/front.jpg,Brass reading lamp,Art deco,"1,250.00"
+```
+
+- **Columns** are matched by name, in English, Dutch, French or German. `file`, `filename`,
+  `image`, `photo`, `bestand`, `afbeelding`, `datei`, `fichier` and `path` name a file or folder;
+  `title`, `titel`, `titre`, `naam` and `name` are the title; `description`, `beschrijving`,
+  `omschrijving`, `beschreibung` are the description; `price`, `prijs`, `preis` and `prix` are the
+  price. A `name` column is read as filenames when every value looks like one, and as titles
+  otherwise.
+- **Matching** tries the full image path, then the folder path, then an image name, then the
+  folder name, then the title. Paths may be written from the item folder (`Mirrors/Carved mirror`),
+  so the selected root's own name is not needed. If the same filename exists in two folders, use
+  the folder path in the CSV; the importer will not guess.
+- **Prices** may be `480`, `480.50`, `480,50`, `1.250,00` or `1,250.00`; a currency symbol is
+  ignored. A row without a readable price is flagged and stays editable.
+- **Grouping.** In folder mode (the default) all photographs in an item folder become one piece,
+  and a `details/` subfolder stays with it. A folder that holds no photographs directly, such as a
+  category folder, does not merge its children. Images loose in the selected root become pieces of
+  their own. Switch to **One piece per image** when the CSV has one row per photograph.
+- **Artist.** Artists are required by the API, so the importer cannot save a piece without one.
+  Every row is selected by default; search for an artist and choose a result to assign that artist
+  to the selection. Untick the rows that should keep another artist, then search and choose again.
+  The search box filters the list, and **Select all** applies to the filtered rows. A new artist can
+  be created in the same screen.
+- **Before importing**, each row shows whether a CSV row matched, how many photographs it has and
+  its folder. Title, description and price can be corrected inline.
+- **Uploads** run one piece at a time and show progress. A failure leaves that row selected with its
+  error; retrying continues from where it stopped and does not create the piece twice. Images are
+  the same formats and 8 MB limit as the single-piece form.
+- **Encoding.** CSV files may be UTF-8 (with or without BOM), Windows-1252 (what Excel often writes)
+  or UTF-16, with comma, semicolon or tab delimiters. Quoted fields and newlines inside a
+  description are supported.
+
+
 
 `nginx.conf` sends these on every response (the container deployment; see below for the static
 one):
 
 | Header | Value |
 |---|---|
-| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: <API>; connect-src 'self' <API> <Keycloak> https://maps.googleapis.com; frame-src 'self' https://www.google.com <Keycloak>; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests` |
-| `Content-Security-Policy-Report-Only` | `require-trusted-types-for 'script'; trusted-types default` |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self' https://*.clarity.ms https://c.bing.com; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: <API> https://*.clarity.ms https://c.bing.com; connect-src 'self' <API> <Keycloak> https://maps.googleapis.com https://*.clarity.ms https://c.bing.com; frame-src 'self' https://www.google.com <Keycloak>; worker-src 'self' blob: https://*.clarity.ms; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests` |
+| `Content-Security-Policy-Report-Only` | `require-trusted-types-for 'script'; trusted-types default clarity` |
 | `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` |
 | `X-Frame-Options` | `SAMEORIGIN` |
 | `Cross-Origin-Opener-Policy` | `same-origin` |
@@ -523,15 +603,32 @@ require-trusted-types-for <- trusted-types-sink
 
 That is `script.src = …` for a lazily loaded route, which every navigation needs. `webpack.config.js`
 now passes `output.trustedTypes: { policyName: "default" }`, so webpack creates that policy and sets
-`src` through it, which is exactly what the report-only header allows (`trusted-types default`) — the
-report is clean. A policy named `galerie`, the first draft of this plan, would need the header widened
-to allow that name as well; `default` is the name a browser calls on its own, and one policy name to
-keep in step between a config file and two header files is one too many.
+`src` through it. The Clarity loader (`src/services/clarity.ts`) also sets a script `src`, and it
+creates a policy named `clarity` for it; the report-only header names both (`trusted-types default
+clarity`). One policy name to keep in step between the webpack config and two header files would be
+one too many, so each sink names its own policy and the header lists them.
 
 What is left of the rollout is the last step: move `require-trusted-types-for 'script'; trusted-types
-default` into the enforced `Content-Security-Policy` in `security-headers.conf` and `render.yaml`,
-after re-running the collector against the built site on the landing page **and** on a lazy route
-(`/login`), plus a page that mounts the 3D viewer — and then delete the report-only header.
+default clarity` into the enforced `Content-Security-Policy` in `security-headers.conf` and
+`render.yaml`, after re-running the collector against the built site on the landing page **and** on a
+lazy route (`/login`), plus a page that mounts the 3D viewer — and then delete the report-only
+header. The collection is also worth running once with analytics accepted, because Clarity's own
+script runs in the page after the loader has requested it.
+
+## Analytics
+
+Microsoft Clarity measures how the gallery is used. It is deliberately not loaded with the document:
+Clarity records sessions and sets cookies, so `src/services/clarity.ts` starts it only after the
+visitor accepts the banner (`src/components/AnalyticsConsent.tsx`). The answer is remembered in
+`galerie-analytics-consent`, the same switch is offered under Preferences, and declining means the
+vendor tag is never requested — not merely told to behave.
+
+The loader is part of the bundle rather than a snippet pasted into `index.html`, which keeps
+`script-src` free of `'unsafe-inline'`; the script itself comes from
+`https://www.clarity.ms/tag/z0549z8r1v`. That project id belongs to
+`galeriederuiter.cloud-ip.cc` only: the loader refuses every other hostname, so previews, tests and
+localhosts never send data. Withdrawing consent calls Clarity's `consent` command, which deletes its
+cookies and stops tracking until it is granted again.
 
 ### Rolling out HSTS
 

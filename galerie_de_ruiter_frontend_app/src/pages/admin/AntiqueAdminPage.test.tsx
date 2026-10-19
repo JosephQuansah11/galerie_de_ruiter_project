@@ -55,6 +55,13 @@ describe("Antique administration page", () => {
     expect(screen.getByText(new RegExp(i18n.t("uncategorized")))).toBeInTheDocument();
   });
 
+  it("offers the folder import beside the single-piece form", async () => {
+    renderPage(<AntiqueAdminPage />);
+
+    expect(await screen.findByRole("link", { name: i18n.t("importFolder") }))
+      .toHaveAttribute("href", "/admin/antiques/import");
+  });
+
   it("searches the inventory and clears the search again", async () => {
     renderPage(<AntiqueAdminPage />);
     await screen.findByText("Carved walnut mirror");

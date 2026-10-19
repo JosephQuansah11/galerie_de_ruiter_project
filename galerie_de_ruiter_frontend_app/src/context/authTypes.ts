@@ -1,4 +1,4 @@
-import type { UserProfile, UserProfileUpdate } from "@/types/types";
+import type { Registration, UserProfile, UserProfileUpdate } from "@/types/types";
 
 export interface AuthContextValue {
   authenticated: boolean;
@@ -15,5 +15,14 @@ export interface AuthContextValue {
   signIn: (usernameOrEmail: string, password: string) => Promise<void>;
   logout: () => void;
   updateProfile: (profile: UserProfileUpdate) => Promise<void>;
-  register: (profile: UserProfile & { password: string }) => Promise<void>;
+  /**
+   * Creates an account under a real address. Resolves true when the project signed the visitor in
+   * straight away, and false when it sent a confirmation link instead.
+   */
+  register: (registration: Registration) => Promise<boolean>;
+  /**
+   * Changes the signed-in account's password after checking the current one. The check costs a
+   * password grant, and it is what stops someone at an unlocked browser from locking the owner out.
+   */
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }

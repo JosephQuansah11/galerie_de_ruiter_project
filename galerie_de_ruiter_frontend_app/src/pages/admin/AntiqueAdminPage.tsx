@@ -1,8 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Alert, Form, Modal, Spinner } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
-import { Check, Plus, Search, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Check, FolderUp, Plus, Search, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { deleteAntique as deleteAntiqueRequest, deleteAntiqueImage, getAllAntiques, reorderAntiqueImages, setAntiqueSold as setAntiqueSoldRequest, updateAntique as updateAntiqueRequest, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 import { useTranslation } from "react-i18next";
@@ -150,6 +150,9 @@ export default function AntiqueAdminPage() {
             <Search size={16} aria-hidden="true" /><span>{t("search")}</span>
           </button>
         </form>
+        <Link className="btn btn-outline-secondary inventory-add-button" to="/admin/antiques/import">
+          <FolderUp size={16} /> {t("importFolder")}
+        </Link>
         <Button as="button" className="btn btn-primary inventory-add-button" onClick={() => navigate("/admin/antiques/new")}>
           <Plus size={16} /> {t("addAntique")}
         </Button>

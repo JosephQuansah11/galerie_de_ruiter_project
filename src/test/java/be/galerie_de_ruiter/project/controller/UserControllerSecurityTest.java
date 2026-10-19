@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -31,6 +32,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -83,6 +85,19 @@ class UserControllerSecurityTest {
     void anAnonymousRequestCannotReadAProfile() throws Exception {
         mvc.perform(get("/api/me"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void anUnauthenticatedRequestDoesNotCreateAServerSession() throws Exception {
+        MockHttpServletRequest request = mvc.perform(get("/api/me"))
+                .andExpect(status().isUnauthorized())
+                .andReturn().getRequest();
+
+        // The API is proved by its token, not by a session. Spring's default policy saves the
+        // refused request in an HttpSession so a form login could return the visitor to it, and
+        // every anonymous client that does not send the cookie back - every crawler and every
+        // expired tab - leaves one behind in the container's heap until it times out.
+        assertThat(request.getSession(false)).isNull();
     }
 
     @Test

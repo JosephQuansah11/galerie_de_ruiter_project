@@ -2,15 +2,13 @@
 #
 # Everything behind an account is closed to crawlers: those routes answer with the sign-in
 # page, so crawling them only spends the crawl budget. What a visitor reaches without an
-# account - the first list of the collection, the landing page, the gallery story, the pop-up's
-# address and the concierge chat - is listed in sitemap.xml, whose URL is appended below at build
-# time by scripts/generate-sitemap.mjs.
+# account - the landing page, the gallery story, the pop-up's address, the concierge chat, the
+# collection list and a piece's own page - is listed in sitemap.xml, whose URL is appended below
+# at build time by scripts/generate-sitemap.mjs.
 #
-# The collection is half open: the list is public and belongs in the sitemap, and a piece's own page
-# is allowed here as well - but it still answers with the sign-in page, which carries noindex, so it
-# is not in the sitemap either. Indexing the pieces means dropping `/antiques/:id` from the
-# RequireAccount group in src/ProtectedRoutes.tsx and adding them to publicPages in the sitemap
-# script; robots.txt is already open to them.
+# The collection is open: the list and a piece's own page are public, and the API's
+# GET /api/antiques gives the sitemap script the ids to list. The actions on a piece - saving it,
+# putting it in the basket, liking it - are what still ask for an account.
 User-agent: *
 
 Disallow: /admin
@@ -18,6 +16,7 @@ Disallow: /cart
 Disallow: /wishlist
 Disallow: /profile
 Disallow: /preferences
+Disallow: /logout
 
 Allow: /
 Allow: /antiques

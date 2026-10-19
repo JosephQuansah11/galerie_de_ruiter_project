@@ -58,6 +58,13 @@ describe("Catalogue page", () => {
     expect(screen.getByText(i18n.t("priceOnRequest"))).toBeInTheDocument();
   });
 
+  it("gives each card a real link a crawler can follow", async () => {
+    renderPage(<AntiquesPage />, { shopping: true });
+
+    expect(await screen.findByRole("link", { name: "Carved walnut mirror" })).toHaveAttribute("href", "/antiques/1");
+    expect(screen.getByRole("link", { name: "Brass reading lamp" })).toHaveAttribute("href", "/antiques/2");
+  });
+
   it("lays the collection out as a list of rows rather than grid tiles", async () => {
     renderPage(<AntiquesPage />, { shopping: true });
     await screen.findByText("Carved walnut mirror");

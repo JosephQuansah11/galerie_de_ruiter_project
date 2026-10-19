@@ -1,4 +1,6 @@
 .catalogue-card h2 { margin: 0.45rem 0; font: 1.45rem Georgia, serif; }
+// The card's title is a real link, so a crawler can follow it. It keeps the card's look.
+.catalogue-card h2 a { color: inherit; text-decoration: none; }
 .catalogue-card p { min-height: 3rem; color: var(--theme-text-secondary); }
 .catalogue-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.2rem; }
 .catalogue-card-actions, .detail-actions, .shopping-row-actions { display: flex; align-items: center; gap: 0.5rem; }

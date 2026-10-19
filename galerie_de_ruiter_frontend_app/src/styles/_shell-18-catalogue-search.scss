@@ -1,0 +1,50 @@
+// The catalogue's search: one field with its icon inside and its button beside it, at one height
+// whatever the screen. It had no layout of its own and stretched to its container's height.
+.catalogue-search {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 34rem;
+  height: 3rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(60, 31, 37, 0.18);
+  border-radius: var(--theme-radius-lg);
+  background: var(--theme-surface);
+  overflow: hidden;
+  .catalogue-search-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 3rem;
+    color: var(--theme-text-secondary);
+    background: #efe7e1;
+  }
+  input {
+    flex: 1 1 auto;
+    // Without this a flex child refuses to shrink below its content, which pushed the button off
+    // the row on a narrow screen.
+    min-width: 0;
+    height: 100%;
+    padding: 0 0.85rem;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--theme-text);
+    font-size: 1rem;
+  }
+  .catalogue-search-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+    padding: 0 1rem;
+    border: 0;
+    background: var(--theme-primary);
+    color: #fff;
+  }
+}
+// On a phone the button is an icon: the word would take the space the field needs.
+@media (max-width: 30rem) {
+  .catalogue-search .catalogue-search-submit span { display: none; }
+}

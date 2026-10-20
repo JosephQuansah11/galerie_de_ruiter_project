@@ -21,7 +21,16 @@ export async function addAntique(antique: AntiqueForm): Promise<Antique> {
   invalidateCache("antiques");
   return response.data;
 }
-export async function updateAntique(id: string, antique: Pick<AntiqueForm, "title" | "description" | "price">): Promise<Antique> {
+export async function updateAntique(id: string, antique: {
+  title: string;
+  description?: string | null;
+  /** Omit to keep the piece's current price. */
+  price?: number;
+  /** Omit to keep the piece's current artist. */
+  artistId?: string;
+  /** Omit to keep the piece's current category. */
+  categoryId?: string;
+}): Promise<Antique> {
   const response = await axiosInstance.put<Antique>(`${backendBaseURL}/api/antiques/${id}`, antique, {
     headers: { ...(await csrfHeaders()), "Content-Type": "application/json" },
   });

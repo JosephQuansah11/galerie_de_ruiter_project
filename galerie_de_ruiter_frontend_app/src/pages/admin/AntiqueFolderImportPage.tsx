@@ -14,7 +14,10 @@ import { useFolderImport, type ImportGroupDraft } from "./antiques/folderImport/
 
 function artistName(group: ImportGroupDraft): string {
   const artist = group.artist;
-  return artist ? [artist.firstName, artist.middleName, artist.lastName].filter(Boolean).join(" ") : "";
+  if (artist) return [artist.firstName, artist.middleName, artist.lastName].filter(Boolean).join(" ");
+  const existing = group.existing?.artist;
+  return existing?.displayName ?? existing?.name
+    ?? [existing?.firstName, existing?.middleName, existing?.lastName].filter(Boolean).join(" ");
 }
 
 /**
@@ -45,12 +48,20 @@ export default function AntiqueFolderImportPage() {
   const selected = imported.groups.filter((group) => group.selected && group.status !== "saved");
   const allVisibleSelected = visible.length > 0
     && visible.every((group) => group.selected || group.status === "saved");
-  const missingArtist = selected.some((group) => !group.artist);
-  const missingCategory = selected.some((group) => !group.categoryId);
-  const missingDetails = selected.some((group) =>
-    !group.title.trim() || !group.price.trim() || !Number.isFinite(Number(group.price)) || Number(group.price) < 0
-    || group.description.length > ANTIQUE_DESCRIPTION_MAX_LENGTH);
-  const canImport = selected.length > 0 && !missingArtist && !missingCategory && !missingDetails && !imported.importing && !imported.reading;
+  // A row that matches an existing piece already has its data; an import field that is blank must
+  // not be treated as a value to erase. A new piece is the only thing that needs all three.
+  const missingArtist = selected.some((group) => !group.existing && !group.artist);
+  const missingCategory = selected.some((group) => !group.existing && !group.categoryId);
+  const missingDetails = selected.some((group) => {
+    const price = group.price.trim();
+    if (!group.title.trim() || group.description.length > ANTIQUE_DESCRIPTION_MAX_LENGTH) return true;
+    if (!price) return !group.existing;
+    return !Number.isFinite(Number(price)) || Number(price) < 0;
+  });
+  const ambiguousExisting = selected.some((group) => group.existingAmbiguous);
+  const canImport = selected.length > 0 && !missingArtist && !missingCategory && !missingDetails
+    && !ambiguousExisting && !imported.importing && !imported.reading
+    && !imported.existingLoading && !imported.existingError;
 
   const chooseFolder = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.currentTarget.files ?? []);
@@ -69,6 +80,7 @@ export default function AntiqueFolderImportPage() {
   return <section className="admin-page folder-import-page">
     <InventoryHeading administration={t("administration")} title={t("importFolderTitle")} />
     <p className="folder-import-intro">{t("importFolderIntro")}</p>
+    {imported.existingError && <Alert variant="warning">{t(imported.existingError)}</Alert>}
     <input ref={input} type="file" multiple className="visually-hidden" aria-label={t("chooseFolder")}
       onChange={chooseFolder} tabIndex={-1} />
     <input ref={csvInput} type="file" multiple accept=".csv,text/csv" className="visually-hidden"
@@ -205,6 +217,8 @@ export default function AntiqueFolderImportPage() {
                 <Badge bg={group.record ? "success" : "secondary"}>
                   {group.record ? t("csvMatched") : t("csvMissing")}
                 </Badge>
+                {group.existing && <Badge bg="info">{t("importWillUpdate")}</Badge>}
+                {group.existingAmbiguous && <Badge bg="warning">{t("importExistingAmbiguous")}</Badge>}
                 <span>{t("imagesCount", { count: group.images.length })}</span>
                 <span className="folder-import-path" title={group.label}>{group.label}</span>
                 <span>{group.artist ? artistName(group) : t("noArtistAssigned")}</span>
@@ -242,13 +256,20 @@ export default function AntiqueFolderImportPage() {
       {selected.length > 0 && missingArtist && <p className="folder-import-validation">{t("importNeedsArtist")}</p>}
       {selected.length > 0 && missingCategory && <p className="folder-import-validation">{t("importNeedsCategory")}</p>}
       {selected.length > 0 && missingDetails && <p className="folder-import-validation">{t("importNeedsDetails")}</p>}
+      {selected.length > 0 && ambiguousExisting && <p className="folder-import-validation">{t("importExistingAmbiguous")}</p>}
       {imported.progress && <p className="folder-import-progress" role="status">
         {t("importingPieces", imported.progress)}
       </p>}
       {imported.result && <Alert variant={imported.result.failed > 0 ? "warning" : "success"}>
         {imported.result.failed > 0
-          ? t("importPartial", { created: imported.result.imported, failed: imported.result.failed })
-          : t("importComplete", { count: imported.result.imported })}
+          ? t("importPartial", {
+            created: imported.result.imported,
+            updated: imported.result.updated,
+            failed: imported.result.failed,
+          })
+          : imported.result.updated > 0
+            ? t("importCompleteMixed", { created: imported.result.imported, updated: imported.result.updated })
+            : t("importComplete", { count: imported.result.imported })}
       </Alert>}
     </>}
   </section>;

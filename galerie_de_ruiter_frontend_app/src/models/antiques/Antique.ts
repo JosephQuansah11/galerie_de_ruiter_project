@@ -7,6 +7,9 @@ type Antique = {
   imageUrl?: string | null;
   artist?: {
     id?: string;
+    firstName?: string;
+    lastName?: string;
+    middleName?: string | null;
     name?: string;
     displayName?: string;
   } | null;

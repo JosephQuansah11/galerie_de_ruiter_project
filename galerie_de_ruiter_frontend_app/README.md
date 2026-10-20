@@ -502,11 +502,20 @@ Lamps/Brass lamp/front.jpg,Brass reading lamp,Art deco,"1,250.00"
   to the selection. Untick the rows that should keep another artist, then search and choose again.
   The search box filters the list, and **Select all** applies to the filtered rows. A new artist can
   be created in the same screen.
-- **Category.** Every selected piece needs a category before it can be imported. A `category` column
+- **Category.** Every new piece needs a category before it can be imported. A `category` column
   in the CSV is matched by name - a main category, a child, or the full path (`Mirrors / Wall
   mirrors`, `Mirrors > Wall mirrors`) - and a name the gallery does not have is listed as an issue.
   Select rows and choose a category in the assignment card to give them one at once, or pick the
   category on the row itself; main categories and subcategories are in the same list.
+- **Existing pieces.** The import matches a folder or CSV title against the inventory,
+  case- and accent-insensitively. A match updates that piece instead of creating a duplicate:
+  title, description, price, artist and category are updated where the import supplies them, blank
+  fields keep what the piece already has, and its photographs are appended to the existing ones.
+  The import waits for the inventory list and pauses with a warning if it cannot load it, so it
+  cannot create duplicates while the check is unavailable. Two folders with the same title become
+  one row and one update, with all their photographs; if their details disagree, the first is used
+  and the issue list flags the title for review. Re-importing the same folder appends its
+  photographs again - there is no content-hash check yet.
 - **Before importing**, each row shows whether a CSV row matched, how many photographs it has and
   its folder. Title, description and price can be corrected inline.
 - **Uploads** run one piece at a time and show progress. A failure leaves that row selected with its

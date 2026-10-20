@@ -129,8 +129,19 @@ public class AntiqueService {
     public AntiqueResponse update(UUID id, AntiqueUpdateRequest request) {
         Antique antique = findAntique(id);
         antique.setTitle(request.title().trim());
-        antique.setDescription(request.description());
-        antique.setPrice(request.price());
+        if (request.description() != null) antique.setDescription(request.description());
+        if (request.price() != null) antique.setPrice(request.price());
+        // Optional fields: a null value means "leave what the piece already has", which is what
+        // lets an import update a title or story without erasing a price, artist or category it
+        // did not know about.
+        if (request.artistId() != null) {
+            antique.setArtist(designerRepository.findById(request.artistId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Designer not found: " + request.artistId())));
+        }
+        if (request.categoryId() != null) {
+            antique.setCategory(categoryRepository.findById(request.categoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + request.categoryId())));
+        }
         return AntiqueResponse.from(antiques.save(antique));
     }
 

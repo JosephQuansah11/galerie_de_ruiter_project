@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { addAntique, getVisibleCategories, uploadAntiqueImage } from "@/apis/backend_api";
+import { addAntique, getAllAntiques, getVisibleCategories, updateAntique, uploadAntiqueImage } from "@/apis/backend_api";
+import type Antique from "@/models/antiques/Antique";
 import type { Category, Designer } from "@/models/antiques/Antique";
 import { publishContentUpdate } from "@/services/contentUpdates";
 import { saveErrorKey } from "@/pages/antiques/antiqueSaveErrors";
 import { categoryIdFor, matchCategory } from "./categoryMatching";
+import { existingIndex, matchExisting } from "./existingMatching";
 import {
   buildImportGroups,
   filePath,
@@ -23,15 +25,31 @@ export type ImportGroupDraft = ImportGroup & {
   /** The category the piece is created under; empty until the admin assigns one. */
   categoryId: string;
   status: ImportStatus;
-  /** The piece this row created; kept so a retry does not create it twice. */
+  /** The piece this row created or updated; kept so a retry does not save it twice. */
   createdId?: string;
   uploadedCount: number;
   error?: string;
   previewUrl: string;
+  /** An existing piece with the same title, if there is exactly one. */
+  existing?: Antique;
+  /** More than one existing piece has this title, so the import will not guess. */
+  existingAmbiguous?: boolean;
 };
 
 export type ImportProgress = { current: number; total: number; title: string };
-export type ImportResult = { imported: number; failed: number };
+export type ImportResult = { imported: number; failed: number; updated: number };
+
+/** The existing piece's artist in the shape the import's artist picker and API use. */
+function artistFromExisting(antique?: Antique): Designer | undefined {
+  const artist = antique?.artist;
+  if (!artist?.id) return undefined;
+  return {
+    id: artist.id,
+    firstName: artist.firstName ?? artist.name ?? artist.displayName ?? "",
+    lastName: artist.lastName ?? "",
+    middleName: artist.middleName ?? undefined,
+  };
+}
 
 function readWithFileReader(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -88,6 +106,9 @@ export function useFolderImport() {
   const [issues, setIssues] = useState<ImportIssue[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesError, setCategoriesError] = useState<string>();
+  const [existingAntiques, setExistingAntiques] = useState<Antique[]>([]);
+  const [existingLoading, setExistingLoading] = useState(true);
+  const [existingError, setExistingError] = useState<string>();
   const [grouping, setGroupingState] = useState<CsvGrouping>("folder");
   const [folderName, setFolderName] = useState("");
   const [imageCount, setImageCount] = useState(0);
@@ -106,6 +127,8 @@ export function useFolderImport() {
   folderFilesRef.current = folderFiles;
   const extraCsvFilesRef = useRef(extraCsvFiles);
   extraCsvFilesRef.current = extraCsvFiles;
+  const existingIndexRef = useRef<Map<string, Antique[]>>(new Map());
+  existingIndexRef.current = existingIndex(existingAntiques);
   /** Lets a newer folder/CSV selection cancel an older, still-reading one. */
   const readRun = useRef(0);
   const previews = useRef<string[]>([]);
@@ -121,6 +144,25 @@ export function useFolderImport() {
       .catch(() => setCategoriesError("categoriesCouldNotLoad"));
   }, []);
 
+  // The import is an upsert. Without the existing inventory, a title that is already in the
+  // gallery would be created a second time, so the page waits for this list before importing.
+  useEffect(() => {
+    let active = true;
+    getAllAntiques()
+      .then((items) => {
+        if (!active) return;
+        setExistingAntiques(items);
+        setExistingError(undefined);
+      })
+      .catch(() => {
+        if (active) setExistingError("importExistingLoadFailed");
+      })
+      .finally(() => {
+        if (active) setExistingLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+
   // A folder can be read before the category list arrives. Once it does, the categories the CSV
   // named are filled in; a piece the admin already assigned keeps their choice.
   useEffect(() => {
@@ -128,8 +170,10 @@ export function useFolderImport() {
     setGroups((current) => {
       let changed = false;
       const next = current.map((group) => {
-        if (group.categoryId || !group.category) return group;
-        const id = categoryIdFor(group.category, categories);
+        if (group.categoryId) return group;
+        const source = group.category || group.existing?.category;
+        if (!source) return group;
+        const id = categoryIdFor(source, categories);
         if (!id) return group;
         changed = true;
         return { ...group, categoryId: id };
@@ -138,21 +182,61 @@ export function useFolderImport() {
     });
   }, [categories]);
 
+  /**
+   * Adds what the existing piece already knows. A blank import field is filled from the existing
+   * record so it cannot overwrite it with nothing; a value the import does supply wins. The artist
+   * and category are filled the same way, which is what lets a row whose CSV only has a title and
+   * price update an existing piece without asking the curator to enter everything again.
+   */
+  function attachExisting(group: ImportGroupDraft): ImportGroupDraft {
+    const match = matchExisting(existingIndexRef.current, group.title);
+    const existing = match.existing;
+    const existingCategory = existing?.category ? categoryIdFor(existing.category, categoriesRef.current) : "";
+    return {
+      ...group,
+      existing,
+      existingAmbiguous: match.ambiguous,
+      artist: group.artist ?? artistFromExisting(existing),
+      categoryId: group.categoryId || categoryIdFor(group.category, categoriesRef.current) || existingCategory,
+      price: group.price.trim() ? group.price : existing?.price != null ? String(existing.price) : "",
+      description: group.description.trim() ? group.description : existing?.description ?? "",
+    };
+  }
+
+  // The inventory list can arrive after a folder has been read, and a title can be edited after
+  // either. Re-evaluate the match when it does; the group keeps whatever the curator has typed.
+  useEffect(() => {
+    if (existingLoading) return;
+    setGroups((current) => {
+      let changed = false;
+      const next = current.map((group) => {
+        const match = matchExisting(existingIndexRef.current, group.title);
+        if (group.existing?.id === match.existing?.id && group.existingAmbiguous === match.ambiguous) return group;
+        changed = true;
+        return attachExisting(group);
+      });
+      return changed ? next : current;
+    });
+  }, [existingAntiques, existingLoading]);
+
   function applyBuild(build: ImportBuild, csvRecords: CsvRecord[], csvIssues: ImportIssue[]): void {
     releasePreviews();
     const drafts = build.groups.map((group): ImportGroupDraft => {
       const previewUrl = URL.createObjectURL(group.images[0].file);
       previews.current.push(previewUrl);
-      return {
+      return attachExisting({
         ...group,
         selected: true,
         status: "pending",
         uploadedCount: 0,
         previewUrl,
         categoryId: categoryIdFor(group.category, categoriesRef.current),
-      };
+      });
     });
-    const nextIssues = [...build.issues, ...csvIssues];
+    const ambiguousIssues: ImportIssue[] = drafts
+      .filter((group) => group.existingAmbiguous)
+      .map((group) => ({ key: "importExistingAmbiguous", params: { title: group.title } }));
+    const nextIssues = [...build.issues, ...csvIssues, ...ambiguousIssues];
     if (csvRecords.length === 0) nextIssues.push({ key: "importNoCsv" });
     setGroups(drafts);
     setIssues(nextIssues);
@@ -261,7 +345,21 @@ export function useFolderImport() {
   };
 
   const updateGroup = (id: string, field: "title" | "description" | "price", value: string): void => {
-    patchGroup(id, { [field]: value, error: undefined });
+    setGroups((current) => current.map((group) => {
+      if (group.id !== id) return group;
+      const next = { ...group, [field]: value, error: undefined };
+      if (field === "title") {
+        const match = matchExisting(existingIndexRef.current, value);
+        next.existing = match.existing;
+        next.existingAmbiguous = match.ambiguous;
+        next.artist = group.artist ?? artistFromExisting(match.existing);
+        next.categoryId = group.categoryId
+          || categoryIdFor(match.existing?.category ?? undefined, categoriesRef.current);
+        next.price = group.price.trim() ? group.price : match.existing?.price != null ? String(match.existing.price) : "";
+        next.description = group.description.trim() ? group.description : match.existing?.description ?? "";
+      }
+      return next;
+    }));
   };
 
   const updateGroupCategory = (id: string, categoryId: string): void => {
@@ -303,15 +401,26 @@ export function useFolderImport() {
       setNotice("importSelectPiecesFirst");
       return;
     }
-    if (targets.some((group) => !group.artist)) {
+    const priceOf = (group: ImportGroupDraft) =>
+      group.price.trim() || (group.existing?.price != null ? String(group.existing.price) : "");
+    if (targets.some((group) => group.existingAmbiguous)) {
+      setNotice("importExistingAmbiguous");
+      return;
+    }
+    if (targets.some((group) => !group.existing && !group.artist)) {
       setNotice("importNeedsArtist");
       return;
     }
-    if (targets.some((group) => !group.categoryId)) {
+    if (targets.some((group) => !group.existing && !group.categoryId)) {
       setNotice("importNeedsCategory");
       return;
     }
-    if (targets.some((group) => !group.title.trim() || !group.price.trim() || !Number.isFinite(Number(group.price)) || Number(group.price) < 0)) {
+    if (targets.some((group) => {
+      const price = group.price.trim();
+      if (!group.title.trim()) return true;
+      if (!price) return !group.existing;
+      return !Number.isFinite(Number(price)) || Number(price) < 0;
+    })) {
       setNotice("importNeedsDetails");
       return;
     }
@@ -320,6 +429,7 @@ export function useFolderImport() {
     setNotice(undefined);
     setResult(undefined);
     let imported = 0;
+    let updated = 0;
     let failed = 0;
 
     for (let index = 0; index < targets.length; index += 1) {
@@ -327,34 +437,50 @@ export function useFolderImport() {
       setProgress({ current: index + 1, total: targets.length, title: target.title });
       patchGroup(target.id, { status: "saving", error: undefined });
 
-      let createdId = target.createdId;
+      let targetId = target.createdId;
       let uploadedCount = target.uploadedCount;
       try {
-        if (!createdId) {
-          const created = await addAntique({
-            title: target.title.trim(),
-            artistId: target.artist!.id,
-            categoryId: target.categoryId,
-            description: target.description,
-            price: Number(target.price),
-          });
-          createdId = created.id;
-          patchGroup(target.id, { createdId });
+        if (!targetId) {
+          const title = target.title.trim();
+          const priceText = priceOf(target);
+          const price = priceText ? Number(priceText) : undefined;
+          // A blank import field keeps what the existing piece already says. Sending an empty
+          // description would erase it, which is exactly the data loss this import must avoid.
+          const description = target.description.trim()
+            ? target.description
+            : target.existing?.description ?? "";
+          const artistId = target.artist?.id ?? target.existing?.artist?.id;
+          const categoryId = target.categoryId || undefined;
+          if (target.existing) {
+            await updateAntique(target.existing.id, { title, description, price, artistId, categoryId });
+            targetId = target.existing.id;
+          } else {
+            const created = await addAntique({
+              title,
+              artistId: artistId!,
+              categoryId,
+              description,
+              price: price!,
+            });
+            targetId = created.id;
+          }
+          patchGroup(target.id, { createdId: targetId });
         }
         for (let imageIndex = uploadedCount; imageIndex < target.images.length; imageIndex += 1) {
-          await uploadAntiqueImage(createdId, target.images[imageIndex].file);
+          await uploadAntiqueImage(targetId, target.images[imageIndex].file);
           uploadedCount = imageIndex + 1;
           patchGroup(target.id, { uploadedCount });
         }
-        imported += 1;
-        patchGroup(target.id, { status: "saved", selected: false, createdId, uploadedCount });
+        if (target.existing) updated += 1;
+        else imported += 1;
+        patchGroup(target.id, { status: "saved", selected: false, createdId: targetId, uploadedCount });
       } catch (error) {
         failed += 1;
         patchGroup(target.id, {
           status: "failed",
-          createdId,
+          createdId: targetId,
           uploadedCount,
-          error: createdId ? imageErrorKey(error) : saveErrorKey(error),
+          error: targetId ? imageErrorKey(error) : saveErrorKey(error),
         });
       }
     }
@@ -362,7 +488,7 @@ export function useFolderImport() {
     publishContentUpdate("antiques");
     setProgress(undefined);
     setImporting(false);
-    setResult({ imported, failed });
+    setResult({ imported, failed, updated });
   };
 
   // A CSV can name a category the gallery does not have, or a name two categories share. The row
@@ -381,5 +507,6 @@ export function useFolderImport() {
     groups, grouping, folderName, imageCount, csvCount, issues, reading, importing, notice, setNotice,
     progress, result, selectFolder, selectCsvFiles, clearFolder, changeGrouping, updateGroup, updateGroupCategory,
     toggleGroup, toggleAll, assignArtist, assignCategory, categories, categoriesError, categoryIssues, importSelected,
+    existingLoading, existingError,
   };
 }

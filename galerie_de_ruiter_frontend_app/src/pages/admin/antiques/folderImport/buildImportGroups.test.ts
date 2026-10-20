@@ -112,6 +112,34 @@ describe("grouping a picked folder", () => {
     expect(build.issues).toEqual([]);
   });
 
+  it("merges folders that carry the same title into one piece", () => {
+    const build = buildImportGroups([
+      image("Root/Mirrors/Carved mirror/front.jpg"),
+      image("Root/Lamps/Carved mirror/back.jpg"),
+    ], [], "folder");
+
+    expect(build.groups).toHaveLength(1);
+    expect(build.groups[0].title).toBe("Carved mirror");
+    expect(build.groups[0].images).toHaveLength(2);
+    expect(build.issues).toEqual([]);
+  });
+
+  it("keeps the first details and flags a shared title with conflicting details", () => {
+    const build = buildImportGroups([
+      image("Root/Mirrors/Carved mirror/front.jpg"),
+      image("Root/Lamps/Carved mirror/back.jpg"),
+    ], [
+      record({ file: "Mirrors/Carved mirror", title: "Carved mirror", description: "Late 19th", price: 480, line: 2 }),
+      record({ file: "Lamps/Carved mirror", title: "Carved mirror", description: "Art deco", price: 900, line: 3 }),
+    ], "folder");
+
+    expect(build.groups).toHaveLength(1);
+    // Groups are ordered by their folder label, so Lamps is the first one here.
+    expect(build.groups[0].description).toBe("Art deco");
+    expect(build.groups[0].price).toBe("900");
+    expect(build.issues).toContainEqual({ key: "importSharedTitleConflict", params: { title: "Carved mirror" } });
+  });
+
   it("does not call a CSV row unmatched before any images are selected", () => {
     const build = buildImportGroups(
       [csv("Root/pieces.csv")],

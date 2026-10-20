@@ -2,12 +2,16 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
 import AntiqueFolderImportPage from "./AntiqueFolderImportPage";
-import { addAntique, getVisibleCategories, searchDesigners, uploadAntiqueImage } from "@/apis/backend_api";
+import {
+  addAntique, getAllAntiques, getVisibleCategories, searchDesigners, updateAntique, uploadAntiqueImage,
+} from "@/apis/backend_api";
 import type { Category } from "@/models/antiques/Antique";
 
 jest.mock("@/apis/backend_api", () => ({
   addAntique: jest.fn(),
+  getAllAntiques: jest.fn(),
   uploadAntiqueImage: jest.fn(),
+  updateAntique: jest.fn(),
   searchDesigners: jest.fn(),
   createDesigner: jest.fn(),
   getVisibleCategories: jest.fn(),
@@ -15,6 +19,8 @@ jest.mock("@/apis/backend_api", () => ({
 jest.mock("@/services/contentUpdates", () => ({ publishContentUpdate: jest.fn() }));
 
 const addAntiqueMock = addAntique as jest.Mock;
+const getAllAntiquesMock = getAllAntiques as jest.Mock;
+const updateAntiqueMock = updateAntique as jest.Mock;
 const uploadImageMock = uploadAntiqueImage as jest.Mock;
 const searchDesignersMock = searchDesigners as jest.Mock;
 const getCategoriesMock = getVisibleCategories as jest.Mock;
@@ -86,7 +92,9 @@ async function assignCategory(categoryId = "cat-mirrors"): Promise<void> {
 beforeEach(() => {
   searchDesignersMock.mockResolvedValue([artist]);
   getCategoriesMock.mockResolvedValue(categories);
+  getAllAntiquesMock.mockResolvedValue([]);
   addAntiqueMock.mockImplementation(async () => ({ id: `antique-${addAntiqueMock.mock.calls.length}` }));
+  updateAntiqueMock.mockImplementation(async (id: string) => ({ id }));
   uploadImageMock.mockResolvedValue({ id: "image-1", url: "/api/antiques/1/image/1" });
 });
 
@@ -178,6 +186,60 @@ describe("the folder import screen", () => {
 
     expect(screen.getByRole("button", { name: /Import 2 piece/ })).toBeDisabled();
     expect(screen.getByText(i18n.t("importNeedsCategory"))).toBeInTheDocument();
+  });
+
+  it("updates an existing piece and keeps the details the import does not provide", async () => {
+    getAllAntiquesMock.mockResolvedValueOnce([{
+      id: "existing-1",
+      title: "Carved mirror",
+      description: "Original story",
+      price: 900,
+      category: "Mirrors",
+      artist: { id: "artist-1", firstName: "Ada", lastName: "Lovelace" },
+      imageUrls: ["/api/antiques/existing-1/image/old"],
+    }]);
+
+    renderPage(<AntiqueFolderImportPage />);
+    await chooseFolder([image("Root/Mirrors/Carved mirror/front.jpg")]);
+
+    // The existing piece supplies the artist, category, price and story the folder does not.
+    expect(await screen.findByDisplayValue("Original story")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("900")).toBeInTheDocument();
+    expect(screen.getByText(i18n.t("importWillUpdate"))).toBeInTheDocument();
+    const importButton = screen.getByRole("button", { name: /Import 1 piece/ });
+    await waitFor(() => expect(importButton).toBeEnabled());
+    fireEvent.click(importButton);
+
+    await waitFor(() => expect(updateAntiqueMock).toHaveBeenCalledTimes(1));
+    expect(updateAntiqueMock).toHaveBeenCalledWith("existing-1", expect.objectContaining({
+      title: "Carved mirror",
+      description: "Original story",
+      price: 900,
+      artistId: "artist-1",
+      categoryId: "cat-mirrors",
+    }));
+    expect(addAntiqueMock).not.toHaveBeenCalled();
+    expect(uploadImageMock).toHaveBeenCalledWith("existing-1", expect.any(File));
+  });
+
+  it("merges folders that share a title into one piece with all their photographs", async () => {
+    renderPage(<AntiqueFolderImportPage />);
+    await chooseFolder([
+      image("Root/Mirrors/Carved mirror/front.jpg"),
+      image("Root/Lamps/Carved mirror/back.jpg"),
+      csv("Root/pieces.csv", "file;title;price\n"
+        + "Mirrors/Carved mirror;Carved mirror;480\n"
+        + "Lamps/Carved mirror;Carved mirror;480\n"),
+    ]);
+    await assignArtist();
+    await assignCategory();
+
+    expect(screen.getAllByDisplayValue("Carved mirror")).toHaveLength(1);
+    expect(screen.getByText(i18n.t("imagesCount", { count: 2 }))).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Import 1 piece/ }));
+
+    await waitFor(() => expect(addAntiqueMock).toHaveBeenCalledTimes(1));
+    expect(uploadImageMock).toHaveBeenCalledTimes(2);
   });
 
   it("pre-fills each piece from a category column in the CSV", async () => {

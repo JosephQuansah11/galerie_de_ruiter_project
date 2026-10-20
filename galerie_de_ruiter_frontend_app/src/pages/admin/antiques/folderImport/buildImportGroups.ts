@@ -8,6 +8,7 @@
  */
 
 import type { CsvGrouping, CsvRecord } from "./csv";
+import { titleKey } from "./existingMatching";
 
 export type ImportIssue = { key: string; params?: Record<string, string | number> };
 
@@ -203,6 +204,61 @@ function groupKeys(group: ImportGroup): string[] {
   return [...keys].filter(Boolean);
 }
 
+/** Whether two non-empty details disagree; a blank value never erases the other. */
+function detailsConflict(left: ImportGroup, right: ImportGroup): boolean {
+  const differs = (one: string | undefined, two: string | undefined) => {
+    const first = one?.trim() ?? "";
+    const second = two?.trim() ?? "";
+    return Boolean(first) && Boolean(second) && titleKey(first) !== titleKey(second);
+  };
+  return differs(left.description, right.description)
+    || differs(left.price, right.price)
+    || differs(left.category, right.category);
+}
+
+/**
+ * Photographs for one piece are sometimes split across folders: `Mirrors/Chair` and
+ * `Lighting/Chair` both describe the chair. The title is the curator's own key, so those folders
+ * become one import row and one update instead of two pieces fighting over the same inventory row.
+ * Conflicting non-empty details are reported rather than silently chosen; the first value is kept
+ * so the curator can see and correct it before importing.
+ */
+function mergeSharedTitles(groups: ImportGroup[]): { groups: ImportGroup[]; issues: ImportIssue[] } {
+  const byTitle = new Map<string, ImportGroup>();
+  const merged: ImportGroup[] = [];
+  const issues: ImportIssue[] = [];
+
+  for (const group of groups) {
+    const key = titleKey(group.title);
+    const first = key ? byTitle.get(key) : undefined;
+    if (!first) {
+      // Copy the group so the rest of the build can keep the original list untouched.
+      const copy = { ...group, images: [...group.images] };
+      if (key) byTitle.set(key, copy);
+      merged.push(copy);
+      continue;
+    }
+
+    if (detailsConflict(first, group)) {
+      issues.push({ key: "importSharedTitleConflict", params: { title: group.title } });
+    }
+    const imagePaths = new Set(first.images.map((image) => image.path));
+    for (const image of group.images) {
+      if (!imagePaths.has(image.path)) {
+        imagePaths.add(image.path);
+        first.images.push(image);
+      }
+    }
+    if (!first.description) first.description = group.description;
+    if (!first.price) first.price = group.price;
+    if (!first.category) first.category = group.category;
+    if (!first.record) first.record = group.record;
+    if (first.label !== group.label) first.label = `${first.label} · ${group.label}`;
+  }
+
+  return { groups: merged, issues };
+}
+
 /** Builds the import preview. Nothing here touches the network or creates object URLs. */
 export function buildImportGroups(files: File[], records: CsvRecord[], grouping: CsvGrouping): ImportBuild {
   const considered = files.filter((file) => !isIgnoredFile(file));
@@ -284,6 +340,13 @@ export function buildImportGroups(files: File[], records: CsvRecord[], grouping:
     }
   }
 
-  return { groups, imageCount: images.length, csvCount, unsupportedCount, issues };
+  const merged = mergeSharedTitles(groups);
+  return {
+    groups: merged.groups,
+    imageCount: images.length,
+    csvCount,
+    unsupportedCount,
+    issues: [...issues, ...merged.issues],
+  };
 }
 

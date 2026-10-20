@@ -102,6 +102,10 @@ public class Antique {
         return artist;
     }
 
+    public void setArtist(Designer artist) {
+        this.artist = artist;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -120,6 +124,10 @@ public class Antique {
 
     public Category getCategory() {
         return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     public byte[] getImageData() {

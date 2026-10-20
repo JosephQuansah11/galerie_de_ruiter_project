@@ -10,21 +10,27 @@ const place = { address: "De Ruiter 12, Waasmunster", latitude: 51.0994, longitu
 
 describe("googleMapsEmbedUrl", () => {
   it("searches for the address the gallery shows", () => {
-    const url = new URL(googleMapsEmbedUrl(place)!);
+    const url = new URL(googleMapsEmbedUrl(place));
     expect(`${url.origin}${url.pathname}`).toBe("https://www.google.com/maps/embed/v1/place");
     expect(url.searchParams.get("q")).toBe(place.address);
     expect(url.searchParams.get("key")).toBe("test-maps-key");
   });
 
   it("falls back to the coordinates when the address is empty", () => {
-    const url = new URL(googleMapsEmbedUrl({ ...place, address: "   " })!);
+    const url = new URL(googleMapsEmbedUrl({ ...place, address: "   " }));
     expect(url.searchParams.get("q")).toBe("51.0994,4.1025");
   });
 
-  it("has no frame to offer without a key, but still has the link", () => {
+  it("still offers a frame without a key, through Google's keyless embed", () => {
     process.env.VITE_GOOGLE_MAPS_API_KEY = "";
     try {
-      expect(googleMapsEmbedUrl(place)).toBeUndefined();
+      const url = new URL(googleMapsEmbedUrl(place));
+      // The classic embed redirects to /maps/embed, which the CSP already allows.
+      expect(`${url.origin}${url.pathname}`).toBe("https://www.google.com/maps");
+      expect(url.searchParams.get("q")).toBe(place.address);
+      expect(url.searchParams.get("z")).toBe("16");
+      expect(url.searchParams.get("output")).toBe("embed");
+      expect(url.searchParams.get("key")).toBeNull();
       // The Maps URL scheme needs no key, which is why the link is never conditional.
       expect(googleMapsLink(place)).toContain("https://www.google.com/maps/search/?api=1&query=");
     } finally {

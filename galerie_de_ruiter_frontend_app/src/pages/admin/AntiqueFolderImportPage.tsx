@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Alert, Badge, Card, Form, Spinner } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
-import { FolderOpen, FileSpreadsheet, Image as ImageIcon, Search, Upload, X } from "lucide-react";
+import { FolderOpen, FileSpreadsheet, Image as ImageIcon, Search, Tags, Upload, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArtistSearch } from "@/pages/antiques/ArtistSearch";
+import { CategoryOptions, categoryLabel } from "@/pages/antiques/CategoryOptions";
 import { DesignerCreator } from "@/pages/antiques/DesignerCreator";
 import { useDesignerDirectory } from "@/pages/antiques/useDesignerDirectory";
 import { ANTIQUE_DESCRIPTION_MAX_LENGTH } from "@/pages/antiques/descriptionLimits";
@@ -31,6 +32,7 @@ export default function AntiqueFolderImportPage() {
   const input = useRef<HTMLInputElement>(null);
   const csvInput = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
+  const [categoryChoice, setCategoryChoice] = useState("");
 
   useEffect(() => {
     // React has no `webkitdirectory` prop, but the browser reads it from the attribute.
@@ -44,10 +46,11 @@ export default function AntiqueFolderImportPage() {
   const allVisibleSelected = visible.length > 0
     && visible.every((group) => group.selected || group.status === "saved");
   const missingArtist = selected.some((group) => !group.artist);
+  const missingCategory = selected.some((group) => !group.categoryId);
   const missingDetails = selected.some((group) =>
     !group.title.trim() || !group.price.trim() || !Number.isFinite(Number(group.price)) || Number(group.price) < 0
     || group.description.length > ANTIQUE_DESCRIPTION_MAX_LENGTH);
-  const canImport = selected.length > 0 && !missingArtist && !missingDetails && !imported.importing && !imported.reading;
+  const canImport = selected.length > 0 && !missingArtist && !missingCategory && !missingDetails && !imported.importing && !imported.reading;
 
   const chooseFolder = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.currentTarget.files ?? []);
@@ -88,7 +91,7 @@ export default function AntiqueFolderImportPage() {
           {t("folderSummary", { images: imported.imageCount, pieces: imported.groups.length, csv: imported.csvCount })}
         </span>
         <Button className="btn btn-outline-secondary" type="button" disabled={imported.importing || imported.reading}
-          onClick={() => { imported.clearFolder(); artistDirectory.setQuery(""); setQuery(""); }}>
+          onClick={() => { imported.clearFolder(); artistDirectory.setQuery(""); setQuery(""); setCategoryChoice(""); }}>
           <X size={16} /> {t("clearFolder")}
         </Button>
       </>}
@@ -100,7 +103,7 @@ export default function AntiqueFolderImportPage() {
         {t("csvFilesSelected", { count: imported.csvCount })}
       </span>}
       <Button className="btn btn-outline-secondary" type="button" disabled={imported.importing || imported.reading}
-        onClick={() => { imported.clearFolder(); artistDirectory.setQuery(""); setQuery(""); }}>
+        onClick={() => { imported.clearFolder(); artistDirectory.setQuery(""); setQuery(""); setCategoryChoice(""); }}>
         <X size={16} /> {t("clearFolder")}
       </Button>
     </div>}
@@ -120,10 +123,10 @@ export default function AntiqueFolderImportPage() {
     </Form.Group>}
 
     {imported.notice && <Alert variant="warning">{t(imported.notice)}</Alert>}
-    {imported.issues.length > 0 && <Alert variant="warning">
+    {(imported.issues.length > 0 || imported.categoryIssues.length > 0) && <Alert variant="warning">
       <strong>{t("importIssues")}</strong>
       <ul className="folder-import-issues">
-        {imported.issues.map((issue, index) => <li key={`${issue.key}-${index}`}>{t(issue.key, issue.params)}</li>)}
+        {[...imported.issues, ...imported.categoryIssues].map((issue, index) => <li key={`${issue.key}-${index}`}>{t(issue.key, issue.params)}</li>)}
       </ul>
     </Alert>}
     {imported.groups.length === 0 && !imported.reading && imported.folderName && <div className="folder-import-empty">
@@ -144,6 +147,25 @@ export default function AntiqueFolderImportPage() {
             creating={artistDirectory.creating} addArtist={artistDirectory.addArtist} />
         </fieldset>
         {artistDirectory.error && <Alert variant="danger">{t(artistDirectory.error)}</Alert>}
+        <div className="folder-import-category">
+          <div className="folder-import-assign-heading">
+            <h2>{t("assignCategory")}</h2>
+          </div>
+          <p className="folder-import-hint">{t("importCategoryHint")}</p>
+          <div className="folder-import-category-controls">
+            <Form.Select size="sm" value={categoryChoice} disabled={imported.importing || imported.reading}
+              aria-label={t("chooseCategory")} onChange={(event) => setCategoryChoice(event.target.value)}>
+              <option value="">{t("chooseCategory")}</option>
+              <CategoryOptions categories={imported.categories} />
+            </Form.Select>
+            <Button className="btn btn-outline-secondary" type="button"
+              disabled={!categoryChoice || selected.length === 0 || imported.importing}
+              onClick={() => imported.assignCategory(categoryChoice)}>
+              <Tags size={16} /> {t("assignCategoryAction")}
+            </Button>
+          </div>
+          {imported.categoriesError && <Alert variant="danger">{t(imported.categoriesError)}</Alert>}
+        </div>
       </Card.Body>
     </Card>}
 
@@ -173,6 +195,12 @@ export default function AntiqueFolderImportPage() {
               <Form.Control size="sm" value={group.title} disabled={disabled}
                 aria-label={`${t("title")}: ${group.folderName}`}
                 onChange={(event) => imported.updateGroup(group.id, "title", event.target.value)} />
+              <Form.Select size="sm" value={group.categoryId} disabled={disabled}
+                aria-label={`${t("category")}: ${group.title}`}
+                onChange={(event) => imported.updateGroupCategory(group.id, event.target.value)}>
+                <option value="">{t("chooseCategory")}</option>
+                <CategoryOptions categories={imported.categories} />
+              </Form.Select>
               <div className="folder-import-meta">
                 <Badge bg={group.record ? "success" : "secondary"}>
                   {group.record ? t("csvMatched") : t("csvMissing")}
@@ -180,6 +208,7 @@ export default function AntiqueFolderImportPage() {
                 <span>{t("imagesCount", { count: group.images.length })}</span>
                 <span className="folder-import-path" title={group.label}>{group.label}</span>
                 <span>{group.artist ? artistName(group) : t("noArtistAssigned")}</span>
+                <span>{categoryLabel(imported.categories, group.categoryId) ?? t("noCategoryAssigned")}</span>
                 {saved && <Badge bg="success">{t("saved")}</Badge>}
                 {group.status === "saving" && <Spinner animation="border" size="sm" />}
               </div>
@@ -211,6 +240,7 @@ export default function AntiqueFolderImportPage() {
         <Link className="btn btn-outline-secondary" to="/admin/antiques">{t("viewInventory")}</Link>
       </div>
       {selected.length > 0 && missingArtist && <p className="folder-import-validation">{t("importNeedsArtist")}</p>}
+      {selected.length > 0 && missingCategory && <p className="folder-import-validation">{t("importNeedsCategory")}</p>}
       {selected.length > 0 && missingDetails && <p className="folder-import-validation">{t("importNeedsDetails")}</p>}
       {imported.progress && <p className="folder-import-progress" role="status">
         {t("importingPieces", imported.progress)}

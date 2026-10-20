@@ -2,21 +2,32 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
 import AntiqueFolderImportPage from "./AntiqueFolderImportPage";
-import { addAntique, searchDesigners, uploadAntiqueImage } from "@/apis/backend_api";
+import { addAntique, getVisibleCategories, searchDesigners, uploadAntiqueImage } from "@/apis/backend_api";
+import type { Category } from "@/models/antiques/Antique";
 
 jest.mock("@/apis/backend_api", () => ({
   addAntique: jest.fn(),
   uploadAntiqueImage: jest.fn(),
   searchDesigners: jest.fn(),
   createDesigner: jest.fn(),
+  getVisibleCategories: jest.fn(),
 }));
 jest.mock("@/services/contentUpdates", () => ({ publishContentUpdate: jest.fn() }));
 
 const addAntiqueMock = addAntique as jest.Mock;
 const uploadImageMock = uploadAntiqueImage as jest.Mock;
 const searchDesignersMock = searchDesigners as jest.Mock;
+const getCategoriesMock = getVisibleCategories as jest.Mock;
 
 const artist = { id: "artist-1", firstName: "Ada", lastName: "Lovelace" };
+
+const categories: Category[] = [
+  {
+    id: "cat-mirrors", name: "Mirrors", visible: true, itemCount: 2,
+    children: [{ id: "cat-wall", name: "Wall mirrors", visible: true, itemCount: 1, children: [] }],
+  },
+  { id: "cat-lighting", name: "Lighting", visible: true, itemCount: 1, children: [] },
+];
 
 function image(path: string): File {
   const file = new File([new Uint8Array(1)], path.split("/").pop() ?? path, { type: "image/jpeg" });
@@ -65,8 +76,16 @@ async function assignArtist(): Promise<void> {
   fireEvent.click(await screen.findByRole("button", { name: "Ada Lovelace" }));
 }
 
+async function assignCategory(categoryId = "cat-mirrors"): Promise<void> {
+  // The picker renders without options until the category request has answered.
+  await screen.findAllByRole("option", { name: "Mirrors" });
+  fireEvent.change(screen.getByLabelText(i18n.t("chooseCategory")), { target: { value: categoryId } });
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("assignCategoryAction"), "i") }));
+}
+
 beforeEach(() => {
   searchDesignersMock.mockResolvedValue([artist]);
+  getCategoriesMock.mockResolvedValue(categories);
   addAntiqueMock.mockImplementation(async () => ({ id: `antique-${addAntiqueMock.mock.calls.length}` }));
   uploadImageMock.mockResolvedValue({ id: "image-1", url: "/api/antiques/1/image/1" });
 });
@@ -123,12 +142,13 @@ describe("the folder import screen", () => {
     expect(screen.getByDisplayValue("1250")).toBeInTheDocument();
   });
 
-  it("assigns one artist to the selected pieces and creates them with all their photographs", async () => {
+  it("assigns one artist and one category to the selected pieces and creates them with all their photographs", async () => {
     renderPage(<AntiqueFolderImportPage />);
     await chooseFolder();
     await assignArtist();
+    await assignCategory();
 
-    // Both rows were selected by default, so choosing the artist filled both.
+    // Both rows were selected by default, so choosing the artist and the category filled both.
     expect(screen.getAllByText("Ada Lovelace")).toHaveLength(2);
     const importButton = screen.getByRole("button", { name: /Import 2 piece/ });
     expect(importButton).toBeEnabled();
@@ -136,8 +156,8 @@ describe("the folder import screen", () => {
 
     await waitFor(() => expect(addAntiqueMock).toHaveBeenCalledTimes(2));
     expect(addAntiqueMock.mock.calls.map(([piece]) => piece)).toEqual([
-      expect.objectContaining({ title: "Brass lamp", artistId: "artist-1", description: "Art deco", price: 1250 }),
-      expect.objectContaining({ title: "Carved mirror", artistId: "artist-1", description: "Late 19th", price: 480.5 }),
+      expect.objectContaining({ title: "Brass lamp", artistId: "artist-1", categoryId: "cat-mirrors", description: "Art deco", price: 1250 }),
+      expect.objectContaining({ title: "Carved mirror", artistId: "artist-1", categoryId: "cat-mirrors", description: "Late 19th", price: 480.5 }),
     ]);
     expect(uploadImageMock).toHaveBeenCalledTimes(3);
     expect(await screen.findByText(/2 piece\(s\) imported/)).toBeInTheDocument();
@@ -149,5 +169,36 @@ describe("the folder import screen", () => {
 
     expect(screen.getByRole("button", { name: /Import 2 piece/ })).toBeDisabled();
     expect(screen.getByText(i18n.t("importNeedsArtist"))).toBeInTheDocument();
+  });
+
+  it("will not import until every selected piece has a category", async () => {
+    renderPage(<AntiqueFolderImportPage />);
+    await chooseFolder();
+    await assignArtist();
+
+    expect(screen.getByRole("button", { name: /Import 2 piece/ })).toBeDisabled();
+    expect(screen.getByText(i18n.t("importNeedsCategory"))).toBeInTheDocument();
+  });
+
+  it("pre-fills each piece from a category column in the CSV", async () => {
+    const withCategories = [
+      image("Root/Mirrors/Carved mirror/front.jpg"),
+      image("Root/Lamps/Brass lamp/1.jpg"),
+      csv("Root/pieces.csv", "file;title;description;price;category\n"
+        + "Mirrors/Carved mirror;Carved mirror;Late 19th;480;Mirrors\n"
+        + "Lamps/Brass lamp;Brass lamp;Art deco;1250;Lighting\n"),
+    ];
+
+    renderPage(<AntiqueFolderImportPage />);
+    await chooseFolder(withCategories);
+
+    await waitFor(() => expect(screen.getByLabelText(`${i18n.t("category")}: Carved mirror`)).toHaveValue("cat-mirrors"));
+    await waitFor(() => expect(screen.getByLabelText(`${i18n.t("category")}: Brass lamp`)).toHaveValue("cat-lighting"));
+
+    await assignArtist();
+    fireEvent.click(screen.getByRole("button", { name: /Import 2 piece/ }));
+
+    await waitFor(() => expect(addAntiqueMock).toHaveBeenCalledTimes(2));
+    expect(addAntiqueMock.mock.calls.map(([piece]) => piece.categoryId)).toEqual(["cat-lighting", "cat-mirrors"]);
   });
 });

@@ -23,6 +23,8 @@ export type ImportGroup = {
   title: string;
   description: string;
   price: string;
+  /** The category the CSV named, before it is matched to a category record. */
+  category?: string;
   record?: CsvRecord;
 };
 
@@ -266,6 +268,7 @@ export function buildImportGroups(files: File[], records: CsvRecord[], grouping:
     group.title = record.title?.trim() || group.title;
     group.description = record.description ?? "";
     group.price = record.price === undefined ? "" : String(record.price);
+    group.category = record.category?.trim() || group.category;
   }
 
   for (const key of ambiguous) {

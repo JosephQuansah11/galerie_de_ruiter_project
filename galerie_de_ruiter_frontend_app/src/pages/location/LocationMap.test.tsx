@@ -28,18 +28,21 @@ describe("the location map", () => {
     expect(container.querySelector(".map-frame-link-only")).toBeNull();
   });
 
-  it("keeps the link, and drops the frame, when the build carries no key", () => {
+  it("still frames the address when the build carries no key", () => {
     process.env.VITE_GOOGLE_MAPS_API_KEY = "";
     try {
       const { container } = renderPage(<LocationMap location={location} {...props} />, { auth: false });
 
-      expect(screen.queryByTitle(props.title)).toBeNull();
+      const frame = screen.getByTitle(props.title);
+      const src = frame.getAttribute("src")!;
+      expect(src).toContain("https://www.google.com/maps");
+      expect(new URL(src).searchParams.get("output")).toBe("embed");
+      expect(new URL(src).searchParams.get("key")).toBeNull();
       expect(screen.getByRole("link", { name: new RegExp(props.linkText, "i") }))
         .toHaveAttribute("href", expect.stringContaining("google.com/maps/search"));
-      // The panel would otherwise keep the frame's height and stand there as an empty card where
-      // a map should be, so it is marked as the link-only shape the stylesheet shrinks.
-      expect(container.querySelector("iframe")).toBeNull();
-      expect(container.querySelector(".map-frame-link-only")).not.toBeNull();
+      // There is no longer a link-only shape: the keyless embed fills the panel with a map.
+      expect(container.querySelector("iframe")).not.toBeNull();
+      expect(container.querySelector(".map-frame-link-only")).toBeNull();
     } finally {
       process.env.VITE_GOOGLE_MAPS_API_KEY = "test-maps-key";
     }

@@ -27,8 +27,8 @@ describe("grouping a picked folder", () => {
     new File(["notes"], "notes.txt", { type: "text/plain" }),
   ];
   const records = [
-    record({ file: "Mirrors/Carved mirror", title: "Carved mirror", description: "Late 19th", price: 480.5, line: 2 }),
-    record({ file: "Lamps/Brass lamp/1.jpg", title: "Brass lamp", description: "Art deco", price: 1250, line: 3 }),
+    record({ file: "Mirrors/Carved mirror", title: "Carved mirror", description: "Late 19th", price: 480.5, category: "Mirrors", line: 2 }),
+    record({ file: "Lamps/Brass lamp/1.jpg", title: "Brass lamp", description: "Art deco", price: 1250, category: "Lighting", line: 3 }),
   ];
 
   it("keeps every photograph in a folder together and uses the folder name when the CSV has no title", () => {
@@ -40,7 +40,7 @@ describe("grouping a picked folder", () => {
     expect(build.groups).toHaveLength(2);
 
     const carved = build.groups.find((group) => group.folderName === "Carved mirror");
-    expect(carved).toMatchObject({ title: "Carved mirror", description: "Late 19th", price: "480.5" });
+    expect(carved).toMatchObject({ title: "Carved mirror", description: "Late 19th", price: "480.5", category: "Mirrors" });
     expect(carved?.images.map((entry) => entry.path)).toEqual([
       "Root/Mirrors/Carved mirror/back.jpg",
       "Root/Mirrors/Carved mirror/front.jpg",
@@ -48,7 +48,7 @@ describe("grouping a picked folder", () => {
     expect(carved?.record?.line).toBe(2);
 
     const brass = build.groups.find((group) => group.folderName === "Brass lamp");
-    expect(brass).toMatchObject({ title: "Brass lamp", price: "1250" });
+    expect(brass).toMatchObject({ title: "Brass lamp", price: "1250", category: "Lighting" });
     expect(brass?.images).toHaveLength(1);
     expect(build.issues).toContainEqual({ key: "importUnsupportedFiles", params: { count: 1 } });
   });

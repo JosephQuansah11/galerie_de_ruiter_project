@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { addAntique, uploadAntiqueImage } from "@/apis/backend_api";
-import type { Designer } from "@/models/antiques/Antique";
+import { addAntique, getVisibleCategories, uploadAntiqueImage } from "@/apis/backend_api";
+import type { Category, Designer } from "@/models/antiques/Antique";
 import { publishContentUpdate } from "@/services/contentUpdates";
 import { saveErrorKey } from "@/pages/antiques/antiqueSaveErrors";
+import { categoryIdFor, matchCategory } from "./categoryMatching";
 import {
   buildImportGroups,
   filePath,
@@ -19,6 +20,8 @@ export type ImportStatus = "pending" | "saving" | "saved" | "failed";
 export type ImportGroupDraft = ImportGroup & {
   selected: boolean;
   artist?: Designer;
+  /** The category the piece is created under; empty until the admin assigns one. */
+  categoryId: string;
   status: ImportStatus;
   /** The piece this row created; kept so a retry does not create it twice. */
   createdId?: string;
@@ -83,6 +86,8 @@ export function useFolderImport() {
   const [records, setRecords] = useState<CsvRecord[]>([]);
   const [parseIssues, setParseIssues] = useState<ImportIssue[]>([]);
   const [issues, setIssues] = useState<ImportIssue[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesError, setCategoriesError] = useState<string>();
   const [grouping, setGroupingState] = useState<CsvGrouping>("folder");
   const [folderName, setFolderName] = useState("");
   const [imageCount, setImageCount] = useState(0);
@@ -95,6 +100,8 @@ export function useFolderImport() {
 
   const groupsRef = useRef(groups);
   groupsRef.current = groups;
+  const categoriesRef = useRef(categories);
+  categoriesRef.current = categories;
   const folderFilesRef = useRef(folderFiles);
   folderFilesRef.current = folderFiles;
   const extraCsvFilesRef = useRef(extraCsvFiles);
@@ -108,12 +115,42 @@ export function useFolderImport() {
   };
   useEffect(() => () => releasePreviews(), []);
 
+  useEffect(() => {
+    getVisibleCategories()
+      .then((items) => { setCategories(items); setCategoriesError(undefined); })
+      .catch(() => setCategoriesError("categoriesCouldNotLoad"));
+  }, []);
+
+  // A folder can be read before the category list arrives. Once it does, the categories the CSV
+  // named are filled in; a piece the admin already assigned keeps their choice.
+  useEffect(() => {
+    if (categories.length === 0) return;
+    setGroups((current) => {
+      let changed = false;
+      const next = current.map((group) => {
+        if (group.categoryId || !group.category) return group;
+        const id = categoryIdFor(group.category, categories);
+        if (!id) return group;
+        changed = true;
+        return { ...group, categoryId: id };
+      });
+      return changed ? next : current;
+    });
+  }, [categories]);
+
   function applyBuild(build: ImportBuild, csvRecords: CsvRecord[], csvIssues: ImportIssue[]): void {
     releasePreviews();
     const drafts = build.groups.map((group): ImportGroupDraft => {
       const previewUrl = URL.createObjectURL(group.images[0].file);
       previews.current.push(previewUrl);
-      return { ...group, selected: true, status: "pending", uploadedCount: 0, previewUrl };
+      return {
+        ...group,
+        selected: true,
+        status: "pending",
+        uploadedCount: 0,
+        previewUrl,
+        categoryId: categoryIdFor(group.category, categoriesRef.current),
+      };
     });
     const nextIssues = [...build.issues, ...csvIssues];
     if (csvRecords.length === 0) nextIssues.push({ key: "importNoCsv" });
@@ -227,6 +264,10 @@ export function useFolderImport() {
     patchGroup(id, { [field]: value, error: undefined });
   };
 
+  const updateGroupCategory = (id: string, categoryId: string): void => {
+    patchGroup(id, { categoryId, error: undefined });
+  };
+
   const toggleGroup = (id: string, selected: boolean): void => patchGroup(id, { selected });
   const toggleAll = (ids: string[], selected: boolean): void => {
     setGroups((current) => current.map((group) =>
@@ -244,6 +285,18 @@ export function useFolderImport() {
     setNotice(undefined);
   }, []);
 
+  /** Assigns one category - a main category or a subcategory - to every selected piece. */
+  const assignCategory = useCallback((categoryId: string): void => {
+    const selected = groupsRef.current.filter((group) => group.selected && group.status !== "saved");
+    if (selected.length === 0) {
+      setNotice("importSelectPiecesFirst");
+      return;
+    }
+    setGroups((current) => current.map((group) =>
+      group.selected && group.status !== "saved" ? { ...group, categoryId, error: undefined } : group));
+    setNotice(undefined);
+  }, []);
+
   const importSelected = async (): Promise<void> => {
     const targets = groupsRef.current.filter((group) => group.selected && group.status !== "saved");
     if (targets.length === 0) {
@@ -252,6 +305,10 @@ export function useFolderImport() {
     }
     if (targets.some((group) => !group.artist)) {
       setNotice("importNeedsArtist");
+      return;
+    }
+    if (targets.some((group) => !group.categoryId)) {
+      setNotice("importNeedsCategory");
       return;
     }
     if (targets.some((group) => !group.title.trim() || !group.price.trim() || !Number.isFinite(Number(group.price)) || Number(group.price) < 0)) {
@@ -277,6 +334,7 @@ export function useFolderImport() {
           const created = await addAntique({
             title: target.title.trim(),
             artistId: target.artist!.id,
+            categoryId: target.categoryId,
             description: target.description,
             price: Number(target.price),
           });
@@ -307,9 +365,21 @@ export function useFolderImport() {
     setResult({ imported, failed });
   };
 
+  // A CSV can name a category the gallery does not have, or a name two categories share. The row
+  // still imports once the admin picks one; this says which row is waiting for that choice.
+  const categoryIssues: ImportIssue[] = categories.length === 0 ? [] : groups.flatMap((group): ImportIssue[] => {
+    if (!group.category || group.categoryId) return [];
+    const match = matchCategory(group.category, categories);
+    if (match.status !== "unknown" && match.status !== "ambiguous") return [];
+    return [{
+      key: match.status === "unknown" ? "csvUnknownCategory" : "csvAmbiguousCategory",
+      params: { source: group.record?.source ?? "", line: group.record?.line ?? "", value: group.category },
+    }];
+  });
+
   return {
     groups, grouping, folderName, imageCount, csvCount, issues, reading, importing, notice, setNotice,
-    progress, result, selectFolder, selectCsvFiles, clearFolder, changeGrouping, updateGroup, toggleGroup, toggleAll,
-    assignArtist, importSelected,
+    progress, result, selectFolder, selectCsvFiles, clearFolder, changeGrouping, updateGroup, updateGroupCategory,
+    toggleGroup, toggleAll, assignArtist, assignCategory, categories, categoriesError, categoryIssues, importSelected,
   };
 }

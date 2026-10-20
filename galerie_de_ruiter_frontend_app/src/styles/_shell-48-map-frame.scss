@@ -1,0 +1,30 @@
+// The location page's map panel: a fixed, comfortable height rather than a frame that stretches
+// to the height of the copy beside it. The iframe takes the space the link does not, so a map fills
+// the card instead of leaving a blank rectangle below it.
+.map-frame {
+  width: 100%;
+  height: clamp(22rem, 55vh, 34rem);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(60, 31, 37, 0.2);
+  background: #e8dfda;
+}
+.map-frame iframe {
+  flex: 1 1 auto;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+}
+.map-frame a {
+  flex: 0 0 auto;
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.5rem;
+  color: var(--theme-primary);
+  font-size: 0.85rem;
+}

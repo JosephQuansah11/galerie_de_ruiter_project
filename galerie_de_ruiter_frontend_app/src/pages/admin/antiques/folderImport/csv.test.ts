@@ -61,6 +61,19 @@ describe("reading the folder's CSV files", () => {
     expect(issues).toEqual([{ key: "csvNoRecognisedColumns", source: "notes.csv" }]);
   });
 
+  it("reads the category column in the languages the gallery edits in", () => {
+    const semicolon = "file;titel;categorie;prijs\nfront.jpg;Spiegel;Mirrors / Wall mirrors;480\n";
+    const comma = "fichier,titre,catégorie,prix\nback.jpg,Miroir,Mirrors,480\n";
+
+    const { records } = parseCsvSources([
+      { name: "pieces.csv", text: semicolon },
+      { name: "pieces-fr.csv", text: comma },
+    ]);
+
+    expect(records[0]).toMatchObject({ title: "Spiegel", category: "Mirrors / Wall mirrors", price: 480 });
+    expect(records[1]).toMatchObject({ title: "Miroir", category: "Mirrors", price: 480 });
+  });
+
   it("skips the delimiter line Excel sometimes writes first", () => {
     const { records } = parseCsvSources([{
       name: "pieces.csv",

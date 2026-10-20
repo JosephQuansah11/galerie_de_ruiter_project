@@ -381,15 +381,15 @@ The key ships in the bundle, so it is not a secret: restrict it in the Google Cl
 `https://galeriederuiter.cloud-ip.cc/*` while the old host is still served, and
 `http://localhost:3000/*` while developing) and enable only those two APIs on it.
 
-Without a key the gallery still works. The location page shows the address, the opening hours and an
-*Open in Google Maps* link — the Maps URL scheme needs no key, which is why that link is never
-conditional — and the panel that would hold the frame drops its height for a quieter card: the mark
-and the link, centred, instead of an empty rectangle where a map should be (`.map-frame-link-only` in
-`src/styles/_location-02-location-facts.scss`, which `LocationMap.test.tsx` pins). The admin's lookup
-says the lookup is unavailable rather than failing silently.
-`src/services/googleMaps.test.ts` covers both builds. The OpenStreetMap embed and its Nominatim
-lookup that this replaced are gone from the code and from the policy, and
-`src/securityHeaders.test.ts` fails if either name comes back.
+Without a key the gallery still works. The frame falls back to Google's classic keyless embed, which
+still shows the street and the pin, so the panel never stands there as an empty rectangle; the
+address, the opening hours and the *Open in Google Maps* link (the Maps URL scheme needs no key) stay
+in place. The key is still worth setting: the Embed API gives the gallery its own keyed frame, and
+the admin's *Find coordinates* lookup needs the Geocoding API. Without it the lookup says it is
+unavailable rather than failing silently. `src/services/googleMaps.test.ts` and
+`LocationMap.test.tsx` cover both builds. The OpenStreetMap embed and its Nominatim lookup that this
+replaced are gone from the code and from the policy, and `src/securityHeaders.test.ts` fails if
+either name comes back.
 
 ## Accounts and profiles
 
@@ -487,6 +487,11 @@ Lamps/Brass lamp/front.jpg,Brass reading lamp,Art deco,"1,250.00"
   to the selection. Untick the rows that should keep another artist, then search and choose again.
   The search box filters the list, and **Select all** applies to the filtered rows. A new artist can
   be created in the same screen.
+- **Category.** Every selected piece needs a category before it can be imported. A `category` column
+  in the CSV is matched by name - a main category, a child, or the full path (`Mirrors / Wall
+  mirrors`, `Mirrors > Wall mirrors`) - and a name the gallery does not have is listed as an issue.
+  Select rows and choose a category in the assignment card to give them one at once, or pick the
+  category on the row itself; main categories and subcategories are in the same list.
 - **Before importing**, each row shows whether a CSV row matched, how many photographs it has and
   its folder. Title, description and price can be corrected inline.
 - **Uploads** run one piece at a time and show progress. A failure leaves that row selected with its

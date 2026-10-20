@@ -5,8 +5,8 @@
  * The key is a browser key: it ships in the bundle and is protected by the HTTP-referrer
  * restriction on the Google Cloud side, not by secrecy. Reading it here gives the deployment one
  * place to set it (`VITE_GOOGLE_MAPS_API_KEY`, see .env, the Dockerfile and render.yaml) and one
- * place to decide what the gallery does without it: the address, the opening hours and a link to
- * Google Maps, which needs no key at all.
+ * place to decide how the frame is built: the Embed API with a key, Google's keyless embed without
+ * one. The address, the opening hours and the link to Google Maps work either way.
  */
 type Place = { address?: string; latitude: number; longitude: number };
 
@@ -27,11 +27,16 @@ function query({ address, latitude, longitude }: Place): string {
  * just spent its critical path on a first paint, and a map that arrives as a frame costs the page
  * no JavaScript of its own.
  */
-export function googleMapsEmbedUrl(place: Place): string | undefined {
+export function googleMapsEmbedUrl(place: Place): string {
   const key = googleMapsKey();
-  if (!key) return undefined;
-  const params = new URLSearchParams({ key, q: query(place), zoom: "16" });
-  return `https://www.google.com/maps/embed/v1/place?${params.toString()}`;
+  if (key) {
+    const params = new URLSearchParams({ key, q: query(place), zoom: "16" });
+    return `https://www.google.com/maps/embed/v1/place?${params.toString()}`;
+  }
+  // Google's classic embed needs no key. It redirects to /maps/embed, which the CSP already
+  // allows, and gives a visitor an actual map to look at instead of an empty card.
+  const params = new URLSearchParams({ q: query(place), z: "16", output: "embed" });
+  return `https://www.google.com/maps?${params.toString()}`;
 }
 
 /** The Maps URL scheme. It needs no key, so the link is always there to follow. */

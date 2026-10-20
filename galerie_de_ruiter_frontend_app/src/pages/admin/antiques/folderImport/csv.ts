@@ -13,6 +13,8 @@ export type CsvRecord = {
   title?: string;
   description?: string;
   price?: number;
+  /** The category as the spreadsheet names it; matched to a category record on the import screen. */
+  category?: string;
   /** The raw price, kept so an unreadable value can be named in the warning. */
   priceText?: string;
   source: string;
@@ -30,7 +32,7 @@ export type CsvParseResult = { records: CsvRecord[]; issues: CsvIssue[] };
 export type CsvSource = { name: string; text: string };
 export type CsvGrouping = "folder" | "image";
 
-type Column = "file" | "title" | "description" | "price";
+type Column = "file" | "title" | "description" | "price" | "category";
 
 const COLUMN_HEADERS: Record<Column, string[]> = {
   file: ["file", "filename", "filepath", "path", "image", "imagename", "imagepath", "imagefile", "photo", "photoname",
@@ -42,6 +44,10 @@ const COLUMN_HEADERS: Record<Column, string[]> = {
     "notes", "note", "story", "verhaal", "verhaaltje"],
   price: ["price", "prijs", "preis", "prix", "amount", "bedrag", "betrag", "montant", "value", "waarde",
     "wert", "euro", "eur", "priceeur", "prijseur", "prixeur", "preiseur"],
+  category: ["category", "categories", "collection", "subcategory", "subcategoryname", "subcollection",
+    "categorie", "categorieen", "collectie", "subcategorie", "subcategorienaam",
+    "kategorie", "kategorien", "sammlung", "unterkategorie", "unterkategoriename",
+    "rubrique", "souscategorie", "souscategories"],
 };
 
 /** `name` is title in one spreadsheet and filename in the next; the values decide. */
@@ -202,7 +208,8 @@ export function parseCsvSources(sources: CsvSource[]): CsvParseResult {
       const title = cell(columns.title);
       const description = cell(columns.description);
       const priceText = cell(columns.price);
-      if (!file && !title && !description && !priceText) continue;
+      const category = cell(columns.category);
+      if (!file && !title && !description && !priceText && !category) continue;
 
       const price = priceText ? parsePrice(priceText) : undefined;
       if (priceText && price === undefined) {
@@ -213,6 +220,7 @@ export function parseCsvSources(sources: CsvSource[]): CsvParseResult {
         title: title || undefined,
         description: description || undefined,
         price,
+        category: category || undefined,
         priceText: priceText || undefined,
         source: source.name,
         line: row.line,

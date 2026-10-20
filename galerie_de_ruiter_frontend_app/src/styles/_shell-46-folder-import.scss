@@ -27,6 +27,10 @@
 .folder-import-path { overflow-wrap: anywhere; }
 .folder-import-price { width: 8rem; }
 .folder-import-error, .folder-import-validation { color: #a12b36; font-size: 0.85rem; }
+.folder-import-category { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--theme-border); }
+.folder-import-category-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.folder-import-category-controls .form-select { flex: 1 1 18rem; max-width: 30rem; }
+.folder-import-category-controls .btn { display: inline-flex; align-items: center; gap: 0.4rem; }
 .folder-import-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.25rem; }
 .folder-import-actions .btn { display: inline-flex; align-items: center; gap: 0.4rem; }
 .folder-import-progress { margin: 0.75rem 0 0; color: var(--theme-text-secondary); }

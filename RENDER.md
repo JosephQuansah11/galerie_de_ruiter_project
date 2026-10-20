@@ -113,7 +113,8 @@ refused (see *Accounts and profiles* in the frontend README).
 The frontend also needs `VITE_GOOGLE_MAPS_API_KEY` (also `sync: false`): a browser key for the Maps
 Embed API and the Geocoding API, restricted by HTTP referrer to the gallery's origins
 (`https://galeriederuiterantieks.gripe/*` and `https://galeriederuiter.cloud-ip.cc/*`). Without it
-the location page shows the address and a link to Google Maps instead of a frame.
+the frame falls back to Google's keyless embed, which still shows the map, but the admin's address
+lookup needs the key.
 
 ## Agent discovery
 

@@ -15,6 +15,12 @@
 export const WEBP_MIME = "image/webp";
 /** The same quality the API uses, so a picture looks the same whichever side converted it. */
 export const WEBP_QUALITY = 0.82;
+/**
+ * The longest side the gallery stores. A camera file can be fifty megapixels; the largest copy a
+ * page draws is 1600 pixels, so 4000 keeps detail for zooming while cutting the upload and the
+ * server's decoding cost by a wide margin.
+ */
+export const MAX_IMAGE_EDGE = 4000;
 
 /** Formats a browser can reasonably decode and that are worth re-encoding. */
 const CONVERTIBLE_TYPES = new Set([
@@ -107,7 +113,11 @@ function encode(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null
  * cannot decode it, or when the encoder refuses. The returned file keeps its original name and
  * last-modified time so nothing downstream treats it as a different photograph.
  */
-export async function toWebp(file: File, quality = WEBP_QUALITY): Promise<File> {
+export async function toWebp(
+  file: File,
+  quality = WEBP_QUALITY,
+  maxEdge = MAX_IMAGE_EDGE,
+): Promise<File> {
   if (!isConvertible(file)) return file;
   if (typeof document === "undefined") return file;
   try {
@@ -115,11 +125,12 @@ export async function toWebp(file: File, quality = WEBP_QUALITY): Promise<File> 
     if (!decoded || decoded.width === 0 || decoded.height === 0) return file;
     try {
       const canvas = document.createElement("canvas");
-      canvas.width = decoded.width;
-      canvas.height = decoded.height;
+      const scale = Math.min(1, maxEdge / Math.max(decoded.width, decoded.height));
+      canvas.width = Math.max(1, Math.round(decoded.width * scale));
+      canvas.height = Math.max(1, Math.round(decoded.height * scale));
       const context = canvas.getContext("2d");
       if (!context) return file;
-      context.drawImage(decoded.source, 0, 0);
+      context.drawImage(decoded.source, 0, 0, canvas.width, canvas.height);
       const blob = await encode(canvas, quality);
       // A browser that has no WebP encoder silently answers with PNG instead.
       if (!blob || blob.type !== WEBP_MIME) return file;
@@ -133,8 +144,12 @@ export async function toWebp(file: File, quality = WEBP_QUALITY): Promise<File> 
 }
 
 /** Converts a batch one at a time, so a large import does not decode every photograph at once. */
-export async function toWebpFiles(files: File[], quality = WEBP_QUALITY): Promise<File[]> {
+export async function toWebpFiles(
+  files: File[],
+  quality = WEBP_QUALITY,
+  maxEdge = MAX_IMAGE_EDGE,
+): Promise<File[]> {
   const converted: File[] = [];
-  for (const file of files) converted.push(await toWebp(file, quality));
+  for (const file of files) converted.push(await toWebp(file, quality, maxEdge));
   return converted;
 }

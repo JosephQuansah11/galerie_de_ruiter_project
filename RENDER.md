@@ -75,13 +75,20 @@ first time they are requested. `ThumbnailServiceTest`, `AntiqueImageAdminTest` a
 The service stores and serves WebP: each photograph is converted when it is uploaded, in the
 browser before it is sent and again on the server if an older client sends a JPEG. The 400, 800 and
 1600-pixel variants are WebP too, written by the `webp-imageio` encoder registered with `ImageIO`
-(it bundles libwebp for Linux, macOS and Windows). The photographs that were already in the
-catalogue are rewritten by the admin's **Photograph format** card on the inventory page
-(`POST /api/admin/images/convert-to-webp`), which reports how many are left before it starts,
-converts ten per call so no request outlives a proxy timeout, and replaces each original
-only after the new object has been verified. `ImageFormatsTest`,
-`ThumbnailServiceTest`, `AntiqueImageAdminTest` and `src/models/antiques/antiqueImages.test.ts` pin
-the formats, sizes and URLs.
+(it bundles libwebp for Linux, macOS and Windows). The welcome slider, About-page images and profile
+avatars follow the same rule: uploads are converted in the browser and on the server, existing rows
+are converted on their first read, and an avatar is capped at 512 pixels. The photographs that were
+already in the catalogue are rewritten by the admin's **Photograph format** card on the inventory
+page (`POST /api/admin/images/convert-to-webp`), which reports how many are left before it starts,
+converts ten per call so no request outlives a proxy timeout, and replaces each original only after
+the new object has been verified. `ImageFormatsTest`, `ThumbnailServiceTest`,
+`AntiqueImageAdminTest` and `src/models/antiques/antiqueImages.test.ts` pin the formats, sizes and
+URLs.
+
+Originals are capped at 4000 pixels on the longest side, and a larger source is read with
+subsampling: a fifty-megapixel camera file is never decoded at full size. That cap also keeps a
+conversion batch inside the API's memory budget, so a large upload cannot restart the service.
+`ThumbnailService` uses the same reader for its variants.
 
 AVIF is not used: JDK `ImageIO` has no AVIF codec and browsers cannot encode it through a canvas,
 so WebP is the one modern format the whole pipeline - upload, storage, variants and every browser
@@ -235,6 +242,9 @@ be configured separately in its dashboard.
   `XSRF-TOKEN` cookie as `SameSite=None; Secure`. The Render frontend and API are
   different origins, so without it the browser drops the cookie and every
   authenticated write (profile details, avatar and image uploads) fails with 403.
+  The frontend reads that cookie and sends it back as `X-XSRF-TOKEN`; it only calls
+  `/api/login` when no cookie exists, and caches the token for the page, instead of
+  asking for a new one before every write.
 - 3D models are stored on a persistent disk, not in PostgreSQL. `galerie-java-api` mounts
   `galerie-models` at `/app/data/models` and `MODELS_STORAGE_DIR` points at that path; uploads
   are streamed to the file, so a large `.glb` never has to fit in the JVM heap or pass through

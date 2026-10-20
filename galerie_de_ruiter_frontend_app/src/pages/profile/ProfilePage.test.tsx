@@ -18,6 +18,7 @@ const mockAuth = {
   updateProfile: jest.fn(),
   changePassword: jest.fn(),
   refreshAvatar: jest.fn().mockResolvedValue(undefined),
+  refreshProfile: jest.fn().mockResolvedValue(undefined),
 };
 
 jest.mock("@/context/AuthContext", () => ({

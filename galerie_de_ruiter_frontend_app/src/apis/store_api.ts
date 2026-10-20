@@ -2,6 +2,7 @@ import { csrfHeaders } from "@/apis/client";
 import { axiosInstance, backendBaseURL } from "./backendClient";
 import type { AboutContent, AboutImage, StoreLocation } from "./apiTypes";
 import { cachedRequest, invalidateCache } from "@/services/apiCache";
+import { toWebp } from "@/services/imageConversion";
 
 export async function getAboutContent(): Promise<AboutContent> {
   return cachedRequest("about", async () =>
@@ -29,7 +30,7 @@ export async function updateStoreLocation(location: Omit<StoreLocation, "id">): 
  */
 export async function uploadAboutImage(image: File): Promise<AboutImage> {
   const form = new FormData();
-  form.append("image", image);
+  form.append("image", await toWebp(image));
   return (await axiosInstance.post<AboutImage>(`${backendBaseURL}/api/about/images`, form, {
     timeout: 120000,
     headers: { ...(await csrfHeaders()), "Content-Type": undefined },

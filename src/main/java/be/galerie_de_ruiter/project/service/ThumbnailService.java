@@ -3,7 +3,6 @@ package be.galerie_de_ruiter.project.service;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import javax.imageio.IIOImage;
@@ -54,8 +53,11 @@ public class ThumbnailService {
         if (maxEdge <= 0) return null;
         BufferedImage source;
         try {
-            source = ImageIO.read(new ByteArrayInputStream(original));
-        } catch (IOException | RuntimeException unreadable) {
+            // Subsampled while decoding: a large camera original is never held at full size just to
+            // make a small copy of it. Twice the target edge leaves enough pixels for a clean
+            // downscale to the exact size the page expects.
+            source = ImageFormats.read(original, maxEdge * 2);
+        } catch (RuntimeException unreadable) {
             return null;
         }
         if (source == null) return null;

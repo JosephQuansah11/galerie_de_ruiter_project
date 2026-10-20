@@ -1,31 +1,17 @@
-﻿import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
-import type { UserProfile } from "@/types/types";
-import { syncCurrentUser } from "@/pages/auth/authApi";
+import { useEffect, type Dispatch, type SetStateAction } from "react";
 
-type Setup = { setLoading: Dispatch<SetStateAction<boolean>>;
-  setProfile: Dispatch<SetStateAction<UserProfile | undefined>>; setRoles: Dispatch<SetStateAction<string[]>>;
-  token?: string };
 /**
- * What a page load still has to do once a session is known: read the visitor's profile.
+ * Marks the app ready once the session is known.
  *
- * Keycloak put the name, the email and the roles in the token and this file used to unpack them.
- * Supabase does the same, and the session hook already publishes them, so what is left is the
- * profile row - which the API creates the first time it is asked for. It is asked for once per
- * session; a failure is not shown, because the token already said who this is and the row appears
- * on the next save if it could not be read now.
+ * <p>The token already carries the visitor's name, address and roles, so a page load no longer asks
+ * `/api/me` who this is. That request used to run on every load, and a slow or restarting API then
+ * filled the console with failures for information the token had already provided. The profile page
+ * reads the row when it actually needs it (see `refreshProfile`).</p>
  */
-export function useAuthInitialization({ setLoading, setProfile, token }: Setup) {
-  const synced = useRef<string | undefined>(undefined);
+export function useAuthInitialization({ setLoading }: {
+  setLoading: Dispatch<SetStateAction<boolean>>;
+}) {
   useEffect(() => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-    if (synced.current === token) return;
-    synced.current = token;
-    syncCurrentUser(token).then((user) => setProfile((current) => ({ ...user,
-      firstName: user.firstName ?? current?.firstName, lastName: user.lastName ?? current?.lastName,
-      username: user.username || current?.username || "" }))).catch(() => undefined)
-      .finally(() => setLoading(false));
-  }, [token, setLoading, setProfile]);
+    setLoading(false);
+  }, [setLoading]);
 }

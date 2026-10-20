@@ -6,6 +6,8 @@ export interface AuthContextValue {
   token?: string;
   avatarUrl?: string;
   refreshAvatar: () => Promise<void>;
+  /** Reads the gallery's own profile row; the profile page calls it when it opens. */
+  refreshProfile: () => Promise<void>;
   profile?: UserProfile;
   roles: string[];
   isAdmin: boolean;

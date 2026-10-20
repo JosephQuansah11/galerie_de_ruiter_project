@@ -55,6 +55,21 @@ class ImageFormatsTest {
     }
 
     @Test
+    void capsAnOriginalAtTheRequestedEdge() throws Exception {
+        assumeTrue(ImageFormats.canWriteWebp(), "this build has no WebP encoder");
+        BufferedImage image = new BufferedImage(800, 400, BufferedImage.TYPE_INT_RGB);
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", png);
+
+        byte[] webp = ImageFormats.toWebp(png.toByteArray(), 200);
+
+        BufferedImage decoded = ImageIO.read(new ByteArrayInputStream(webp));
+        assertThat(Math.max(decoded.getWidth(), decoded.getHeight())).isEqualTo(200);
+        assertThat(decoded.getWidth()).isEqualTo(200);
+        assertThat(decoded.getHeight()).isEqualTo(100);
+    }
+
+    @Test
     void refusesBytesItCannotRead() {
         assertThat(ImageFormats.toWebp(null)).isNull();
         assertThat(ImageFormats.toWebp(new byte[0])).isNull();

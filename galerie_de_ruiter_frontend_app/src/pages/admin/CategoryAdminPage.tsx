@@ -16,7 +16,8 @@ export default function CategoryAdminPage() {
       <h1>{t("catalogueNavigation")}</h1></div><ListTree size={32} /></div>
     <p className="admin-intro">{t("categoryAdminIntro")}</p>
     <CategoryCreateForm {...admin} categories={admin.categories} />
-    {admin.createError && <Alert variant="warning">{t(admin.createError)}</Alert>}
+    {admin.createError && <Alert variant="warning">{admin.createError}</Alert>}
+    {admin.saveError && <Alert variant="danger">{admin.saveError}</Alert>}
     {admin.loading && <div className="catalogue-state"><Spinner animation="border" size="sm" /> {t("loadingCategories")}</div>}
     {admin.error && <Alert variant="danger">{t("categoriesLoadError")}</Alert>}
     <CategoryList categories={admin.categories} toggle={admin.toggle} remove={admin.removeCategory} />

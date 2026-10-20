@@ -31,7 +31,14 @@ public final class ImageUploads {
             throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Images must be 10 MB or smaller.");
         }
         byte[] bytes = file.getBytes();
-        return new PreparedImage(bytes, verifiedType(bytes));
+        String contentType = verifiedType(bytes);
+        // The slider and About page store WebP like the catalogue: a camera PNG has no business
+        // travelling at full weight to every visitor. A WebP upload is already what we store.
+        if (ImageFormats.WEBP.equals(contentType)) return new PreparedImage(bytes, contentType);
+        byte[] webp = ImageFormats.toWebp(bytes);
+        return webp != null
+                ? new PreparedImage(webp, ImageFormats.WEBP)
+                : new PreparedImage(bytes, contentType);
     }
 
     private static String verifiedType(byte[] bytes) {

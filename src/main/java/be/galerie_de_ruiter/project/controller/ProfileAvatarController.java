@@ -1,6 +1,7 @@
 package be.galerie_de_ruiter.project.controller;
 
 import be.galerie_de_ruiter.project.domain.User;
+import be.galerie_de_ruiter.project.service.ImageFormats;
 import be.galerie_de_ruiter.project.service.UserService;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
@@ -36,16 +37,29 @@ public class ProfileAvatarController {
 
     @GetMapping
     public ResponseEntity<byte[]> get(@AuthenticationPrincipal Jwt jwt) {
-        User user = users.getByKeycloakSubject(requireSubject(jwt));
+        String subject = requireSubject(jwt);
+        User user = users.getByKeycloakSubject(subject);
         // "No avatar yet" is an answer, not an error: the account menu falls back to the visitor's
         // initials. It used to be 404, which the browser reports as a failed request in the console
         // on every page load for every signed-in visitor who has not uploaded a picture - and the
         // frontend already reads 204 as "nothing to show" (see loadProfileAvatar).
         if (user == null || user.getAvatarImage() == null) return ResponseEntity.noContent().build();
+        byte[] avatar = user.getAvatarImage();
+        String contentType = user.getAvatarContentType();
+        // Avatars uploaded before WebP support are converted on their first read and kept small.
+        if (!ImageFormats.WEBP.equals(contentType)) {
+            byte[] webp = ImageFormats.toWebp(avatar, 512);
+            if (webp != null) {
+                users.updateAvatar(subject, webp, ImageFormats.WEBP);
+                avatar = webp;
+                contentType = ImageFormats.WEBP;
+            }
+        }
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "private, max-age=300")
-                .contentType(MediaType.parseMediaType(user.getAvatarContentType()))
-                .body(user.getAvatarImage());
+                .contentType(MediaType.parseMediaType(
+                        contentType == null ? MediaType.APPLICATION_OCTET_STREAM_VALUE : contentType))
+                .body(avatar);
     }
 
     private String requireSubject(Jwt jwt) {

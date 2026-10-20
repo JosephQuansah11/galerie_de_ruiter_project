@@ -3,11 +3,15 @@ import axiosInstance from "@/apis/authPromise";
 import { apiBaseUrl } from "@/apis/apiConfig";
 import { csrfHeaders } from "@/apis/client";
 
+import { toWebp, WEBP_QUALITY } from "@/services/imageConversion";
+
 const avatarUrl = `${apiBaseUrl}/api/me/avatar`;
 
 export async function uploadProfileAvatar(image: File): Promise<void> {
+  // An avatar is drawn in a small circle; 512 pixels is enough, and WebP keeps it tiny.
+  const prepared = await toWebp(image, WEBP_QUALITY, 512);
   const form = new FormData();
-  form.append("image", image);
+  form.append("image", prepared);
   await axiosInstance.put(avatarUrl, form, {
     timeout: 60000,
     // The CSRF token must come from the same origin that receives the upload, and the

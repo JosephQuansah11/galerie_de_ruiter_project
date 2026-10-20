@@ -35,11 +35,18 @@ export function bearerHeaders(token: string) {
 
 const csrfName = 'XSRF-TOKEN'
 const csrfHeader = 'X-XSRF-TOKEN'
-const crossOriginCsrfClient = axios.create({ baseURL: apiBaseUrl, withCredentials: true, timeout: 20000 })
+const crossOriginCsrfClient = axios.create({ baseURL: apiBaseUrl, withCredentials: true, timeout: 10000 })
+const csrfClients = new Map<string, AxiosInstance>()
+const csrfTokens = new Map<string, string>()
+const csrfRequests = new Map<string, Promise<string | undefined>>()
 
 function csrfClient(baseUrl: string): AxiosInstance {
   if (baseUrl === apiBaseUrl) return crossOriginCsrfClient
-  return axios.create({ baseURL: baseUrl, withCredentials: true, timeout: 20000 })
+  const existing = csrfClients.get(baseUrl)
+  if (existing) return existing
+  const client = axios.create({ baseURL: baseUrl, withCredentials: true, timeout: 10000 })
+  csrfClients.set(baseUrl, client)
+  return client
 }
 
 /**
@@ -56,17 +63,47 @@ export function readCsrfCookie(): string | undefined {
   return value.length > 0 ? decodeURIComponent(value) : undefined
 }
 
-/**
- * Requests a CSRF token from the same origin that will receive the write request.
- */
-export async function csrfHeaders(baseUrl: string = apiBaseUrl) {
+/** Drops the cached token after a sign-out, so the next write asks the new session for one. */
+export function clearCsrfTokenCache(): void {
+  csrfTokens.clear()
+  csrfRequests.clear()
+}
+
+async function requestCsrfToken(baseUrl: string): Promise<string | undefined> {
   try {
     const { data } = await csrfClient(baseUrl).get<{ token?: string }>('/api/login')
-    if (data?.token) return { [csrfHeader]: data.token }
+    return data?.token ?? readCsrfCookie()
   } catch {
-    // Fall through to the cookie so a blocked or slow token endpoint is not fatal.
+    // A blocked or slow token endpoint is not fatal when the cookie is already there.
+    return readCsrfCookie()
   }
-  const token = readCsrfCookie()
-  if (token) return { [csrfHeader]: token }
+}
+
+/**
+ * Requests a CSRF token from the same origin that will receive the write request.
+ *
+ * The cookie the API set is the answer most of the time; it used to call `/api/login` on every
+ * write, which added a second request to every category or profile save and failed the whole save
+ * whenever that request happened to meet a restarting API. The token is cached and concurrent
+ * writes share one request.
+ */
+export async function csrfHeaders(baseUrl: string = apiBaseUrl) {
+  const cookie = readCsrfCookie()
+  if (cookie) {
+    csrfTokens.set(baseUrl, cookie)
+    return { [csrfHeader]: cookie }
+  }
+  const cached = csrfTokens.get(baseUrl)
+  if (cached) return { [csrfHeader]: cached }
+  let pending = csrfRequests.get(baseUrl)
+  if (!pending) {
+    pending = requestCsrfToken(baseUrl).finally(() => csrfRequests.delete(baseUrl))
+    csrfRequests.set(baseUrl, pending)
+  }
+  const token = await pending
+  if (token) {
+    csrfTokens.set(baseUrl, token)
+    return { [csrfHeader]: token }
+  }
   throw new Error('Could not obtain a CSRF token from the API.')
 }

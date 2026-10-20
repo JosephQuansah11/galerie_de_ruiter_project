@@ -394,27 +394,28 @@ either name comes back.
 
 ## Accounts and profiles
 
-Signing in is Keycloak's job; what the app knows about the visitor is the API's. The two meet at one
-endpoint, `GET /api/me`, which the app asks on every page load so that the profile screen and the
-account menu show what the gallery's own database holds rather than only what the token says.
+Signing in is Supabase's job; what the app knows about the visitor is the API's. The access token
+already carries the name, address and roles, so the account menu and the forms use that - a page
+load no longer calls `GET /api/me`. The profile page asks for the gallery's own row when it opens
+(`AuthContext.refreshProfile`), and saving a profile writes it; the row is still created when it is
+first needed.
 
 - **`GET /api/me` needs a signed-in visitor, not a role.** It answers with the caller's own profile,
   looked up by the token's subject, and creates that row when it is missing - so being signed in is
   the whole requirement. It used to require `USER` or `ADMIN`, and the realm defines both roles but
   grants neither to a new account: every visitor who registered was refused their own profile with
-  403 until someone granted them a role by hand, and because the app asks on every page load, each of
-  them got a failed request in the browser console. A role belongs on what a role guards - the
+  403 until someone granted them a role by hand. A role belongs on what a role guards - the
   `ADMIN` writes - which is where the rest of `SecurityConfiguration` puts it.
   `UserControllerSecurityTest` pins both halves: a token carrying no role is answered, an anonymous
   request is not.
-- **The app does not send a request it knows will be refused.** `src/context/useAuthInitialization.ts`
-  reads the roles out of the token and asks `/api/me` only when it carries one the endpoint accepts
-  (`PROFILE_ROLES`), so a realm that has granted nothing yet costs the visitor nothing. Their name,
-  email and picture already came from the token, and the profile row is still created the first time
-  they save something. `AuthContext.test.tsx` pins both cases.
+- **The profile row is read only where it is needed.** The token names the visitor and gives the
+  roles, so `/api/me` is not part of every page load. `useAuthInitialization` only marks the app
+  ready; `ProfilePage` calls `AuthContext.refreshProfile` once for the row, which also picks up a
+  name edited on another device. A failed read does not block the form: the token values are already
+  there, and saving creates or updates the row.
 - **"No avatar yet" is an answer, not an error.** `GET /api/me/avatar` answered 404 for a visitor who
-  has not uploaded a picture, which the browser reports as a failed request in the console on every
-  page load - the one line the gallery saw in a console that was otherwise clean. It answers 204 now,
+  has not uploaded a picture, which the browser reports as a failed request in the developer tools on
+  every page load - the one line the gallery saw when everything else was clean. It answers 204 now,
   which says the same thing without the failure, and the frontend read both all along
   (`loadProfileAvatar`). `ProfileAvatarControllerTest` pins it, together with the picture it does
   send and the visitor whose row does not exist yet.
@@ -527,7 +528,9 @@ Boeken/Kunst/Schilderij,Schilderij,Oil on canvas,"1,250.00"
   its folder. Title, description and price can be corrected inline.
 - **Uploads** run one piece at a time and show progress. A failure leaves that row selected with its
   error; retrying continues from where it stopped and does not create the piece twice. Images are
-  the same formats and 8 MB limit as the single-piece form.
+  the same formats and 8 MB limit as the single-piece form, and are converted to WebP before they
+  are sent; the API converts again and stores them with a longest side of 4000 pixels. The welcome
+  slider, About page and profile avatar follow the same rule (an avatar is capped at 512 pixels).
 - **Encoding.** CSV files may be UTF-8 (with or without BOM), Windows-1252 (what Excel often writes)
   or UTF-16, with comma, semicolon or tab delimiters. Quoted fields and newlines inside a
   description are supported.

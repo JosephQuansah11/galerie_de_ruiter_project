@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DynamicForm } from '../../components/DynamicForm'
 import { Avatar } from '../../components/Avatar'
 import { useAuth } from '../../context/AuthContext'
@@ -11,6 +11,9 @@ import { describeApiError } from '../../apis/apiError'
 
 export function ProfilePage() {
   const auth = useAuth(); const { t } = useTranslation(); const name = auth.profile?.username ?? t("guestVisitor")
+  // The token already names the visitor; this is the one page that also needs the gallery's own
+  // profile row (a name edited elsewhere, for example). It is deliberately not fetched on every load.
+  useEffect(() => { void auth.refreshProfile(); }, [auth.refreshProfile]);
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const fields: FormField<UserProfile>[] = [{ name: 'firstName', label: t("firstName"), required: true }, { name: 'lastName', label: t("lastName"), required: true }, { name: 'email', label: t("email"), type: 'email', required: true }]

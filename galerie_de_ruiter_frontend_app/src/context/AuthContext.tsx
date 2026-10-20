@@ -1,11 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Registration, UserProfile, UserProfileUpdate } from "@/types/types";
 import type { AuthContextValue } from "./authTypes";
 import { useAvatar } from "./useAvatar";
 import { useAuthInitialization } from "./useAuthInitialization";
 import { useSupabaseSession, claimsOf } from "./useSupabaseSession";
-import { updateCurrentUser } from "@/pages/auth/authApi";
+import { syncCurrentUser, updateCurrentUser } from "@/pages/auth/authApi";
 import { changePassword as changePasswordWithSupabase, signIn as signInWithSupabase, signUp } from "@/services/supabaseAuth";
 import { clearChatSession } from "@/services/chatSession";
 import { clearCache } from "@/services/apiCache";
@@ -32,7 +32,25 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [roles, setRoles] = useState<string[]>([]);
   const { token, adopt, endSession, forget } = useSupabaseSession({ setAuthenticated, setProfile, setRoles });
   const { avatarUrl, refreshAvatar } = useAvatar(authenticated, token);
-  useAuthInitialization({ setLoading, setProfile, setRoles, token });
+  useAuthInitialization({ setLoading });
+  /**
+   * Reads the profile row when a page actually needs it. The account menu and the profile form are
+   * already named by the token, so this is only for the details that live in the gallery's own row
+   * (and for picking up a name edited on another device). It is called by the profile page, not on
+   * every page load.
+   */
+  const refreshProfile = useCallback(async () => {
+    if (!token) return;
+    try {
+      const user = await syncCurrentUser(token);
+      setProfile((current) => ({ ...user,
+        firstName: user.firstName ?? current?.firstName,
+        lastName: user.lastName ?? current?.lastName,
+        username: user.username || current?.username || "" }));
+    } catch {
+      // The token already names the visitor; the profile form can still be saved.
+    }
+  }, [token]);
   // A token the API refuses is no longer usable: forget it, drop cached responses, and let the
   // authPromise interceptor retry the public request without it. Otherwise every public page keeps
   // presenting the same refused token and both the collection and its categories stay empty.
@@ -72,7 +90,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     adopt(await changePasswordWithSupabase(email, currentPassword, newPassword));
   };
   const value = useMemo(() => ({
-    authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles,
+    authenticated, loading, token, profile, avatarUrl, refreshAvatar, refreshProfile, roles,
     isAdmin: roles.some((role) => role.replace(/^ROLE_/i, "").toUpperCase() === "ADMIN"),
     login: (from?: string) => toSignIn(navigate, from),
     // Signing out ends the concierge conversation, drops the cached public data and forgets the
@@ -86,7 +104,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       return endSession();
     },
     signIn, register, updateProfile, changePassword,
-  }), [authenticated, loading, token, profile, avatarUrl, refreshAvatar, roles]);
+  }), [authenticated, loading, token, profile, avatarUrl, refreshAvatar, refreshProfile, roles]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

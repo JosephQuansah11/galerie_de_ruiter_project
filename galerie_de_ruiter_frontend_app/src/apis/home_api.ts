@@ -1,6 +1,7 @@
 import { csrfHeaders } from "@/apis/client";
 import { axiosInstance, backendBaseURL } from "./backendClient";
 import { cachedRequest, invalidateCache } from "@/services/apiCache";
+import { toWebp } from "@/services/imageConversion";
 
 /** Editable copy for the dashboard / home page. Blank fields use the translated default. */
 export type HomeContent = {
@@ -39,7 +40,7 @@ export async function getHomeImages(): Promise<HomeImage[]> {
 
 export async function uploadHomeImage(image: File, caption?: string): Promise<HomeImage> {
   const form = new FormData();
-  form.append("image", image);
+  form.append("image", await toWebp(image));
   if (caption?.trim()) form.append("caption", caption.trim());
   const { data } = await axiosInstance.post<HomeImage>(`${backendBaseURL}/api/home/images`, form, {
     timeout: 120000,

@@ -11,6 +11,7 @@ describe("converting photographs to WebP before upload", () => {
   const originalContext = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, "getContext");
   const originalToBlob = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, "toBlob");
   let encoder: jest.Mock;
+  let lastCanvas: HTMLCanvasElement | undefined;
 
   beforeEach(() => {
     Object.defineProperty(globalThis, "createImageBitmap", {
@@ -21,8 +22,12 @@ describe("converting photographs to WebP before upload", () => {
     Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
       configurable: true,
       writable: true,
-      value: jest.fn(() => ({ drawImage: jest.fn() })),
+      value: jest.fn(function (this: HTMLCanvasElement) {
+        lastCanvas = this;
+        return { drawImage: jest.fn() };
+      }),
     });
+    lastCanvas = undefined;
     encoder = jest.fn((callback: BlobCallback) => callback(webpBlob()));
     Object.defineProperty(HTMLCanvasElement.prototype, "toBlob", {
       configurable: true,
@@ -89,6 +94,24 @@ describe("converting photographs to WebP before upload", () => {
     const original = imageFile("front.heic", "image/heic");
 
     expect(await toWebp(original)).toBe(original);
+  });
+
+  it("caps a camera-sized photograph at the gallery's maximum edge", async () => {
+    (globalThis.createImageBitmap as jest.Mock).mockResolvedValue({ width: 6000, height: 4000, close: jest.fn() });
+
+    const converted = await toWebp(imageFile("front.jpg", "image/jpeg"));
+
+    expect(converted.type).toBe(WEBP_MIME);
+    expect(lastCanvas?.width).toBe(4000);
+    expect(lastCanvas?.height).toBe(2667);
+  });
+
+  it("shrinks an avatar to the size the profile picture is drawn at", async () => {
+    const converted = await toWebp(imageFile("portrait.png", "image/png"), 0.82, 512);
+
+    expect(converted.type).toBe(WEBP_MIME);
+    expect(lastCanvas?.width).toBe(512);
+    expect(lastCanvas?.height).toBe(341);
   });
 
   it("converts a batch in order", async () => {

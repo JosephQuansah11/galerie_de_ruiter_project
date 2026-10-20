@@ -3,6 +3,7 @@ package be.galerie_de_ruiter.project.controller;
 import be.galerie_de_ruiter.project.domain.HomeImage;
 import be.galerie_de_ruiter.project.dto.HomeImageResponse;
 import be.galerie_de_ruiter.project.repository.HomeImageRepository;
+import be.galerie_de_ruiter.project.service.ImageFormats;
 import be.galerie_de_ruiter.project.service.ImageUploads;
 import java.io.IOException;
 import java.util.List;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,16 +60,29 @@ public class HomeImageController {
     }
 
     @GetMapping("/{imageId}")
+    @Transactional
     public ResponseEntity<byte[]> image(@PathVariable UUID imageId) {
         return images.findById(imageId)
-                .map(image -> ResponseEntity.ok()
-                        // An upload gets a new id and its bytes never change, so a visitor who has
-                        // seen this photograph may keep it. Five minutes made every slider visit
-                        // fetch it again and put the bytes through the database a second time.
-                        .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
-                        .contentType(MediaType.parseMediaType(image.getContentType()))
-                        .contentLength(image.getData().length)
-                        .body(image.getData()))
+                .map(image -> {
+                    // Rows uploaded before WebP support are converted the first time a page asks
+                    // for them, and the result is kept. The visitor always receives WebP.
+                    if (!ImageFormats.WEBP.equals(image.getContentType())) {
+                        byte[] webp = ImageFormats.toWebp(image.getData());
+                        if (webp != null) {
+                            image.setData(webp);
+                            image.setContentType(ImageFormats.WEBP);
+                            images.save(image);
+                        }
+                    }
+                    return ResponseEntity.ok()
+                            // An upload gets a new id and its bytes never change, so a visitor who has
+                            // seen this photograph may keep it. Five minutes made every slider visit
+                            // fetch it again and put the bytes through the database a second time.
+                            .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
+                            .contentType(MediaType.parseMediaType(image.getContentType()))
+                            .contentLength(image.getData().length)
+                            .body(image.getData());
+                })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

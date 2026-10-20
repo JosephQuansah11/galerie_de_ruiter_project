@@ -3,7 +3,7 @@ import { Alert, Badge, Card, Modal, Spinner } from "react-bootstrap";
 import { Image as ImageIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { convertImagesToWebp, getImageFormatStatus, type ImageFormatReport, type ImageFormatStatus } from "@/apis/backend_api";
-import { describeApiError } from "@/apis/apiError";
+import { describeApiError, isNetworkError } from "@/apis/apiError";
 import { Button } from "@/components/ReactButton";
 
 /** A byte count the curator can read, for the saving the conversion reports. */
@@ -40,7 +40,8 @@ export function ImageFormatAdmin() {
     setLoading(true);
     getImageFormatStatus()
       .then((value) => { setStatus(value); setError(undefined); })
-      .catch((thrown) => setError(describeApiError(thrown, t("imageFormatFailed"))))
+      .catch((thrown) => setError(describeApiError(thrown,
+        isNetworkError(thrown) ? t("imageFormatUnavailable") : t("imageFormatFailed"))))
       .finally(() => setLoading(false));
   };
 
@@ -59,7 +60,7 @@ export function ImageFormatAdmin() {
     try {
       let remaining = progress.candidates;
       for (let round = 0; round < 200 && remaining > 0; round += 1) {
-        const batch = await convertImagesToWebp(true, 25);
+        const batch = await convertImagesToWebp(true, 10);
         progress.converted += batch.converted;
         progress.bytesBefore += batch.bytesBefore;
         progress.bytesAfter += batch.bytesAfter;
@@ -76,7 +77,8 @@ export function ImageFormatAdmin() {
       setConfirming(false);
       refresh();
     } catch (thrown) {
-      setError(describeApiError(thrown, t("imageFormatFailed")));
+      setError(describeApiError(thrown,
+        isNetworkError(thrown) ? t("imageFormatUnavailable") : t("imageFormatFailed")));
     } finally {
       setConverting(false);
     }
@@ -93,7 +95,14 @@ export function ImageFormatAdmin() {
       </Badge>}
     </div>
     {loading && <p className="image-format-admin-status"><Spinner animation="border" size="sm" /> {t("imageFormatLoading")}</p>}
-    {error && <Alert variant="danger">{error}</Alert>}
+    {error && <Alert variant="danger">
+      <div className="image-format-admin-error">
+        <span>{error}</span>
+        <Button className="btn btn-outline-secondary" type="button" disabled={loading} onClick={refresh}>
+          {t("imageFormatRetry")}
+        </Button>
+      </div>
+    </Alert>}
     {status && <>
       <p className="image-format-admin-status">
         {t("imageFormatStatus", { webp: status.webp, total: status.total })}

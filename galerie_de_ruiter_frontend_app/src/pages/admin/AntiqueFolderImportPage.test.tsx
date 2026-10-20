@@ -3,8 +3,8 @@ import { renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
 import AntiqueFolderImportPage from "./AntiqueFolderImportPage";
 import {
-  addAntique, createCategory, getAllAntiques, getAllCategories, getVisibleCategories,
-  searchDesigners, updateAntique, uploadAntiqueImage,
+  addAntique, createCategory, createDesigner, getAllAntiques, getAllCategories, getAllDesigners,
+  getVisibleCategories, searchDesigners, updateAntique, uploadAntiqueImage,
 } from "@/apis/backend_api";
 import type { Category } from "@/models/antiques/Antique";
 
@@ -18,6 +18,7 @@ jest.mock("@/apis/backend_api", () => ({
   getVisibleCategories: jest.fn(),
   getAllCategories: jest.fn(),
   createCategory: jest.fn(),
+  getAllDesigners: jest.fn(),
 }));
 jest.mock("@/services/contentUpdates", () => ({ publishContentUpdate: jest.fn() }));
 
@@ -29,6 +30,8 @@ const searchDesignersMock = searchDesigners as jest.Mock;
 const getCategoriesMock = getVisibleCategories as jest.Mock;
 const getAllCategoriesMock = getAllCategories as jest.Mock;
 const createCategoryMock = createCategory as jest.Mock;
+const getAllDesignersMock = getAllDesigners as jest.Mock;
+const createDesignerMock = createDesigner as jest.Mock;
 
 const artist = { id: "artist-1", firstName: "Ada", lastName: "Lovelace" };
 
@@ -98,9 +101,14 @@ beforeEach(() => {
   searchDesignersMock.mockResolvedValue([artist]);
   getCategoriesMock.mockResolvedValue(categories);
   getAllCategoriesMock.mockResolvedValue(categories);
+  getAllDesignersMock.mockResolvedValue([]);
   createCategoryMock.mockImplementation(async (name: string, parentId?: string) => ({
     id: `cat-${name.toLowerCase()}`, name, parentId: parentId ?? null,
     visible: true, itemCount: 0, children: [],
+  }));
+  createDesignerMock.mockImplementation(async (designer: { firstName: string; lastName: string; middleName?: string | null }) => ({
+    id: `artist-${designer.lastName.toLowerCase()}`,
+    firstName: designer.firstName, lastName: designer.lastName, middleName: designer.middleName ?? null,
   }));
   getAllAntiquesMock.mockResolvedValue([]);
   addAntiqueMock.mockImplementation(async () => ({ id: `antique-${addAntiqueMock.mock.calls.length}` }));
@@ -230,6 +238,52 @@ describe("the folder import screen", () => {
     expect(uploadImageMock).toHaveBeenCalledTimes(2);
   });
 
+  it("reads Title by Artist from the folder, strips it from the title and creates the artist", async () => {
+    renderPage(<AntiqueFolderImportPage />);
+    await chooseFolder([
+      image("Boeken/Fotografie/Stoel by John Doe/front.jpg"),
+      csv("Boeken/pieces.csv", "file;title;price\nFotografie/Stoel by John Doe;Stoel;480\n"),
+    ], "Stoel");
+
+    // Boeken is the main category because it is the picked folder; Fotografie is its child.
+    expect((await screen.findAllByText("Boeken / Fotografie")).length).toBeGreaterThan(0);
+    expect(screen.getByText(i18n.t("artistFromTitle", { name: "John Doe" }))).toBeInTheDocument();
+    expect(screen.getByText(i18n.t("importArtistWillCreate"))).toBeInTheDocument();
+
+    const importButton = screen.getByRole("button", { name: /Import 1 piece/ });
+    await waitFor(() => expect(importButton).toBeEnabled());
+    fireEvent.click(importButton);
+
+    await waitFor(() => expect(createDesignerMock).toHaveBeenCalledWith(expect.objectContaining({
+      firstName: "John", lastName: "Doe",
+    })));
+    await waitFor(() => expect(addAntiqueMock).toHaveBeenCalledWith(expect.objectContaining({
+      title: "Stoel",
+      artistId: "artist-doe",
+      categoryId: "cat-fotografie",
+    })));
+  });
+
+  it("uses an artist that is already in the directory", async () => {
+    getAllDesignersMock.mockResolvedValue([{ id: "artist-john", firstName: "John", lastName: "Doe" }]);
+    renderPage(<AntiqueFolderImportPage />);
+    await chooseFolder([
+      image("Boeken/Fotografie/Stoel by John Doe/front.jpg"),
+      csv("Boeken/pieces.csv", "file;title;price\nFotografie/Stoel by John Doe;Stoel;480\n"),
+    ], "Stoel");
+
+    expect(await screen.findByText("John Doe")).toBeInTheDocument();
+    expect(screen.queryByText(i18n.t("importArtistWillCreate"))).not.toBeInTheDocument();
+    const importButton = screen.getByRole("button", { name: /Import 1 piece/ });
+    await waitFor(() => expect(importButton).toBeEnabled());
+    fireEvent.click(importButton);
+
+    await waitFor(() => expect(addAntiqueMock).toHaveBeenCalledWith(expect.objectContaining({
+      artistId: "artist-john",
+    })));
+    expect(createDesignerMock).not.toHaveBeenCalled();
+  });
+
   it("updates an existing piece and keeps the details the import does not provide", async () => {
     getAllAntiquesMock.mockResolvedValueOnce([{
       id: "existing-1",
@@ -242,7 +296,7 @@ describe("the folder import screen", () => {
     }]);
 
     renderPage(<AntiqueFolderImportPage />);
-    await chooseFolder([image("Root/Mirrors/Carved mirror/front.jpg")]);
+    await chooseFolder([image("Mirrors/Carved mirror/front.jpg")]);
 
     // The existing piece supplies the artist, category, price and story the folder does not.
     expect(await screen.findByDisplayValue("Original story")).toBeInTheDocument();

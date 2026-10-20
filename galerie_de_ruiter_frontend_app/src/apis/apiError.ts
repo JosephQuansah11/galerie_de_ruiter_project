@@ -2,6 +2,12 @@ import axios from "axios";
 
 type ApiErrorBody = { message?: string; detail?: string; error?: string; status?: number };
 
+export function isNetworkError(error: unknown): boolean {
+  // A blocked CORS request, a dropped connection and a cold proxy all reach the browser without a
+  // response, which is what a visitor sees as "network error".
+  return axios.isAxiosError(error) && !error.response;
+}
+
 /**
  * Turns a failed API call into a message that can be shown to a visitor. The API
  * reports the real reason (validation, missing session, CSRF, model warm-up) in the

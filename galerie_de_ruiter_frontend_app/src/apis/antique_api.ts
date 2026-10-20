@@ -1,5 +1,6 @@
 import type Antique from "@/models/antiques/Antique";
 import type { AntiqueForm } from "@/models/antiques/Antique";
+import axios from "axios";
 import { csrfHeaders } from "@/apis/client";
 import { visitorId } from "@/services/visitorId";
 import { toWebp } from "@/services/imageConversion";
@@ -142,6 +143,32 @@ export async function uploadAntiqueModel(id: string, model: File): Promise<Antiq
   return response.data;
 }
 
+/**
+ * Render answers 502/503 while a deploy restarts the API, and its proxy answers 502 if a request
+ * outlives it. Those are temporary and the same call works a moment later, so the conversion
+ * retries them instead of showing a network error. A request that was already processed is safe to
+ * repeat: the conversion only looks at photographs that are not WebP yet.
+ */
+function isTransient(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) return false;
+  // A request that ran into its own timeout is not a deploy window; retrying it would only make
+  // the curator wait longer for the same answer.
+  if (error.code === "ECONNABORTED" || error.code === "ERR_CANCELED") return false;
+  const status = error.response?.status;
+  return status === undefined || status === 502 || status === 503 || status === 504;
+}
+
+async function withRetry<T>(request: () => Promise<T>, attempts = 3): Promise<T> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await request();
+    } catch (error) {
+      if (attempt >= attempts || !isTransient(error)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 1500 * attempt));
+    }
+  }
+}
+
 /** How much of the catalogue is already WebP, and whether this API can encode it at all. */
 export type ImageFormatStatus = {
   webpEncoder: boolean;
@@ -164,8 +191,10 @@ export type ImageFormatReport = {
 };
 
 export async function getImageFormatStatus(): Promise<ImageFormatStatus> {
-  const response = await axiosInstance.get<ImageFormatStatus>(`${backendBaseURL}/api/admin/images/format-status`);
-  return response.data;
+  return withRetry(async () => {
+    const response = await axiosInstance.get<ImageFormatStatus>(`${backendBaseURL}/api/admin/images/format-status`);
+    return response.data;
+  });
 }
 
 /**
@@ -173,14 +202,16 @@ export async function getImageFormatStatus(): Promise<ImageFormatStatus> {
  * counts. Without it the API only reports what is left to do. One call converts at most `limit`
  * pictures, so a large catalogue is done in batches instead of one request that can time out.
  */
-export async function convertImagesToWebp(confirm = false, limit = 25): Promise<ImageFormatReport> {
-  const response = await axiosInstance.post<ImageFormatReport>(
-    `${backendBaseURL}/api/admin/images/convert-to-webp`, undefined, {
-      params: { confirm, limit },
-      // A batch of 25 photographs is minutes of encoding at worst, not a dead request.
-      timeout: 900000,
-      headers: await csrfHeaders(),
-    });
-  invalidateCache("antiques");
-  return response.data;
+export async function convertImagesToWebp(confirm = false, limit = 10): Promise<ImageFormatReport> {
+  return withRetry(async () => {
+    const response = await axiosInstance.post<ImageFormatReport>(
+      `${backendBaseURL}/api/admin/images/convert-to-webp`, undefined, {
+        params: { confirm, limit },
+        // A batch of ten photographs is well inside a proxy's request window.
+        timeout: 900000,
+        headers: await csrfHeaders(),
+      });
+    invalidateCache("antiques");
+    return response.data;
+  });
 }

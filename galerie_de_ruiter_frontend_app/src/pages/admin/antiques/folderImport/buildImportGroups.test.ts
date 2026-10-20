@@ -192,9 +192,22 @@ describe("reading categories from the folder hierarchy", () => {
   });
 
   it("keeps a single folder as a main category", () => {
-    const build = buildImportGroups([image("Root/Boeken/Stoel/front.jpg")], [], "folder");
+    const build = buildImportGroups([image("Boeken/Stoel/front.jpg")], [], "folder");
 
     expect(build.groups[0].categoryPath).toEqual(["Boeken"]);
+  });
+
+  it("makes the picked folder the main category when titles sit below its subfolders", () => {
+    const build = buildImportGroups([image("Boeken/Fotografie/Stoel/front.jpg")], [], "folder");
+
+    expect(build.groups[0].categoryPath).toEqual(["Boeken", "Fotografie"]);
+  });
+
+  it("skips the picked folder when it is the collection above the categories", () => {
+    const build = buildImportGroups(
+      [image("Collection/Boeken/Fotografie/Stoel/front.jpg")], [], "folder");
+
+    expect(build.groups[0].categoryPath).toEqual(["Boeken", "Fotografie"]);
   });
 
   it("flags folders deeper than the gallery's two category levels", () => {
@@ -202,5 +215,16 @@ describe("reading categories from the folder hierarchy", () => {
 
     expect(build.groups[0].categoryPath).toEqual(["A", "B", "C"]);
     expect(build.issues).toContainEqual({ key: "importCategoryTooDeep", params: { path: "A / B / C" } });
+  });
+
+  it("takes the artist from a Title by Artist folder", () => {
+    const build = buildImportGroups([
+      image("Boeken/Fotografie/Stoel by John Doe/front.jpg"),
+    ], [], "folder");
+
+    expect(build.groups[0]).toMatchObject({ title: "Stoel", artistName: "John Doe" });
+    expect(build.groups[0].categoryPath).toEqual(["Boeken", "Fotografie"]);
+    // The folder name itself is kept for matching a CSV that writes it in full.
+    expect(build.groups[0].folderName).toBe("Stoel by John Doe");
   });
 });

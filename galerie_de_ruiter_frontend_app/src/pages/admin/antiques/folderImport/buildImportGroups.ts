@@ -8,14 +8,15 @@
  */
 
 import type { CsvGrouping, CsvRecord } from "./csv";
+import { splitTitleArtist } from "./artistMatching";
 import { titleKey } from "./existingMatching";
 
 export type ImportIssue = { key: string; params?: Record<string, string | number> };
 
 export type ImportImage = { file: File; path: string; name: string };
 
-/** Where the category folders start: at the children of the picked folder, or at the picked one. */
-export type ImportCategorySource = "inside" | "chosen";
+/** Where the category folders start: inferred from the tree, or forced by the curator. */
+export type ImportCategorySource = "auto" | "inside" | "chosen";
 
 export type ImportGroup = {
   id: string;
@@ -34,6 +35,11 @@ export type ImportGroup = {
    * folders do not name a category - a loose photograph, for example.
    */
   categoryPath: string[];
+  /**
+   * The artist the folder's `Title by Artist` names, if it has one. The row may still need a
+   * matching artist record; the import resolves or creates it.
+   */
+  artistName?: string;
   record?: CsvRecord;
 };
 
@@ -144,12 +150,18 @@ function createGroups(images: ImportImage[], grouping: CsvGrouping, categorySour
     let group = groups.get(key);
     if (!group) {
       const leaf = perImage ? humaniseName(image.name) : humaniseName(itemFolder);
+      // `Stoel by John Doe` is a title and an artist; the folder name itself is kept for matching
+      // a CSV that writes it in full.
+      const { title: folderTitle, artistName } = splitTitleArtist(leaf);
       // In folder mode the piece is the folder that holds the photographs, so the folders above it
       // are its categories. In image mode the photograph is the piece and every folder below the
-      // picked root is a category.
+      // picked root is a category. `chosen` means the picked folder is the main category itself,
+      // which is what importing a `Boeken` folder does.
       const folders = perImage ? image.path.split("/").slice(1, -1) : itemFolder.split("/");
       const categoryFolders = perImage ? folders : folders.slice(0, -1);
-      const categoryPath = (categorySource === "chosen" ? [parts[0], ...categoryFolders] : categoryFolders)
+      const categoryPath = (categorySource === "chosen" && folders.length > 0
+        ? [parts[0], ...categoryFolders]
+        : categoryFolders)
         .map((segment) => segment.trim())
         .filter(Boolean);
       group = {
@@ -157,7 +169,8 @@ function createGroups(images: ImportImage[], grouping: CsvGrouping, categorySour
         label,
         folderName: leaf,
         images: [],
-        title: leaf,
+        title: folderTitle,
+        artistName,
         description: "",
         price: "",
         categoryPath,
@@ -221,6 +234,33 @@ function groupKeys(group: ImportGroup): string[] {
   return [...keys].filter(Boolean);
 }
 
+/**
+ * Whether the picked folder is the main category or the collection above the main categories.
+ *
+ * <p>Importing `Boeken` gives `Boeken / Fotografie / Title`: the title sits two folders below the
+ * picked one, so `Boeken` is the main category. Importing the collection above it gives
+ * `Collection / Boeken / Fotografie / Title`, three folders below, so the collection is skipped.
+ * Image mode shifts this by one because the photograph itself is the piece. Anything unusual can
+ * still be overridden in the screen, which is why this is a default rather than a rule.</p>
+ */
+export function inferCategorySource(
+  images: ImportImage[],
+  grouping: CsvGrouping,
+): Exclude<ImportCategorySource, "auto"> {
+  const directFolders = new Set(images.map((image) => folderWithinRoot(image.path)).filter(Boolean));
+  const depths = images.map((image) => {
+    if (grouping === "image") return image.path.split("/").slice(1, -1).length;
+    const itemFolder = owningFolder(folderWithinRoot(image.path), directFolders);
+    return itemFolder ? itemFolder.split("/").length : 0;
+  });
+  // Folder mode: main category, subcategory, title = at least three levels under a collection root.
+  // Image mode: main category, subcategory = two directory levels under a collection root.
+  const collectionRoot = grouping === "image"
+    ? depths.some((depth) => depth >= 2)
+    : depths.some((depth) => depth >= 3);
+  return collectionRoot ? "inside" : "chosen";
+}
+
 /** Whether two non-empty details disagree; a blank value never erases the other. */
 function detailsConflict(left: ImportGroup, right: ImportGroup): boolean {
   const differs = (one: string | undefined, two: string | undefined) => {
@@ -231,6 +271,7 @@ function detailsConflict(left: ImportGroup, right: ImportGroup): boolean {
   return differs(left.description, right.description)
     || differs(left.price, right.price)
     || differs(left.category, right.category)
+    || differs(left.artistName, right.artistName)
     // Two folders with the same title but different category folders are a real disagreement: the
     // first category is kept, and the curator is told to check the piece.
     || differs(left.categoryPath.join(" / "), right.categoryPath.join(" / "));
@@ -273,6 +314,7 @@ function mergeSharedTitles(groups: ImportGroup[]): { groups: ImportGroup[]; issu
     if (!first.price) first.price = group.price;
     if (!first.category) first.category = group.category;
     if (first.categoryPath.length === 0) first.categoryPath = group.categoryPath;
+    if (!first.artistName) first.artistName = group.artistName;
     if (!first.record) first.record = group.record;
     if (first.label !== group.label) first.label = `${first.label} · ${group.label}`;
   }
@@ -285,7 +327,7 @@ export function buildImportGroups(
   files: File[],
   records: CsvRecord[],
   grouping: CsvGrouping,
-  categorySource: ImportCategorySource = "inside",
+  categorySource: ImportCategorySource = "auto",
 ): ImportBuild {
   const considered = files.filter((file) => !isIgnoredFile(file));
   const csvCount = considered.filter(isCsvFile).length;
@@ -297,7 +339,10 @@ export function buildImportGroups(
   }
 
   const images = imageFiles.map((file) => ({ file, path: filePath(file), name: file.name }));
-  const groups = createGroups(images, grouping, categorySource);
+  // The tree itself says whether the picked folder is the main category (`Boeken`) or the
+  // collection above it; the curator can override that in the screen.
+  const source = categorySource === "auto" ? inferCategorySource(images, grouping) : categorySource;
+  const groups = createGroups(images, grouping, source);
   const { byPath, byTitle } = indexRecords(records);
 
   // A basename is only safe when it names one group. The same `front.jpg` in two item folders must

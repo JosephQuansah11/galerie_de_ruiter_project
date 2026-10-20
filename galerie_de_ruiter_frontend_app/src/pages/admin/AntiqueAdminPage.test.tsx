@@ -202,7 +202,7 @@ describe("Antique administration page", () => {
     const dialog = await screen.findByRole("dialog");
     fireEvent.click(within(dialog).getByRole("button", { name: i18n.t("imageFormatConvert") }));
 
-    await waitFor(() => expect(mockedConvert).toHaveBeenCalledWith(true, 25));
+    await waitFor(() => expect(mockedConvert).toHaveBeenCalledWith(true, 10));
     expect(await screen.findByText(/3 photograph\(s\) converted/)).toBeInTheDocument();
   });
 

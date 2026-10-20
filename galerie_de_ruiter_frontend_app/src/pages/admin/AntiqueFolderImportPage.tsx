@@ -53,7 +53,12 @@ export default function AntiqueFolderImportPage() {
     && visible.every((group) => group.selected || group.status === "saved");
   // A row that matches an existing piece already has its data; an import field that is blank must
   // not be treated as a value to erase. A new piece is the only thing that needs all three.
-  const missingArtist = selected.some((group) => !group.existing && !group.artist);
+  const missingArtist = selected.some((group) => {
+    // A `Title by Artist` name is an artist the import can create, as long as it has a first and a
+    // last name (the designer API requires both).
+    const creatable = Boolean(group.artistName && group.artistName.trim().split(/\s+/).filter(Boolean).length >= 2);
+    return !group.existing && !group.artist && !creatable;
+  });
   // A category can come from the CSV, from an existing piece, or from the folders above the title.
   // Only when all three say nothing does the import have to wait for the curator.
   const missingCategory = selected.some((group) => !group.existing && !group.categoryId
@@ -154,8 +159,9 @@ export default function AntiqueFolderImportPage() {
         <Form.Label>{t("importCategorySource")}</Form.Label>
         <Form.Select size="sm" value={imported.categorySource} disabled={imported.importing || imported.reading}
           onChange={(event) => imported.changeCategorySource(event.target.value as ImportCategorySource)}>
-          <option value="inside">{t("importCategoryInside")}</option>
+          <option value="auto">{t("importCategoryAuto")}</option>
           <option value="chosen">{t("importCategoryChosen")}</option>
+          <option value="inside">{t("importCategoryInside")}</option>
         </Form.Select>
         <Form.Text>{t("importCategorySourceHint")}</Form.Text>
       </Form.Group>
@@ -258,7 +264,14 @@ export default function AntiqueFolderImportPage() {
                 {group.existingAmbiguous && <Badge bg="warning">{t("importExistingAmbiguous")}</Badge>}
                 <span>{t("imagesCount", { count: group.images.length })}</span>
                 <span className="folder-import-path" title={group.label}>{group.label}</span>
-                <span>{group.artist ? artistName(group) : t("noArtistAssigned")}</span>
+                <span>{group.artist
+                  ? artistName(group)
+                  : group.artistName
+                    ? t("artistFromTitle", { name: group.artistName })
+                    : t("noArtistAssigned")}</span>
+                {!group.artist && group.artistName
+                  && group.artistName.trim().split(/\s+/).filter(Boolean).length >= 2
+                  && <Badge bg="warning">{t("importArtistWillCreate")}</Badge>}
                 <span>{categoryLabel(imported.categories, group.categoryId)
                   ?? (group.categoryPath.join(" / ") || t("noCategoryAssigned"))}</span>
                 {saved && <Badge bg="success">{t("saved")}</Badge>}

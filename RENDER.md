@@ -78,7 +78,7 @@ browser before it is sent and again on the server if an older client sends a JPE
 (it bundles libwebp for Linux, macOS and Windows). The photographs that were already in the
 catalogue are rewritten by the admin's **Photograph format** card on the inventory page
 (`POST /api/admin/images/convert-to-webp`), which reports how many are left before it starts,
-converts twenty-five per call so no request outlives a proxy timeout, and replaces each original
+converts ten per call so no request outlives a proxy timeout, and replaces each original
 only after the new object has been verified. `ImageFormatsTest`,
 `ThumbnailServiceTest`, `AntiqueImageAdminTest` and `src/models/antiques/antiqueImages.test.ts` pin
 the formats, sizes and URLs.

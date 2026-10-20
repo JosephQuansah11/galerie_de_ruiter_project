@@ -447,9 +447,9 @@ A folder the importer understands looks like this:
 ```text
 Collection/                 <- the folder the admin picks
   pieces.csv                <- one or more CSVs, at any depth
-  Boeken/                   <- main category
+  Boeken/                   <- main category when Boeken is the folder picked
     Antiek/                 <- subcategory
-      Stoel/                <- one piece: its photographs are grouped
+      Stoel by John Doe/    <- one piece: title "Stoel", artist "John Doe"
         front.jpg
         back.jpg
         details/close.jpg
@@ -460,7 +460,7 @@ Collection/                 <- the folder the admin picks
 
 ```csv
 file,title,description,price
-Boeken/Antiek/Stoel,Stoel,Late 19th century,480.50
+Boeken/Antiek/Stoel by John Doe,Stoel,Late 19th century,480.50
 Boeken/Kunst/Schilderij,Schilderij,Oil on canvas,"1,250.00"
 ```
 
@@ -489,14 +489,23 @@ Boeken/Kunst/Schilderij,Schilderij,Oil on canvas,"1,250.00"
   to the selection. Untick the rows that should keep another artist, then search and choose again.
   The search box filters the list, and **Select all** applies to the filtered rows. A new artist can
   be created in the same screen.
-- **Categories from the folders.** The folders above an item folder are its category path:
-  `Boeken/Antiek/Stoel/` files the piece under the subcategory `Antiek` of `Boeken`, and
-  `Boeken/Stoel/` uses `Boeken` as the main category. The preview shows the detected path on every
-  row. Pick the folder that contains the main categories for this default; when `Boeken` itself is
-  the folder you picked, switch **Category from the folders** to *Starting with the chosen folder*.
-  The gallery's categories have two levels, so deeper folders are flagged as an issue and the first
-  two are used. A category that does not exist is created before the piece is saved - the main
-  category first, then its child - and the preview lists the categories that will be created.
+- **Categories from the folders.** The folder tree is read automatically: importing `Boeken` makes
+  `Boeken` the main category and its direct folders (`Fotografie`, `Kunst`, `Vintage`, `Cultuur`,
+  `Design & Architectuur`, …) the subcategories, with each title folder inside them a piece.
+  `Boeken / Fotografie / Stoel by John Doe/` therefore becomes the piece “Stoel” under the
+  subcategory `Fotografie` of `Boeken`. Picking the collection folder above `Boeken` is detected too:
+  the collection level is skipped and `Boeken` stays the main category. The preview shows the
+  detected path on every row; **Category from the folders** can override the detection when a tree
+  is arranged differently. The gallery has two category levels, so deeper folders are flagged and
+  the first two are used. A category that does not exist is created before the piece is saved - the
+  main category first, then its child - and the preview lists the categories that will be created.
+- **Artist from the title.** A title folder such as `Stoel by John Doe` is split at the last
+  ` by `: “Stoel” is the title and “John Doe” the artist. The name is matched against the artist
+  directory (case and accents do not matter); a match fills the row in, and a name that is not there
+  yet is created during the import (first word as the first name, the rest as the last name) and
+  assigned with the piece. A single-word artist cannot be created that way because the API needs a
+  first and a last name; those rows wait for you to pick or create the artist. The original folder
+  name is kept for CSV matching, and the title and artist remain editable.
 - **Category from the CSV.** A `category` column wins over the folder path. It is matched by name -
   a main category, a child, or the full path (`Mirrors / Wall mirrors`, `Mirrors > Wall mirrors`) -
   and a name the gallery does not have is listed as an issue rather than guessed at. Select rows and

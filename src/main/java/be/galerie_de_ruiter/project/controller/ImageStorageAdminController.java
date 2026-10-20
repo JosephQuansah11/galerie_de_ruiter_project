@@ -87,7 +87,7 @@ public class ImageStorageAdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ImageFormatMigration.Report convertToWebp(
             @RequestParam(name = "confirm", defaultValue = "false") boolean confirm,
-            @RequestParam(name = "limit", defaultValue = "25") int limit) {
+            @RequestParam(name = "limit", defaultValue = "10") int limit) {
         if (!ImageFormats.canWriteWebp()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
                     "This build has no WebP encoder, so the photographs cannot be converted.");

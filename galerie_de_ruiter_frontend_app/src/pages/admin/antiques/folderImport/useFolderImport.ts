@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { addAntique, createCategory, getAllAntiques, getAllCategories, getVisibleCategories, updateAntique, uploadAntiqueImage } from "@/apis/backend_api";
+import { addAntique, createCategory, createDesigner, getAllAntiques, getAllCategories, getAllDesigners, getVisibleCategories, updateAntique, uploadAntiqueImage } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 import type { Category, Designer } from "@/models/antiques/Antique";
 import { publishContentUpdate } from "@/services/contentUpdates";
 import { saveErrorKey } from "@/pages/antiques/antiqueSaveErrors";
 import { categoryIdFor, categoryNameKey, flattenAllCategories, matchCategory, matchCategoryPath } from "./categoryMatching";
-import { existingIndex, matchExisting } from "./existingMatching";
+import { existingIndex, matchExisting, titleKey } from "./existingMatching";
 import { importDifferences, type ImportField } from "./differences";
+import {
+  artistNameParts,
+  designerForName,
+  designerIndex,
+  designerKeys,
+} from "./artistMatching";
 import {
   buildImportGroups,
   filePath,
@@ -136,11 +142,12 @@ export function useFolderImport() {
   const [issues, setIssues] = useState<ImportIssue[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesError, setCategoriesError] = useState<string>();
+  const [designers, setDesigners] = useState<Designer[]>([]);
   const [existingAntiques, setExistingAntiques] = useState<Antique[]>([]);
   const [existingLoading, setExistingLoading] = useState(true);
   const [existingError, setExistingError] = useState<string>();
   const [grouping, setGroupingState] = useState<CsvGrouping>("folder");
-  const [categorySource, setCategorySource] = useState<ImportCategorySource>("inside");
+  const [categorySource, setCategorySource] = useState<ImportCategorySource>("auto");
   const [folderName, setFolderName] = useState("");
   const [imageCount, setImageCount] = useState(0);
   const [csvCount, setCsvCount] = useState(0);
@@ -160,6 +167,8 @@ export function useFolderImport() {
   extraCsvFilesRef.current = extraCsvFiles;
   const existingIndexRef = useRef<Map<string, Antique[]>>(new Map());
   existingIndexRef.current = existingIndex(existingAntiques);
+  const designersRef = useRef(designers);
+  designersRef.current = designers;
   const categorySourceRef = useRef(categorySource);
   categorySourceRef.current = categorySource;
   /** Lets a newer folder/CSV selection cancel an older, still-reading one. */
@@ -176,6 +185,29 @@ export function useFolderImport() {
       .then((items) => { setCategories(items); setCategoriesError(undefined); })
       .catch(() => setCategoriesError("categoriesCouldNotLoad"));
   }, []);
+
+  // Titles like `Stoel by John Doe` name an artist. The whole directory is small enough to read
+  // once, which lets the preview fill in the artist without a search call per row.
+  useEffect(() => {
+    getAllDesigners().then(setDesigners).catch(() => undefined);
+  }, []);
+
+  // If the directory arrives after a folder was read, fill in the artists it can match.
+  useEffect(() => {
+    if (designers.length === 0) return;
+    const index = designerIndex(designers);
+    setGroups((current) => {
+      let changed = false;
+      const next = current.map((group) => {
+        if (group.artist || !group.artistName) return group;
+        const match = designerForName(index, group.artistName);
+        if (!match) return group;
+        changed = true;
+        return { ...group, artist: match };
+      });
+      return changed ? next : current;
+    });
+  }, [designers]);
 
   // The import is an upsert. Without the existing inventory, a title that is already in the
   // gallery would be created a second time, so the page waits for this list before importing.
@@ -244,7 +276,9 @@ export function useFolderImport() {
       ...group,
       existing,
       existingAmbiguous: match.ambiguous,
-      artist: group.artist ?? artistFromExisting(existing),
+      // A parsed `by Artist` is an imported value even when the artist is not in the directory yet:
+      // leaving it empty lets the comparison show it, and the import creates it when taken.
+      artist: group.artist ?? (group.artistName ? undefined : artistFromExisting(existing)),
       categoryId,
       price: group.price.trim() ? group.price : existing?.price != null ? String(existing.price) : "",
       description: group.description.trim() ? group.description : existing?.description ?? "",
@@ -269,6 +303,7 @@ export function useFolderImport() {
 
   function applyBuild(build: ImportBuild, csvRecords: CsvRecord[], csvIssues: ImportIssue[]): void {
     releasePreviews();
+    const artists = designerIndex(designersRef.current);
     const drafts = build.groups.map((group): ImportGroupDraft => {
       const previewUrl = URL.createObjectURL(group.images[0].file);
       previews.current.push(previewUrl);
@@ -283,6 +318,9 @@ export function useFolderImport() {
         categoryId: categoryIdFor(group.category, categoriesRef.current)
           || matchCategoryPath(group.categoryPath, categoriesRef.current).id
           || "",
+        // An artist already in the directory is filled in; one that is not yet there is created
+        // before the piece is saved, so the curator does not have to type it by hand.
+        artist: designerForName(artists, group.artistName),
         overrides: {},
         confirmed: false,
         addImages: true,
@@ -494,7 +532,12 @@ export function useFolderImport() {
       setNotice("importExistingAmbiguous");
       return;
     }
-    if (targets.some((group) => !group.existing && !group.artist)) {
+    // A `Title by Artist` folder supplies the artist even before a record exists; the import creates
+    // it. A single-word name cannot be created through the designer API (it needs a first and a
+    // last name), so that row waits for the curator to pick or create the artist.
+    const canCreateArtist = (name?: string) =>
+      Boolean(name && name.trim().split(/\s+/).filter(Boolean).length >= 2);
+    if (targets.some((group) => !group.existing && !group.artist && !canCreateArtist(group.artistName))) {
       setNotice("importNeedsArtist");
       return;
     }
@@ -556,6 +599,30 @@ export function useFolderImport() {
       return path.length > 1 ? (await ensureCategory(path[1], main.id)).id : main.id;
     };
 
+    // The directory the page loaded is enough to reuse an artist; if it could not be loaded, ask
+    // once so the import does not create a duplicate of an artist that already exists.
+    let artistCache = designerIndex(designersRef.current);
+    if (designersRef.current.length === 0) {
+      try {
+        artistCache = designerIndex(await getAllDesigners());
+      } catch {
+        // Creating the artist below is still better than losing the piece.
+      }
+    }
+    const ensureArtist = async (name: string): Promise<Designer> => {
+      const known = designerForName(artistCache, name);
+      if (known) return known;
+      const parts = artistNameParts(name);
+      if (!parts) throw new Error("The artist needs a first and a last name.");
+      const created = await createDesigner({ ...parts, middleName: null });
+      for (const key of designerKeys(created)) artistCache.set(titleKey(key), created);
+      // Keep the page's directory in step too, so a second import in the same visit reuses this
+      // artist instead of creating a duplicate of it.
+      designersRef.current = [...designersRef.current, created];
+      setDesigners(designersRef.current);
+      return created;
+    };
+
     for (let index = 0; index < targets.length; index += 1) {
       const target = targets[index];
       setProgress({ current: index + 1, total: targets.length, title: target.title });
@@ -565,6 +632,8 @@ export function useFolderImport() {
       let uploadedCount = target.uploadedCount;
       let categoryId = target.categoryId;
       let categoryError = false;
+      let artistId = target.artist?.id;
+      let artistError = false;
       try {
         // The folder hierarchy is a category instruction: make the category before the piece that
         // belongs in it, so a new catalogue can be imported in one pass. An existing piece only
@@ -578,6 +647,19 @@ export function useFolderImport() {
             throw error;
           }
           patchGroup(target.id, { categoryId });
+        }
+        // The same for a `Title by Artist` folder: an artist that is not in the directory yet is
+        // created before the piece, and reused by every later row in the run.
+        if (!artistId && target.artistName
+            && (!target.existing || Boolean(target.overrides.artist))) {
+          try {
+            const artist = await ensureArtist(target.artistName);
+            artistId = artist.id;
+            patchGroup(target.id, { artist });
+          } catch (error) {
+            artistError = true;
+            throw error;
+          }
         }
         if (!targetId) {
           const priceText = priceOf(target);
@@ -594,7 +676,7 @@ export function useFolderImport() {
           const description = existing && !target.overrides.description
             ? existing.description ?? ""
             : target.description.trim() ? target.description : existing?.description ?? "";
-          const artistId = takes("artist") ? target.artist?.id ?? existing?.artist?.id : existing?.artist?.id;
+          const chosenArtistId = takes("artist") ? artistId ?? existing?.artist?.id : existing?.artist?.id;
           // Omitted means "keep the category already on the piece"; the API cannot clear it.
           const chosenCategoryId = takes("category") ? categoryId || undefined : undefined;
           if (existing) {
@@ -602,14 +684,14 @@ export function useFolderImport() {
               title,
               description,
               price: (takes("price") ? price ?? existing.price : existing.price) ?? undefined,
-              artistId,
+              artistId: chosenArtistId,
               categoryId: chosenCategoryId,
             });
             targetId = existing.id;
           } else {
             const created = await addAntique({
               title,
-              artistId: artistId!,
+              artistId: chosenArtistId!,
               categoryId: chosenCategoryId,
               description,
               price: price!,
@@ -639,9 +721,11 @@ export function useFolderImport() {
           status: "failed",
           createdId: targetId,
           uploadedCount,
-          error: categoryError
-            ? "importCategoryCreateFailed"
-            : targetId ? imageErrorKey(error) : saveErrorKey(error),
+          error: artistError
+            ? "importArtistCreateFailed"
+            : categoryError
+              ? "importCategoryCreateFailed"
+              : targetId ? imageErrorKey(error) : saveErrorKey(error),
         });
       }
     }

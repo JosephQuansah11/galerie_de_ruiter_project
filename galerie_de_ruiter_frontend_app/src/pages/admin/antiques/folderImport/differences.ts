@@ -21,6 +21,8 @@ export type ImportDraftFields = {
   description: string;
   price: string;
   artist?: Designer;
+  /** The artist a folder's `Title by Artist` names, even when the directory has no record yet. */
+  artistName?: string;
   categoryId: string;
   /** The category the CSV named, if any. */
   category?: string;
@@ -93,8 +95,11 @@ export function importDifferences(
     }
   }
 
-  const incomingArtist = artistName(draft.artist);
-  if (draft.artist?.id && draft.artist.id !== (existing.artist?.id ?? "")) {
+  const incomingArtist = artistName(draft.artist) || draft.artistName?.trim() || "";
+  const artistDiffers = draft.artist?.id
+    ? draft.artist.id !== (existing.artist?.id ?? "")
+    : Boolean(incomingArtist) && !sameText(incomingArtist, artistName(existing.artist));
+  if (artistDiffers) {
     differences.push({
       field: "artist",
       current: artistName(existing.artist),

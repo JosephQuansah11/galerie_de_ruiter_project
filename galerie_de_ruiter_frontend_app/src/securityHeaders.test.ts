@@ -24,7 +24,6 @@ const blueprint = readFileSync(join(join(appRoot, ".."), "render.yaml"), "utf8")
 /** What the container deployment substitutes into the policy at build time (see the Dockerfile). */
 const substituted = {
   "${CSP_API_ORIGIN}": "https://galerie-java-api.onrender.com",
-  "${CSP_KEYCLOAK_ORIGIN}": "https://galerie-keycloak.onrender.com",
 };
 
 const expand = (value: string) =>
@@ -68,6 +67,13 @@ const cspOf = (headers: Record<string, string>) => headers["content-security-pol
 const directive = (policy: string[], name: string) => policy.find((part) => part === name || part.startsWith(`${name} `));
 
 describe("security headers", () => {
+  it("does not deploy Keycloak or its settings on Render", () => {
+    // Production authenticates with Supabase. Comments may explain what was removed; only active
+    // blueprint lines matter.
+    const active = blueprint.split(/\r?\n/).filter((line) => !line.trim().startsWith("#")).join("\n");
+    expect(active).not.toMatch(/KEYCLOAK_|galerie-keycloak/i);
+  });
+
   it("sends the same headers from nginx and from the Render blueprint", () => {
     const nginxHeaders = fromNginx();
     const blueprintHeaders = fromBlueprint();
@@ -84,11 +90,8 @@ describe("security headers", () => {
   it("sends no Cross-Origin-Embedder-Policy, on purpose", () => {
     // COEP makes every cross-origin frame, image and script on the page declare a
     // Cross-Origin-Resource-Policy, and the resources this page loads are other people's: the Google
-    // map and Keycloak's own pages. Keycloak sends no CORP and cannot be given one - it is not this
-    // site's server. Its third-party-cookie probe, which keycloak-js loads in a hidden iframe, is
-    // what COEP broke: the frame was refused, the adapter rejected on its ten-second timeout, and
-    // the sign-in button did nothing. `credentialless`, the alternative the guidance offers, refuses
-    // that frame too. Nothing here needs `crossOriginIsolated`, which is all COEP buys.
+    // map does not send that header and this site cannot add it to someone else's server. Nothing
+    // here needs `crossOriginIsolated`, which is all COEP buys.
     expect(fromNginx()["cross-origin-embedder-policy"]).toBeUndefined();
     expect(fromBlueprint()["cross-origin-embedder-policy"]).toBeUndefined();
   });
@@ -180,13 +183,9 @@ describe("security headers", () => {
   it("lets the page load what it is built to load", () => {
     const policy = cspOf(fromNginx());
     const api = frontendEnv("VITE_JAVA_API_URL");
-    const keycloak = frontendEnv("VITE_KEYCLOAK_URL");
     // Every request the browser makes goes to the API, so both img-src and connect-src need it.
     expect(directive(policy, "img-src")).toContain(api);
     expect(directive(policy, "connect-src")).toContain(api);
-    // Keycloak answers the sign-in check.
-    expect(directive(policy, "connect-src")).toContain(keycloak);
-    expect(directive(policy, "frame-src")).toContain(keycloak);
     // The map is a Google Embed frame, and the administrator's address lookup calls Google's
     // geocoder, so both directives have to name Google and neither may name OpenStreetMap any more.
     expect(directive(policy, "frame-src")).toContain("https://www.google.com");

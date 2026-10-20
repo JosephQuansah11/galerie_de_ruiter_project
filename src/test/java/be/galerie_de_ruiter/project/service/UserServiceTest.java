@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.keycloak.admin.client.Keycloak;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 @ExtendWith(MockitoExtension.class)
@@ -22,7 +23,7 @@ class UserServiceTest {
 	@Mock
 	private UserRepository users;
 	@Mock
-	private Keycloak keycloakAdminClient;
+	private ObjectProvider<Keycloak> keycloakAdminClient;
 
 	@Test
 	void createsAProfileFromTheAuthenticatedKeycloakSubject() {

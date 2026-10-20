@@ -12,9 +12,12 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import be.galerie_de_ruiter.project.service.implementation.UserServiceImplementation;
 
 import jakarta.ws.rs.core.Response;
@@ -25,16 +28,29 @@ import jakarta.ws.rs.core.Response;
 public class UserService implements UserServiceImplementation {
 
     private final UserRepository usersRepository;
-    private final Keycloak keycloakAdminClient;
+    /**
+     * Absent under the Supabase profile: the legacy registration/role methods below then answer
+     * 503 instead of preventing the API from starting.
+     */
+    private final ObjectProvider<Keycloak> keycloakAdminClient;
     private final String keycloakRealm;
 
     public UserService(
             UserRepository usersRepository,
-            Keycloak keycloakAdminClient,
-            @Value("${keycloak.realm}") String keycloakRealm) {
+            ObjectProvider<Keycloak> keycloakAdminClient,
+            @Value("${keycloak.realm:}") String keycloakRealm) {
         this.usersRepository = usersRepository;
         this.keycloakAdminClient = keycloakAdminClient;
         this.keycloakRealm = keycloakRealm;
+    }
+
+    private Keycloak keycloak() {
+        Keycloak client = keycloakAdminClient.getIfAvailable();
+        if (client == null) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Keycloak is not configured; production uses Supabase Auth.");
+        }
+        return client;
     }
 
     @Override
@@ -54,7 +70,7 @@ public class UserService implements UserServiceImplementation {
         representation.setCredentials(List.of(credential));
 
         String keycloakSubject;
-        try (Response response = keycloakAdminClient.realm(keycloakRealm).users().create(representation)) {
+        try (Response response = keycloak().realm(keycloakRealm).users().create(representation)) {
             if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
 
                 String errorBody = response.hasEntity()
@@ -78,7 +94,7 @@ public class UserService implements UserServiceImplementation {
             return usersRepository.save(user);
         } catch (RuntimeException exception) {
             try {
-                keycloakAdminClient
+                keycloak()
                         .realm(keycloakRealm)
                         .users()
                         .delete(keycloakSubject);
@@ -148,32 +164,32 @@ public class UserService implements UserServiceImplementation {
     @Override
     public User removeRole(String keycloakSubject, UserRole role) {
         User user = requireUser(keycloakSubject);
-        keycloakAdminClient.realm(keycloakRealm).users().get(keycloakSubject).roles().realmLevel()
+        keycloak().realm(keycloakRealm).users().get(keycloakSubject).roles().realmLevel()
                 .remove(java.util.List.of(getKeycloakRole(role)));
         user.getRoles().remove(role);
         return usersRepository.save(user);
     }
 
     private void assignKeycloakRole(String keycloakSubject, UserRole role) {
-        keycloakAdminClient.realm(keycloakRealm).users().get(keycloakSubject).roles().realmLevel()
+        keycloak().realm(keycloakRealm).users().get(keycloakSubject).roles().realmLevel()
                 .add(java.util.List.of(getKeycloakRole(role)));
     }
 
     private RoleRepresentation getKeycloakRole(UserRole role) {
         try {
-            return keycloakAdminClient.realm(keycloakRealm).roles().get(role.name()).toRepresentation();
+            return keycloak().realm(keycloakRealm).roles().get(role.name()).toRepresentation();
         } catch (RuntimeException exception) {
             RoleRepresentation representation = new RoleRepresentation();
             representation.setName(role.name());
             representation.setDescription("Application role " + role.name());
             try {
-                keycloakAdminClient.realm(keycloakRealm).roles().create(representation);
+                keycloak().realm(keycloakRealm).roles().create(representation);
             } catch (jakarta.ws.rs.WebApplicationException roleCreationException) {
                 if (roleCreationException.getResponse().getStatus() != Response.Status.CONFLICT.getStatusCode()) {
                     throw roleCreationException;
                 }
             }
-            return keycloakAdminClient.realm(keycloakRealm).roles().get(role.name()).toRepresentation();
+            return keycloak().realm(keycloakRealm).roles().get(role.name()).toRepresentation();
         }
     }
 

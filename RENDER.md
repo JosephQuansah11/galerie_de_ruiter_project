@@ -1,14 +1,13 @@
 # Render production deployment
 
-The Render blueprint deploys the public app, its dependent services and two
-managed PostgreSQL databases:
+The Render blueprint deploys the public app and its dependent services:
 
 - `galerie-app-db`: application PostgreSQL database
-- `galerie-keycloak-db`: separate PostgreSQL database for Keycloak
-- `galerie-keycloak`: public Keycloak service
-- `galerie-ollama`: private Ollama model service
 - `galerie-java-api`: Spring Boot API
 - `galerie-frontend`: static React frontend with SPA rewrites
+
+Production authentication is **Supabase Auth**. Keycloak is only used by the local development
+stack and is no longer a Render service or database.
 
 The blueprint used to declare `galerie-reconstruction-api`, a Python service that turned six
 photographs into a 3D model, with a 1 GB data disk. Nothing called it - the frontend half of the
@@ -17,12 +16,9 @@ so it, its disk and its endpoints are gone. Syncing the blueprint deletes the Re
 models the gallery shows are `.glb` files an administrator uploads to `galerie-java-api`, which are
 unrelated to it.
 
-Both PostgreSQL databases use Render's current `basic-256mb` plan rather than
-the retired `starter` plan. Review the database pricing and capacity in Render
-before syncing; changing a plan can affect monthly costs.
-Keycloak uses the `standard` web-service plan (2 GiB RAM) because its startup
-exceeded the 512 MiB available on the `starter` plan. This service-plan change
-increases costs; review the current price in Render before syncing.
+The application PostgreSQL database uses Render's current `basic-256mb` plan rather than the retired
+`starter` plan. Review the database pricing and capacity in Render before syncing; changing a plan
+can affect monthly costs.
 
 ## Supabase Auth on the API
 
@@ -33,11 +29,10 @@ when the `supabase` Spring profile is active:
 - `SUPABASE_ISSUER_URI=https://bgmxpublcoldebamstbj.supabase.co/auth/v1`
 - `SUPABASE_JWK_SET_URI=https://bgmxpublcoldebamstbj.supabase.co/auth/v1/.well-known/jwks.json`
 
-The blueprint sets all three. `application-supabase.yml` replaces the Keycloak issuer and key set
-inherited from `application-prod.yml`, names `ES256` (Supabase's algorithm; Spring Boot defaults to
-`RS256`) and reads the project's key set directly. If a Supabase sign-in leaves `/api/me` or
-`/api/me/avatar` answering 401, check these values first: the API is still validating Keycloak
-tokens.
+The blueprint sets all three. `application-supabase.yml` names the Supabase issuer and key set,
+uses `ES256` (Supabase's algorithm; Spring Boot defaults to `RS256`) and reads the project's key
+set directly. If a Supabase sign-in leaves `/api/me` or `/api/me/avatar` answering 401, check these
+values first: the API is still using the legacy Keycloak settings.
 
 ## Supabase egress
 
@@ -86,29 +81,11 @@ than a new image pipeline.
 
 ## Keycloak
 
-The live client in the running Keycloak (`movie_project_frontend_client`) must also list
-`https://galeriederuiterantieks.gripe/*` and `https://galeriederuiter.cloud-ip.cc/*` in **Valid
-redirect URIs** *and* in **Valid post logout redirect URIs**. Keycloak refuses to return the browser
-to an origin its client does not declare, so without them a sign-in started on either domain fails
-at the redirect back - and the sign-out that returns through `/logout` fails with it. The realm file
-in `keycloak/realms` is a reference for a fresh import; a deploy does not re-import it into a
-Keycloak that already holds the realm.
-
-If the `galerie-keycloak` deploy fails with *"Failed to run import"* and *"Unrecognized field"*, the
-realm file in `keycloak/realms` carries a field Keycloak's client representation does not know, and
-the container exits before it serves anything - the fix is the field, not the service. *Keycloak
-realm files* in the repository README says where each setting belongs and which test now catches it
-before a deploy does.
-
-The realm file defines the `USER` and `ADMIN` realm roles but grants neither of them automatically, so
-a fresh Keycloak hands a new account no role at all. Nothing in the API needs `USER` any more - the
-only rule that asked for it was `GET /api/me`, which now asks for a signed-in visitor - but the
-gallery's own account needs `ADMIN` before the admin screens work, because those writes are gated on
-it in the API. Assign it under *Users* → the account → *Role mapping* → *Assign role* → filter by
-*realm roles* → `ADMIN`, then have that person sign out and back in: the role travels in the token
-that was issued at sign-in, so the old token keeps saying what it said. Until then they are a
-signed-in visitor with no role, which the app handles without sending a request it knows will be
-refused (see *Accounts and profiles* in the frontend README).
+Keycloak is no longer deployed on Render. The `galerie-keycloak` service and `galerie-keycloak-db`
+database were removed from the blueprint; a Blueprint sync deletes both. Production authenticates
+with Supabase, and the API's legacy Keycloak admin/provisioning beans are disabled by the `supabase`
+Spring profile. The local development stack and the realm files under `keycloak/realms` remain for
+development, but they are not part of the Render deployment.
 
 The frontend also needs `VITE_GOOGLE_MAPS_API_KEY` (also `sync: false`): a browser key for the Maps
 Embed API and the Geocoding API, restricted by HTTP referrer to the gallery's origins
@@ -175,9 +152,8 @@ drop the inherited ones (`/logout` and `/.well-known/`) - and
 `galerie_de_ruiter_frontend_app/src/securityHeaders.test.ts` fails when the two
 lists drift apart. See *Security headers* in the frontend README for what each
 header is for, for why there is deliberately no `Cross-Origin-Embedder-Policy`
-(it would make Keycloak's own frames declare a policy this site cannot give them,
-and that is what broke sign-in), and for why `Clear-Site-Data` sits on `/logout`
-rather than on the whole site.
+(it would make the Google Maps frame declare a policy this site cannot give it),
+and for why `Clear-Site-Data` sits on `/logout` rather than on the whole site.
 
 ### Cloudflare's inline-script CSP error
 
@@ -198,29 +174,12 @@ injected script immediately, without waiting for a Blueprint sync or a cache pur
 
 1. Create or apply the blueprint from `render.yaml`; it sets Render's automatic
    deployment for each service.
-2. Set these `galerie-keycloak` environment secrets in the Render dashboard:
-   `KC_BOOTSTRAP_ADMIN_USERNAME` and `KC_BOOTSTRAP_ADMIN_PASSWORD`.
-3. Set the same username/password as `KEYCLOAK_ADMIN_USERNAME` and
-   `KEYCLOAK_ADMIN_PASSWORD` on `galerie-java-api`, and set
-   `KEYCLOAK_ADMIN_CLIENT_ID` to `admin-cli`. The app uses them for Keycloak
-   administration. The blueprint sets the application login name to
-   `de-ruiter`; set `KEYCLOAK_REALM_ADMIN_PASSWORD` on `galerie-java-api` to provision that
-   application user, and optionally set `KEYCLOAK_REALM_ADMIN_EMAIL`. Startup
-   creates or updates the user in the `movie_project_keycloak` realm and assigns
-   the application `ADMIN` realm role. Its login is `de-ruiter` and its display
-   name is `De Ruiter`. This is not a Keycloak master-realm superadmin account.
-4. The blueprint builds and runs Ollama as a private Docker service on the
-   `pro` plan and persists model files on its mounted disk. On first startup it
-   downloads `llama3.2:3b`; initial model download and warm-up can take several
-   minutes.    The Java API resolves the Ollama service's internal host and port from the
-   blueprint and connects over Render's private network. Review the
-   service and persistent-disk pricing before syncing the blueprint. If you
-   change `OLLAMA_MODEL`, update it on `galerie-ollama` and `galerie-java-api`
-   to the same model; allow enough disk space for the selected model.
-5. The Keycloak image imports the production realm and frontend client from
-   `keycloak/realms/galerie-production-realm.json`, copied into the image using
-   Keycloak's required `movie_project_keycloak-realm.json` import filename; no
-   manual realm/client setup is required.
+2. Set `VITE_SUPABASE_ANON_KEY` on `galerie-frontend` in the Render dashboard
+   (`sync: false`). The public `VITE_SUPABASE_URL` is already in the blueprint.
+   The API's Supabase issuer and key-set URL are set there too, so there are no
+   Keycloak secrets to provision.
+3. Optionally set `VITE_GOOGLE_MAPS_API_KEY` on `galerie-frontend` for the
+   location page's Embed API frame and the admin address lookup.
 
 GitHub Actions generates temporary, random credentials for its isolated service
 smoke test. These credentials are not used in production; Render's secrets must
@@ -228,11 +187,10 @@ be configured separately in its dashboard.
 
 ## Important production values
 
-- Do not commit database passwords or Keycloak passwords.
+- Do not commit database passwords.
 - `sync: false` variables in `render.yaml` must be populated in Render's
-  dashboard. In particular, set `KC_BOOTSTRAP_ADMIN_USERNAME`,
-  `KC_BOOTSTRAP_ADMIN_PASSWORD`, `KEYCLOAK_ADMIN_USERNAME`,
-  `KEYCLOAK_ADMIN_PASSWORD`, and `KEYCLOAK_REALM_ADMIN_PASSWORD`.
+  dashboard. In particular, set the frontend's `VITE_SUPABASE_ANON_KEY` (and
+  optionally `VITE_GOOGLE_MAPS_API_KEY`).
 - The frontend's public origin is `SITE_URL=https://galeriederuiterantieks.gripe` in
   `render.yaml`. `sitemap.xml`, the `Sitemap:` line in `robots.txt`, the canonical URLs and the
   `og:url`/`og:image` tags are built from it; without it the build falls back to the same origin in
@@ -257,13 +215,11 @@ be configured separately in its dashboard.
   localhost ports. Serving the app from a third hostname means adding it to this value - and a
   single value still works, for a local run or a one-domain deployment.
 - The frontend environment variables are build-time values for the static site. Trigger a frontend deploy after changing them.
-- The frontend's public Keycloak settings are already declared in `render.yaml`:
-  `VITE_KEYCLOAK_URL=https://galerie-keycloak.onrender.com`,
-  `VITE_KEYCLOAK_REALM=movie_project_keycloak`, and
-  `VITE_KEYCLOAK_CLIENT_ID=movie_project_frontend_client`. They are public
-  client configuration, not secrets. The Webpack build injects these values
-  from Render's build environment; deploy the frontend after changing them.
-- `FRONTEND_ORIGIN` and the Keycloak issuer URL must match the final Render service URLs.
+- The frontend's public Supabase settings are `VITE_SUPABASE_URL` in
+  `render.yaml` and `VITE_SUPABASE_ANON_KEY` in the dashboard. The Webpack
+  build injects them from Render's build environment; deploy the frontend after
+  changing them.
+- `FRONTEND_ORIGIN` and the Supabase issuer/key-set URLs must match the final Render service URLs.
 - The chatbot sends requests through `galerie-java-api`, which calls the
   private `galerie-ollama` Docker service. Its model is downloaded at runtime
   and retained on the service's persistent disk. `GET /api/chat/status` reports
@@ -287,10 +243,8 @@ be configured separately in its dashboard.
 - The Java API receives the `galerie-app-db` internal host, port, database, username, and password through the `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USERNAME`, and `DATABASE_PASSWORD` variables. The Spring profile assembles these into a JDBC URL.
 - If you created a standalone Java web service instead of the `galerie-java-api` blueprint service, add those five variables and link each to the corresponding **internal** property of `galerie-app-db` in that service's environment. Alternatively, set `DATABASE_URL` to a valid JDBC URL beginning `jdbc:postgresql://`. Ensure the database and web service are in the same Render region.
 - The Java API listens on Render's `PORT`.
-- Render health checks use the `movie_project_keycloak` realm's OpenID Connect
-  metadata endpoint for Keycloak, and `/actuator/health` for Spring Boot. Keycloak's
-  health endpoints are served on its separate management port by default, so Render
-  checks the realm metadata on the public HTTP port instead.
+- Render health checks use `/actuator/health` for Spring Boot. There is no Keycloak
+  health endpoint in the Render deployment any more.
 - The frontend uses SPA fallback so React routes such as `/antiques/:id` work after refresh.
 
 ## Local production-like compose

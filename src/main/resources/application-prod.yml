@@ -20,27 +20,30 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI}
-          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:${KEYCLOAK_ISSUER_URI}/protocol/openid-connect/certs}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:${KEYCLOAK_ISSUER_URI:}/protocol/openid-connect/certs}
 
 server:
   address: 0.0.0.0
   port: ${PORT:8080}
 
+# Legacy settings for a Keycloak deployment. Production uses the supabase profile, where the
+# Keycloak beans are inactive; the empty defaults keep the properties resolvable when those env
+# vars are intentionally absent from Render.
 keycloak:
-  server-url: ${PUBLIC_KEYCLOAK_URL}
-  realm: ${KEYCLOAK_REALM}
-  admin-realm: ${KEYCLOAK_ADMIN_REALM}
-  admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID}
-  admin-username: ${KEYCLOAK_ADMIN_USERNAME}
-  admin-password: ${KEYCLOAK_ADMIN_PASSWORD}
+  server-url: ${PUBLIC_KEYCLOAK_URL:}
+  realm: ${KEYCLOAK_REALM:}
+  admin-realm: ${KEYCLOAK_ADMIN_REALM:}
+  admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:}
+  admin-username: ${KEYCLOAK_ADMIN_USERNAME:}
+  admin-password: ${KEYCLOAK_ADMIN_PASSWORD:}
   provision-admin:
-    required: true
+    required: ${KEYCLOAK_REALM_ADMIN_REQUIRED:true}
     username: ${KEYCLOAK_REALM_ADMIN_USERNAME:}
     first-name: ${KEYCLOAK_REALM_ADMIN_FIRST_NAME:}
     last-name: ${KEYCLOAK_REALM_ADMIN_LAST_NAME:}
     email: ${KEYCLOAK_REALM_ADMIN_EMAIL:}
-    password: ${KEYCLOAK_REALM_ADMIN_PASSWORD:admin}
+    password: ${KEYCLOAK_REALM_ADMIN_PASSWORD:}
 
 app:
   security:

@@ -3,10 +3,6 @@
     databaseName: galerie
     user: galerie_app
     plan: basic-256mb
-  - name: galerie-keycloak-db
-    databaseName: keycloak
-    user: keycloak_app
-    plan: basic-256mb
 
 services:
   # galerie-reconstruction-api (services/reconstruction-api) used to run here: a Python service that
@@ -14,47 +10,9 @@ services:
   # ever used it, so nothing called the service and it ran with RECONSTRUCTION_MODE=disabled. The
   # service, its 1 GB data disk, the endpoints it fed and the copy that named it are gone with it -
   # and a blueprint sync deletes the Render service itself.
-  - type: web
-    name: galerie-keycloak
-    runtime: docker
-    dockerfilePath: ./keycloak/Dockerfile
-    dockerContext: ./keycloak
-    plan: standard
-    healthCheckPath: /realms/movie_project_keycloak/.well-known/openid-configuration
-    autoDeploy: true
-    envVars:
-      - key: KC_HOSTNAME
-        value: https://galerie-keycloak.onrender.com
-      - key: KC_PROXY_HEADERS
-        value: xforwarded
-      - key: KC_HTTP_ENABLED
-        value: "true"
-      - key: KC_DB
-        value: postgres
-      - key: KC_DB_URL_HOST
-        fromDatabase:
-          name: galerie-keycloak-db
-          property: host
-      - key: KC_DB_URL_PORT
-        fromDatabase:
-          name: galerie-keycloak-db
-          property: port
-      - key: KC_DB_URL_DATABASE
-        fromDatabase:
-          name: galerie-keycloak-db
-          property: database
-      - key: KC_DB_USERNAME
-        fromDatabase:
-          name: galerie-keycloak-db
-          property: user
-      - key: KC_DB_PASSWORD
-        fromDatabase:
-          name: galerie-keycloak-db
-          property: password
-      - key: KC_BOOTSTRAP_ADMIN_USERNAME
-        sync: false
-      - key: KC_BOOTSTRAP_ADMIN_PASSWORD
-        sync: false
+  # galerie-keycloak and galerie-keycloak-db used to run here. Production signs in with Supabase
+  # (the API runs prod,supabase), so the service and its separate database are no longer needed.
+  # A Blueprint sync deletes both from Render; the local Keycloak files remain for development.
 
   # galerie-ollama (services/ollama) used to run here: a private Ollama service with a 5 GB model
   # disk, holding the language model the chat answered from. The chat now answers from the gallery's
@@ -122,31 +80,6 @@ services:
       # same build until it is retired. SecurityConfiguration reads this as a comma-separated list.
       - key: FRONTEND_ORIGIN
         value: https://galeriederuiterantieks.gripe,https://galeriederuiter.cloud-ip.cc
-      - key: KEYCLOAK_ISSUER_URI
-        value: https://galerie-keycloak.onrender.com/realms/movie_project_keycloak
-      - key: PUBLIC_KEYCLOAK_URL
-        value: https://galerie-keycloak.onrender.com
-      - key: KEYCLOAK_REALM
-        value: movie_project_keycloak
-      - key: KEYCLOAK_ADMIN_REALM
-        value: master
-      - key: KEYCLOAK_ADMIN_CLIENT_ID
-        value: admin-cli
-      - key: KEYCLOAK_ADMIN_USERNAME
-        sync: false
-      - key: KEYCLOAK_ADMIN_PASSWORD
-        sync: false
-      - key: KEYCLOAK_REALM_ADMIN_USERNAME
-        value: de-ruiter
-      - key: KEYCLOAK_REALM_ADMIN_FIRST_NAME
-        value: De
-      - key: KEYCLOAK_REALM_ADMIN_LAST_NAME
-        value: Ruiter
-      - key: KEYCLOAK_REALM_ADMIN_EMAIL
-        value: ""
-      - key: KEYCLOAK_REALM_ADMIN_PASSWORD
-        sync: false
-
   - type: web
     name: galerie-frontend
     runtime: static
@@ -167,12 +100,12 @@ services:
         value: https://galerie-java-api.onrender.com
       - key: VITE_API_URL
         value: https://galerie-java-api.onrender.com
-      - key: VITE_KEYCLOAK_URL
-        value: https://galerie-keycloak.onrender.com
-      - key: VITE_KEYCLOAK_REALM
-        value: movie_project_keycloak
-      - key: VITE_KEYCLOAK_CLIENT_ID
-        value: movie_project_frontend_client
+      # Supabase Auth is the production identity provider. The project URL is public; the anon key
+      # is set in the Render dashboard with `sync: false`.
+      - key: VITE_SUPABASE_URL
+        value: https://bgmxpublcoldebamstbj.supabase.co
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
       # The Google Maps browser key: the location page's Embed API frame and the admin's address
       # lookup (see "Google Maps" in the frontend README). Restricted by HTTP referrer to the
       # gallery's origins; without it the location page shows the address and a Maps link instead.
@@ -267,7 +200,7 @@ services:
       # construction, so it adds no origin to the allowlist.
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self' https://*.clarity.ms https://c.bing.com; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://galerie-java-api.onrender.com https://*.clarity.ms https://c.bing.com; connect-src 'self' https://bgmxpublcoldebamstbj.supabase.co https://galerie-java-api.onrender.com https://galerie-keycloak.onrender.com https://maps.googleapis.com https://*.clarity.ms https://c.bing.com blob:; frame-src 'self' https://www.google.com https://galerie-keycloak.onrender.com; worker-src 'self' blob: https://*.clarity.ms; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+        value: "default-src 'self'; script-src 'self' https://*.clarity.ms https://c.bing.com; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https://galerie-java-api.onrender.com https://*.clarity.ms https://c.bing.com; connect-src 'self' https://bgmxpublcoldebamstbj.supabase.co https://galerie-java-api.onrender.com https://maps.googleapis.com https://*.clarity.ms https://c.bing.com blob:; frame-src 'self' https://www.google.com; worker-src 'self' blob: https://*.clarity.ms; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
       - path: /*
         name: Strict-Transport-Security
         value: max-age=31536000; includeSubDomains

@@ -16,9 +16,15 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+/**
+ * Provisions the gallery administrator in the local/development Keycloak. Production authenticates
+ * with Supabase, where there is no Keycloak service to provision.
+ */
 @Component
+@Profile("!supabase")
 public class KeycloakRealmAdminProvisioner implements ApplicationRunner {
     private final Keycloak keycloakAdminClient;
     private final String realmName;

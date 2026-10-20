@@ -198,18 +198,15 @@ The move touches these systems, in this order:
    links stay monitored - but there is one sitemap now and it lists only new-domain URLs, so the new
    property is the one whose coverage matters. Add the new site to Bing Webmaster Tools too; IndexNow
    announces whichever origin the build was made for.
-5. Keycloak's frontend client: add the new origin to Valid redirect URIs and Valid post logout
-   redirect URIs, and keep the old one while the old host is served. The realm file carries both,
-   and `KeycloakRealmFilesTest` pins them.
+5. Supabase Auth → URL Configuration: Site URL and additional redirect URLs for both gallery
+   origins while the old host is served. Keycloak is no longer deployed in production.
 6. `FRONTEND_ORIGIN` on `galerie-java-api`: a comma-separated list with both origins. Also check the
    `VITE_*` values and `SITEMAP_API_URL` in `render.yaml`.
-7. Supabase Auth → URL Configuration: Site URL and additional redirect URLs, if the Supabase sign-in
-   profile is in use.
-8. `PRODUCTION_HOSTS` in `src/services/clarity.ts` holds both hosts, and the Google Maps key's HTTP
+7. `PRODUCTION_HOSTS` in `src/services/clarity.ts` holds both hosts, and the Google Maps key's HTTP
    referrer restrictions list both origins.
-9. The CSP in `security-headers.conf` and `render.yaml` names origins explicitly. The frontend's own
-   origin is `'self'`, so the move does not change it; check `connect-src` for the API and Keycloak
-   and `frame-src` for Keycloak.
+8. The CSP in `security-headers.conf` and `render.yaml` names origins explicitly. The frontend's own
+   origin is `'self'`, so the move does not change it; check `connect-src` for the API and
+   `frame-src` for the Google map.
 
 ### IndexNow
 
@@ -533,7 +530,7 @@ one):
 
 | Header | Value |
 |---|---|
-| `Content-Security-Policy` | `default-src 'self'; script-src 'self' https://*.clarity.ms https://c.bing.com; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: <API> https://*.clarity.ms https://c.bing.com; connect-src 'self' <API> <Keycloak> https://maps.googleapis.com https://*.clarity.ms https://c.bing.com; frame-src 'self' https://www.google.com <Keycloak>; worker-src 'self' blob: https://*.clarity.ms; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests` |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self' https://*.clarity.ms https://c.bing.com; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: <API> https://*.clarity.ms https://c.bing.com; connect-src 'self' <API> https://maps.googleapis.com https://*.clarity.ms https://c.bing.com; frame-src 'self' https://www.google.com; worker-src 'self' blob: https://*.clarity.ms; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests` |
 | `Content-Security-Policy-Report-Only` | `require-trusted-types-for 'script'; trusted-types default clarity` |
 | `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` |
 | `X-Frame-Options` | `SAMEORIGIN` |
@@ -553,7 +550,7 @@ one):
 having: the app ships no inline script and no `eval`. The one script that used to live outside the
 bundle, `public/silent-check-sso.js` for the silent sign-in check, went with the check itself (see
 *Speed*), so the policy no longer allows a `<script src>` the bundle did not put there. `frame-src`
-lists `'self'` beside the map and Keycloak - the gallery frames nothing of its own today, and a
+lists `'self'` beside the Google map - the gallery frames nothing of its own today, and a
 same-origin frame is the one thing that value cannot break. `style-src`/`font-src` no longer list the
 Google Fonts origins, because the gallery
 type is served from this origin now (see *Speed*). The one inline handler the page used to have
@@ -586,43 +583,30 @@ risk, which is a foreign page framing the gallery.
 `Cross-Origin-Embedder-Policy` is deliberately **absent**, and that is the one header here that was
 removed rather than added. COEP makes every cross-origin frame, image and script on the page declare
 a `Cross-Origin-Resource-Policy`, and the resources this page loads are other people's: the Google
-map and Keycloak's own pages. Keycloak sends no CORP and cannot be given one - it is not this site's
-server - so the header only takes things away, and it took away sign-in: keycloak-js loads Keycloak's
-third-party-cookie probe in a hidden iframe, the browser refused that frame under COEP, the adapter
-rejected on its ten-second timeout, and the sign-in button did nothing. `credentialless`, the
-alternative the guidance offers, refuses that frame too. The only thing COEP buys is
-`crossOriginIsolated`, which nothing here needs, so the site sends none and keeps
+map does not send that header and this site cannot add it to someone else's server. The only thing
+COEP buys is `crossOriginIsolated`, which nothing here needs, so the site sends none and keeps
 `Cross-Origin-Resource-Policy: same-origin` for its own responses instead.
 
-`Clear-Site-Data` is on one path, not on the site: `/logout`. Signing out ends the Keycloak session,
-and `AuthContext.logout` sends the browser back through `/logout`, so that one response tells the
-browser to drop everything it holds for the gallery's origin — `"cache"`, `"cookies"` and
-`"storage"`, which is the chosen language, the remembered city, the cached responses, the chat
-session and the stored sign-in session (`AuthContext.logout` removes that last one itself, before the
-redirect, so it is gone even if the response never arrives). Sent on every response it would clear
-the visitor's language on any page load, which is why the header belongs on a logout response and not
-in the site-wide set.
+`Clear-Site-Data` is on one path, not on the site: `/logout`. Signing out clears the browser's
+Supabase session through `AuthContext.logout`; the `/logout` response still tells the browser to drop
+everything it holds for the gallery's origin — `"cache"`, `"cookies"` and `"storage"`, which is the
+chosen language, the remembered city, the cached responses, the chat session and the stored sign-in
+session. Sent on every response it would clear the visitor's language on any page load, which is why
+the header belongs on a logout response and not in the site-wide set.
 
 Keeping a session across page loads means keeping a refresh token in the browser:
-`src/services/keycloakSession.ts` writes it to `localStorage`, where it stays until the visitor signs
-out or Keycloak refuses to refresh it. `script-src 'self'` without `'unsafe-inline'` is what makes
-that acceptable here — the app ships no inline script, so nothing else runs on this origin to read it
-— and a refresh token that has been rotated or revoked is worth nothing to whoever did. The
-alternative, asking Keycloak for the session on every page load, is the third-party-cookie check that
-broke sign-in (see *Speed*).
+`src/context/useSupabaseSession.ts` writes it to `localStorage`, where it stays until the visitor
+signs out or Supabase refuses to refresh it. `script-src 'self'` without `'unsafe-inline'` is what
+makes that acceptable here — the app ships no inline script, so nothing else runs on this origin to
+read it — and a refresh token that has been rotated or revoked is worth nothing to whoever did.
 
-That redirect is a Keycloak *post-logout* redirect, so the client has to allow it: the gallery's
-domain is listed in the frontend client's `post.logout.redirect.uris` **attribute** in
-`keycloak/realms/galerie-production-realm.json`, with `##` between URIs. That attribute is where
-Keycloak keeps them - the field is not part of the client representation, and one there stops the
-container with *"Unrecognized field"* (see *Keycloak realm files* in the repository README). A
-Keycloak whose client lists no post-logout URIs falls back to the redirect URIs. If signing out ever
-answers with *"Invalid redirect uri"*, that is the setting to look at.
+**The API origin comes from the environment**, so the policy always matches the bundle: the image
+sets `CSP_API_ORIGIN` from the same build argument the frontend was built with, and
+`docker-compose.production.yml` passes it explicitly. Override it if the browser-facing API origin
+differs from the one the frontend was built against.
 
-**The API and Keycloak origins come from the environment**, so the policy always matches the
-bundle: the image sets `CSP_API_ORIGIN` and `CSP_KEYCLOAK_ORIGIN` from the same build arguments
-the frontend was built with, and `docker-compose.production.yml` passes them explicitly. Override
-them if the browser-facing origins differ from the ones the frontend was built against.
+The `/logout` page and its `Clear-Site-Data` header remain available; production authentication uses
+Supabase, which signs out with a request rather than an identity-provider redirect.
 
 **The photographs and the 3D models come from the API**, so the API is the service that has to allow
 this origin to embed them: it sends `Cross-Origin-Resource-Policy: cross-origin`, because

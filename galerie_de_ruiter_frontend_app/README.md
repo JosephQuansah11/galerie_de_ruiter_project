@@ -75,7 +75,22 @@ The app is one HTML page, so what a crawler can reach is decided in five places:
   submissions used, so it keeps answering) plus the absolute `Sitemap:` line in
   `dist/robots.txt`.
   It lists the pages
-  a visitor reaches without an account: `/`, `/antiques`, `/about`, `/map` and `/chat`.
+  a visitor reaches without an account: `/`, `/antiques`, `/about`, `/map` and `/chat`, and it adds
+  an `<image:image>` entry for every photograph of every piece the API returns (the 1600-pixel
+  copy, not the original). Google deprecated `image:title` and `image:caption`; the page's `<img
+  alt>` and the copy around it are what give the image its context.
+- **Images** — Google Images can only index an image whose URL is crawlable, whose page is
+  indexable, and which has useful alt text. The catalogue rows use the piece title as alt, a piece
+  page sets `og:image` to its first 1600-pixel photograph, and every indexable page sends
+  `max-image-preview:large`. The sitemap is the discovery path that does not depend on Google
+  rendering the client-side page.
+  The photographs are served from `galerie-java-api.onrender.com`. Google's image-sitemap rules
+  require **both** the page domain and the image domain to be verified in Search Console when they
+  differ, so add that API host as a property (or serve photographs from a host under
+  `galeriederuiterantieks.gripe`). Submit `sitemap_index.xml` under *Sitemaps* after a deploy;
+  image indexing takes days to weeks, not minutes. `Product`/`VisualArtwork` structured data and
+  prerendering the piece pages are the next steps for product-style rich results, not
+  prerequisites for basic image indexing.
 - **the routes, on both deployments** — `render.yaml` names the application's routes one by one and
   `nginx.conf` names them in one regular expression, so a path the router does not draw is a 404
   rather than the landing page with a 200. `public/404.html` (with `public/404.css`) is the page a

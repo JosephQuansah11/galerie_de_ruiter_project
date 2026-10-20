@@ -38,11 +38,11 @@ export function AntiqueRow({ antique }: { antique: Antique }) {
     else navigate("/login", { state: { from: `${location.pathname}${location.search}` } });
   };
   return <article className={`catalogue-card catalogue-row${antique.sold ? " is-sold" : ""}`} onClick={() => navigate(`/antiques/${antique.id}`)}>
-    <div className="catalogue-card-image" aria-hidden="true">{imageUrl ? <img
+    <div className="catalogue-card-image">{imageUrl ? <img
       src={thumbnailUrl}
       srcSet={thumbnailUrl && mediumUrl ? `${thumbnailUrl} 400w, ${mediumUrl} 800w` : undefined}
       sizes="(max-width: 520px) 120px, (max-width: 900px) 20vw, 208px"
-      alt=""
+      alt={antique.title}
       loading="lazy"
       decoding="async"
       width={800}

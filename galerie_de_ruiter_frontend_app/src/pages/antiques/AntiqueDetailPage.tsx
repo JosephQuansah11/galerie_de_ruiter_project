@@ -5,6 +5,7 @@ import { useAntiqueContent } from "@/hooks/useAddAntiques";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useShopping } from "@/context/ShoppingContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { resolveAntiqueLargeUrl } from "@/models/antiques/Antique";
 import { AntiqueDetailContent } from "./AntiqueDetailContent";
 import { getDetailPresentation } from "./useDetailPresentation";
 import { summarizeDescription } from "./summarizeDescription";
@@ -29,6 +30,10 @@ export default function AntiqueDetailPage() {
       ? summarizeDescription(antique.description, META_DESCRIPTION_WORDS) || t("metaPieceDescription", { title: antique.title })
       : undefined,
     canonicalPath: `/antiques/${id}`,
+    // The representative image is the same 1600-pixel copy the page draws, so a shared link and
+    // an image search result both lead back to this piece rather than to the gallery logo.
+    image: antique ? resolveAntiqueLargeUrl(antique.imageUrl ?? antique.imageUrls?.[0]) : undefined,
+    imageAlt: antique?.title,
     // A stale or mistyped piece URL is a soft 404: the application cannot return a 404 status for
     // a client-side route, so it tells a crawler not to index the "not found" answer instead.
     noindex: !loading && !antique,

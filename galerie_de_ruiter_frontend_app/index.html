@@ -17,6 +17,10 @@
         name="description"
         content="Ontdek unieke antiek, kunst en vintage design bij Galerie de Ruiter in Waasmunster. Bekijk onze collectie en laat u adviseren door onze experts."
     />
+    <!-- Large image previews are what Google Images and Discover show for an indexed page. The
+         pages set the same value through usePageMeta; sign-in and registration replace it with
+         noindex. -->
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#841a23" />
 
     <!-- The search engines that can verify this domain verify it by reading a tag: Search Console
@@ -35,6 +39,10 @@
     <meta property="og:description" content="Ontdek unieke antiek, kunst en vintage design bij Galerie de Ruiter in Waasmunster. Bekijk onze collectie en laat u adviseren door onze experts." />
     <meta property="og:url" content="<%= htmlWebpackPlugin.options.siteUrl %>/" />
     <meta property="og:image" content="<%= htmlWebpackPlugin.options.siteUrl %>/logo512.png" />
+    <meta property="og:image:alt" content="Galerie de Ruiter" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="<%= htmlWebpackPlugin.options.siteUrl %>/logo512.png" />
+    <meta name="twitter:image:alt" content="Galerie de Ruiter" />
 
     <!-- What the gallery is, in the shape a search engine reads without running the bundle: an
          ArtGallery (schema.org) for the gallery itself, and a WebSite for the domain. The street

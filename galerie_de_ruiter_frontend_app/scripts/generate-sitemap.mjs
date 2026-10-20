@@ -41,6 +41,43 @@ const publicPages = [
 const apiOrigin = (process.env.SITEMAP_API_URL ?? "").trim().replace(/\/+$/, "");
 
 /**
+ * A photograph's URL, made absolute against the API origin. The API returns paths such as
+ * `/api/antiques/{id}/image/{imageId}`; an image sitemap needs full URLs.
+ */
+function absoluteImageUrl(url) {
+  if (typeof url !== "string" || !url.trim()) return undefined;
+  try {
+    return new URL(url, apiOrigin).toString();
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The 1600-pixel copy a piece's own page offers. It is what Google should fetch: large enough to
+ * rank in Images, small enough that a build does not ask a crawler to download a six-megabyte
+ * original. A path without an image id has no variant route, so it is used as it is.
+ */
+function imageSitemapUrl(url) {
+  const absolute = absoluteImageUrl(url);
+  if (!absolute) return undefined;
+  return /\/image\/[^/?#]+$/.test(absolute) ? `${absolute}/large` : absolute;
+}
+
+/** The image entries for one piece: one per photograph, in the gallery's order. */
+function imageEntries(item) {
+  const urls = Array.isArray(item.imageUrls) ? item.imageUrls : [];
+  const candidates = [...urls, item.imageUrl].filter((url) => typeof url === "string" && url.trim());
+  const seen = new Set();
+  return candidates.flatMap((url) => {
+    const loc = imageSitemapUrl(url);
+    if (!loc || seen.has(loc)) return [];
+    seen.add(loc);
+    return [loc];
+  });
+}
+
+/**
  * A piece's own page is public and is the gallery's content, so it belongs in the sitemap. The
  * list comes from the API at build time; without an API the five static pages are still written
  * rather than failing the build.
@@ -54,7 +91,12 @@ async function piecePages() {
     if (!Array.isArray(items)) throw new Error("the answer was not a list");
     return items
       .filter((item) => item && typeof item.id === "string" && item.id)
-      .map((item) => ({ path: `/antiques/${item.id}`, changefreq: "weekly", priority: "0.7" }));
+      .map((item) => ({
+        path: `/antiques/${item.id}`,
+        changefreq: "weekly",
+        priority: "0.7",
+        images: imageEntries(item),
+      }));
   } catch (error) {
     console.warn(`generate-sitemap: piece pages were not added (${error.message})`);
     return [];
@@ -91,13 +133,21 @@ if (/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(siteUrl)) {
 const lastmod = new Date().toISOString().slice(0, 10);
 const sitemap = [
   '<?xml version="1.0" encoding="UTF-8"?>',
-  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
+  '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
   ...pages.map((page) => [
     "  <url>",
     `    <loc>${escapeXml(`${siteUrl}${page.path}`)}</loc>`,
     `    <lastmod>${lastmod}</lastmod>`,
     `    <changefreq>${page.changefreq}</changefreq>`,
     `    <priority>${page.priority}</priority>`,
+    // Google deprecated image:title and image:caption; the page's <img alt> and its surrounding
+    // copy carry that context now. The location is the required part of an image entry.
+    ...(page.images ?? []).flatMap((loc) => [
+      "    <image:image>",
+      `      <image:loc>${escapeXml(loc)}</image:loc>`,
+      "    </image:image>",
+    ]),
     "  </url>",
   ].join("\n")),
   "</urlset>",

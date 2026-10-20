@@ -1,10 +1,10 @@
 import { render } from "@testing-library/react";
 import { usePageMeta } from "./usePageMeta";
 
-function Page({ title, description, canonicalPath, noindex }: {
-  title?: string; description?: string; canonicalPath?: string; noindex?: boolean;
+function Page({ title, description, canonicalPath, noindex, image, imageAlt }: {
+  title?: string; description?: string; canonicalPath?: string; noindex?: boolean; image?: string; imageAlt?: string;
 }) {
-  usePageMeta({ title, description, canonicalPath, noindex });
+  usePageMeta({ title, description, canonicalPath, noindex, image, imageAlt });
   return <p>{title ?? "loading"}</p>;
 }
 
@@ -25,6 +25,11 @@ describe("page metadata", () => {
     expect(metaContent("name", "description")).toBe("Stel je vragen.");
     expect(metaContent("property", "og:title")).toBe("Chat met Galerie de Ruiter");
     expect(canonicalHref()).toBe("https://galeriederuiterantieks.gripe/chat");
+    // Indexable pages allow the large preview Google Images and Discover use, and fall back to
+    // the gallery logo when the page has no photograph of its own.
+    expect(metaContent("name", "robots")).toBe("index, follow, max-image-preview:large");
+    expect(metaContent("property", "og:image")).toBe("https://galeriederuiterantieks.gripe/logo512.png");
+    expect(metaContent("property", "og:image:alt")).toBe("Chat met Galerie de Ruiter");
   });
 
   it("declares the gallery's own origin, whatever host served the page", () => {
@@ -48,6 +53,23 @@ describe("page metadata", () => {
     expect(canonicalHref()).toBe("https://galeriederuiterantieks.gripe/antiques");
   });
 
+  it("gives a piece its own image, then puts the gallery logo back", () => {
+    const { rerender } = render(<Page title="Vaas — Galerie de Ruiter" canonicalPath="/antiques/piece-1"
+      image="https://galerie-java-api.onrender.com/api/antiques/piece-1/image/photo-1/large"
+      imageAlt="Vaas" />);
+
+    expect(metaContent("property", "og:image"))
+      .toBe("https://galerie-java-api.onrender.com/api/antiques/piece-1/image/photo-1/large");
+    expect(metaContent("property", "og:image:alt")).toBe("Vaas");
+    expect(metaContent("name", "twitter:image"))
+      .toBe("https://galerie-java-api.onrender.com/api/antiques/piece-1/image/photo-1/large");
+
+    rerender(<Page title="De collectie — Galerie de Ruiter" canonicalPath="/antiques" />);
+
+    expect(metaContent("property", "og:image")).toBe("https://galeriederuiterantieks.gripe/logo512.png");
+    expect(metaContent("property", "og:image:alt")).toBe("De collectie — Galerie de Ruiter");
+  });
+
   it("keeps the sign-in pages out of the results", () => {
     const { rerender } = render(<Page title="Aanmelden — Galerie de Ruiter" noindex />);
 
@@ -55,7 +77,7 @@ describe("page metadata", () => {
 
     rerender(<Page title="Galerie de Ruiter — antiek en kunst" />);
 
-    expect(metaContent("name", "robots")).toBeUndefined();
+    expect(metaContent("name", "robots")).toBe("index, follow, max-image-preview:large");
   });
 
   it("leaves the title alone while a page is still loading", () => {

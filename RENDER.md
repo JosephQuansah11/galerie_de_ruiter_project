@@ -238,6 +238,12 @@ be configured separately in its dashboard.
   `og:url`/`og:image` tags are built from it; without it the build falls back to the same origin in
   `site.config.mjs`. If it names a host a crawler cannot fetch, Search Console reports every URL
   in the sitemap as "Couldn't fetch".
+- The sitemap's `<image:loc>` entries point at `SITEMAP_API_URL`, which is the API host
+  (`galerie-java-api.onrender.com`). Google's image-sitemap rules require both the page domain and
+  the image domain to be verified in Search Console when they differ, so either verify that API
+  host there or move the photographs to a host under `galeriederuiterantieks.gripe` (a custom API
+  domain such as `api.galeriederuiterantieks.gripe` works) and point `SITEMAP_API_URL` and the
+  frontend's `VITE_*` API values at it. The image endpoints must stay public.
 - The older `https://galeriederuiter.cloud-ip.cc` stays attached to `galerie-frontend` and serves
   the same build while the move settles. Every page it serves declares the new origin canonical, so
   Google consolidates the two hosts instead of indexing them as competitors. Keep both hosts in

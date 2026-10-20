@@ -38,6 +38,16 @@ describe("the document, read without the bundle", () => {
     expect(description!.length).toBeLessThanOrEqual(160);
   });
 
+  it("allows large image previews and declares a share image", () => {
+    // Google Images and Discover use the large-preview permission; the logo is the document's
+    // default until a piece page puts its own photograph in og:image.
+    expect(content('meta[name="robots"]')).toBe("index, follow, max-image-preview:large");
+    expect(content('meta[property="og:image:alt"]')).toBe("Galerie de Ruiter");
+    expect(content('meta[name="twitter:card"]')).toBe("summary_large_image");
+    // The template still carries the origin placeholder; webpack fills it in at build time.
+    expect(content('meta[name="twitter:image"]')).toContain("/logo512.png");
+  });
+
   it("carries the tags that prove the domain to the search engines", () => {
     // The gallery verifies the domain by serving these tags: Search Console reads
     // google-site-verification, Bing Webmaster Tools reads msvalidate.01. A rewrite of the head that

@@ -59,7 +59,20 @@ describe("the IndexNow key", () => {
     const server = createServer((request, response) => {
       if (request.url === "/api/antiques") {
         response.writeHead(200, { "Content-Type": "application/json" });
-        response.end(JSON.stringify([{ id: "piece-1" }, { id: "piece-2" }]));
+        response.end(JSON.stringify([
+          {
+            id: "piece-1",
+            title: "Vaas",
+            description: "Een vaas",
+            imageUrls: ["/api/antiques/piece-1/image/photo-1"],
+          },
+          {
+            id: "piece-2",
+            title: "Stoel",
+            description: "Een stoel",
+            imageUrls: ["/api/antiques/piece-2/image/photo-2"],
+          },
+        ]));
         return;
       }
       response.writeHead(404).end();
@@ -85,6 +98,11 @@ describe("the IndexNow key", () => {
       expect(sitemap).toContain("<loc>http://localhost:3000/antiques</loc>");
       expect(sitemap).toContain("<loc>http://localhost:3000/antiques/piece-1</loc>");
       expect(sitemap).toContain("<loc>http://localhost:3000/antiques/piece-2</loc>");
+      // The photographs are what Google Images can discover without rendering the page.
+      expect(sitemap).toContain('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"');
+      expect(sitemap).toContain(
+        `<image:loc>http://127.0.0.1:${port}/api/antiques/piece-1/image/photo-1/large</image:loc>`,
+      );
     } finally {
       await new Promise<void>((resolve) => server.close(() => resolve()));
     }

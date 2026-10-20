@@ -25,12 +25,14 @@ class FakeIntersectionObserver {
 
 function Harness({ count, itemCount = count }: { count: number; itemCount?: number }) {
   const listRef = useRef<HTMLDivElement>(null);
-  return <>
-    <div ref={listRef} className="test-list">
-      {Array.from({ length: count }, (_, index) => <p key={index}>Item {index + 1}</p>)}
-    </div>
-    <JumpToBottom itemCount={itemCount} targetRef={listRef} />
-  </>;
+  return <div className="main-content">
+    <section className="test-page">
+      <div ref={listRef} className="test-list">
+        {Array.from({ length: count }, (_, index) => <p key={index}>Item {index + 1}</p>)}
+      </div>
+      <JumpToBottom itemCount={itemCount} targetRef={listRef} />
+    </section>
+  </div>;
 }
 
 const renderHarness = (count: number, itemCount?: number) =>
@@ -38,6 +40,12 @@ const renderHarness = (count: number, itemCount?: number) =>
 
 const latestObserver = () => FakeIntersectionObserver.instances.at(-1)!;
 const button = () => screen.queryByRole("button", { name: i18n.t("jumpToBottomLabel") });
+const topButton = () => screen.queryByRole("button", { name: i18n.t("jumpToTopLabel") });
+const pageScroller = () => document.querySelector(".main-content") as HTMLElement;
+const scrollPage = (top: number) => {
+  pageScroller().scrollTop = top;
+  fireEvent.scroll(pageScroller());
+};
 
 let originalObserver: typeof IntersectionObserver | undefined;
 let originalElementScroll: typeof Element.prototype.scrollIntoView;
@@ -68,8 +76,10 @@ describe("the shortcut to the last items", () => {
     renderHarness(3);
 
     act(() => latestObserver().report(false));
+    scrollPage(200);
 
     expect(button()).toBeNull();
+    expect(topButton()).toBeNull();
   });
 
   it("appears while the last rows are below the fold, and leaves once they are visible", () => {
@@ -92,6 +102,38 @@ describe("the shortcut to the last items", () => {
     expect(scroll).toHaveBeenCalledWith({ behavior: "smooth", block: "end" });
     // The destination is the last row, not the page footer or the top of the list.
     expect(scroll.mock.instances[0]).toBe(document.querySelector(".test-list")!.lastElementChild);
+  });
+
+  it("offers the trip back to the top once the page has scrolled", () => {
+    renderHarness(12);
+    act(() => latestObserver().report(false));
+    expect(topButton()).toBeNull();
+
+    scrollPage(240);
+    expect(topButton()).toBeInTheDocument();
+
+    scrollPage(0);
+    expect(topButton()).toBeNull();
+  });
+
+  it("returns to the page heading, not just the first row", () => {
+    renderHarness(12);
+    act(() => latestObserver().report(false));
+    scrollPage(240);
+
+    fireEvent.click(topButton()!);
+
+    expect(scroll).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+    expect(scroll.mock.instances[0]).toBe(document.querySelector(".test-page"));
+  });
+
+  it("keeps the way back at the end, when the last-items shortcut has gone", () => {
+    renderHarness(12);
+    scrollPage(240);
+    act(() => latestObserver().report(true));
+
+    expect(button()).toBeNull();
+    expect(topButton()).toBeInTheDocument();
   });
 
   it("comes back when more rows are added to a list that was already read to the bottom", () => {

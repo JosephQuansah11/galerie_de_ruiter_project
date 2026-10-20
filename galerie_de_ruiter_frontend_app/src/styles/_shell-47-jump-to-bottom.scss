@@ -1,16 +1,23 @@
-// A shortcut to the last rows of a long list. It floats above the content rather than sitting in
-// the flow: a list long enough to need it is exactly the one whose end is below the fold too.
-// `position: fixed` keeps it reachable while `.main-content` - not the window - scrolls.
-.jump-to-bottom-sentinel {
-  width: 100%;
-  height: 1px;
-}
+// Shortcuts to the top and last rows of a long list. They float above the content rather than
+// sitting in the flow: a list long enough to need them is the one whose ends are below the fold.
+.jump-to-bottom-sentinel { width: 100%; height: 1px; }
 
-.jump-to-bottom {
+.list-jumps {
   position: fixed;
   right: clamp(1rem, 3vw, 2.5rem);
   bottom: clamp(1rem, 3vw, 2rem);
   z-index: 1035;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.jump-to-top,
+.jump-to-bottom {
+  display: inline-flex;
+  align-items: center;
   gap: 0.45rem;
   padding: 0.55rem 0.95rem;
   border: 1px solid var(--theme-hairline);
@@ -20,8 +27,11 @@
   box-shadow: var(--theme-shadow-sm);
   font-size: 0.9rem;
   line-height: 1;
+  pointer-events: auto;
 }
 
+.jump-to-top:hover,
+.jump-to-top:focus-visible,
 .jump-to-bottom:hover,
 .jump-to-bottom:focus-visible {
   border-color: var(--theme-gold);
@@ -29,12 +39,10 @@
   transform: translateY(-2px);
 }
 
-// On a phone the arrow is enough; the word would cover the row it is offering to reach.
+// On a phone the arrows are enough; the words would cover the row they are offering to reach.
 @media (max-width: 30rem) {
-  .jump-to-bottom {
-    padding: 0.65rem;
-  }
-  .jump-to-bottom span {
-    display: none;
-  }
+  .jump-to-top,
+  .jump-to-bottom { padding: 0.65rem; }
+  .jump-to-top span,
+  .jump-to-bottom span { display: none; }
 }

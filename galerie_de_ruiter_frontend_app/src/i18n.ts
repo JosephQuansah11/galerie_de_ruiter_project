@@ -1122,11 +1122,11 @@ const cataloguePagingLabels: Record<string, Record<string, string>> = {
  * one place like the blocks above so every language stays in step.
  */
 const listNavigationLabels: Record<string, Record<string, string>> = {
-  en: { jumpToBottom: "Last items", jumpToBottomLabel: "Scroll to the last items" },
-  fr: { jumpToBottom: "Dernières pièces", jumpToBottomLabel: "Aller aux dernières pièces" },
-  "nl-NL": { jumpToBottom: "Laatste stukken", jumpToBottomLabel: "Naar de laatste stukken" },
-  "nl-BE": { jumpToBottom: "Laatste stukken", jumpToBottomLabel: "Naar de laatste stukken" },
-  de: { jumpToBottom: "Letzte Stücke", jumpToBottomLabel: "Zu den letzten Stücken" },
+  en: { jumpToTop: "Back to top", jumpToTopLabel: "Scroll back to the top", jumpToBottom: "Last items", jumpToBottomLabel: "Scroll to the last items" },
+  fr: { jumpToTop: "Haut de page", jumpToTopLabel: "Remonter en haut de la page", jumpToBottom: "Dernières pièces", jumpToBottomLabel: "Aller aux dernières pièces" },
+  "nl-NL": { jumpToTop: "Naar boven", jumpToTopLabel: "Terug naar boven", jumpToBottom: "Laatste stukken", jumpToBottomLabel: "Naar de laatste stukken" },
+  "nl-BE": { jumpToTop: "Naar boven", jumpToTopLabel: "Terug naar boven", jumpToBottom: "Laatste stukken", jumpToBottomLabel: "Naar de laatste stukken" },
+  de: { jumpToTop: "Nach oben", jumpToTopLabel: "Zurück nach oben", jumpToBottom: "Letzte Stücke", jumpToBottomLabel: "Zu den letzten Stücken" },
 };
 
 /**

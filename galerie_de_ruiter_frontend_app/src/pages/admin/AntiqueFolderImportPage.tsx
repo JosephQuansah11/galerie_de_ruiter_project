@@ -8,7 +8,10 @@ import { ArtistSearch } from "@/pages/antiques/ArtistSearch";
 import { CategoryOptions, categoryLabel } from "@/pages/antiques/CategoryOptions";
 import { DesignerCreator } from "@/pages/antiques/DesignerCreator";
 import { useDesignerDirectory } from "@/pages/antiques/useDesignerDirectory";
-import { ANTIQUE_DESCRIPTION_MAX_LENGTH } from "@/pages/antiques/descriptionLimits";
+import {
+  ANTIQUE_DESCRIPTION_MAX_WORDS,
+  descriptionIsTooLong,
+} from "@/pages/antiques/descriptionLimits";
 import { InventoryHeading } from "./antiques/InventoryHeading";
 import { useFolderImport, type ImportGroupDraft } from "./antiques/folderImport/useFolderImport";
 import type { ImportCategorySource } from "./antiques/folderImport/buildImportGroups";
@@ -71,7 +74,7 @@ export default function AntiqueFolderImportPage() {
     .map((group) => group.categoryPath.slice(0, 2).join(" / ")))];
   const missingDetails = selected.some((group) => {
     const price = group.price.trim();
-    if (!group.title.trim() || group.description.length > ANTIQUE_DESCRIPTION_MAX_LENGTH) return true;
+    if (!group.title.trim() || descriptionIsTooLong(group.description)) return true;
     if (!price) return !group.existing;
     return !Number.isFinite(Number(price)) || Number(price) < 0;
   });
@@ -280,8 +283,8 @@ export default function AntiqueFolderImportPage() {
               <Form.Control as="textarea" rows={2} size="sm" value={group.description} disabled={disabled}
                 aria-label={`${t("description")}: ${group.title}`}
                 onChange={(event) => imported.updateGroup(group.id, "description", event.target.value)} />
-              {group.description.length > ANTIQUE_DESCRIPTION_MAX_LENGTH && <p className="folder-import-error">
-                {t("descriptionTooLong", { max: ANTIQUE_DESCRIPTION_MAX_LENGTH })}
+              {descriptionIsTooLong(group.description) && <p className="folder-import-error">
+                {t("descriptionTooLong", { max: ANTIQUE_DESCRIPTION_MAX_WORDS })}
               </p>}
               <div className="folder-import-meta">
                 <Form.Control className="folder-import-price" size="sm" type="number" min="0" step="0.01"

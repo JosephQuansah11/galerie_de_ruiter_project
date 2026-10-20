@@ -1,5 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { ANTIQUE_DESCRIPTION_MAX_LENGTH } from "./descriptionLimits";
+import {
+  ANTIQUE_DESCRIPTION_MAX_WORDS,
+  descriptionIsTooLong,
+  descriptionWordCount,
+} from "./descriptionLimits";
 
 /**
  * Shows how much of the description allowance is used, so the curator can see the
@@ -7,13 +11,13 @@ import { ANTIQUE_DESCRIPTION_MAX_LENGTH } from "./descriptionLimits";
  */
 export function DescriptionLimitHint({ value }: { value?: string }) {
   const { t } = useTranslation();
-  const used = (value ?? "").length;
-  const overLimit = used > ANTIQUE_DESCRIPTION_MAX_LENGTH;
+  const used = descriptionWordCount(value);
+  const overLimit = descriptionIsTooLong(value);
   return <div className={overLimit ? "description-hint is-over" : "description-hint"} role="status">
-    <span>{t("descriptionLimitNotice", { max: ANTIQUE_DESCRIPTION_MAX_LENGTH })}</span>
+    <span>{t("descriptionLimitNotice", { max: ANTIQUE_DESCRIPTION_MAX_WORDS })}</span>
     <strong>
-      {t("descriptionCount", { used, max: ANTIQUE_DESCRIPTION_MAX_LENGTH })}
-      {overLimit && ` · ${t("descriptionTooLong", { max: ANTIQUE_DESCRIPTION_MAX_LENGTH })}`}
+      {t("descriptionCount", { used, max: ANTIQUE_DESCRIPTION_MAX_WORDS })}
+      {overLimit && ` · ${t("descriptionTooLong", { max: ANTIQUE_DESCRIPTION_MAX_WORDS })}`}
     </strong>
   </div>;
 }

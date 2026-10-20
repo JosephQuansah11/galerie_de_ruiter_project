@@ -13,7 +13,7 @@ import { InventoryHeading } from "./antiques/InventoryHeading";
 import { AntiqueImageEditor } from "./antiques/AntiqueImageEditor";
 import { ImageFormatAdmin } from "./antiques/ImageFormatAdmin";
 import { DescriptionLimitHint } from "../antiques/DescriptionLimitHint";
-import { ANTIQUE_DESCRIPTION_MAX_LENGTH } from "../antiques/descriptionLimits";
+import { descriptionIsTooLong } from "../antiques/descriptionLimits";
 import { MODEL_MAX_SIZE_MB, isUploadableModel } from "../antiques/modelUploadLimits";
 import { useAntiqueImageEditing } from "./antiques/useAntiqueImageEditing";
 import { managementErrorKey, modelUploadErrorKey } from "../antiques/antiqueSaveErrors";
@@ -58,7 +58,7 @@ export default function AntiqueAdminPage() {
     editingImages.load(antique.imageUrls ?? []);
     setActionError(undefined);
   };
-  const descriptionTooLong = editDescription.length > ANTIQUE_DESCRIPTION_MAX_LENGTH;
+  const descriptionTooLong = descriptionIsTooLong(editDescription);
   const saveEdit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!editing) return;

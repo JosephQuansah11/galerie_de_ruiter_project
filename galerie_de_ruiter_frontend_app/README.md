@@ -500,13 +500,15 @@ Boeken/Kunst/Schilderij,Schilderij,Oil on canvas,"1,250.00"
   is arranged differently. The gallery has two category levels, so deeper folders are flagged and
   the first two are used. A category that does not exist is created before the piece is saved - the
   main category first, then its child - and the preview lists the categories that will be created.
-- **Artist from the title.** A title folder such as `Stoel by John Doe` is split at the last
-  ` by `: “Stoel” is the title and “John Doe” the artist. The name is matched against the artist
-  directory (case and accents do not matter); a match fills the row in, and a name that is not there
-  yet is created during the import (first word as the first name, the rest as the last name) and
-  assigned with the piece. A single-word artist cannot be created that way because the API needs a
-  first and a last name; those rows wait for you to pick or create the artist. The original folder
-  name is kept for CSV matching, and the title and artist remain editable.
+- **Artist from the title.** A title folder or CSV title such as `Stoel by John Doe` is split at
+  the last ` by `: “Stoel” is the title and “John Doe” the artist. An artist written as
+  `Luc Tuymans -` (the name followed by a dash, with the title kept in the folder or another CSV
+  field) is recognized the same way. The name is matched against the artist directory (case and
+  accents do not matter); a match fills the row in, and a name that is not there yet is created
+  during the import (first word as the first name, the rest as the last name) and assigned with the
+  piece. A single-word artist cannot be created that way because the API needs a first and a last
+  name; those rows wait for you to pick or create the artist. The original folder name is kept for
+  CSV matching, and the title and artist remain editable.
 - **Category from the CSV.** A `category` column wins over the folder path. It is matched by name -
   a main category, a child, or the full path (`Mirrors / Wall mirrors`, `Mirrors > Wall mirrors`) -
   and a name the gallery does not have is listed as an issue rather than guessed at. Select rows and
@@ -525,7 +527,9 @@ Boeken/Kunst/Schilderij,Schilderij,Oil on canvas,"1,250.00"
   flags the title for review. Re-importing the same folder appends its photographs again - there is
   no content-hash check yet.
 - **Before importing**, each row shows whether a CSV row matched, how many photographs it has and
-  its folder. Title, description and price can be corrected inline.
+  its folder. Title, description and price can be corrected inline. A new piece's title may have at
+  most ten words; a longer title is flagged on its row and the import waits until it is shortened.
+  A piece that already exists keeps its title, so re-importing an older entry does not fail.
 - **Uploads** run one piece at a time and show progress. A failure leaves that row selected with its
   error; retrying continues from where it stopped and does not create the piece twice. Images are
   the same formats and 8 MB limit as the single-piece form, and are converted to WebP before they

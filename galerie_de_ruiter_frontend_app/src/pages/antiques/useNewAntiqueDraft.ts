@@ -5,6 +5,7 @@ import { publishContentUpdate } from "@/services/contentUpdates";
 import { useImageSelection } from "./useImageSelection";
 import { modelUploadErrorKey, saveErrorKey } from "./antiqueSaveErrors";
 import { isUploadableModel } from "./modelUploadLimits";
+import { titleIsTooLong } from "./titleLimits";
 
 type Draft = Omit<AntiqueForm, "price"> & { price: string };
 const empty: Draft = { title: "", artistId: "", description: "", price: "", categoryId: "", modelUrl: "" };
@@ -50,6 +51,10 @@ export function useNewAntiqueDraft(openAntique: (id: string) => void) {
   };
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (titleIsTooLong(form.title)) {
+      setMessage("titleTooLong");
+      return;
+    }
     setSaving(true);
     setMessage(undefined);
     let antiqueId: string;

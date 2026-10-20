@@ -5,13 +5,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import be.galerie_de_ruiter.project.validation.DescriptionLimits;
 import be.galerie_de_ruiter.project.validation.MaxWords;
+import be.galerie_de_ruiter.project.validation.TitleLimits;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 
 
 public record AntiqueRequest(
-	@NotBlank String title, 
+	@NotBlank @MaxWords(TitleLimits.MAX_WORDS) String title, 
 	@NotNull UUID artistId, 
 	@MaxWords(DescriptionLimits.MAX_WORDS) String description,
 	@NotNull @DecimalMin("0.0") BigDecimal price,

@@ -3,12 +3,14 @@ import type { Category } from "@/models/antiques/Antique";
 import type { useNewAntiqueDraft } from "./useNewAntiqueDraft";
 import { useTranslation } from "react-i18next";
 import { CategoryOptions } from "./CategoryOptions";
+import { TitleLimitHint } from "./TitleLimitHint";
 
 type Draft = ReturnType<typeof useNewAntiqueDraft>;
 export function AntiqueIdentityFields({ form, update, categories }: { form: Draft["form"]; update: Draft["update"]; categories: Category[] }) {
   const { t } = useTranslation();
   return <><Form.Group className="mb-3" controlId="antique-title"><Form.Label>{t("title")}</Form.Label>
-    <Form.Control required value={form.title} onChange={(event) => update("title", event.target.value)} /></Form.Group>
+    <Form.Control required value={form.title} onChange={(event) => update("title", event.target.value)} />
+    <TitleLimitHint value={form.title} /></Form.Group>
     <Form.Group className="mb-3" controlId="antique-category"><Form.Label>{t("category")}</Form.Label>
       <Form.Select required value={form.categoryId} onChange={(event) => update("categoryId", event.target.value)}>
         <option value="">{t("chooseCategory")}</option>

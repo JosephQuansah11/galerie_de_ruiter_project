@@ -197,6 +197,21 @@ describe("the folder import screen", () => {
     expect(screen.getByText(i18n.t("importNeedsArtist"))).toBeInTheDocument();
   });
 
+  it("will not create a piece whose title is longer than ten words", async () => {
+    const longTitle = "one two three four five six seven eight nine ten eleven";
+    renderPage(<AntiqueFolderImportPage />);
+    await chooseFolder([
+      image("Root/Mirrors/Carved mirror/front.jpg"),
+      csv("Root/pieces.csv", `file;title;price\nMirrors/Carved mirror;${longTitle};480\n`),
+    ], longTitle);
+    await assignArtist();
+    await assignCategory();
+
+    expect(screen.getByText(i18n.t("titleTooLong", { max: 10 }))).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Import 1 piece/ })).toBeDisabled();
+    expect(addAntiqueMock).not.toHaveBeenCalled();
+  });
+
   it("asks for a category when neither the folders nor the CSV name one", async () => {
     renderPage(<AntiqueFolderImportPage />);
     fireEvent.change(screen.getByLabelText(i18n.t("chooseFolder")), {

@@ -55,6 +55,23 @@ beforeEach(() => {
   addAntiqueMock.mockResolvedValue(antique("antique-1"));
 });
 
+describe("useNewAntiqueDraft title limit", () => {
+  it("refuses to save a title longer than ten words", async () => {
+    addAntiqueMock.mockClear();
+    const openAntique = jest.fn();
+    const { result } = renderHook(() => useNewAntiqueDraft(openAntique));
+    act(() => result.current.update("title", "one two three four five six seven eight nine ten eleven"));
+
+    await act(async () => {
+      await result.current.submit(submitEvent);
+    });
+
+    expect(addAntiqueMock).not.toHaveBeenCalled();
+    expect(result.current.message).toBe("titleTooLong");
+    expect(openAntique).not.toHaveBeenCalled();
+  });
+});
+
 describe("useNewAntiqueDraft model upload", () => {
   it("rejects a model above the shared limit before it is saved", () => {
     const { result } = renderHook(() => useNewAntiqueDraft(jest.fn()));

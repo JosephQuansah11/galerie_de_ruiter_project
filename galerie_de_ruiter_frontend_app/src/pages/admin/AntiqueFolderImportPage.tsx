@@ -12,6 +12,10 @@ import {
   ANTIQUE_DESCRIPTION_MAX_WORDS,
   descriptionIsTooLong,
 } from "@/pages/antiques/descriptionLimits";
+import {
+  ANTIQUE_TITLE_MAX_WORDS,
+  titleIsTooLong,
+} from "@/pages/antiques/titleLimits";
 import { InventoryHeading } from "./antiques/InventoryHeading";
 import { useFolderImport, type ImportGroupDraft } from "./antiques/folderImport/useFolderImport";
 import type { ImportCategorySource } from "./antiques/folderImport/buildImportGroups";
@@ -74,7 +78,10 @@ export default function AntiqueFolderImportPage() {
     .map((group) => group.categoryPath.slice(0, 2).join(" / ")))];
   const missingDetails = selected.some((group) => {
     const price = group.price.trim();
-    if (!group.title.trim() || descriptionIsTooLong(group.description)) return true;
+    if (!group.title.trim()) return true;
+    // The title limit applies to a new piece; an existing piece may keep the title it already has.
+    if (!group.existing && titleIsTooLong(group.title)) return true;
+    if (descriptionIsTooLong(group.description)) return true;
     if (!price) return !group.existing;
     return !Number.isFinite(Number(price)) || Number(price) < 0;
   });
@@ -249,6 +256,9 @@ export default function AntiqueFolderImportPage() {
               <Form.Control size="sm" value={group.title} disabled={disabled}
                 aria-label={`${t("title")}: ${group.folderName}`}
                 onChange={(event) => imported.updateGroup(group.id, "title", event.target.value)} />
+              {!group.existing && titleIsTooLong(group.title) && <p className="folder-import-error">
+                {t("titleTooLong", { max: ANTIQUE_TITLE_MAX_WORDS })}
+              </p>}
               <Form.Select size="sm" value={group.categoryId} disabled={disabled}
                 aria-label={`${t("category")}: ${group.title}`}
                 onChange={(event) => imported.updateGroupCategory(group.id, event.target.value)}>

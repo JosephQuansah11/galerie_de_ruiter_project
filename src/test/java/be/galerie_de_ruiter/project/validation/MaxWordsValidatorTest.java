@@ -19,6 +19,13 @@ class MaxWordsValidatorTest {
     }
 
     @Test
+    void acceptsTenTitleWordsAndRejectsTheEleventh() {
+        assertThat(validator.validate(withTitle(words(TitleLimits.MAX_WORDS)))).isEmpty();
+        assertThat(validator.validate(withTitle(words(TitleLimits.MAX_WORDS + 1))))
+                .anyMatch(violation -> violation.getPropertyPath().toString().equals("title"));
+    }
+
+    @Test
     void rejectsTheNextWord() {
         var violations = validator.validate(request(words(DescriptionLimits.MAX_WORDS + 1)));
 
@@ -40,6 +47,10 @@ class MaxWordsValidatorTest {
 
     private static AntiqueRequest request(String description) {
         return new AntiqueRequest("Stoel", UUID.randomUUID(), description, BigDecimal.TEN, null, null, null);
+    }
+
+    private static AntiqueRequest withTitle(String title) {
+        return new AntiqueRequest(title, UUID.randomUUID(), null, BigDecimal.TEN, null, null, null);
     }
 
     private static String words(int count) {

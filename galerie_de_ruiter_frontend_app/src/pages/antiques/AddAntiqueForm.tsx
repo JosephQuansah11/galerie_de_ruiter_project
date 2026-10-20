@@ -11,13 +11,17 @@ import { AntiqueIdentityFields } from "./AntiqueIdentityFields";
 import { AntiqueMediaFields } from "./AntiqueMediaFields";
 import { AntiqueDescriptionFields } from "./AntiqueDescriptionFields";
 import { MODEL_MAX_SIZE_MB } from "./modelUploadLimits";
+import { ANTIQUE_TITLE_MAX_WORDS, titleIsTooLong } from "./titleLimits";
 
 type Draft = ReturnType<typeof useNewAntiqueDraft>;
 type Lookups = ReturnType<typeof useAntiqueLookups>;
 export function AddAntiqueForm({ draft, lookups, selectArtist }: { draft: Draft; lookups: Lookups; selectArtist: (designer: Designer) => void }) {
   const { t } = useTranslation();
+  const titleTooLong = titleIsTooLong(draft.form.title);
   return <>
-    {(draft.message || lookups.error) && <Alert variant="danger">{t(draft.message ?? lookups.error!, { max: MODEL_MAX_SIZE_MB })}</Alert>}
+    {(draft.message || lookups.error) && <Alert variant="danger">{t(draft.message ?? lookups.error!, {
+      max: draft.message === "titleTooLong" ? ANTIQUE_TITLE_MAX_WORDS : MODEL_MAX_SIZE_MB,
+    })}</Alert>}
     <Form onSubmit={draft.submit}>
       <fieldset disabled={Boolean(draft.createdId)} className="border-0 p-0">
         <ArtistSearch query={lookups.query} setQuery={(value) => { lookups.setQuery(value); draft.update("artistId", ""); }}
@@ -30,7 +34,7 @@ export function AddAntiqueForm({ draft, lookups, selectArtist }: { draft: Draft;
           updateModelUrl={(value) => { draft.update("modelUrl", value); if (value) draft.selectModelFile(null); }} />
         <AntiqueDescriptionFields form={draft.form} update={draft.update} />
       </fieldset>
-      <Button className="btn btn-outline-secondary" type="submit" disabled={draft.saving || draft.modelFileInvalid}>
+      <Button className="btn btn-outline-secondary" type="submit" disabled={draft.saving || draft.modelFileInvalid || titleTooLong}>
         {draft.saving ? <Spinner size="sm" /> : <Save size={16} />}
         {draft.saving ? t("saving") : t(draft.createdId ? "retryUploads" : "saveAntique")}
       </Button>

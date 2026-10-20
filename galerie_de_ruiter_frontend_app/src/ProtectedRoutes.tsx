@@ -48,6 +48,23 @@ function RequireAccount() {
   return <Navigate to={`/login?from=${encodeURIComponent(from)}`} replace />;
 }
 
+/**
+ * The screens that change the gallery. Signing in is not enough: a member who types an admin
+ * address must not get the dashboard, the editors or the folder import. The API refuses every
+ * write from an account without the admin role, but showing the screen still tells them what the
+ * gallery's controls are and leaves buttons that can only fail.
+ *
+ * A member is sent to the landing page rather than shown a "forbidden" page: there is nothing for
+ * them to do with the address, and the navigation never offered it in the first place.
+ */
+function RequireAdmin() {
+  const auth = useAuth();
+  const { t } = useTranslation();
+  if (auth.loading) return <div className="loading-screen">{t("checkingSession")}</div>;
+  if (!auth.isAdmin) return <Navigate to="/" replace />;
+  return <Outlet />;
+}
+
 export function ProtectedRoutes() {
   return <Routes>
     {/* Open to visitors without an account: the gallery story, where it is, the landing page and
@@ -66,14 +83,17 @@ export function ProtectedRoutes() {
     <Route element={<RequireAccount />}>
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/preferences" element={<PreferencesPage />} />
-      <Route path="/admin/dashboard" element={<DashboardPage />} />
-      <Route path="/admin/antiques/new" element={<AddNewAntique />} />
-      <Route path="/admin/antiques/import" element={<AntiqueFolderImportPage />} />
-      <Route path="/admin/antiques" element={<AntiqueAdminPage />} />
-      <Route path="/admin/categories" element={<CategoryAdminPage />} />
-      <Route path="/admin/location" element={<LocationAdminPage />} />
-      <Route path="/admin/about" element={<AboutAdminPage />} />
-      <Route path="/admin/home" element={<HomeAdminPage />} />
+      {/* These screens write to the gallery, so they need the admin role as well as an account. */}
+      <Route element={<RequireAdmin />}>
+        <Route path="/admin/dashboard" element={<DashboardPage />} />
+        <Route path="/admin/antiques/new" element={<AddNewAntique />} />
+        <Route path="/admin/antiques/import" element={<AntiqueFolderImportPage />} />
+        <Route path="/admin/antiques" element={<AntiqueAdminPage />} />
+        <Route path="/admin/categories" element={<CategoryAdminPage />} />
+        <Route path="/admin/location" element={<LocationAdminPage />} />
+        <Route path="/admin/about" element={<AboutAdminPage />} />
+        <Route path="/admin/home" element={<HomeAdminPage />} />
+      </Route>
       <Route path="/wishlist" element={<WishlistPage />} />
       <Route path="/cart" element={<CartPage />} />
     </Route>

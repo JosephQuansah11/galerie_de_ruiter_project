@@ -526,6 +526,15 @@ Boeken/Kunst/Schilderij,Schilderij,Oil on canvas,"1,250.00"
   photographs; if their details or category folders disagree, the first is used and the issue list
   flags the title for review. Re-importing the same folder appends its photographs again - there is
   no content-hash check yet.
+- **Ready or needs work.** Every row is checked against the same rules as the import button. Rows
+  that can be saved now sit under **Ready to import**; rows that still need a title, artist,
+  category, price or confirmation sit under **Needs attention**. **Select ready** selects only the
+  ready rows, so a few incomplete entries no longer hold up the rest of the batch.
+- **Save for later.** **Save for later** writes the preview and its files to the browser's
+  IndexedDB. Leaving the screen and coming back - or reloading the page - restores the chosen
+  folder, the CSV matches and the edits you made, so the import can continue where it stopped. The
+  session is also saved when you leave the screen; **Clear** discards it. If the browser cannot
+  store it, the preview still lives for the current visit.
 - **Before importing**, each row shows whether a CSV row matched, how many photographs it has and
   its folder. Title, description and price can be corrected inline. A new piece's title may have at
   most ten words; a longer title is flagged on its row and the import waits until it is shortened.

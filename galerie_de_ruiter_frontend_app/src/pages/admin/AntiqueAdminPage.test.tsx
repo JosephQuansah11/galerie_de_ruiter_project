@@ -88,7 +88,7 @@ describe("Antique administration page", () => {
 
     fireEvent.change(screen.getByPlaceholderText(i18n.t("searchInventory")), { target: { value: "mirror" } });
 
-    expect(screen.getByText("1 / 2")).toBeInTheDocument();
+    expect(screen.getByText(i18n.t("inventoryResultCount", { filtered: 1, total: 2 }))).toBeInTheDocument();
   });
 
   it("deletes a piece after the curator confirms", async () => {

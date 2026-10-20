@@ -162,7 +162,9 @@ export default function AntiqueAdminPage() {
         </Button>
       </div>
       {actionError && <Alert variant="danger">{t(actionError, { max: MODEL_MAX_SIZE_MB })}</Alert>}
-      {!loading && !loadError && <p className="inventory-result-count">{filtered.length} / {antiques.length}</p>}
+      {!loading && !loadError && <p className="inventory-result-count">
+        {t("inventoryResultCount", { filtered: filtered.length, total: antiques.length })}
+      </p>}
       {loading && (
         <div className="catalogue-state">
           <Spinner animation="border" size="sm" /> {t("loadingInventory")}

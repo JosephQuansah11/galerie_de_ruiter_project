@@ -24,6 +24,15 @@ import {
   type ImportIssue,
 } from "./buildImportGroups";
 import { parseCsvSources, type CsvGrouping, type CsvRecord, type CsvSource } from "./csv";
+import {
+  clearImportSession,
+  loadImportSession,
+  restoreFilePath,
+  saveImportSession,
+  storedFile,
+  storedGroup,
+  type ImportSessionInput,
+} from "./importSession";
 
 export type ImportStatus = "pending" | "saving" | "saved" | "failed";
 
@@ -156,6 +165,12 @@ export function useFolderImport() {
   const [notice, setNotice] = useState<string>();
   const [progress, setProgress] = useState<ImportProgress>();
   const [result, setResult] = useState<ImportResult>();
+  /** A saved preview is being read from IndexedDB. */
+  const [restoring, setRestoring] = useState(true);
+  /** The preview currently on screen came from a saved session. */
+  const [restored, setRestored] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "unavailable">("idle");
+  const [savedAt, setSavedAt] = useState<number>();
 
   const groupsRef = useRef(groups);
   groupsRef.current = groups;
@@ -173,12 +188,100 @@ export function useFolderImport() {
   categorySourceRef.current = categorySource;
   /** Lets a newer folder/CSV selection cancel an older, still-reading one. */
   const readRun = useRef(0);
+  /** Stops a late IndexedDB restore from replacing a folder the curator has already chosen. */
+  const sessionTouched = useRef(false);
+  const snapshotRef = useRef<ImportSessionInput | undefined>(undefined);
   const previews = useRef<string[]>([]);
   const releasePreviews = () => {
     previews.current.forEach((url) => URL.revokeObjectURL(url));
     previews.current = [];
   };
   useEffect(() => () => releasePreviews(), []);
+
+  // A preview the curator saved earlier - or simply left this page with - is restored with its
+  // files. `sessionTouched` protects a folder chosen while IndexedDB was still answering.
+  useEffect(() => {
+    let active = true;
+    void loadImportSession().then((saved) => {
+      if (!active) return;
+      setRestoring(false);
+      if (!saved || sessionTouched.current
+          || groupsRef.current.length > 0 || folderFilesRef.current.length > 0) return;
+      const restoredGroups = saved.groups.map((group) => {
+        const images = group.images.map((image) => ({
+          ...image,
+          file: restoreFilePath(image.file, image.path),
+        }));
+        const previewUrl = images[0] ? URL.createObjectURL(images[0].file) : "";
+        if (previewUrl) previews.current.push(previewUrl);
+        return {
+          ...group,
+          images,
+          previewUrl,
+          status: group.status === "saving" ? "pending" as const : group.status,
+        };
+      });
+      setGroups(restoredGroups);
+      setFolderFiles(saved.folderFiles.map(({ path, file }) => restoreFilePath(file, path)));
+      setExtraCsvFiles(saved.extraCsvFiles.map(({ path, file }) => restoreFilePath(file, path)));
+      setRecords(saved.records);
+      setParseIssues(saved.parseIssues);
+      setIssues(saved.issues);
+      setGroupingState(saved.grouping);
+      setCategorySource(saved.categorySource);
+      setFolderName(saved.folderName);
+      setImageCount(saved.imageCount);
+      setCsvCount(saved.csvCount);
+      setSavedAt(saved.savedAt);
+      setRestored(true);
+    }).catch(() => {
+      if (active) setRestoring(false);
+    });
+    return () => { active = false; };
+  }, []);
+
+  // The latest preview, used by the save button and by the automatic save when the page is left.
+  snapshotRef.current = groups.length === 0 ? undefined : {
+    folderFiles: folderFiles.map(storedFile),
+    extraCsvFiles: extraCsvFiles.map(storedFile),
+    groups: groups.map(storedGroup),
+    records,
+    parseIssues,
+    issues,
+    grouping,
+    categorySource,
+    folderName,
+    imageCount,
+    csvCount,
+  };
+
+  const saveForLater = async (): Promise<void> => {
+    const session = snapshotRef.current;
+    if (!session) return;
+    setSaveState("saving");
+    const saved = await saveImportSession(session);
+    setSaveState(saved ? "saved" : "unavailable");
+    if (saved) setSavedAt(Date.now());
+  };
+
+  // IndexedDB cannot be written reliably from `beforeunload`; a hidden page and the component's
+  // unmount are the two moments that happen before the tab goes away or the route changes.
+  useEffect(() => {
+    const persist = () => {
+      const session = snapshotRef.current;
+      if (session) void saveImportSession(session);
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") persist();
+    };
+    window.addEventListener("pagehide", persist);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", persist);
+      document.removeEventListener("visibilitychange", onVisibility);
+      persist();
+    };
+  }, []);
 
   useEffect(() => {
     getVisibleCategories()
@@ -391,6 +494,7 @@ export function useFolderImport() {
   const selectFolder = (input: FileList | File[] | null): void => {
     const files = Array.from(input ?? []);
     if (files.length === 0) return;
+    sessionTouched.current = true;
     folderFilesRef.current = files;
     setFolderFiles(files);
     const firstPath = filePath(files[0]);
@@ -402,6 +506,7 @@ export function useFolderImport() {
   const selectCsvFiles = (input: FileList | File[] | null): void => {
     const files = Array.from(input ?? []).filter((file) => !isIgnoredFile(file) && isCsvFile(file));
     if (files.length === 0) return;
+    sessionTouched.current = true;
     extraCsvFilesRef.current = files;
     setExtraCsvFiles(files);
     void rebuild(folderFilesRef.current, files, grouping, categorySourceRef.current);
@@ -409,7 +514,10 @@ export function useFolderImport() {
 
   const clearFolder = (): void => {
     readRun.current += 1;
+    sessionTouched.current = true;
+    snapshotRef.current = undefined;
     releasePreviews();
+    void clearImportSession();
     folderFilesRef.current = [];
     extraCsvFilesRef.current = [];
     setGroups([]);
@@ -426,6 +534,9 @@ export function useFolderImport() {
     setProgress(undefined);
     setResult(undefined);
     setReading(false);
+    setRestored(false);
+    setSaveState("idle");
+    setSavedAt(undefined);
   };
 
   /** Rebuilds the preview when the admin changes how photographs become pieces. */
@@ -491,6 +602,11 @@ export function useFolderImport() {
   const toggleAll = (ids: string[], selected: boolean): void => {
     setGroups((current) => current.map((group) =>
       ids.includes(group.id) && group.status !== "saved" ? { ...group, selected } : group));
+  };
+  /** Selects exactly these rows, which is how the ready group is imported without the others. */
+  const selectOnly = (ids: string[]): void => {
+    setGroups((current) => current.map((group) =>
+      group.status === "saved" ? group : { ...group, selected: ids.includes(group.id) }));
   };
 
   const assignArtist = useCallback((designer: Designer): void => {
@@ -757,7 +873,8 @@ export function useFolderImport() {
     groups, grouping, categorySource, folderName, imageCount, csvCount, issues, reading, importing, notice, setNotice,
     progress, result, selectFolder, selectCsvFiles, clearFolder, changeGrouping, changeCategorySource,
     updateGroup, updateGroupCategory,
-    toggleGroup, toggleAll, assignArtist, assignCategory, categories, categoriesError, categoryIssues, importSelected,
+    toggleGroup, toggleAll, selectOnly, assignArtist, assignCategory, categories, categoriesError, categoryIssues, importSelected,
     existingLoading, existingError, setOverride, confirmGroup, setAddImages,
+    restoring, restored, dismissRestored: () => setRestored(false), saveState, savedAt, saveForLater,
   };
 }

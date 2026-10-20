@@ -1,28 +1,21 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Alert, Badge, Card, Form, Spinner } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
-import { FolderOpen, FileSpreadsheet, Image as ImageIcon, Search, Tags, Upload, X } from "lucide-react";
+import { FolderOpen, FileSpreadsheet, Image as ImageIcon, Save, Search, Tags, Upload, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArtistSearch } from "@/pages/antiques/ArtistSearch";
-import { CategoryOptions, categoryLabel } from "@/pages/antiques/CategoryOptions";
+import { CategoryOptions } from "@/pages/antiques/CategoryOptions";
 import { DesignerCreator } from "@/pages/antiques/DesignerCreator";
 import { useDesignerDirectory } from "@/pages/antiques/useDesignerDirectory";
-import {
-  ANTIQUE_DESCRIPTION_MAX_WORDS,
-  descriptionIsTooLong,
-} from "@/pages/antiques/descriptionLimits";
-import {
-  ANTIQUE_TITLE_MAX_WORDS,
-  titleIsTooLong,
-} from "@/pages/antiques/titleLimits";
 import { InventoryHeading } from "./antiques/InventoryHeading";
 import { useFolderImport, type ImportGroupDraft } from "./antiques/folderImport/useFolderImport";
 import type { ImportCategorySource } from "./antiques/folderImport/buildImportGroups";
-import { importDifferences } from "./antiques/folderImport/differences";
-import { ImportDifferences } from "./antiques/folderImport/ImportDifferences";
+import { hasDetailBlocker, importBlockers } from "./antiques/folderImport/importReadiness";
+import { FolderImportRow } from "./antiques/folderImport/FolderImportRow";
 
-function artistName(group: ImportGroupDraft): string {
+/** The artist text the preview search matches, including an existing piece's artist. */
+function artistSearchName(group: ImportGroupDraft): string {
   const artist = group.artist;
   if (artist) return [artist.firstName, artist.middleName, artist.lastName].filter(Boolean).join(" ");
   const existing = group.existing?.artist;
@@ -54,44 +47,33 @@ export default function AntiqueFolderImportPage() {
   }, []);
 
   const visible = imported.groups.filter((group) =>
-    `${group.title} ${group.label} ${artistName(group)}`.toLowerCase().includes(query.trim().toLowerCase()));
+    `${group.title} ${group.label} ${artistSearchName(group)}`.toLowerCase().includes(query.trim().toLowerCase()));
   const selected = imported.groups.filter((group) => group.selected && group.status !== "saved");
   const allVisibleSelected = visible.length > 0
     && visible.every((group) => group.selected || group.status === "saved");
-  // A row that matches an existing piece already has its data; an import field that is blank must
-  // not be treated as a value to erase. A new piece is the only thing that needs all three.
-  const missingArtist = selected.some((group) => {
-    // A `Title by Artist` name is an artist the import can create, as long as it has a first and a
-    // last name (the designer API requires both).
-    const creatable = Boolean(group.artistName && group.artistName.trim().split(/\s+/).filter(Boolean).length >= 2);
-    return !group.existing && !group.artist && !creatable;
-  });
-  // A category can come from the CSV, from an existing piece, or from the folders above the title.
-  // Only when all three say nothing does the import have to wait for the curator.
-  const missingCategory = selected.some((group) => !group.existing && !group.categoryId
-    && (group.categoryPath.length === 0 || Boolean(group.category)));
+  // The same per-row checks decide the two groups below and whether the import button is enabled.
+  const blockersByGroup = new Map(imported.groups.map((group) => [
+    group.id, importBlockers(group, imported.categories),
+  ]));
+  const selectedBlockers = new Set(selected.flatMap((group) => blockersByGroup.get(group.id) ?? []));
+  const missingArtist = selectedBlockers.has("artist");
+  const missingCategory = selectedBlockers.has("category");
+  const missingDetails = hasDetailBlocker([...selectedBlockers]);
+  const ambiguousExisting = selectedBlockers.has("ambiguousExisting");
+  const unconfirmed = selectedBlockers.has("unconfirmed");
   // A folder category that exists nowhere is created by the import; this is the list the curator
   // sees before pressing the button. An existing piece only counts when its category was ticked.
   const categoriesToCreate = [...new Set(selected
     .filter((group) => !group.categoryId && !group.category && group.categoryPath.length > 0
       && (!group.existing || Boolean(group.overrides.category)))
     .map((group) => group.categoryPath.slice(0, 2).join(" / ")))];
-  const missingDetails = selected.some((group) => {
-    const price = group.price.trim();
-    if (!group.title.trim()) return true;
-    // The title limit applies to a new piece; an existing piece may keep the title it already has.
-    if (!group.existing && titleIsTooLong(group.title)) return true;
-    if (descriptionIsTooLong(group.description)) return true;
-    if (!price) return !group.existing;
-    return !Number.isFinite(Number(price)) || Number(price) < 0;
-  });
-  const ambiguousExisting = selected.some((group) => group.existingAmbiguous);
-  // A piece that is already in the gallery is only updated once the admin has seen what differs
-  // and confirmed it. The confirmation resets as soon as a value changes.
-  const unconfirmed = selected.some((group) => group.existing && !group.confirmed
-    && importDifferences(group, group.existing, imported.categories).length > 0);
-  const canImport = selected.length > 0 && !missingArtist && !missingCategory && !missingDetails
-    && !ambiguousExisting && !unconfirmed && !imported.importing && !imported.reading
+  const readyGroups = visible.filter((group) => group.status !== "saved"
+    && (blockersByGroup.get(group.id)?.length ?? 0) === 0);
+  const needsWorkGroups = visible.filter((group) => group.status !== "saved"
+    && (blockersByGroup.get(group.id)?.length ?? 0) > 0);
+  const savedGroups = visible.filter((group) => group.status === "saved");
+  const canImport = selected.length > 0 && selectedBlockers.size === 0
+    && !imported.importing && !imported.reading
     && !imported.existingLoading && !imported.existingError;
 
   const chooseFolder = (event: ChangeEvent<HTMLInputElement>) => {
@@ -108,9 +90,21 @@ export default function AntiqueFolderImportPage() {
     void imported.selectCsvFiles(files);
   };
 
+  const sections = [
+    { key: "ready", label: t("importReadyGroup"), badge: "success" as const, groups: readyGroups },
+    { key: "needsWork", label: t("importNeedsWorkGroup"), badge: "warning" as const, groups: needsWorkGroups },
+    { key: "saved", label: t("importSavedGroup"), badge: "secondary" as const, groups: savedGroups },
+  ];
+
   return <section className="admin-page folder-import-page">
     <InventoryHeading administration={t("administration")} title={t("importFolderTitle")} />
     <p className="folder-import-intro">{t("importFolderIntro")}</p>
+    {imported.restoring && imported.groups.length === 0 && <div className="folder-import-hint" role="status">
+      <Spinner animation="border" size="sm" /> {t("importSessionRestoring")}
+    </div>}
+    {imported.restored && <Alert variant="info" dismissible onClose={imported.dismissRestored}>
+      {t("importSessionRestored")}
+    </Alert>}
     {imported.existingError && <Alert variant="warning">{t(imported.existingError)}</Alert>}
     <input ref={input} type="file" multiple className="visually-hidden" aria-label={t("chooseFolder")}
       onChange={chooseFolder} tabIndex={-1} />
@@ -137,6 +131,14 @@ export default function AntiqueFolderImportPage() {
           onClick={() => { imported.clearFolder(); artistDirectory.setQuery(""); setQuery(""); setCategoryChoice(""); }}>
           <X size={16} /> {t("clearFolder")}
         </Button>
+        <Button className="btn btn-outline-secondary" type="button"
+          disabled={imported.importing || imported.saveState === "saving"}
+          onClick={() => void imported.saveForLater()}>
+          {imported.saveState === "saving" ? <Spinner animation="border" size="sm" /> : <Save size={16} />}
+          {t("saveImportForLater")}
+        </Button>
+        {imported.saveState === "saved" && <span className="folder-import-saved">{t("importSavedForLater")}</span>}
+        {imported.saveState === "unavailable" && <span className="folder-import-error">{t("importSaveUnavailable")}</span>}
       </>}
     </div>
     <p className="folder-import-hint">{t("chooseFolderHint")}</p>
@@ -240,78 +242,25 @@ export default function AntiqueFolderImportPage() {
         <Form.Check type="checkbox" id="folder-import-select-all" label={t("selectAllPieces")}
           checked={allVisibleSelected} disabled={visible.length === 0 || imported.importing}
           onChange={(event) => imported.toggleAll(visible.map((group) => group.id), event.target.checked)} />
+        <Button className="btn btn-outline-secondary btn-sm" type="button"
+          disabled={readyGroups.length === 0 || imported.importing}
+          onClick={() => imported.selectOnly(readyGroups.map((group) => group.id))}>
+          {t("selectReadyPieces", { count: readyGroups.length })}
+        </Button>
         <span className="folder-import-selected">{t("selectedPieces", { count: selected.length })}</span>
       </div>
 
       <div className="folder-import-list">
-        {visible.map((group) => {
-          const saved = group.status === "saved";
-          const disabled = saved || imported.importing;
-          return <article className={`folder-import-row${saved ? " is-saved" : ""}`} key={group.id}>
-            <Form.Check type="checkbox" checked={group.selected} disabled={disabled}
-              aria-label={t("selectPiece", { title: group.title })}
-              onChange={(event) => imported.toggleGroup(group.id, event.target.checked)} />
-            <img className="folder-import-thumb" src={group.previewUrl} alt="" loading="lazy" />
-            <div className="folder-import-fields">
-              <Form.Control size="sm" value={group.title} disabled={disabled}
-                aria-label={`${t("title")}: ${group.folderName}`}
-                onChange={(event) => imported.updateGroup(group.id, "title", event.target.value)} />
-              {!group.existing && titleIsTooLong(group.title) && <p className="folder-import-error">
-                {t("titleTooLong", { max: ANTIQUE_TITLE_MAX_WORDS })}
-              </p>}
-              <Form.Select size="sm" value={group.categoryId} disabled={disabled}
-                aria-label={`${t("category")}: ${group.title}`}
-                onChange={(event) => imported.updateGroupCategory(group.id, event.target.value)}>
-                <option value="">{t("chooseCategory")}</option>
-                <CategoryOptions categories={imported.categories} />
-              </Form.Select>
-              {group.categoryPath.length > 0 && !group.category && <span className="folder-import-folder-category">
-                <span>{t("importCategoryFromFolders")}: <strong>{group.categoryPath.slice(0, 2).join(" / ")}</strong></span>
-                {!group.categoryId && <Badge bg="warning">{t("importCategoryWillCreate")}</Badge>}
-              </span>}
-              <div className="folder-import-meta">
-                <Badge bg={group.record ? "success" : "secondary"}>
-                  {group.record ? t("csvMatched") : t("csvMissing")}
-                </Badge>
-                {group.existing && <Badge bg="info">{t("importWillUpdate")}</Badge>}
-                {group.existingAmbiguous && <Badge bg="warning">{t("importExistingAmbiguous")}</Badge>}
-                <span>{t("imagesCount", { count: group.images.length })}</span>
-                <span className="folder-import-path" title={group.label}>{group.label}</span>
-                <span>{group.artist
-                  ? artistName(group)
-                  : group.artistName
-                    ? t("artistFromTitle", { name: group.artistName })
-                    : t("noArtistAssigned")}</span>
-                {!group.artist && group.artistName
-                  && group.artistName.trim().split(/\s+/).filter(Boolean).length >= 2
-                  && <Badge bg="warning">{t("importArtistWillCreate")}</Badge>}
-                <span>{categoryLabel(imported.categories, group.categoryId)
-                  ?? (group.categoryPath.join(" / ") || t("noCategoryAssigned"))}</span>
-                {saved && <Badge bg="success">{t("saved")}</Badge>}
-                {group.status === "saving" && <Spinner animation="border" size="sm" />}
-              </div>
-              <Form.Control as="textarea" rows={2} size="sm" value={group.description} disabled={disabled}
-                aria-label={`${t("description")}: ${group.title}`}
-                onChange={(event) => imported.updateGroup(group.id, "description", event.target.value)} />
-              {descriptionIsTooLong(group.description) && <p className="folder-import-error">
-                {t("descriptionTooLong", { max: ANTIQUE_DESCRIPTION_MAX_WORDS })}
-              </p>}
-              <div className="folder-import-meta">
-                <Form.Control className="folder-import-price" size="sm" type="number" min="0" step="0.01"
-                  value={group.price} disabled={disabled} placeholder={t("priceEur")}
-                  aria-label={`${t("priceEur")}: ${group.title}`}
-                  onChange={(event) => imported.updateGroup(group.id, "price", event.target.value)} />
-                {group.error && <span className="folder-import-error">{t(group.error)}</span>}
-              </div>
-              <ImportDifferences group={group}
-                differences={group.existing ? importDifferences(group, group.existing, imported.categories) : []}
-                disabled={disabled}
-                onOverride={(field, override) => imported.setOverride(group.id, field, override)}
-                onConfirm={(confirmed) => imported.confirmGroup(group.id, confirmed)}
-                onAddImages={(addImages) => imported.setAddImages(group.id, addImages)} />
+        {sections.filter((section) => section.groups.length > 0).map((section) =>
+          <section className={`folder-import-section folder-import-section-${section.key}`} key={section.key}>
+            <h3 className="folder-import-section-heading">
+              <span>{section.label}</span>
+              <Badge bg={section.badge}>{section.groups.length}</Badge>
+            </h3>
+            <div className="folder-import-rows">
+              {section.groups.map((group) => <FolderImportRow key={group.id} group={group} imported={imported} />)}
             </div>
-          </article>;
-        })}
+          </section>)}
       </div>
       {visible.length === 0 && <Alert variant="light">{t("noImportedPiecesFound")}</Alert>}
 

@@ -189,6 +189,34 @@ describe("the folder import screen", () => {
     expect(await screen.findByText(/2 piece\(s\) imported/)).toBeInTheDocument();
   });
 
+  it("groups ready rows apart and can import only the ready ones", async () => {
+    addAntiqueMock.mockClear();
+    const files = [
+      image("Root/Mirrors/Carved mirror/front.jpg"),
+      image("Root/Lamps/Brass lamp/back.jpg"),
+      csv("Root/pieces.csv", "file;title;description;price;category\n"
+        + "Mirrors/Carved mirror;Carved mirror;Late 19th;480;Mirrors\n"
+        + "Lamps/Brass lamp;Brass lamp;Art deco;1250;Unknown\n"),
+    ];
+    renderPage(<AntiqueFolderImportPage />);
+    await chooseFolder(files, "Carved mirror");
+    await assignArtist();
+
+    // One row has a known category; the other names a category the gallery does not have.
+    expect(screen.getByText(i18n.t("importReadyGroup"))).toBeInTheDocument();
+    expect(screen.getByText(i18n.t("importNeedsWorkGroup"))).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("selectReadyPieces", { count: 1 }) }));
+
+    const importButton = screen.getByRole("button", { name: /Import 1 piece/ });
+    expect(importButton).toBeEnabled();
+    fireEvent.click(importButton);
+
+    await waitFor(() => expect(addAntiqueMock).toHaveBeenCalledTimes(1));
+    expect(addAntiqueMock.mock.calls[0][0]).toMatchObject({
+      title: "Carved mirror", categoryId: "cat-mirrors",
+    });
+  });
+
   it("will not import until every selected piece has an artist", async () => {
     renderPage(<AntiqueFolderImportPage />);
     await chooseFolder();

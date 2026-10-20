@@ -31,8 +31,8 @@
 }
 
 #Navbar .nav-item-link {
-  min-height: 2.7rem;
-  padding: 0.65rem 0.8rem;
+  min-height: 2rem;
+  padding: 0.25rem;
   border-radius: 0.55rem;
   color: rgba(255, 250, 247, 0.9);
   font-size: 0.9rem;
@@ -44,4 +44,7 @@
   background: rgba(255, 250, 247, 0.14);
   color: #fffaf7;
   text-decoration: none;
+}
+#Navbar .gap-2 {
+  gap: 0.25rem !important;
 }

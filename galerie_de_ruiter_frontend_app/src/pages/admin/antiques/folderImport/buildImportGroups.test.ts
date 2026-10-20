@@ -121,7 +121,8 @@ describe("grouping a picked folder", () => {
     expect(build.groups).toHaveLength(1);
     expect(build.groups[0].title).toBe("Carved mirror");
     expect(build.groups[0].images).toHaveLength(2);
-    expect(build.issues).toEqual([]);
+    // The folders disagree on the category, so the piece is flagged for the curator to check.
+    expect(build.issues).toContainEqual({ key: "importSharedTitleConflict", params: { title: "Carved mirror" } });
   });
 
   it("keeps the first details and flags a shared title with conflicting details", () => {
@@ -162,5 +163,44 @@ describe("grouping a picked folder", () => {
       key: "csvRowUnmatched",
       params: { source: "pieces.csv", line: 7, value: "Elsewhere/side.jpg" },
     });
+  });
+});
+
+describe("reading categories from the folder hierarchy", () => {
+  it("uses the folders above the piece as its category path", () => {
+    const build = buildImportGroups([
+      image("Root/Boeken/Antiek/Stoel/front.jpg"),
+      image("Root/Boeken/Antiek/Stoel/back.jpg"),
+    ], [], "folder");
+
+    expect(build.groups).toHaveLength(1);
+    expect(build.groups[0].categoryPath).toEqual(["Boeken", "Antiek"]);
+  });
+
+  it("can start at the picked folder when that folder is the main category", () => {
+    const build = buildImportGroups(
+      [image("Boeken/Antiek/Stoel/front.jpg")], [], "folder", "chosen");
+
+    expect(build.groups[0].categoryPath).toEqual(["Boeken", "Antiek"]);
+  });
+
+  it("treats every folder as a category when each photograph is a piece", () => {
+    const build = buildImportGroups(
+      [image("Root/Boeken/Antiek/front.jpg")], [], "image");
+
+    expect(build.groups[0].categoryPath).toEqual(["Boeken", "Antiek"]);
+  });
+
+  it("keeps a single folder as a main category", () => {
+    const build = buildImportGroups([image("Root/Boeken/Stoel/front.jpg")], [], "folder");
+
+    expect(build.groups[0].categoryPath).toEqual(["Boeken"]);
+  });
+
+  it("flags folders deeper than the gallery's two category levels", () => {
+    const build = buildImportGroups([image("Root/A/B/C/Item/front.jpg")], [], "folder");
+
+    expect(build.groups[0].categoryPath).toEqual(["A", "B", "C"]);
+    expect(build.issues).toContainEqual({ key: "importCategoryTooDeep", params: { path: "A / B / C" } });
   });
 });

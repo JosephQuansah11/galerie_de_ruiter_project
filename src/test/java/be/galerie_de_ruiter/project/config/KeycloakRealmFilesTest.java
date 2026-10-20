@@ -69,15 +69,18 @@ class KeycloakRealmFilesTest {
 
         assertThat(client.getRedirectUris())
                 .contains("https://galeriederuiterantieks.gripe/*")
-                // The older free subdomain keeps signing in until it is retired.
-                .contains("https://galeriederuiter.cloud-ip.cc/*")
-                .contains("https://galerie-frontend.onrender.com/*");
+                // The Render host is the same site and still signs in.
+                .contains("https://galerie-frontend.onrender.com/*")
+                // The gallery's retired free host must not come back through a realm import.
+                .doesNotContain("https://galeriederuiter.cloud-ip.cc/*");
         assertThat(client.getWebOrigins())
                 .contains("https://galeriederuiterantieks.gripe")
-                .contains("https://galeriederuiter.cloud-ip.cc");
+                .contains("https://galerie-frontend.onrender.com")
+                .doesNotContain("https://galeriederuiter.cloud-ip.cc");
         assertThat(client.getAttributes().get("post.logout.redirect.uris"))
                 .contains("https://galeriederuiterantieks.gripe/*")
-                .contains("https://galeriederuiter.cloud-ip.cc/*")
+                .contains("https://galerie-frontend.onrender.com/*")
+                .doesNotContain("https://galeriederuiter.cloud-ip.cc/*")
                 // Two or more URIs in one attribute: `##` is the separator Keycloak reads them
                 // back with.
                 .contains("##");

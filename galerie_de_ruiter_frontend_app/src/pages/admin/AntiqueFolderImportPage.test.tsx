@@ -3,7 +3,8 @@ import { renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
 import AntiqueFolderImportPage from "./AntiqueFolderImportPage";
 import {
-  addAntique, getAllAntiques, getVisibleCategories, searchDesigners, updateAntique, uploadAntiqueImage,
+  addAntique, createCategory, getAllAntiques, getAllCategories, getVisibleCategories,
+  searchDesigners, updateAntique, uploadAntiqueImage,
 } from "@/apis/backend_api";
 import type { Category } from "@/models/antiques/Antique";
 
@@ -15,6 +16,8 @@ jest.mock("@/apis/backend_api", () => ({
   searchDesigners: jest.fn(),
   createDesigner: jest.fn(),
   getVisibleCategories: jest.fn(),
+  getAllCategories: jest.fn(),
+  createCategory: jest.fn(),
 }));
 jest.mock("@/services/contentUpdates", () => ({ publishContentUpdate: jest.fn() }));
 
@@ -24,6 +27,8 @@ const updateAntiqueMock = updateAntique as jest.Mock;
 const uploadImageMock = uploadAntiqueImage as jest.Mock;
 const searchDesignersMock = searchDesigners as jest.Mock;
 const getCategoriesMock = getVisibleCategories as jest.Mock;
+const getAllCategoriesMock = getAllCategories as jest.Mock;
+const createCategoryMock = createCategory as jest.Mock;
 
 const artist = { id: "artist-1", firstName: "Ada", lastName: "Lovelace" };
 
@@ -71,10 +76,10 @@ const folder = [
     + "Lamps/Brass lamp;Brass lamp;Art deco;1.250,00\n"),
 ];
 
-async function chooseFolder(files = folder): Promise<void> {
+async function chooseFolder(files = folder, expectedTitle = "Carved mirror"): Promise<void> {
   const picker = screen.getByLabelText(i18n.t("chooseFolder"));
   fireEvent.change(picker, { target: { files: fileList(files) } });
-  await screen.findByDisplayValue("Carved mirror");
+  await screen.findByDisplayValue(expectedTitle);
 }
 
 async function assignArtist(): Promise<void> {
@@ -92,6 +97,11 @@ async function assignCategory(categoryId = "cat-mirrors"): Promise<void> {
 beforeEach(() => {
   searchDesignersMock.mockResolvedValue([artist]);
   getCategoriesMock.mockResolvedValue(categories);
+  getAllCategoriesMock.mockResolvedValue(categories);
+  createCategoryMock.mockImplementation(async (name: string, parentId?: string) => ({
+    id: `cat-${name.toLowerCase()}`, name, parentId: parentId ?? null,
+    visible: true, itemCount: 0, children: [],
+  }));
   getAllAntiquesMock.mockResolvedValue([]);
   addAntiqueMock.mockImplementation(async () => ({ id: `antique-${addAntiqueMock.mock.calls.length}` }));
   updateAntiqueMock.mockImplementation(async (id: string) => ({ id }));
@@ -179,13 +189,45 @@ describe("the folder import screen", () => {
     expect(screen.getByText(i18n.t("importNeedsArtist"))).toBeInTheDocument();
   });
 
-  it("will not import until every selected piece has a category", async () => {
+  it("asks for a category when neither the folders nor the CSV name one", async () => {
     renderPage(<AntiqueFolderImportPage />);
-    await chooseFolder();
+    fireEvent.change(screen.getByLabelText(i18n.t("chooseFolder")), {
+      target: {
+        files: fileList([
+          image("Root/a.jpg"),
+          csv("Root/pieces.csv", "file;title;price\na.jpg;Loose piece;100\n"),
+        ]),
+      },
+    });
+    await screen.findByDisplayValue("Loose piece");
     await assignArtist();
 
-    expect(screen.getByRole("button", { name: /Import 2 piece/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Import 1 piece/ })).toBeDisabled();
     expect(screen.getByText(i18n.t("importNeedsCategory"))).toBeInTheDocument();
+  });
+
+  it("creates the category folders the gallery does not have and files each piece under them", async () => {
+    renderPage(<AntiqueFolderImportPage />);
+    await chooseFolder([
+      image("Root/Boeken/Antiek/Stoel/front.jpg"),
+      image("Root/Boeken/Antiek/Stoel/back.jpg"),
+      csv("Root/pieces.csv", "file;title;price\nBoeken/Antiek/Stoel;Stoel;480\n"),
+    ], "Stoel");
+
+    // The row says the category will be created, and the import is not blocked on it.
+    expect(await screen.findByText(i18n.t("importCategoryWillCreate"))).toBeInTheDocument();
+    await assignArtist();
+    const importButton = screen.getByRole("button", { name: /Import 1 piece/ });
+    await waitFor(() => expect(importButton).toBeEnabled());
+    fireEvent.click(importButton);
+
+    await waitFor(() => expect(createCategoryMock).toHaveBeenCalledWith("Boeken", undefined));
+    await waitFor(() => expect(createCategoryMock).toHaveBeenCalledWith("Antiek", "cat-boeken"));
+    await waitFor(() => expect(addAntiqueMock).toHaveBeenCalledWith(expect.objectContaining({
+      title: "Stoel",
+      categoryId: "cat-antiek",
+    })));
+    expect(uploadImageMock).toHaveBeenCalledTimes(2);
   });
 
   it("updates an existing piece and keeps the details the import does not provide", async () => {
@@ -262,5 +304,84 @@ describe("the folder import screen", () => {
 
     await waitFor(() => expect(addAntiqueMock).toHaveBeenCalledTimes(2));
     expect(addAntiqueMock.mock.calls.map(([piece]) => piece.categoryId)).toEqual(["cat-lighting", "cat-mirrors"]);
+  });
+
+  it("shows what differs on an existing piece and only overrides what the admin confirms", async () => {
+    getAllAntiquesMock.mockResolvedValueOnce([{
+      id: "existing-1",
+      title: "Carved mirror",
+      description: "Original story",
+      price: 900,
+      category: "Mirrors",
+      artist: { id: "artist-1", firstName: "Ada", lastName: "Lovelace" },
+      imageUrls: ["/api/antiques/existing-1/image/old"],
+    }]);
+
+    renderPage(<AntiqueFolderImportPage />);
+    await chooseFolder([
+      image("Root/Mirrors/Carved mirror/front.jpg"),
+      csv("Root/pieces.csv", "file;title;description;price\n"
+        + "Mirrors/Carved mirror;Carved mirror;New story;750\n"),
+    ]);
+
+    // The comparison names both values, and importing waits for a decision.
+    expect(await screen.findByText("Original story")).toBeInTheDocument();
+    // "New story" is both what the import field holds and what the comparison shows.
+    expect(screen.getAllByText("New story").length).toBeGreaterThan(1);
+    expect(screen.getByText("900")).toBeInTheDocument();
+    expect(screen.getByText("750")).toBeInTheDocument();
+    const importButton = screen.getByRole("button", { name: /Import 1 piece/ });
+    expect(importButton).toBeDisabled();
+    expect(screen.getByText(i18n.t("importNeedsConfirmation"))).toBeInTheDocument();
+
+    // Take the new story, keep the gallery's price, then confirm the comparison.
+    fireEvent.click(screen.getByLabelText(i18n.t("importOverrideField", {
+      field: i18n.t("importField_description"),
+    })));
+    fireEvent.click(screen.getByLabelText(i18n.t("importConfirmDifferences")));
+    await waitFor(() => expect(importButton).toBeEnabled());
+    fireEvent.click(importButton);
+
+    await waitFor(() => expect(updateAntiqueMock).toHaveBeenCalledTimes(1));
+    expect(updateAntiqueMock).toHaveBeenCalledWith("existing-1", expect.objectContaining({
+      title: "Carved mirror",
+      description: "New story",
+      price: 900,
+    }));
+    expect(addAntiqueMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps the existing photographs when the admin unticks them", async () => {
+    getAllAntiquesMock.mockResolvedValueOnce([{
+      id: "existing-1",
+      title: "Carved mirror",
+      description: "Original story",
+      price: 900,
+      category: "Mirrors",
+      artist: { id: "artist-1", firstName: "Ada", lastName: "Lovelace" },
+      imageUrls: ["/api/antiques/existing-1/image/old"],
+    }]);
+
+    renderPage(<AntiqueFolderImportPage />);
+    await chooseFolder([
+      image("Root/Mirrors/Carved mirror/front.jpg"),
+      csv("Root/pieces.csv", "file;title;description;price\n"
+        + "Mirrors/Carved mirror;Carved mirror;New story;750\n"),
+    ]);
+
+    await screen.findByText("Original story");
+    fireEvent.click(screen.getByLabelText(i18n.t("importConfirmDifferences")));
+    fireEvent.click(screen.getByLabelText(i18n.t("importAddImages", { count: 1, existing: 1 })));
+    const importButton = screen.getByRole("button", { name: /Import 1 piece/ });
+    await waitFor(() => expect(importButton).toBeEnabled());
+    fireEvent.click(importButton);
+
+    await waitFor(() => expect(updateAntiqueMock).toHaveBeenCalledTimes(1));
+    // Nothing was ticked, so the gallery's story and price survive the import untouched.
+    expect(updateAntiqueMock).toHaveBeenCalledWith("existing-1", expect.objectContaining({
+      description: "Original story",
+      price: 900,
+    }));
+    expect(uploadImageMock).not.toHaveBeenCalled();
   });
 });

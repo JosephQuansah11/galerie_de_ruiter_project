@@ -14,6 +14,9 @@ export type ImportIssue = { key: string; params?: Record<string, string | number
 
 export type ImportImage = { file: File; path: string; name: string };
 
+/** Where the category folders start: at the children of the picked folder, or at the picked one. */
+export type ImportCategorySource = "inside" | "chosen";
+
 export type ImportGroup = {
   id: string;
   /** The folder path, or the image path in image mode. */
@@ -26,6 +29,11 @@ export type ImportGroup = {
   price: string;
   /** The category the CSV named, before it is matched to a category record. */
   category?: string;
+  /**
+   * The category folders above the piece, outermost first (`["Boeken", "Antiek"]`). Empty when the
+   * folders do not name a category - a loose photograph, for example.
+   */
+  categoryPath: string[];
   record?: CsvRecord;
 };
 
@@ -120,7 +128,7 @@ function owningFolder(folder: string, directFolders: Set<string>): string {
   return folder;
 }
 
-function createGroups(images: ImportImage[], grouping: CsvGrouping): ImportGroup[] {
+function createGroups(images: ImportImage[], grouping: CsvGrouping, categorySource: ImportCategorySource): ImportGroup[] {
   const groups = new Map<string, ImportGroup>();
   const directFolders = new Set(images.map((image) => folderWithinRoot(image.path)).filter(Boolean));
   for (const image of images) {
@@ -136,6 +144,14 @@ function createGroups(images: ImportImage[], grouping: CsvGrouping): ImportGroup
     let group = groups.get(key);
     if (!group) {
       const leaf = perImage ? humaniseName(image.name) : humaniseName(itemFolder);
+      // In folder mode the piece is the folder that holds the photographs, so the folders above it
+      // are its categories. In image mode the photograph is the piece and every folder below the
+      // picked root is a category.
+      const folders = perImage ? image.path.split("/").slice(1, -1) : itemFolder.split("/");
+      const categoryFolders = perImage ? folders : folders.slice(0, -1);
+      const categoryPath = (categorySource === "chosen" ? [parts[0], ...categoryFolders] : categoryFolders)
+        .map((segment) => segment.trim())
+        .filter(Boolean);
       group = {
         id: key,
         label,
@@ -144,6 +160,7 @@ function createGroups(images: ImportImage[], grouping: CsvGrouping): ImportGroup
         title: leaf,
         description: "",
         price: "",
+        categoryPath,
       };
       groups.set(key, group);
     }
@@ -213,7 +230,10 @@ function detailsConflict(left: ImportGroup, right: ImportGroup): boolean {
   };
   return differs(left.description, right.description)
     || differs(left.price, right.price)
-    || differs(left.category, right.category);
+    || differs(left.category, right.category)
+    // Two folders with the same title but different category folders are a real disagreement: the
+    // first category is kept, and the curator is told to check the piece.
+    || differs(left.categoryPath.join(" / "), right.categoryPath.join(" / "));
 }
 
 /**
@@ -252,6 +272,7 @@ function mergeSharedTitles(groups: ImportGroup[]): { groups: ImportGroup[]; issu
     if (!first.description) first.description = group.description;
     if (!first.price) first.price = group.price;
     if (!first.category) first.category = group.category;
+    if (first.categoryPath.length === 0) first.categoryPath = group.categoryPath;
     if (!first.record) first.record = group.record;
     if (first.label !== group.label) first.label = `${first.label} · ${group.label}`;
   }
@@ -260,7 +281,12 @@ function mergeSharedTitles(groups: ImportGroup[]): { groups: ImportGroup[]; issu
 }
 
 /** Builds the import preview. Nothing here touches the network or creates object URLs. */
-export function buildImportGroups(files: File[], records: CsvRecord[], grouping: CsvGrouping): ImportBuild {
+export function buildImportGroups(
+  files: File[],
+  records: CsvRecord[],
+  grouping: CsvGrouping,
+  categorySource: ImportCategorySource = "inside",
+): ImportBuild {
   const considered = files.filter((file) => !isIgnoredFile(file));
   const csvCount = considered.filter(isCsvFile).length;
   const imageFiles = considered.filter(isSupportedImage);
@@ -271,7 +297,7 @@ export function buildImportGroups(files: File[], records: CsvRecord[], grouping:
   }
 
   const images = imageFiles.map((file) => ({ file, path: filePath(file), name: file.name }));
-  const groups = createGroups(images, grouping);
+  const groups = createGroups(images, grouping, categorySource);
   const { byPath, byTitle } = indexRecords(records);
 
   // A basename is only safe when it names one group. The same `front.jpg` in two item folders must
@@ -341,6 +367,13 @@ export function buildImportGroups(files: File[], records: CsvRecord[], grouping:
   }
 
   const merged = mergeSharedTitles(groups);
+  // The gallery's categories have two levels. A third folder is not silently ignored: the piece
+  // still imports under the first two, and the issue says which folders were used.
+  for (const group of merged.groups) {
+    if (group.categoryPath.length > 2) {
+      issues.push({ key: "importCategoryTooDeep", params: { path: group.categoryPath.join(" / ") } });
+    }
+  }
   return {
     groups: merged.groups,
     imageCount: images.length,

@@ -229,4 +229,16 @@ describe("security headers", () => {
     expect(inlineStyles).toContain("style={{");
     expect(directive(cspOf(fromNginx()), "style-src-attr")).toBe("style-src-attr 'unsafe-inline'");
   });
+
+  it("allows one canonical origin to call the API", () => {
+    // FRONTEND_ORIGIN is the API's CORS allow-list, and the gallery serves one public domain. The
+    // retired free host must not creep back in as a second browser origin without a deliberate
+    // decision - the API's CORS test refuses it, and this catches the blueprint first.
+    const api = blueprint.slice(
+      blueprint.indexOf("name: galerie-java-api"),
+      blueprint.indexOf("name: galerie-frontend"));
+    const frontendOrigin = /- key: FRONTEND_ORIGIN\s*\r?\n\s+value: (\S+)/.exec(api)?.[1];
+
+    expect(frontendOrigin).toBe("https://galeriederuiterantieks.gripe");
+  });
 });

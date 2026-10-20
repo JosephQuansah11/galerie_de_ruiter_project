@@ -12,10 +12,10 @@
  * sitemap whose every URL points at `http://localhost:3000`. That is the sitemap Search Console
  * answers with "Couldn't fetch", and it takes the site out of the search results.
  *
- * The gallery owns this domain now. The older `https://galeriederuiter.cloud-ip.cc` still serves
- * the same build, and every page it serves declares this origin canonical, so a search engine
- * consolidates the two copies here rather than choosing between them. Remove the old host from
- * Render and Cloudflare only once the new one has settled in Search Console.
+ * The gallery owns this domain. Every page the site serves declares this origin canonical, and
+ * `SITE_URL` in `render.yaml` names the same value at build time. The gallery's earlier free host
+ * has been retired: if it is ever served again, make it redirect here rather than publishing a
+ * second copy, so search engines keep one canonical site.
  */
 export const PRODUCTION_ORIGIN = "https://galeriederuiterantieks.gripe";
 

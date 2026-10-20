@@ -12,12 +12,9 @@
  */
 const PROJECT_ID = "z0549z8r1v";
 const CONSENT_KEY = "galerie-analytics-consent";
-/** The hosts the gallery's Clarity project belongs to; previews and localhost stay out. */
+/** The domain the gallery owns, which every page declares canonical; previews and localhost stay out. */
 const PRODUCTION_HOSTS = new Set([
-  // The domain the gallery owns, which every page declares canonical.
   "galeriederuiterantieks.gripe",
-  // The free subdomain the gallery used before it; still served while the move settles.
-  "galeriederuiter.cloud-ip.cc",
 ]);
 const SCRIPT_URL = `https://www.clarity.ms/tag/${PROJECT_ID}?ref=bwt`;
 

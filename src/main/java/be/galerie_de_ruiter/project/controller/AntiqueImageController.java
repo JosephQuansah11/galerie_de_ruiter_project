@@ -6,6 +6,7 @@ import be.galerie_de_ruiter.project.dto.AntiqueImageOrderRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueImageResponse;
 import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueRepository;
+import be.galerie_de_ruiter.project.service.ImageFormats;
 import be.galerie_de_ruiter.project.service.ImageStorage;
 import be.galerie_de_ruiter.project.service.ThumbnailService;
 import java.util.List;
@@ -117,10 +118,21 @@ public class AntiqueImageController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose an image under 8 MB.");
         }
         Antique antique = antiques.findById(id).orElseThrow();
+        // Every photograph is stored as WebP, whoever uploads it: the browser converts before it
+        // sends, and this conversion is the safety net for an older client or a direct API call.
+        // A picture the encoder cannot read (a camera's HEIC, say) is kept as it arrived rather
+        // than refused - a picture the gallery has is better than no picture at all.
+        byte[] uploaded = image.getBytes();
+        String uploadedType = ImageFormats.sniff(uploaded);
+        // The browser already sends WebP; re-encoding that would be a second lossy pass for no
+        // gain. Anything else (an older client, a direct API call) is converted here.
+        byte[] converted = ImageFormats.WEBP.equals(uploadedType) ? null : ImageFormats.toWebp(uploaded);
+        byte[] bytes = converted != null ? converted : uploaded;
+        String contentType = converted != null ? ImageFormats.WEBP
+                : uploadedType != null ? uploadedType : image.getContentType();
         // A new photograph lands at the end of the gallery's order; the admin can move it after.
         String order = String.valueOf(images.countByAntiqueId(id));
-        byte[] bytes = image.getBytes();
-        AntiqueImage photo = new AntiqueImage(antique, order, order, bytes, image.getContentType());
+        AntiqueImage photo = new AntiqueImage(antique, order, order, bytes, contentType);
         // Made once, now, while the bytes are already in hand: a gallery that uploads a picture
         // should not be the reason a visitor downloads six megabytes for a tile, a phone download
         // a desktop original, or a desktop download a camera file.
@@ -133,7 +145,7 @@ public class AntiqueImageController {
         // first, which is why this happens after the save. If the bucket is not configured, or the
         // object cannot be confirmed there, the row keeps its copy and nothing is lost.
         if (storage.isEnabled()) {
-            String key = storage.put(id, saved.getId(), bytes, image.getContentType());
+            String key = storage.put(id, saved.getId(), bytes, contentType);
             if (storage.exists(key)) {
                 saved.setStorageKey(key);
                 saved.setImageData(null);
@@ -227,10 +239,17 @@ public class AntiqueImageController {
                 : storage.get(image.getStorageKey()).orElseGet(image::getData);
     }
 
-    /** A JPEG copy with the cache header every immutable photograph earns. */
+    /**
+     * Serves bytes with the type their signature proves. Variants are WebP now but rows created
+     * before the encoder was added still hold JPEG copies, and a row never records which type its
+     * variant is - sniffing it here is what keeps the header true for both.
+     */
     private ResponseEntity<byte[]> imageBytes(byte[] bytes) {
+        String contentType = ImageFormats.sniff(bytes);
         return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG)
+                .contentType(contentType == null
+                        ? MediaType.IMAGE_JPEG
+                        : MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
                 .body(bytes);
     }

@@ -33,10 +33,10 @@ describe("page metadata", () => {
   });
 
   it("declares the gallery's own origin, whatever host served the page", () => {
-    // Render serves the same site on its own onrender.com domain, and the gallery's older free
-    // subdomain still serves it too. A canonical built from the host would let either declare
-    // itself canonical for every page, and a search engine would then be choosing between copies
-    // of the whole site instead of consolidating them on the domain the gallery owns.
+    // Render serves the same site on its own onrender.com domain. A canonical built from the host
+    // would let that host declare itself canonical for every page, and a search engine would then
+    // be choosing between copies of the whole site instead of consolidating them on the domain the
+    // gallery owns.
     render(<Page title="Chat met Galerie de Ruiter" canonicalPath="/chat" />);
 
     expect(window.location.origin).not.toBe("https://galeriederuiterantieks.gripe");

@@ -72,12 +72,21 @@ The variants are generated once and kept on the row; existing photographs fill t
 first time they are requested. `ThumbnailServiceTest`, `AntiqueImageAdminTest` and
 `src/models/antiques/antiqueImages.test.ts` pin the sizes and the URLs.
 
-The service writes JPEG variants because the JDK's `ImageIO` has no AVIF or WebP encoder. Those two
-formats need either a native encoder (`cwebp`, `avifenc`) in the image and more stored variants, or -
-preferably, if the photographs are moving to R2 anyway - a CDN that negotiates them (Cloudflare
-Images, or R2 with Image Resizing). The current `<img srcset>` is the fallback those sources would
-sit beside; the URLs are already split per size, so adding `<picture>` is a frontend change rather
-than a new image pipeline.
+The service stores and serves WebP: each photograph is converted when it is uploaded, in the
+browser before it is sent and again on the server if an older client sends a JPEG. The 400, 800 and
+1600-pixel variants are WebP too, written by the `webp-imageio` encoder registered with `ImageIO`
+(it bundles libwebp for Linux, macOS and Windows). The photographs that were already in the
+catalogue are rewritten by the admin's **Photograph format** card on the inventory page
+(`POST /api/admin/images/convert-to-webp`), which reports how many are left before it starts,
+converts twenty-five per call so no request outlives a proxy timeout, and replaces each original
+only after the new object has been verified. `ImageFormatsTest`,
+`ThumbnailServiceTest`, `AntiqueImageAdminTest` and `src/models/antiques/antiqueImages.test.ts` pin
+the formats, sizes and URLs.
+
+AVIF is not used: JDK `ImageIO` has no AVIF codec and browsers cannot encode it through a canvas,
+so WebP is the one modern format the whole pipeline - upload, storage, variants and every browser
+the gallery supports - can guarantee. The URLs are already split per size, so an AVIF pipeline can
+later sit beside them with a `<picture>` element rather than a rewrite.
 
 ## Keycloak
 
@@ -88,10 +97,9 @@ Spring profile. The local development stack and the realm files under `keycloak/
 development, but they are not part of the Render deployment.
 
 The frontend also needs `VITE_GOOGLE_MAPS_API_KEY` (also `sync: false`): a browser key for the Maps
-Embed API and the Geocoding API, restricted by HTTP referrer to the gallery's origins
-(`https://galeriederuiterantieks.gripe/*` and `https://galeriederuiter.cloud-ip.cc/*`). Without it
-the frame falls back to Google's keyless embed, which still shows the map, but the admin's address
-lookup needs the key.
+Embed API and the Geocoding API, restricted by HTTP referrer to the gallery's origin
+(`https://galeriederuiterantieks.gripe/*`). Without it the frame falls back to Google's keyless
+embed, which still shows the map, but the admin's address lookup needs the key.
 
 ## Agent discovery
 
@@ -204,16 +212,13 @@ be configured separately in its dashboard.
   frontend's `VITE_*` API values at it. The image endpoints must stay public.
   The API root serves the `google-site-verification` meta tag and is public, so Search Console's
   URL-prefix property for `https://galerie-java-api.onrender.com/` can be verified there.
-- The older `https://galeriederuiter.cloud-ip.cc` stays attached to `galerie-frontend` and serves
-  the same build while the move settles. Every page it serves declares the new origin canonical, so
-  Google consolidates the two hosts instead of indexing them as competitors. Keep both hosts in
-  Render and Cloudflare until search results and Search Console show the new domain; after that,
-  retire the old one - a Cloudflare redirect rule from the old host to the new one is the last step,
-  not the first.
-- `FRONTEND_ORIGIN` on `galerie-java-api` is the comma-separated list of browser origins allowed to
-  call the API, so it names both domains while both are served. The backend also allows the
-  localhost ports. Serving the app from a third hostname means adding it to this value - and a
-  single value still works, for a local run or a one-domain deployment.
+- The gallery's public origin is `https://galeriederuiterantieks.gripe`, served by
+  `galerie-frontend`. Its earlier free host has been retired from Render and Cloudflare; it must not
+  be attached again - a redirect from any legacy link to the gallery's domain is the only thing that
+  should answer there.
+- `FRONTEND_ORIGIN` on `galerie-java-api` names the gallery's origin, the browser origin allowed to
+  call the API. A comma-separated list still works, so a staging host can be added without a code
+  change, but production names one domain. The backend also allows the localhost ports.
 - The frontend environment variables are build-time values for the static site. Trigger a frontend deploy after changing them.
 - The frontend's public Supabase settings are `VITE_SUPABASE_URL` in
   `render.yaml` and `VITE_SUPABASE_ANON_KEY` in the dashboard. The Webpack

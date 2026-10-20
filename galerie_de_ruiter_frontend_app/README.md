@@ -130,9 +130,8 @@ docker build --build-arg SITE_URL=https://www.example.be ./galerie_de_ruiter_fro
 ```
 
 `render.yaml` sets `SITE_URL` for the static site. Like the other frontend values in it, it is
-read while the bundle is built, so changing it needs a new deploy. Both the new domain and the older
-`galeriederuiter.cloud-ip.cc` serve that one build; the canonical URLs inside it are what tell a search
-engine which host is the gallery.
+read while the bundle is built, so changing it needs a new deploy. The gallery serves one origin,
+`https://galeriederuiterantieks.gripe`, and the canonical URLs inside the build name it.
 
 The `og:image` a shared link shows is `logo512.png`. A 1200×630 image in `public/` pointed at
 from `index.html` makes for a richer preview, which is what a shared link gets instead of a
@@ -153,11 +152,10 @@ Both should name the public origin. Then, in Search Console, submit
 `https://galeriederuiterantieks.gripe/sitemap_index.xml` under *Sitemaps*, and use *URL inspection* →
 *Request indexing* for `/`, `/about` and `/map`.
 
-The new property is verified by its `google-site-verification` TXT record in the Cloudflare zone, so
-nothing in a deploy has to carry a token for it. The older property is verified by the tag in
-`index.html`, which `src/staticDocument.test.ts` pins, and that token is harmless on the new host.
-Both hosts serve pages that name the same canonical origin. Bing Webmaster Tools verifies a domain
-the same way; the `msvalidate.01` tag beside the Google one is pinned by the same test.
+The property is verified by its `google-site-verification` TXT record in the Cloudflare zone, so
+nothing in a deploy has to carry a token for it. The `google-site-verification` and `msvalidate.01`
+meta tags still in `index.html` are harmless on the gallery's host and pinned by
+`src/staticDocument.test.ts`. Bing Webmaster Tools verifies a domain the same way.
 
 Every page the gallery wants indexed is now readable without an account: the landing page, the
 collection list and each piece, the story, the map and the chat. A crawler that follows a catalogue
@@ -172,41 +170,32 @@ canonical and content after it runs. Google renders JavaScript, so those pages c
 prerender of the public routes would make the first HTML route-specific and remove the dependence on
 rendering. That is the next step if ranking on those pages matters.
 
-**The gallery owns its domain now.** `https://galeriederuiterantieks.gripe` is the canonical origin:
+**The gallery has one public origin.** `https://galeriederuiterantieks.gripe` is canonical:
 `PRODUCTION_ORIGIN` in `site.config.mjs` names it, `SITE_URL` in `render.yaml` names it, and every
-page declares it canonical - including the pages served on the older free subdomain. The old
-`https://galeriederuiter.cloud-ip.cc` is deliberately still attached and still serves this build, so
-existing links and bookmarks keep working while Google moves its index. It is not a second canonical
-site: every response names the new domain, and the sitemap lists only new-domain URLs. Retire the old
-host only once Search Console shows the new property indexed, and make the retirement a redirect
-rather than a deletion, so the links keep working.
+page declares it canonical. The earlier `galeriederuiter.cloud-ip.cc` host has been retired from
+Render, Cloudflare and the frontend's host allow-lists. Do not attach or name it again; a redirect
+from a legacy link to this origin is the only thing that should answer on the old hostname.
 
-The move touches these systems, in this order:
+The systems that carry the origin, and where to check it:
 
 1. `site.config.mjs` (`PRODUCTION_ORIGIN`) and `SITE_URL` in `render.yaml`, then rebuild: the
    canonical URLs, sitemap, `robots.txt`, Open Graph tags and structured data are built from it.
-   `llms.txt` and the two `/.well-known` manifests are static files, so their URLs were changed by
-   hand in the same commit.
-2. Render → `galerie-frontend` → Custom Domains: add the apex and `www`, with `www` redirecting to
-   the apex. The new host already answers with this build, so this is in place.
-3. Cloudflare: keep the proxied DNS records that point the new host at Render, and leave the old
-   host's record in place for as long as it is served.
-4. Google Search Console: the new property is verified by its `google-site-verification` TXT record;
-   the meta tag in `index.html` verifies the old property and stays. Submit
-   `https://galeriederuiterantieks.gripe/sitemap_index.xml` under *Sitemaps*, and request indexing for
-   `/`, `/about` and `/map`. Keep the old property while the old host is served - it is how those
-   links stay monitored - but there is one sitemap now and it lists only new-domain URLs, so the new
-   property is the one whose coverage matters. Add the new site to Bing Webmaster Tools too; IndexNow
-   announces whichever origin the build was made for.
-5. Supabase Auth → URL Configuration: Site URL and additional redirect URLs for both gallery
-   origins while the old host is served. Keycloak is no longer deployed in production.
-6. `FRONTEND_ORIGIN` on `galerie-java-api`: a comma-separated list with both origins. Also check the
-   `VITE_*` values and `SITEMAP_API_URL` in `render.yaml`.
-7. `PRODUCTION_HOSTS` in `src/services/clarity.ts` holds both hosts, and the Google Maps key's HTTP
-   referrer restrictions list both origins.
+   `llms.txt` and the two `/.well-known` manifests are static files and name the same origin.
+2. Render → `galerie-frontend` → Custom Domains: the apex and `www` point at this service, with
+   `www` redirecting to the apex.
+3. Cloudflare: the proxied DNS records for the gallery's domain. No record remains for the retired
+   free host.
+4. Google Search Console and Bing Webmaster Tools: submit
+   `https://galeriederuiterantieks.gripe/sitemap_index.xml` under *Sitemaps*, and request indexing
+   for `/`, `/about` and `/map`.
+5. Supabase Auth → URL Configuration: Site URL and additional redirect URLs name this origin.
+   Keycloak is no longer deployed in production.
+6. `FRONTEND_ORIGIN` on `galerie-java-api` and the `VITE_*` values and `SITEMAP_API_URL` in
+   `render.yaml` name this origin (and the API host).
+7. `PRODUCTION_HOSTS` in `src/services/clarity.ts` holds this host, and the Google Maps key's HTTP
+   referrer restrictions list it.
 8. The CSP in `security-headers.conf` and `render.yaml` names origins explicitly. The frontend's own
-   origin is `'self'`, so the move does not change it; check `connect-src` for the API and
-   `frame-src` for the Google map.
+   origin is `'self'`, so only `connect-src` (the API) and `frame-src` (the Google map) list others.
 
 ### IndexNow
 
@@ -220,10 +209,10 @@ reaches all of them. A static site has nowhere to announce from but its build, w
 
 The key was generated in Bing Webmaster Tools, and the file that proves the domain owns it is
 `public/413098dae5154255acb93dd6e4e9ad9c.txt` - at the site root, named after the key, containing the
-key and nothing else. The same build serves it from both hosts while the old one is still live, so a
-submission for either origin can read it back. `src/indexNow.test.ts` reads both, so rotating the key
-in one place cannot leave the other behind: the submissions would answer 403 while every other check
-stayed green.
+key and nothing else. It is served from the gallery's origin, so a submission can read it back.
+`src/indexNow.test.ts` reads both the key file and the script, so rotating the key in one place
+cannot leave the other behind: the submissions would answer 403 while every other check stayed
+green.
 
 It submits only from a build for the production origin, never from localhost, because a staging build
 names URLs a crawler cannot fetch and announcing those is worse than saying nothing. `INDEXNOW=off`
@@ -390,8 +379,7 @@ lookup turns a typed address into coordinates through Google's geocoder. Both re
 - **Geocoding API** for the lookup behind *Find coordinates* on the admin's location screen.
 
 The key ships in the bundle, so it is not a secret: restrict it in the Google Cloud console by
-**HTTP referrer** to the gallery's origins (`https://galeriederuiterantieks.gripe/*`,
-`https://galeriederuiter.cloud-ip.cc/*` while the old host is still served, and
+**HTTP referrer** to the gallery's origin (`https://galeriederuiterantieks.gripe/*`, and
 `http://localhost:3000/*` while developing) and enable only those two APIs on it.
 
 Without a key the gallery still works. The frame falls back to Google's classic keyless embed, which
@@ -459,20 +447,21 @@ A folder the importer understands looks like this:
 ```text
 Collection/                 <- the folder the admin picks
   pieces.csv                <- one or more CSVs, at any depth
-  Mirrors/
-    Carved mirror/
-      front.jpg
-      back.jpg
-      details/close.jpg
-  Lamps/
-    Brass lamp/
-      front.jpg
+  Boeken/                   <- main category
+    Antiek/                 <- subcategory
+      Stoel/                <- one piece: its photographs are grouped
+        front.jpg
+        back.jpg
+        details/close.jpg
+    Kunst/
+      Schilderij/
+        front.jpg
 ```
 
 ```csv
 file,title,description,price
-Mirrors/Carved mirror,Carved walnut mirror,Late 19th century,480.50
-Lamps/Brass lamp/front.jpg,Brass reading lamp,Art deco,"1,250.00"
+Boeken/Antiek/Stoel,Stoel,Late 19th century,480.50
+Boeken/Kunst/Schilderij,Schilderij,Oil on canvas,"1,250.00"
 ```
 
 - **Columns** are matched by name, in English, Dutch, French or German. `file`, `filename`,
@@ -500,20 +489,31 @@ Lamps/Brass lamp/front.jpg,Brass reading lamp,Art deco,"1,250.00"
   to the selection. Untick the rows that should keep another artist, then search and choose again.
   The search box filters the list, and **Select all** applies to the filtered rows. A new artist can
   be created in the same screen.
-- **Category.** Every new piece needs a category before it can be imported. A `category` column
-  in the CSV is matched by name - a main category, a child, or the full path (`Mirrors / Wall
-  mirrors`, `Mirrors > Wall mirrors`) - and a name the gallery does not have is listed as an issue.
-  Select rows and choose a category in the assignment card to give them one at once, or pick the
-  category on the row itself; main categories and subcategories are in the same list.
+- **Categories from the folders.** The folders above an item folder are its category path:
+  `Boeken/Antiek/Stoel/` files the piece under the subcategory `Antiek` of `Boeken`, and
+  `Boeken/Stoel/` uses `Boeken` as the main category. The preview shows the detected path on every
+  row. Pick the folder that contains the main categories for this default; when `Boeken` itself is
+  the folder you picked, switch **Category from the folders** to *Starting with the chosen folder*.
+  The gallery's categories have two levels, so deeper folders are flagged as an issue and the first
+  two are used. A category that does not exist is created before the piece is saved - the main
+  category first, then its child - and the preview lists the categories that will be created.
+- **Category from the CSV.** A `category` column wins over the folder path. It is matched by name -
+  a main category, a child, or the full path (`Mirrors / Wall mirrors`, `Mirrors > Wall mirrors`) -
+  and a name the gallery does not have is listed as an issue rather than guessed at. Select rows and
+  choose a category in the assignment card to give them one at once, or pick the category on the row
+  itself; main categories and subcategories are in the same list. Every new piece needs a category
+  from one of these sources.
 - **Existing pieces.** The import matches a folder or CSV title against the inventory,
-  case- and accent-insensitively. A match updates that piece instead of creating a duplicate:
-  title, description, price, artist and category are updated where the import supplies them, blank
-  fields keep what the piece already has, and its photographs are appended to the existing ones.
-  The import waits for the inventory list and pauses with a warning if it cannot load it, so it
-  cannot create duplicates while the check is unavailable. Two folders with the same title become
-  one row and one update, with all their photographs; if their details disagree, the first is used
-  and the issue list flags the title for review. Re-importing the same folder appends its
-  photographs again - there is no content-hash check yet.
+  case- and accent-insensitively. A match opens a comparison of every field that differs - title,
+  description, price, artist and category - with the gallery's value beside the import's. The admin
+  ticks the fields the import may take and confirms the comparison; an unticked field keeps what the
+  piece already has, and a blank import field never erases anything. A matched piece's photographs
+  are appended only when its photo checkbox is ticked. The import waits for the inventory list and
+  pauses with a warning if it cannot load it, so it cannot create duplicates while the check is
+  unavailable. Two folders with the same title become one row and one update, with all their
+  photographs; if their details or category folders disagree, the first is used and the issue list
+  flags the title for review. Re-importing the same folder appends its photographs again - there is
+  no content-hash check yet.
 - **Before importing**, each row shows whether a CSV row matched, how many photographs it has and
   its folder. Title, description and price can be corrected inline.
 - **Uploads** run one piece at a time and show progress. A failure leaves that row selected with its
@@ -677,19 +677,16 @@ vendor tag is never requested — not merely told to behave.
 The loader is part of the bundle rather than a snippet pasted into `index.html`, which keeps
 `script-src` free of `'unsafe-inline'`; the script itself comes from
 `https://www.clarity.ms/tag/z0549z8r1v`. `PRODUCTION_HOSTS` in `src/services/clarity.ts` names the
-gallery's own hosts - the new domain and the older free subdomain while it is still served - and the
-loader refuses every other hostname, so previews, tests and localhosts never send data. Withdrawing
-consent calls Clarity's `consent` command, which deletes its cookies and stops tracking until it is
-granted again.
+gallery's own domain, and the loader refuses every other hostname, so previews, Render's host, tests
+and localhosts never send data. Withdrawing consent calls Clarity's `consent` command, which deletes
+its cookies and stops tracking until it is granted again.
 
 ### Rolling out HSTS
 
 `max-age=31536000; includeSubDomains` is what the audit asks for, and both parts are safe here: the
 gallery's host is `galeriederuiterantieks.gripe`, which it owns, so `includeSubDomains` covers a name
-the gallery controls and on which every subdomain answers over HTTPS. The older
-`galeriederuiter.cloud-ip.cc` sends the same header, but HSTS applies to the host that sent it (and
-its subdomains), so it neither widens nor weakens what the new domain claims. If a subdomain ever has
-to answer over plain HTTP, lower the `max-age` first, then remove `includeSubDomains`.
+the gallery controls and on which every subdomain answers over HTTPS. If a subdomain ever has to
+answer over plain HTTP, lower the `max-age` first, then remove `includeSubDomains`.
 
 `preload` is deliberately **not** sent. Now that the gallery owns a registrable domain it *can* be
 submitted at [hstspreload.org](https://hstspreload.org/), but a `preload` token is a long-lived

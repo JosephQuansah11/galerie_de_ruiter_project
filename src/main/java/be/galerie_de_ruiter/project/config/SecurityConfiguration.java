@@ -27,9 +27,8 @@ public class SecurityConfiguration {
 	/**
 	 * The browser origins allowed to call the API, comma-separated.
 	 *
-	 * The gallery serves the same build on the domain it owns and on its older free subdomain, so
-	 * both are named while the move settles. A single value still works, which is what a local run
-	 * and the production smoke test set.
+	 * The gallery has one public origin, the domain it owns. A single value is the normal case, and
+	 * a local run or a staging host can still add itself to the list without a code change.
 	 */
 	@Value("${FRONTEND_ORIGIN:http://localhost:5173}")
 	private String frontendOrigins;

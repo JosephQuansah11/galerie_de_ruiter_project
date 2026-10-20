@@ -1,23 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { addAntique, getAllAntiques, getVisibleCategories, updateAntique, uploadAntiqueImage } from "@/apis/backend_api";
+import { addAntique, createCategory, getAllAntiques, getAllCategories, getVisibleCategories, updateAntique, uploadAntiqueImage } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 import type { Category, Designer } from "@/models/antiques/Antique";
 import { publishContentUpdate } from "@/services/contentUpdates";
 import { saveErrorKey } from "@/pages/antiques/antiqueSaveErrors";
-import { categoryIdFor, matchCategory } from "./categoryMatching";
+import { categoryIdFor, categoryNameKey, flattenAllCategories, matchCategory, matchCategoryPath } from "./categoryMatching";
 import { existingIndex, matchExisting } from "./existingMatching";
+import { importDifferences, type ImportField } from "./differences";
 import {
   buildImportGroups,
   filePath,
   isCsvFile,
   isIgnoredFile,
   type ImportBuild,
+  type ImportCategorySource,
   type ImportGroup,
   type ImportIssue,
 } from "./buildImportGroups";
 import { parseCsvSources, type CsvGrouping, type CsvRecord, type CsvSource } from "./csv";
 
 export type ImportStatus = "pending" | "saving" | "saved" | "failed";
+
+/** The differing fields the admin chose to take from the folder or its CSV. */
+export type ImportOverrides = Partial<Record<ImportField, boolean>>;
 
 export type ImportGroupDraft = ImportGroup & {
   selected: boolean;
@@ -34,6 +39,15 @@ export type ImportGroupDraft = ImportGroup & {
   existing?: Antique;
   /** More than one existing piece has this title, so the import will not guess. */
   existingAmbiguous?: boolean;
+  /**
+   * Which differences the admin allowed to overwrite the gallery's values. A field that is not
+   * ticked keeps what the existing piece says; a new piece ignores this.
+   */
+  overrides: ImportOverrides;
+  /** True once the admin has seen this piece's differences and accepted them. */
+  confirmed: boolean;
+  /** Whether the folder's photographs are added to an existing piece. */
+  addImages: boolean;
 };
 
 export type ImportProgress = { current: number; total: number; title: string };
@@ -79,6 +93,22 @@ function imageErrorKey(error: unknown): string {
   return "antiqueImageUploadFailed";
 }
 
+/**
+ * The categories an import can reuse, keyed by name under their parent.
+ *
+ * <p>A run can name the same missing main category for many pieces, so the first one creates it and
+ * the rest find it here. The tree the picker already has is enough; the full list is only fetched
+ * when a creation collides with a hidden category or a parallel import.</p>
+ */
+function buildCategoryCache(categories: Category[]): Map<string, Category> {
+  const cache = new Map<string, Category>();
+  for (const category of categories) {
+    cache.set(categoryNameKey(category.name, category.parentId), category);
+    for (const child of category.children ?? []) cache.set(categoryNameKey(child.name, category.id), child);
+  }
+  return cache;
+}
+
 /** The same file chosen through the folder and through the CSV picker is read once. */
 function fileIdentity(file: File): string {
   return `${filePath(file)}\u0000${file.size}\u0000${file.lastModified}`;
@@ -110,6 +140,7 @@ export function useFolderImport() {
   const [existingLoading, setExistingLoading] = useState(true);
   const [existingError, setExistingError] = useState<string>();
   const [grouping, setGroupingState] = useState<CsvGrouping>("folder");
+  const [categorySource, setCategorySource] = useState<ImportCategorySource>("inside");
   const [folderName, setFolderName] = useState("");
   const [imageCount, setImageCount] = useState(0);
   const [csvCount, setCsvCount] = useState(0);
@@ -129,6 +160,8 @@ export function useFolderImport() {
   extraCsvFilesRef.current = extraCsvFiles;
   const existingIndexRef = useRef<Map<string, Antique[]>>(new Map());
   existingIndexRef.current = existingIndex(existingAntiques);
+  const categorySourceRef = useRef(categorySource);
+  categorySourceRef.current = categorySource;
   /** Lets a newer folder/CSV selection cancel an older, still-reading one. */
   const readRun = useRef(0);
   const previews = useRef<string[]>([]);
@@ -163,17 +196,22 @@ export function useFolderImport() {
     return () => { active = false; };
   }, []);
 
-  // A folder can be read before the category list arrives. Once it does, the categories the CSV
-  // named are filled in; a piece the admin already assigned keeps their choice.
+  // A folder can be read before the category list arrives. Once it does, the category the CSV named
+  // - or the one the folders name - is filled in; a piece the admin already assigned keeps their
+  // choice. A CSV category that matches nothing stays empty so the curator is asked, rather than
+  // silently falling back to a folder that may not mean the same thing.
   useEffect(() => {
     if (categories.length === 0) return;
     setGroups((current) => {
       let changed = false;
       const next = current.map((group) => {
         if (group.categoryId) return group;
-        const source = group.category || group.existing?.category;
-        if (!source) return group;
-        const id = categoryIdFor(source, categories);
+        const id = group.category
+          ? categoryIdFor(group.category, categories)
+          : matchCategoryPath(group.categoryPath, categories).id
+            || (group.categoryPath.length === 0 && group.existing?.category
+              ? categoryIdFor(group.existing.category, categories)
+              : "");
         if (!id) return group;
         changed = true;
         return { ...group, categoryId: id };
@@ -192,12 +230,22 @@ export function useFolderImport() {
     const match = matchExisting(existingIndexRef.current, group.title);
     const existing = match.existing;
     const existingCategory = existing?.category ? categoryIdFor(existing.category, categoriesRef.current) : "";
+    const folderCategory = matchCategoryPath(group.categoryPath, categoriesRef.current);
+    // A folder category that exists is taken as the imported value. One that does not exist stays
+    // empty: the comparison can then show it beside the gallery's category and the curator decides
+    // whether to create it. A CSV category that matches nothing falls back to the existing value,
+    // as before, while the issue list asks which category was meant.
+    const categoryId = group.categoryId
+      || categoryIdFor(group.category, categoriesRef.current)
+      || (!group.category
+        ? folderCategory.id || (group.categoryPath.length === 0 ? existingCategory : "")
+        : existingCategory);
     return {
       ...group,
       existing,
       existingAmbiguous: match.ambiguous,
       artist: group.artist ?? artistFromExisting(existing),
-      categoryId: group.categoryId || categoryIdFor(group.category, categoriesRef.current) || existingCategory,
+      categoryId,
       price: group.price.trim() ? group.price : existing?.price != null ? String(existing.price) : "",
       description: group.description.trim() ? group.description : existing?.description ?? "",
     };
@@ -230,7 +278,14 @@ export function useFolderImport() {
         status: "pending",
         uploadedCount: 0,
         previewUrl,
-        categoryId: categoryIdFor(group.category, categoriesRef.current),
+        // A category the CSV names wins; otherwise the piece is filed where its folders say. A path
+        // that matches nothing yet stays empty and is created before the piece is saved.
+        categoryId: categoryIdFor(group.category, categoriesRef.current)
+          || matchCategoryPath(group.categoryPath, categoriesRef.current).id
+          || "",
+        overrides: {},
+        confirmed: false,
+        addImages: true,
       });
     });
     const ambiguousIssues: ImportIssue[] = drafts
@@ -269,7 +324,7 @@ export function useFolderImport() {
   }
 
   /** Re-reads the CSVs and rebuilds the preview from the current folder and CSV selection. */
-  async function rebuild(folder: File[], extras: File[], mode: CsvGrouping): Promise<void> {
+  async function rebuild(folder: File[], extras: File[], mode: CsvGrouping, source: ImportCategorySource): Promise<void> {
     const run = ++readRun.current;
     setReading(true);
     setNotice(undefined);
@@ -288,7 +343,7 @@ export function useFolderImport() {
         params: { source: issue.source, line: issue.line ?? "", value: issue.value ?? "" },
       })),
     ];
-    const build = buildImportGroups(combined, parsed.records, mode);
+    const build = buildImportGroups(combined, parsed.records, mode, source);
     setRecords(parsed.records);
     setParseIssues(csvIssues);
     applyBuild(build, parsed.records, csvIssues);
@@ -303,7 +358,7 @@ export function useFolderImport() {
     const firstPath = filePath(files[0]);
     setFolderName(firstPath.includes("/") ? firstPath.split("/")[0] : "");
     // The CSV picker is independent: a folder chosen before or after the CSVs keeps both.
-    void rebuild(files, extraCsvFilesRef.current, grouping);
+    void rebuild(files, extraCsvFilesRef.current, grouping, categorySourceRef.current);
   };
 
   const selectCsvFiles = (input: FileList | File[] | null): void => {
@@ -311,7 +366,7 @@ export function useFolderImport() {
     if (files.length === 0) return;
     extraCsvFilesRef.current = files;
     setExtraCsvFiles(files);
-    void rebuild(folderFilesRef.current, files, grouping);
+    void rebuild(folderFilesRef.current, files, grouping, categorySourceRef.current);
   };
 
   const clearFolder = (): void => {
@@ -341,13 +396,28 @@ export function useFolderImport() {
     setGroupingState(next);
     const combined = mergeFileSets(folderFilesRef.current, extraCsvFilesRef.current);
     if (combined.length === 0) return;
-    applyBuild(buildImportGroups(combined, records, next), records, parseIssues);
+    applyBuild(buildImportGroups(combined, records, next, categorySourceRef.current), records, parseIssues);
+  };
+
+  /**
+   * Rebuilds the preview when the admin says where the category folders start: at the children of
+   * the picked folder, or at the picked folder itself.
+   */
+  const changeCategorySource = (next: ImportCategorySource): void => {
+    if (next === categorySourceRef.current) return;
+    categorySourceRef.current = next;
+    setCategorySource(next);
+    const combined = mergeFileSets(folderFilesRef.current, extraCsvFilesRef.current);
+    if (combined.length === 0) return;
+    applyBuild(buildImportGroups(combined, records, grouping, next), records, parseIssues);
   };
 
   const updateGroup = (id: string, field: "title" | "description" | "price", value: string): void => {
     setGroups((current) => current.map((group) => {
       if (group.id !== id) return group;
-      const next = { ...group, [field]: value, error: undefined };
+      // Editing a value after a confirmation invalidates that confirmation: the admin has to look
+      // at the differences that are on screen now, not the ones that were there a moment ago.
+      const next = { ...group, [field]: value, error: undefined, confirmed: false };
       if (field === "title") {
         const match = matchExisting(existingIndexRef.current, value);
         next.existing = match.existing;
@@ -363,8 +433,21 @@ export function useFolderImport() {
   };
 
   const updateGroupCategory = (id: string, categoryId: string): void => {
-    patchGroup(id, { categoryId, error: undefined });
+    patchGroup(id, { categoryId, error: undefined, confirmed: false });
   };
+
+  /** Ticks or unticks one field of one piece; the import applies exactly the ticked ones. */
+  const setOverride = (id: string, field: ImportField, override: boolean): void => {
+    setGroups((current) => current.map((group) => group.id === id
+      ? { ...group, overrides: { ...group.overrides, [field]: override } }
+      : group));
+  };
+
+  /** The admin's confirmation that this piece's differences were reviewed. */
+  const confirmGroup = (id: string, confirmed: boolean): void => patchGroup(id, { confirmed });
+
+  /** Whether the folder's photographs are added to a piece that already has some. */
+  const setAddImages = (id: string, addImages: boolean): void => patchGroup(id, { addImages });
 
   const toggleGroup = (id: string, selected: boolean): void => patchGroup(id, { selected });
   const toggleAll = (ids: string[], selected: boolean): void => {
@@ -379,7 +462,9 @@ export function useFolderImport() {
       return;
     }
     setGroups((current) => current.map((group) =>
-      group.selected && group.status !== "saved" ? { ...group, artist: designer, error: undefined } : group));
+      group.selected && group.status !== "saved"
+        ? { ...group, artist: designer, error: undefined, confirmed: false }
+        : group));
     setNotice(undefined);
   }, []);
 
@@ -391,7 +476,9 @@ export function useFolderImport() {
       return;
     }
     setGroups((current) => current.map((group) =>
-      group.selected && group.status !== "saved" ? { ...group, categoryId, error: undefined } : group));
+      group.selected && group.status !== "saved"
+        ? { ...group, categoryId, error: undefined, confirmed: false }
+        : group));
     setNotice(undefined);
   }, []);
 
@@ -411,7 +498,10 @@ export function useFolderImport() {
       setNotice("importNeedsArtist");
       return;
     }
-    if (targets.some((group) => !group.existing && !group.categoryId)) {
+    if (targets.some((group) => !group.existing && !group.categoryId
+        && (group.categoryPath.length === 0 || Boolean(group.category)))) {
+      // A folder path that exists nowhere is not a reason to block: the import creates it. A CSV
+      // that names an unknown category is, because the CSV is the explicit instruction.
       setNotice("importNeedsCategory");
       return;
     }
@@ -424,6 +514,13 @@ export function useFolderImport() {
       setNotice("importNeedsDetails");
       return;
     }
+    // A piece that is already in the gallery is only updated after its differences were shown and
+    // the admin confirmed them. Nothing is overwritten silently.
+    if (targets.some((group) => group.existing && !group.confirmed
+        && importDifferences(group, group.existing, categoriesRef.current).length > 0)) {
+      setNotice("importNeedsConfirmation");
+      return;
+    }
 
     setImporting(true);
     setNotice(undefined);
@@ -432,6 +529,33 @@ export function useFolderImport() {
     let updated = 0;
     let failed = 0;
 
+    // The categories the folders name are created as they are needed. One cache for the whole run
+    // means the first "Boeken" creates the main category and every later "Boeken" reuses it; the
+    // full list is only fetched when a creation collides with a hidden category or another import.
+    let categoryCache = buildCategoryCache(categoriesRef.current);
+    let createdCategories = false;
+    const ensureCategory = async (name: string, parentId?: string): Promise<Category> => {
+      const key = categoryNameKey(name, parentId);
+      const known = categoryCache.get(key);
+      if (known) return known;
+      try {
+        const created = await createCategory(name, parentId);
+        categoryCache.set(key, created);
+        createdCategories = true;
+        return created;
+      } catch (error) {
+        const all = await getAllCategories();
+        categoryCache = buildCategoryCache(flattenAllCategories(all));
+        const found = categoryCache.get(key);
+        if (!found) throw error;
+        return found;
+      }
+    };
+    const categoryForPath = async (path: string[]): Promise<string> => {
+      const main = await ensureCategory(path[0]);
+      return path.length > 1 ? (await ensureCategory(path[1], main.id)).id : main.id;
+    };
+
     for (let index = 0; index < targets.length; index += 1) {
       const target = targets[index];
       setProgress({ current: index + 1, total: targets.length, title: target.title });
@@ -439,26 +563,54 @@ export function useFolderImport() {
 
       let targetId = target.createdId;
       let uploadedCount = target.uploadedCount;
+      let categoryId = target.categoryId;
+      let categoryError = false;
       try {
+        // The folder hierarchy is a category instruction: make the category before the piece that
+        // belongs in it, so a new catalogue can be imported in one pass. An existing piece only
+        // gets a category created when the curator ticked the override beside it.
+        if (!targetId && !categoryId && target.categoryPath.length > 0
+            && (!target.existing || Boolean(target.overrides.category))) {
+          try {
+            categoryId = await categoryForPath(target.categoryPath);
+          } catch (error) {
+            categoryError = true;
+            throw error;
+          }
+          patchGroup(target.id, { categoryId });
+        }
         if (!targetId) {
-          const title = target.title.trim();
           const priceText = priceOf(target);
           const price = priceText ? Number(priceText) : undefined;
+          const existing = target.existing;
+          // Only the values the admin ticked replace what the gallery has. An unticked field keeps
+          // the existing piece's value, even when the CSV carried a different one.
+          const differences = existing ? importDifferences(target, existing, categoriesRef.current) : [];
+          const differs = (field: ImportField) => differences.some((difference) => difference.field === field);
+          const takes = (field: ImportField) => !differs(field) || Boolean(target.overrides[field]);
+          const title = existing && !target.overrides.title ? existing.title : target.title.trim();
           // A blank import field keeps what the existing piece already says. Sending an empty
           // description would erase it, which is exactly the data loss this import must avoid.
-          const description = target.description.trim()
-            ? target.description
-            : target.existing?.description ?? "";
-          const artistId = target.artist?.id ?? target.existing?.artist?.id;
-          const categoryId = target.categoryId || undefined;
-          if (target.existing) {
-            await updateAntique(target.existing.id, { title, description, price, artistId, categoryId });
-            targetId = target.existing.id;
+          const description = existing && !target.overrides.description
+            ? existing.description ?? ""
+            : target.description.trim() ? target.description : existing?.description ?? "";
+          const artistId = takes("artist") ? target.artist?.id ?? existing?.artist?.id : existing?.artist?.id;
+          // Omitted means "keep the category already on the piece"; the API cannot clear it.
+          const chosenCategoryId = takes("category") ? categoryId || undefined : undefined;
+          if (existing) {
+            await updateAntique(existing.id, {
+              title,
+              description,
+              price: (takes("price") ? price ?? existing.price : existing.price) ?? undefined,
+              artistId,
+              categoryId: chosenCategoryId,
+            });
+            targetId = existing.id;
           } else {
             const created = await addAntique({
               title,
               artistId: artistId!,
-              categoryId,
+              categoryId: chosenCategoryId,
               description,
               price: price!,
             });
@@ -466,9 +618,16 @@ export function useFolderImport() {
           }
           patchGroup(target.id, { createdId: targetId });
         }
-        for (let imageIndex = uploadedCount; imageIndex < target.images.length; imageIndex += 1) {
-          await uploadAntiqueImage(targetId, target.images[imageIndex].file);
-          uploadedCount = imageIndex + 1;
+        if (target.addImages) {
+          for (let imageIndex = uploadedCount; imageIndex < target.images.length; imageIndex += 1) {
+            await uploadAntiqueImage(targetId, target.images[imageIndex].file);
+            uploadedCount = imageIndex + 1;
+            patchGroup(target.id, { uploadedCount });
+          }
+        } else {
+          // The admin chose to keep the existing photographs; recording the count means a retry
+          // does not quietly add them later.
+          uploadedCount = target.images.length;
           patchGroup(target.id, { uploadedCount });
         }
         if (target.existing) updated += 1;
@@ -480,11 +639,18 @@ export function useFolderImport() {
           status: "failed",
           createdId: targetId,
           uploadedCount,
-          error: targetId ? imageErrorKey(error) : saveErrorKey(error),
+          error: categoryError
+            ? "importCategoryCreateFailed"
+            : targetId ? imageErrorKey(error) : saveErrorKey(error),
         });
       }
     }
 
+    if (createdCategories) {
+      publishContentUpdate("categories");
+      // Refresh the picker so the categories this run created can be chosen and edited at once.
+      getVisibleCategories().then((items) => setCategories(items)).catch(() => undefined);
+    }
     publishContentUpdate("antiques");
     setProgress(undefined);
     setImporting(false);
@@ -504,9 +670,10 @@ export function useFolderImport() {
   });
 
   return {
-    groups, grouping, folderName, imageCount, csvCount, issues, reading, importing, notice, setNotice,
-    progress, result, selectFolder, selectCsvFiles, clearFolder, changeGrouping, updateGroup, updateGroupCategory,
+    groups, grouping, categorySource, folderName, imageCount, csvCount, issues, reading, importing, notice, setNotice,
+    progress, result, selectFolder, selectCsvFiles, clearFolder, changeGrouping, changeCategorySource,
+    updateGroup, updateGroupCategory,
     toggleGroup, toggleAll, assignArtist, assignCategory, categories, categoriesError, categoryIssues, importSelected,
-    existingLoading, existingError,
+    existingLoading, existingError, setOverride, confirmGroup, setAddImages,
   };
 }

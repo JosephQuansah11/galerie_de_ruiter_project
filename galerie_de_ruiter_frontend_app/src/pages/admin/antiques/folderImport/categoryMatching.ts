@@ -1,4 +1,5 @@
 import type { Category } from "@/models/antiques/Antique";
+import { titleKey } from "./existingMatching";
 
 /**
  * Matches the category a spreadsheet names to one of the gallery's category records.
@@ -55,4 +56,58 @@ export function matchCategory(value: string | undefined, categories: Category[])
 export function categoryIdFor(value: string | undefined, categories: Category[]): string {
   const match = matchCategory(value, categories);
   return match.status === "matched" ? match.id : "";
+}
+
+/**
+ * The category folders a piece sits in, matched to the gallery's records.
+ *
+ * <p>The gallery's categories have two levels - a main category and its children - so at most the
+ * first two folder names are used. `Boeken / Antiek` becomes the child "Antiek" under the main
+ * category "Boeken"; a single `Boeken` becomes the main category itself. When either level is not
+ * there yet, `missing` is true and the import creates it before assigning the piece.</p>
+ */
+export type CategoryPathMatch = {
+  /** The existing category to file the piece under, when both levels are known. */
+  id?: string;
+  /** The main category's name, as the folders spell it. */
+  mainName: string;
+  /** The subcategory's name, when the folders name one. */
+  subName?: string;
+  /** How the path reads to the curator: the gallery's own spelling where it exists. */
+  label: string;
+  /** True when at least one level does not exist yet. */
+  missing: boolean;
+};
+
+export function matchCategoryPath(path: string[], categories: Category[]): CategoryPathMatch {
+  const names = path.map((part) => part.trim()).filter(Boolean);
+  if (names.length === 0) return { mainName: "", label: "", missing: false };
+  const [mainName, subName] = names;
+  const main = categories.find((category) => titleKey(category.name) === titleKey(mainName));
+  if (!main) return { mainName, subName, missing: true, label: [mainName, subName].filter(Boolean).join(" / ") };
+  if (!subName) return { mainName, id: main.id, missing: false, label: main.name };
+  const sub = (main.children ?? []).find((child) => titleKey(child.name) === titleKey(subName));
+  if (!sub) return { mainName, subName, missing: true, label: `${main.name} / ${subName}` };
+  return { mainName, subName, id: sub.id, missing: false, label: `${main.name} / ${sub.name}` };
+}
+
+/**
+ * Every category in one list, without duplicates.
+ *
+ * <p>The admin endpoint returns one response per row, and a parent also nests its visible
+ * children - so the same child can arrive twice. Rebuilding by id makes the list safe to search
+ * for a name that already exists, including a hidden category the public list does not show.</p>
+ */
+export function flattenAllCategories(categories: Category[]): Category[] {
+  const byId = new Map<string, Category>();
+  for (const category of categories) {
+    byId.set(category.id, category);
+    for (const child of category.children ?? []) byId.set(child.id, child);
+  }
+  return [...byId.values()];
+}
+
+/** The key that identifies a category name under its parent, for reuse during one import. */
+export function categoryNameKey(name: string, parentId?: string | null): string {
+  return `${parentId ?? ""}\u0000${titleKey(name)}`;
 }

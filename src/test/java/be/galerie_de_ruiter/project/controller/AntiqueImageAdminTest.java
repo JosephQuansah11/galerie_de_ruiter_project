@@ -1,6 +1,7 @@
 package be.galerie_de_ruiter.project.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
@@ -16,12 +17,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import be.galerie_de_ruiter.project.domain.Antique;
+import be.galerie_de_ruiter.project.domain.AntiqueImage;
 import be.galerie_de_ruiter.project.domain.Designer;
 import be.galerie_de_ruiter.project.domain.User;
 import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueRepository;
 import be.galerie_de_ruiter.project.repository.DesignerRepository;
 import be.galerie_de_ruiter.project.repository.UserRepository;
+import be.galerie_de_ruiter.project.service.ImageFormats;
 import be.galerie_de_ruiter.project.service.ThumbnailService;
 import be.galerie_de_ruiter.project.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -147,11 +151,55 @@ class AntiqueImageAdminTest {
         assertCopy(id, photo, "large", ThumbnailService.LARGE_EDGE);
     }
 
+    @Test
+    void convertsAnOlderJpegToWebpAndRewritesItsCopies() throws Exception {
+        assumeTrue(ImageFormats.canWriteWebp(), "this build has no WebP encoder");
+        UUID id = createAntique();
+        Antique antique = antiques.findById(id).orElseThrow();
+        AntiqueImage older = images.save(new AntiqueImage(antique, "0", "0", jpeg(1200, 900), "image/jpeg"));
+
+        mvc.perform(post("/api/admin/images/convert-to-webp")
+                        .param("confirm", "true")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.converted").value(1))
+                .andExpect(jsonPath("$.failed").isEmpty());
+
+        AntiqueImage converted = images.findById(older.getId()).orElseThrow();
+        assertThat(converted.getContentType()).isEqualTo("image/webp");
+        assertThat(ImageFormats.sniff(converted.getData())).isEqualTo("image/webp");
+        // The small copies made in the same pass are WebP too, not the old JPEGs.
+        assertThat(ImageFormats.sniff(converted.getThumbnail())).isEqualTo("image/webp");
+        assertThat(ImageFormats.sniff(converted.getMedium())).isEqualTo("image/webp");
+        assertThat(ImageFormats.sniff(converted.getLarge())).isEqualTo("image/webp");
+    }
+
+    @Test
+    void aDryRunOnlyCountsWhatIsLeftToConvert() throws Exception {
+        UUID id = createAntique();
+        Antique antique = antiques.findById(id).orElseThrow();
+        images.save(new AntiqueImage(antique, "0", "0", jpeg(300, 200), "image/jpeg"));
+
+        mvc.perform(post("/api/admin/images/convert-to-webp")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dryRun").value(true))
+                .andExpect(jsonPath("$.candidates").isNumber());
+
+        // Nothing was rewritten, so the row is still the JPEG it was.
+        assertThat(images.findIdsNotWebp()).isNotEmpty();
+    }
+
     private void assertCopy(UUID id, UUID imageId, String variant, int expectedEdge) throws Exception {
         mvc.perform(get("/api/antiques/" + id + "/image/" + imageId + "/" + variant))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "public, max-age=31536000, immutable"))
-                .andExpect(content().contentType("image/jpeg"))
+                // WebP is the stored format; a build without the encoder still answers with JPEG.
+                .andDo(result -> {
+                    assertThat(result.getResponse().getContentType()).isIn("image/webp", "image/jpeg");
+                })
                 .andDo(result -> {
                     BufferedImage copy = ImageIO.read(new ByteArrayInputStream(
                             result.getResponse().getContentAsByteArray()));
@@ -193,6 +241,14 @@ class AntiqueImageAdminTest {
                 .andReturn();
 
         return UUID.fromString(JSON.readTree(uploaded.getResponse().getContentAsString()).path("id").asText());
+    }
+
+    /** A real, decodable JPEG, as the gallery stored photographs before the WebP encoder. */
+    private static byte[] jpeg(int width, int height) throws Exception {
+        BufferedImage source = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        ByteArrayOutputStream jpeg = new ByteArrayOutputStream();
+        ImageIO.write(source, "jpeg", jpeg);
+        return jpeg.toByteArray();
     }
 
     /** Uploads a real, decodable PNG so the responsive copies can be measured. */

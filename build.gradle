@@ -28,6 +28,11 @@ dependencies {
 	// row carries a storage key, and the client is only built when the four STORAGE_* settings exist.
 	implementation platform("software.amazon.awssdk:bom:2.25.60")
 	implementation "software.amazon.awssdk:s3"
+	// The photographs are stored as WebP. The JDK's ImageIO writes JPEG and PNG only, so without an
+	// encoder every picture would stay a camera-sized JPEG. The dependency registers itself with
+	// ImageIO at runtime (it bundles libwebp for the platforms the gallery runs on), which is why it
+	// is not referenced from any import below.
+	runtimeOnly "com.github.usefulness:webp-imageio:0.11.0"
 	 implementation "org.keycloak:keycloak-admin-client:26.0.12"
     implementation "org.keycloak:keycloak-authz-client:26.0.12"
     implementation "org.keycloak:keycloak-policy-enforcer:26.0.12"

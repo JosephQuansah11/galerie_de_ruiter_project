@@ -11,6 +11,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { InventoryList } from "./antiques/InventoryList";
 import { InventoryHeading } from "./antiques/InventoryHeading";
 import { AntiqueImageEditor } from "./antiques/AntiqueImageEditor";
+import { ImageFormatAdmin } from "./antiques/ImageFormatAdmin";
 import { DescriptionLimitHint } from "../antiques/DescriptionLimitHint";
 import { ANTIQUE_DESCRIPTION_MAX_LENGTH } from "../antiques/descriptionLimits";
 import { MODEL_MAX_SIZE_MB, isUploadableModel } from "../antiques/modelUploadLimits";
@@ -135,6 +136,7 @@ export default function AntiqueAdminPage() {
   return (
     <section className="admin-page">
       <InventoryHeading administration={t("administration")} title={t("antiqueInventory")} />
+      <ImageFormatAdmin />
       <div className="inventory-toolbar">
         <form className="inventory-search" role="search" onSubmit={(event) => event.preventDefault()}>
           <span className="inventory-search-icon" aria-hidden="true"><Search size={17} /></span>

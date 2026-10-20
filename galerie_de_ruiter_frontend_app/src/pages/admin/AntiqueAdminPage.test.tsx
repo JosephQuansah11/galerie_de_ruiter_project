@@ -1,8 +1,8 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
 import AntiqueAdminPage from "./AntiqueAdminPage";
-import { deleteAntique, deleteAntiqueImage, getAllAntiques, reorderAntiqueImages, setAntiqueSold, updateAntique } from "@/apis/backend_api";
+import { deleteAntique, deleteAntiqueImage, getAllAntiques, getImageFormatStatus, convertImagesToWebp, reorderAntiqueImages, setAntiqueSold, updateAntique } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 
 jest.mock("@/apis/backend_api", () => ({
@@ -14,6 +14,8 @@ jest.mock("@/apis/backend_api", () => ({
   uploadAntiqueImage: jest.fn(),
   uploadAntiqueModel: jest.fn(),
   setAntiqueSold: jest.fn(),
+  getImageFormatStatus: jest.fn(),
+  convertImagesToWebp: jest.fn(),
 }));
 
 const mockedAntiques = getAllAntiques as jest.Mock;
@@ -22,6 +24,8 @@ const mockedSold = setAntiqueSold as jest.Mock;
 const mockedUpdate = updateAntique as jest.Mock;
 const mockedDeleteImage = deleteAntiqueImage as jest.Mock;
 const mockedReorder = reorderAntiqueImages as jest.Mock;
+const mockedImageFormat = getImageFormatStatus as jest.Mock;
+const mockedConvert = convertImagesToWebp as jest.Mock;
 
 /** Mirrors an axios HTTP failure so the page's status handling can be exercised. */
 function httpError(status: number) {
@@ -42,6 +46,7 @@ beforeEach(() => {
   mockedUpdate.mockResolvedValue(inventory[0]);
   mockedDeleteImage.mockResolvedValue(undefined);
   mockedReorder.mockResolvedValue(undefined);
+  mockedImageFormat.mockResolvedValue({ webpEncoder: true, total: 2, webp: 2, candidates: 0 });
   jest.spyOn(window, "confirm").mockReturnValue(true);
   jest.spyOn(console, "error").mockImplementation(() => undefined);
 });
@@ -181,5 +186,29 @@ describe("Antique administration page", () => {
     fireEvent.click(screen.getByRole("button", { name: i18n.t("saveAntique") }));
 
     await waitFor(() => expect(mockedReorder).toHaveBeenCalledWith("1", ["bbb", "aaa"]));
+  });
+
+  it("converts the catalogue's older photographs after the admin confirms", async () => {
+    mockedImageFormat.mockResolvedValue({ webpEncoder: true, total: 5, webp: 2, candidates: 3 });
+    mockedConvert.mockResolvedValue({
+      dryRun: false, total: 5, webp: 5, candidates: 0, converted: 3,
+      bytesBefore: 3_000_000, bytesAfter: 1_000_000, failed: [],
+    });
+
+    renderPage(<AntiqueAdminPage />);
+    await screen.findByText(i18n.t("imageFormatStatus", { webp: 2, total: 5 }));
+
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("imageFormatConvert") }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: i18n.t("imageFormatConvert") }));
+
+    await waitFor(() => expect(mockedConvert).toHaveBeenCalledWith(true, 25));
+    expect(await screen.findByText(/3 photograph\(s\) converted/)).toBeInTheDocument();
+  });
+
+  it("says so when every photograph is already WebP", async () => {
+    renderPage(<AntiqueAdminPage />);
+
+    expect(await screen.findByText(i18n.t("imageFormatAllDone"))).toBeInTheDocument();
   });
 });

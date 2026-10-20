@@ -17,19 +17,20 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The gallery serves the same site on the domain it owns and, for now, on the free subdomain it
- * used before it. Both are browser origins that call this API, so both have to survive the CORS
- * preflight - and a third origin still has to be refused.
+ * The API answers CORS preflights for the browser origins in `FRONTEND_ORIGIN`, and refuses every
+ * other origin - including the gallery's retired free host, so it cannot start working again by
+ * accident.
  *
  * `FRONTEND_ORIGIN` is one comma-separated value rather than a list in YAML, because a Render
  * blueprint environment variable is a string. The space after the comma is deliberate: it is what
- * a person writes, and the parser trims it.
+ * a person writes, and the parser trims it. Production names the gallery's own domain; the second
+ * origin here is a staging host that exercises the list without being a gallery address.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test-dev")
 @TestPropertySource(properties =
-        "FRONTEND_ORIGIN=https://galeriederuiterantieks.gripe, https://galeriederuiter.cloud-ip.cc")
+        "FRONTEND_ORIGIN=https://galeriederuiterantieks.gripe, https://staging.galeriederuiterantieks.gripe")
 class FrontendOriginCorsTest {
 
     @Autowired
@@ -39,16 +40,24 @@ class FrontendOriginCorsTest {
     private JwtDecoder jwtDecoder;
 
     @Test
-    void answersThePreflightForBothOfTheGalleryOrigins() throws Exception {
+    void answersThePreflightForEveryConfiguredGalleryOrigin() throws Exception {
         for (String origin : List.of(
                 "https://galeriederuiterantieks.gripe",
-                "https://galeriederuiter.cloud-ip.cc")) {
+                "https://staging.galeriederuiterantieks.gripe")) {
             mvc.perform(options("/api/location")
                             .header(HttpHeaders.ORIGIN, origin)
                             .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
                     .andExpect(status().isOk())
                     .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin));
         }
+    }
+
+    @Test
+    void refusesTheRetiredFreeHostname() throws Exception {
+        mvc.perform(options("/api/location")
+                        .header(HttpHeaders.ORIGIN, "https://galeriederuiter.cloud-ip.cc")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

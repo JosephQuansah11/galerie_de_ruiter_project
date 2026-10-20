@@ -75,11 +75,11 @@ services:
         fromDatabase:
           name: galerie-app-db
           property: password
-      # The browser origin allowed to call the API. Two origins while the gallery moves to the
-      # domain it owns: the new domain is canonical, and the older free subdomain still serves the
-      # same build until it is retired. SecurityConfiguration reads this as a comma-separated list.
+      # The browser origin allowed to call the API: the gallery's own domain. The parser still
+      # accepts a comma-separated list, so a staging origin can be added without changing code, but
+      # production serves one canonical host.
       - key: FRONTEND_ORIGIN
-        value: https://galeriederuiterantieks.gripe,https://galeriederuiter.cloud-ip.cc
+        value: https://galeriederuiterantieks.gripe
   - type: web
     name: galerie-frontend
     runtime: static

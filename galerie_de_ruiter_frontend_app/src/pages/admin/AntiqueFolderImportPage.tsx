@@ -11,6 +11,9 @@ import { useDesignerDirectory } from "@/pages/antiques/useDesignerDirectory";
 import { ANTIQUE_DESCRIPTION_MAX_LENGTH } from "@/pages/antiques/descriptionLimits";
 import { InventoryHeading } from "./antiques/InventoryHeading";
 import { useFolderImport, type ImportGroupDraft } from "./antiques/folderImport/useFolderImport";
+import type { ImportCategorySource } from "./antiques/folderImport/buildImportGroups";
+import { importDifferences } from "./antiques/folderImport/differences";
+import { ImportDifferences } from "./antiques/folderImport/ImportDifferences";
 
 function artistName(group: ImportGroupDraft): string {
   const artist = group.artist;
@@ -51,7 +54,16 @@ export default function AntiqueFolderImportPage() {
   // A row that matches an existing piece already has its data; an import field that is blank must
   // not be treated as a value to erase. A new piece is the only thing that needs all three.
   const missingArtist = selected.some((group) => !group.existing && !group.artist);
-  const missingCategory = selected.some((group) => !group.existing && !group.categoryId);
+  // A category can come from the CSV, from an existing piece, or from the folders above the title.
+  // Only when all three say nothing does the import have to wait for the curator.
+  const missingCategory = selected.some((group) => !group.existing && !group.categoryId
+    && (group.categoryPath.length === 0 || Boolean(group.category)));
+  // A folder category that exists nowhere is created by the import; this is the list the curator
+  // sees before pressing the button. An existing piece only counts when its category was ticked.
+  const categoriesToCreate = [...new Set(selected
+    .filter((group) => !group.categoryId && !group.category && group.categoryPath.length > 0
+      && (!group.existing || Boolean(group.overrides.category)))
+    .map((group) => group.categoryPath.slice(0, 2).join(" / ")))];
   const missingDetails = selected.some((group) => {
     const price = group.price.trim();
     if (!group.title.trim() || group.description.length > ANTIQUE_DESCRIPTION_MAX_LENGTH) return true;
@@ -59,8 +71,12 @@ export default function AntiqueFolderImportPage() {
     return !Number.isFinite(Number(price)) || Number(price) < 0;
   });
   const ambiguousExisting = selected.some((group) => group.existingAmbiguous);
+  // A piece that is already in the gallery is only updated once the admin has seen what differs
+  // and confirmed it. The confirmation resets as soon as a value changes.
+  const unconfirmed = selected.some((group) => group.existing && !group.confirmed
+    && importDifferences(group, group.existing, imported.categories).length > 0);
   const canImport = selected.length > 0 && !missingArtist && !missingCategory && !missingDetails
-    && !ambiguousExisting && !imported.importing && !imported.reading
+    && !ambiguousExisting && !unconfirmed && !imported.importing && !imported.reading
     && !imported.existingLoading && !imported.existingError;
 
   const chooseFolder = (event: ChangeEvent<HTMLInputElement>) => {
@@ -121,18 +137,29 @@ export default function AntiqueFolderImportPage() {
     </div>}
     <Alert variant="light" className="folder-import-help">{t("importCsvHelp")}</Alert>
 
-    {imported.groups.length > 0 && <Form.Group className="folder-import-grouping" controlId="folder-import-grouping">
-      <Form.Label>{t("importGrouping")}</Form.Label>
-      <div>
-        <Form.Check inline type="radio" name="folder-import-grouping" id="folder-import-grouping-folder"
-          label={t("onePiecePerFolder")} checked={imported.grouping === "folder"} disabled={imported.importing || imported.reading}
-          onChange={() => imported.changeGrouping("folder")} />
-        <Form.Check inline type="radio" name="folder-import-grouping" id="folder-import-grouping-image"
-          label={t("onePiecePerImage")} checked={imported.grouping === "image"} disabled={imported.importing || imported.reading}
-          onChange={() => imported.changeGrouping("image")} />
-      </div>
-      <Form.Text>{t("importGroupingHint")}</Form.Text>
-    </Form.Group>}
+    {imported.groups.length > 0 && <>
+      <Form.Group className="folder-import-grouping" controlId="folder-import-grouping">
+        <Form.Label>{t("importGrouping")}</Form.Label>
+        <div>
+          <Form.Check inline type="radio" name="folder-import-grouping" id="folder-import-grouping-folder"
+            label={t("onePiecePerFolder")} checked={imported.grouping === "folder"} disabled={imported.importing || imported.reading}
+            onChange={() => imported.changeGrouping("folder")} />
+          <Form.Check inline type="radio" name="folder-import-grouping" id="folder-import-grouping-image"
+            label={t("onePiecePerImage")} checked={imported.grouping === "image"} disabled={imported.importing || imported.reading}
+            onChange={() => imported.changeGrouping("image")} />
+        </div>
+        <Form.Text>{t("importGroupingHint")}</Form.Text>
+      </Form.Group>
+      <Form.Group className="folder-import-category-source" controlId="folder-import-category-source">
+        <Form.Label>{t("importCategorySource")}</Form.Label>
+        <Form.Select size="sm" value={imported.categorySource} disabled={imported.importing || imported.reading}
+          onChange={(event) => imported.changeCategorySource(event.target.value as ImportCategorySource)}>
+          <option value="inside">{t("importCategoryInside")}</option>
+          <option value="chosen">{t("importCategoryChosen")}</option>
+        </Form.Select>
+        <Form.Text>{t("importCategorySourceHint")}</Form.Text>
+      </Form.Group>
+    </>}
 
     {imported.notice && <Alert variant="warning">{t(imported.notice)}</Alert>}
     {(imported.issues.length > 0 || imported.categoryIssues.length > 0) && <Alert variant="warning">
@@ -140,6 +167,12 @@ export default function AntiqueFolderImportPage() {
       <ul className="folder-import-issues">
         {[...imported.issues, ...imported.categoryIssues].map((issue, index) => <li key={`${issue.key}-${index}`}>{t(issue.key, issue.params)}</li>)}
       </ul>
+    </Alert>}
+    {categoriesToCreate.length > 0 && <Alert variant="info" className="folder-import-new-categories">
+      {t("importCategoriesToCreate", {
+        count: categoriesToCreate.length,
+        categories: categoriesToCreate.join(", "),
+      })}
     </Alert>}
     {imported.groups.length === 0 && !imported.reading && imported.folderName && <div className="folder-import-empty">
       <ImageIcon size={26} aria-hidden="true" /><span>{t("importNoImages")}</span>
@@ -213,6 +246,10 @@ export default function AntiqueFolderImportPage() {
                 <option value="">{t("chooseCategory")}</option>
                 <CategoryOptions categories={imported.categories} />
               </Form.Select>
+              {group.categoryPath.length > 0 && !group.category && <span className="folder-import-folder-category">
+                <span>{t("importCategoryFromFolders")}: <strong>{group.categoryPath.slice(0, 2).join(" / ")}</strong></span>
+                {!group.categoryId && <Badge bg="warning">{t("importCategoryWillCreate")}</Badge>}
+              </span>}
               <div className="folder-import-meta">
                 <Badge bg={group.record ? "success" : "secondary"}>
                   {group.record ? t("csvMatched") : t("csvMissing")}
@@ -222,7 +259,8 @@ export default function AntiqueFolderImportPage() {
                 <span>{t("imagesCount", { count: group.images.length })}</span>
                 <span className="folder-import-path" title={group.label}>{group.label}</span>
                 <span>{group.artist ? artistName(group) : t("noArtistAssigned")}</span>
-                <span>{categoryLabel(imported.categories, group.categoryId) ?? t("noCategoryAssigned")}</span>
+                <span>{categoryLabel(imported.categories, group.categoryId)
+                  ?? (group.categoryPath.join(" / ") || t("noCategoryAssigned"))}</span>
                 {saved && <Badge bg="success">{t("saved")}</Badge>}
                 {group.status === "saving" && <Spinner animation="border" size="sm" />}
               </div>
@@ -239,6 +277,12 @@ export default function AntiqueFolderImportPage() {
                   onChange={(event) => imported.updateGroup(group.id, "price", event.target.value)} />
                 {group.error && <span className="folder-import-error">{t(group.error)}</span>}
               </div>
+              <ImportDifferences group={group}
+                differences={group.existing ? importDifferences(group, group.existing, imported.categories) : []}
+                disabled={disabled}
+                onOverride={(field, override) => imported.setOverride(group.id, field, override)}
+                onConfirm={(confirmed) => imported.confirmGroup(group.id, confirmed)}
+                onAddImages={(addImages) => imported.setAddImages(group.id, addImages)} />
             </div>
           </article>;
         })}
@@ -257,6 +301,7 @@ export default function AntiqueFolderImportPage() {
       {selected.length > 0 && missingCategory && <p className="folder-import-validation">{t("importNeedsCategory")}</p>}
       {selected.length > 0 && missingDetails && <p className="folder-import-validation">{t("importNeedsDetails")}</p>}
       {selected.length > 0 && ambiguousExisting && <p className="folder-import-validation">{t("importExistingAmbiguous")}</p>}
+      {selected.length > 0 && unconfirmed && <p className="folder-import-validation">{t("importNeedsConfirmation")}</p>}
       {imported.progress && <p className="folder-import-progress" role="status">
         {t("importingPieces", imported.progress)}
       </p>}

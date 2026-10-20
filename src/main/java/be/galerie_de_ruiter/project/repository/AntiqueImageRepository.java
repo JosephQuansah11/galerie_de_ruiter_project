@@ -109,6 +109,27 @@ public interface AntiqueImageRepository extends JpaRepository<AntiqueImage, UUID
             @org.springframework.data.repository.query.Param("antiqueId") UUID antiqueId);
 
 
+    /**
+     * The photographs whose original is not WebP yet, as ids only.
+     *
+     * <p>Ids, not rows: this is the table the photographs live in, so selecting the entities to ask
+     * "which of you is still a JPEG?" would read every picture out of PostgreSQL first. The
+     * conversion loads each row on its own instead, which keeps its memory flat.</p>
+     */
+    @org.springframework.data.jpa.repository.Query("""
+            select i.id from AntiqueImage i
+            where lower(i.contentType) <> 'image/webp'
+            """)
+    List<UUID> findIdsNotWebp();
+
+    /** How many photographs still have to be converted, without reading any of their bytes. */
+    @org.springframework.data.jpa.repository.Query("""
+            select count(i) from AntiqueImage i
+            where lower(i.contentType) <> 'image/webp'
+            """)
+    long countNotWebp();
+
+
     /** One row of {@link #findCatalogueImages()}. */
     interface CatalogueImage {
         UUID getAntiqueId();

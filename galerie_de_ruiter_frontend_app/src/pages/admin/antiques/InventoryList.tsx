@@ -1,3 +1,4 @@
+import type { RefObject } from "react";
 import { Badge } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
 import { BadgeCheck, Image, Pencil, Trash2, Undo2 } from "lucide-react";
@@ -20,10 +21,13 @@ type Props = {
   soldLabel: string;
   markSoldLabel: string;
   markAvailableLabel: string;
+  /** The list itself, so a shortcut can bring its last row into view. */
+  listRef?: RefObject<HTMLDivElement | null>;
 };
 export function InventoryList({ antiques, onEdit, onDelete, onToggleSold, deletingId, soldSavingId,
-  uncategorized, priceOnRequest, locale, editLabel, deleteLabel, soldLabel, markSoldLabel, markAvailableLabel }: Props) {
-  return <div className="inventory-list">{antiques.map((antique) =>
+  uncategorized, priceOnRequest, locale, editLabel, deleteLabel, soldLabel, markSoldLabel, markAvailableLabel,
+  listRef }: Props) {
+  return <div className="inventory-list" ref={listRef}>{antiques.map((antique) =>
     <article className={`inventory-row${antique.sold ? " is-sold" : ""}`} key={antique.id}>
       <span className="inventory-thumb">
         {antique.imageUrl ? <img src={resolveAntiqueThumbnailUrl(antique.imageUrl)} alt="" loading="lazy" decoding="async" width={400} height={300} />

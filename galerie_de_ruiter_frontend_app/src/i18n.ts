@@ -1118,6 +1118,18 @@ const cataloguePagingLabels: Record<string, Record<string, string>> = {
 };
 
 /**
+ * List navigation: the shortcut that takes a visitor to the last rows of a long list. Merged from
+ * one place like the blocks above so every language stays in step.
+ */
+const listNavigationLabels: Record<string, Record<string, string>> = {
+  en: { jumpToBottom: "Last items", jumpToBottomLabel: "Scroll to the last items" },
+  fr: { jumpToBottom: "Dernières pièces", jumpToBottomLabel: "Aller aux dernières pièces" },
+  "nl-NL": { jumpToBottom: "Laatste stukken", jumpToBottomLabel: "Naar de laatste stukken" },
+  "nl-BE": { jumpToBottom: "Laatste stukken", jumpToBottomLabel: "Naar de laatste stukken" },
+  de: { jumpToBottom: "Letzte Stücke", jumpToBottomLabel: "Zu den letzten Stücken" },
+};
+
+/**
  * Page metadata: the title and description a search engine shows for each route. Merged from
  * one place like the blocks above so every language stays in step.
  */
@@ -1461,7 +1473,7 @@ const folderImportLabels: Record<string, Record<string, string>> = {
 function translationFor(language: string, keys: Record<string, string>): Record<string, string> {
   const translation = { ...keys };
   for (const labels of [engagementLabels, chatAccessLabels, availabilityLabels, imageUploadLabels,
-    aboutEditorLabels, cataloguePagingLabels, pageMetaLabels, routeLabels, footerLabels, folderImportLabels]) {
+    aboutEditorLabels, cataloguePagingLabels, listNavigationLabels, pageMetaLabels, routeLabels, footerLabels, folderImportLabels]) {
     Object.assign(translation, labels[language] ?? labels.en);
   }
   return translation;

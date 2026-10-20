@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import { Button } from "@/components/ReactButton";
+import { JumpToBottom } from "@/components/JumpToBottom";
 import { ArrowRight, ShoppingBag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useShopping } from "@/context/ShoppingContext";
@@ -10,6 +12,7 @@ export default function CartPage() {
   const navigate = useNavigate();
   const { cart, updateQuantity, removeFromCart } = useShopping();
   const { t, locale } = useLanguage();
+  const listRef = useRef<HTMLDivElement>(null);
   const total = cart.reduce(
     (sum, item) => sum + (item.antique.price ?? 0) * item.quantity,
     0,
@@ -39,7 +42,8 @@ export default function CartPage() {
         </div>
       ) : (
         <>
-          <CartItems items={cart} updateQuantity={updateQuantity} removeFromCart={removeFromCart} />
+          <CartItems items={cart} updateQuantity={updateQuantity} removeFromCart={removeFromCart} listRef={listRef} />
+          <JumpToBottom itemCount={cart.length} targetRef={listRef} />
           <div className="cart-total">
             <span>{t("estimatedTotal")}</span>
             <strong>{formatEuroAmount(total, locale)}</strong>

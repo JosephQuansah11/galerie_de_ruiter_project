@@ -1,6 +1,7 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Alert, Form, Modal, Spinner } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
+import { JumpToBottom } from "@/components/JumpToBottom";
 import { Check, FolderUp, Plus, Search, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { deleteAntique as deleteAntiqueRequest, deleteAntiqueImage, getAllAntiques, reorderAntiqueImages, setAntiqueSold as setAntiqueSoldRequest, updateAntique as updateAntiqueRequest, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
@@ -22,6 +23,7 @@ export default function AntiqueAdminPage() {
   const navigate = useNavigate();
   const [antiques, setAntiques] = useState<Antique[]>([]);
   const [query, setQuery] = useState("");
+  const listRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [editing, setEditing] = useState<Antique>();
@@ -168,11 +170,12 @@ export default function AntiqueAdminPage() {
       {!loading && !loadError && filtered.length === 0 && (
         <Alert variant="light">{t("noAntiquesFound")}</Alert>
       )}
-      {!loading && !loadError && <InventoryList antiques={filtered} onEdit={openEdit} onDelete={removeAntique}
+      {!loading && !loadError && <InventoryList antiques={filtered} listRef={listRef} onEdit={openEdit} onDelete={removeAntique}
         onToggleSold={toggleSold} deletingId={deletingId} soldSavingId={soldSavingId}
         uncategorized={t("uncategorized")} priceOnRequest={t("priceOnRequest")}
         locale={locale} editLabel={t("editAntique")} deleteLabel={t("deleteAntique")}
         soldLabel={t("sold")} markSoldLabel={t("markSold")} markAvailableLabel={t("markAvailable")} />}
+      {!loading && !loadError && filtered.length > 0 && <JumpToBottom itemCount={filtered.length} targetRef={listRef} />}
       <Modal show={Boolean(editing)} onHide={() => !savingEdit && setEditing(undefined)} centered>
         <Form onSubmit={saveEdit}>
           <Modal.Header closeButton={!savingEdit}>

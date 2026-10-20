@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Form, Badge } from "react-bootstrap";
 import { Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type Antique from "@/models/antiques/Antique";
 import type { Category } from "@/models/antiques/Antique";
+import { JumpToBottom } from "@/components/JumpToBottom";
 import { CollectionFilter } from "./CollectionFilter";
 import { AntiqueList } from "./AntiqueList";
 import { CataloguePaging } from "./CataloguePaging";
@@ -40,6 +41,7 @@ export function CataloguePage(props: Props) {
   const { t } = useTranslation();
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [page, setPage] = useState(1);
+  const listRef = useRef<HTMLDivElement>(null);
   const hasQuery = props.query.length > 0;
   // A visitor without an account reads the first page of the list and nothing deeper, so the page
   // size is the default one and the page is the first, whatever the controls would have said.
@@ -72,7 +74,8 @@ export function CataloguePage(props: Props) {
     </div>
     <CatalogueStatus loading={props.loading} error={props.error} categoriesLoading={props.categoriesLoading} categoriesError={props.categoriesError} empty={!props.filteredAntiques.length} hasQuery={Boolean(props.query)} />
     {!props.loading && !props.error && <>
-      <AntiqueList antiques={visible} />
+      <AntiqueList antiques={visible} listRef={listRef} />
+      {visible.length > 0 && <JumpToBottom itemCount={visible.length} targetRef={listRef} />}
       {props.filteredAntiques.length > 0 && !props.checkingSession && (props.signedIn
         ? <CataloguePaging pageSize={pageSize} page={currentPage} pageCount={pageCount}
           onPageSize={setPageSize} onPage={setPage} />

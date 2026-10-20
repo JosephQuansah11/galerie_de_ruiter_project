@@ -1,5 +1,9 @@
 package be.galerie_de_ruiter.project.service;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +14,9 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
+import software.amazon.awssdk.services.s3.model.Delete;
+import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
@@ -32,6 +39,13 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 @Service
 public class ImageStorage {
     private static final Region REGION = Region.of("auto");
+    /**
+     * Photograph objects are immutable: their id names these bytes and nothing else. The API sends
+     * the same header on its own responses; putting it on the object as well means a custom R2
+     * domain or a Cloudflare cache in front of the bucket can serve it for a year without asking
+     * R2 again.
+     */
+    private static final String CACHE_CONTROL = "public, max-age=31536000, immutable";
 
     private final String endpoint;
     private final String bucket;
@@ -86,6 +100,8 @@ public class ImageStorage {
                         .key(key)
                         .contentType(contentType)
                         .contentLength((long) bytes.length)
+                        .cacheControl(CACHE_CONTROL)
+                        .contentDisposition("inline")
                         .build(),
                 RequestBody.fromBytes(bytes));
         return key;
@@ -117,6 +133,44 @@ public class ImageStorage {
     public void delete(String key) {
         requireEnabled();
         client().deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
+    }
+
+    /** Removes an object when storage is configured; an unreferenced object is not an error. */
+    public void deleteQuietly(String key) {
+        if (!isEnabled() || key == null || key.isBlank()) return;
+        try {
+            delete(key);
+        } catch (RuntimeException ignored) {
+            // The row is already gone. A failed object delete costs storage, not correctness;
+            // the next cleanup pass can find it.
+        }
+    }
+
+    /**
+     * Removes many objects in the bucket's batch call (up to 1,000 keys per request). Used when a
+     * piece or a selection of pieces is deleted, so a bulk delete does not become one R2 request per
+     * photograph.
+     */
+    public void deleteAllQuietly(Collection<String> keys) {
+        if (!isEnabled() || keys == null || keys.isEmpty()) return;
+        List<String> unique = new ArrayList<>(new LinkedHashSet<>(keys));
+        for (int start = 0; start < unique.size(); start += 1000) {
+            List<ObjectIdentifier> batch = unique.subList(start, Math.min(start + 1000, unique.size()))
+                    .stream()
+                    .filter((key) -> key != null && !key.isBlank())
+                    .map((key) -> ObjectIdentifier.builder().key(key).build())
+                    .toList();
+            if (batch.isEmpty()) continue;
+            try {
+                client().deleteObjects(DeleteObjectsRequest.builder()
+                        .bucket(bucket)
+                        .delete(Delete.builder().objects(batch).build())
+                        .build());
+            } catch (RuntimeException ignored) {
+                // The database rows are already committed. An object left behind costs storage,
+                // not correctness; a later cleanup can find it.
+            }
+        }
     }
 
     /**

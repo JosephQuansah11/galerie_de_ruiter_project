@@ -25,7 +25,11 @@ import java.util.UUID;
         // piece and position. Without these, each lookup scans the whole table - which is also the
         // table the photographs live in, so it is the largest one in the database.
         @Index(name = "idx_antique_images_antique", columnList = "antique_id"),
-        @Index(name = "idx_antique_images_antique_position", columnList = "antique_id, position")
+        @Index(name = "idx_antique_images_antique_position", columnList = "antique_id, position"),
+        // The catalogue sorts a piece's photographs and the copy job asks which rows still hold
+        // bytes; both are cheap with these, and the table is the largest one in the database.
+        @Index(name = "idx_antique_images_antique_display_order", columnList = "antique_id, display_order"),
+        @Index(name = "idx_antique_images_storage_key", columnList = "storage_key")
 })
 public class AntiqueImage {
     @Id

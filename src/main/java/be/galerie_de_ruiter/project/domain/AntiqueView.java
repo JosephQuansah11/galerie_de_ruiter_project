@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -21,7 +22,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "antique_views",
         uniqueConstraints = @UniqueConstraint(name = "uk_antique_views_viewer",
-                columnNames = { "antique_id", "viewer_key" }))
+                columnNames = { "antique_id", "viewer_key" }),
+        indexes = @Index(name = "idx_antique_views_created_at", columnList = "created_at"))
 public class AntiqueView {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

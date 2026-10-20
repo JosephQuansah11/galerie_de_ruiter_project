@@ -55,6 +55,18 @@ services:
         value: "8080"
       - key: MODELS_STORAGE_DIR
         value: /app/data/models
+      # Photograph originals can live in Cloudflare R2 (S3 API). These are deliberately
+      # unmanaged: set them in the Render dashboard, not in the repository.
+      - key: STORAGE_ENDPOINT
+        sync: false
+      - key: STORAGE_BUCKET
+        sync: false
+      - key: STORAGE_ACCESS_KEY
+        sync: false
+      - key: STORAGE_SECRET_KEY
+        sync: false
+      - key: STORAGE_PUBLIC_URL
+        sync: false
       - key: DATABASE_HOST
         fromDatabase:
           name: galerie-app-db

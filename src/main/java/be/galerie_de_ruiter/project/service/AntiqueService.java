@@ -54,6 +54,7 @@ public class AntiqueService {
     private final AntiqueLikeRepository antiqueLikeRepository;
     private final AntiqueViewRepository antiqueViewRepository;
     private final AntiqueInterestRepository antiqueInterestRepository;
+    private final ImageStorage imageStorage;
     private final AntiqueModelStorage modelStorage;
     private final UserService users;
     private final CategoryRepository categoryRepository;
@@ -203,7 +204,8 @@ public class AntiqueService {
 
     @Transactional
     public void delete(UUID id) {
-        deleteAntique(findAntique(id));
+        List<String> storedKeys = deleteAntique(findAntique(id));
+        StoredObjectCleanup.afterCommit(imageStorage, storedKeys);
     }
 
     /**
@@ -214,20 +216,28 @@ public class AntiqueService {
     public AntiqueBulkDeleteResponse deleteMany(List<UUID> ids) {
         int deleted = 0;
         List<UUID> missing = new ArrayList<>();
+        List<String> storedKeys = new ArrayList<>();
         for (UUID id : new LinkedHashSet<>(ids)) {
             Optional<Antique> antique = antiques.findById(id);
             if (antique.isEmpty()) {
                 missing.add(id);
                 continue;
             }
-            deleteAntique(antique.get());
+            storedKeys.addAll(deleteAntique(antique.get()));
             deleted += 1;
         }
+        // One R2 deleteObjects request for the whole selection instead of one per piece.
+        StoredObjectCleanup.afterCommit(imageStorage, storedKeys);
         return new AntiqueBulkDeleteResponse(deleted, missing);
     }
 
-    private void deleteAntique(Antique antique) {
+    private List<String> deleteAntique(Antique antique) {
         UUID id = antique.getId();
+        // Read the object keys before deleting the rows; once the rows are gone there is no way to
+        // name the objects they pointed at. The removal itself waits for the transaction to commit.
+        List<String> storedKeys = imageStorage.isEnabled()
+                ? antiqueImageRepository.findStorageKeysByAntiqueId(id)
+                : List.of();
         antiqueImageRepository.deleteAllByAntiqueId(id);
         antiqueModelRepository.deleteByAntiqueId(id);
         modelStorage.delete(id);
@@ -238,6 +248,7 @@ public class AntiqueService {
         antiqueLikeRepository.deleteAllByAntiqueId(id);
         antiqueInterestRepository.deleteAllByAntiqueId(id);
         antiques.delete(antique);
+        return storedKeys;
     }
 
     private Antique findAntique(UUID id) {

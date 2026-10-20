@@ -6,6 +6,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -21,7 +22,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "antique_interests",
         uniqueConstraints = @UniqueConstraint(name = "uk_antique_interests_user",
-                columnNames = {"antique_id", "user_id"}))
+                columnNames = {"antique_id", "user_id"}),
+        indexes = @Index(name = "idx_antique_interests_user_created", columnList = "user_id, created_at"))
 public class AntiqueInterest {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

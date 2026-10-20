@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -22,7 +23,10 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+        // /api/me and every wishlist request look the local row up by the Supabase subject.
+        @Index(name = "idx_users_keycloak_subject", columnList = "keycloak_subject")
+})
 @NoArgsConstructor
 @Getter
 @Setter 

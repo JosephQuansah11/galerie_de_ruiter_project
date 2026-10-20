@@ -8,6 +8,7 @@ import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueRepository;
 import be.galerie_de_ruiter.project.service.ImageFormats;
 import be.galerie_de_ruiter.project.service.ImageStorage;
+import be.galerie_de_ruiter.project.service.StoredObjectCleanup;
 import be.galerie_de_ruiter.project.service.ThumbnailService;
 import java.util.List;
 import java.util.Map;
@@ -186,7 +187,10 @@ public class AntiqueImageController {
         return images.findById(imageId)
                 .filter(image -> image.getAntique().getId().equals(id))
                 .map(image -> {
+                    String storedKey = image.getStorageKey();
                     images.delete(image);
+                    StoredObjectCleanup.afterCommit(storage,
+                            storedKey == null ? List.of() : List.of(storedKey));
                     return ResponseEntity.noContent().<Void>build();
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());

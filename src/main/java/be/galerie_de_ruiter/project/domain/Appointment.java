@@ -13,7 +13,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "appointments")
+@Table(name = "appointments", indexes = {
+        // The chat restores a visitor's appointments by subject, newest first.
+        @Index(name = "idx_appointments_subject_start", columnList = "keycloak_subject, starts_at")
+})
 @Getter
 @Setter
 @NoArgsConstructor

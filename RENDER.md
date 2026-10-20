@@ -95,6 +95,47 @@ so WebP is the one modern format the whole pipeline - upload, storage, variants 
 the gallery supports - can guarantee. The URLs are already split per size, so an AVIF pipeline can
 later sit beside them with a `<picture>` element rather than a rewrite.
 
+## Cloudflare R2 optimization
+
+R2 is the cheaper home for the gallery's originals because its egress is free. It is optional:
+`ImageStorage` is inert until all four settings exist on the API service.
+
+- `STORAGE_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com`
+- `STORAGE_BUCKET=<bucket>`
+- `STORAGE_ACCESS_KEY=<R2 access key id>`
+- `STORAGE_SECRET_KEY=<R2 secret access key>`
+- `STORAGE_PUBLIC_URL` is optional and only used by the storage helper today; the API still serves
+  the photographs so the 400/800/1600 variants and the fallback-to-database path stay intact.
+
+New R2 objects are written with `Content-Type`, `Content-Disposition: inline` and
+`Cache-Control: public, max-age=31536000, immutable`. Put the bucket behind a Cloudflare custom
+domain with **Cache Everything**, an edge TTL of one year and a browser TTL of one year. The object
+names are immutable (the image id is part of the key), so a cached photograph never becomes stale.
+CORS is not needed for ordinary `<img>` requests.
+
+Then run the one-time migration from the admin inventory's **Photograph storage** card, or:
+
+```text
+GET  /api/admin/images/status
+POST /api/admin/images/migrate-to-storage
+POST /api/admin/images/release-stored-bytes?confirm=false   # report only
+POST /api/admin/images/release-stored-bytes?confirm=true    # frees the database copy
+```
+
+The release step checks that every object exists in R2 before it clears `image_data`. Run the
+report first and keep a database backup until it reports no failures. The API now also removes the
+R2 object after an image row or a whole antique is deleted, instead of leaving an unreferenced object
+in the bucket; the removal happens after the database transaction commits.
+
+Check what PostgreSQL still holds:
+
+```sql
+select pg_size_pretty(pg_total_relation_size('antique_images')) as image_table,
+       pg_size_pretty(sum(pg_column_size(data))) as original_bytes,
+       count(*) filter (where storage_key is null) as originals_still_in_db
+from antique_images;
+```
+
 ## Keycloak
 
 Keycloak is no longer deployed on Render. The `galerie-keycloak` service and `galerie-keycloak-db`

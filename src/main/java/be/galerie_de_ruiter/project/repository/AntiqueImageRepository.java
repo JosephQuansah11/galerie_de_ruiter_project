@@ -20,6 +20,12 @@ public interface AntiqueImageRepository extends JpaRepository<AntiqueImage, UUID
 
     void deleteAllByAntiqueId(UUID antiqueId);
 
+    @org.springframework.data.jpa.repository.Query("""
+            select i.storageKey from AntiqueImage i
+            where i.antique.id = :antiqueId and i.storageKey is not null
+            """)
+    List<String> findStorageKeysByAntiqueId(@org.springframework.data.repository.query.Param("antiqueId") UUID antiqueId);
+
     /**
      * The image metadata a catalogue response needs - which piece, which id, where in the order -
      * and none of the photograph itself.

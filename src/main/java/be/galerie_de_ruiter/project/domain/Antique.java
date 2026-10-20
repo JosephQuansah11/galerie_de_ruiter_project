@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -18,7 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "antiques")
+@Table(name = "antiques", indexes = {
+        // The public category list counts pieces by category, and the inventory/artist relationship
+        // is looked up on every catalogue row. Both columns are foreign keys without an index of
+        // their own once PostgreSQL has created them.
+        @Index(name = "idx_antiques_category", columnList = "category_id"),
+        @Index(name = "idx_antiques_artist", columnList = "artist_id")
+})
 public class Antique {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

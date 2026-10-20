@@ -8,11 +8,32 @@ spring:
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      # A small pool is deliberate. Supabase limits connections per project, and the API is a
+      # low-traffic gallery; a pool of 5 serves it without holding a free-plan connection hostage
+      # for every idle JVM thread. Raise DB_POOL_MAX_SIZE if load says so.
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:5}
+      minimum-idle: ${DB_POOL_MIN_IDLE:1}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:10000}
+      idle-timeout: ${DB_IDLE_TIMEOUT_MS:300000}
+      max-lifetime: ${DB_MAX_LIFETIME_MS:1800000}
+      keepalive-time: ${DB_KEEPALIVE_MS:60000}
   jpa:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:update}
     open-in-view: false
     show-sql: false
+    properties:
+      hibernate:
+        # Import work and bulk deletion send many rows in one round trip instead of one statement
+        # per row. The timezone keeps Instants stable regardless of the host's locale.
+        jdbc:
+          batch_size: ${JPA_BATCH_SIZE:20}
+          time_zone: UTC
+        order_inserts: true
+        order_updates: true
+        query:
+          in_clause_parameter_padding: true
   h2:
     console:
       enabled: false

@@ -1,11 +1,11 @@
-// The catalogue's search: one field with its icon inside and its button beside it, at one height
-// whatever the screen. It had no layout of its own and stretched to its container's height.
+// The catalogue's search: one field, an icon and a button at one bounded height, whatever the screen.
 .catalogue-search {
   display: flex;
   align-items: center;
+  justify-content: space-evenly;
   width: 100%;
   max-width: 34rem;
-  height: 2.5rem;
+  height: 2.75rem;
   margin: 0;
   padding: 0;
   border: 1px solid rgba(60, 31, 37, 0.18);

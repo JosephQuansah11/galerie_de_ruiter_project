@@ -122,6 +122,7 @@ public class SecurityConfiguration {
 				// realm had not handed a role to. Saving a profile was never gated this way, so the
 				// gate only ever stopped people reading what they were allowed to write.
 				.requestMatchers(HttpMethod.GET, "/api/me").authenticated()
+				.requestMatchers(HttpMethod.GET, "/", "/index.html").permitAll()
 				.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
 				// .requestMatchers(HttpMethod.GET, "http://localhost:11434/api/chat").permitAll()
 				.anyRequest().authenticated())

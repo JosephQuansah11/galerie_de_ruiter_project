@@ -86,8 +86,9 @@ The app is one HTML page, so what a crawler can reach is decided in five places:
   rendering the client-side page.
   The photographs are served from `galerie-java-api.onrender.com`. Google's image-sitemap rules
   require **both** the page domain and the image domain to be verified in Search Console when they
-  differ, so add that API host as a property (or serve photographs from a host under
-  `galeriederuiterantieks.gripe`). Submit `sitemap_index.xml` under *Sitemaps* after a deploy;
+  differ, so add that API host as a URL-prefix property - its root serves the verification meta
+  tag - or serve photographs from a host under `galeriederuiterantieks.gripe`. Submit
+  `sitemap_index.xml` under *Sitemaps* after a deploy;
   image indexing takes days to weeks, not minutes. `Product`/`VisualArtwork` structured data and
   prerendering the piece pages are the next steps for product-style rich results, not
   prerequisites for basic image indexing.

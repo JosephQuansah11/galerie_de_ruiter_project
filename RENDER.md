@@ -244,6 +244,8 @@ be configured separately in its dashboard.
   host there or move the photographs to a host under `galeriederuiterantieks.gripe` (a custom API
   domain such as `api.galeriederuiterantieks.gripe` works) and point `SITEMAP_API_URL` and the
   frontend's `VITE_*` API values at it. The image endpoints must stay public.
+  The API root serves the `google-site-verification` meta tag and is public, so Search Console's
+  URL-prefix property for `https://galerie-java-api.onrender.com/` can be verified there.
 - The older `https://galeriederuiter.cloud-ip.cc` stays attached to `galerie-frontend` and serves
   the same build while the move settles. Every page it serves declares the new origin canonical, so
   Google consolidates the two hosts instead of indexing them as competitors. Keep both hosts in

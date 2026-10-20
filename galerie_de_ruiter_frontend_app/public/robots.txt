@@ -7,8 +7,8 @@
 # at build time by scripts/generate-sitemap.mjs.
 #
 # The collection is open: the list and a piece's own page are public, and the API's
-# GET /api/antiques gives the sitemap script the ids to list. The actions on a piece - saving it,
-# putting it in the basket, liking it - are what still ask for an account.
+# GET /api/antiques gives the sitemap script the ids to list. The actions on a piece - marking it
+# as interesting, putting it in the basket, liking it - are what still ask for an account.
 User-agent: *
 
 Disallow: /admin

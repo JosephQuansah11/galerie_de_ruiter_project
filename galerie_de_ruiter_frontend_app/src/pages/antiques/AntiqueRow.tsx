@@ -62,7 +62,7 @@ export function AntiqueRow({ antique }: { antique: Antique }) {
         {antique.sold
           ? <Badge bg="dark" className="catalogue-sold-pill"><ShoppingBag size={14} /> {t("sold")}</Badge>
           : <Button className="btn btn-sm btn-outline-dark" type="button" onClick={withAccount(() => shopping.addToCart(antique))} text={<><ShoppingBag size={15} /> {t("add")}</>} />}
-        <Button className="btn btn-sm btn-link" type="button" aria-label={t("savePieceNamed", { title: antique.title })} onClick={withAccount(() => shopping.toggleWishlist(antique))} text={<Heart size={18} fill={shopping.isWishlisted(antique.id) ? "currentColor" : "none"} />} />
+        <Button className="btn btn-sm btn-link" type="button" aria-label={t("interestSaveNamed", { title: antique.title })} onClick={withAccount(() => shopping.toggleWishlist(antique))} text={<Heart size={18} fill={shopping.isWishlisted(antique.id) ? "currentColor" : "none"} />} />
       </div></div>
     </div>
   </article>;

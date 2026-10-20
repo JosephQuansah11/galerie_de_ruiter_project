@@ -29,7 +29,7 @@ export function DetailSummary({ antique, artist, price, wishlisted, addToCart, t
     <div className="detail-actions">
       <Button className={`btn ${antique.sold ? "btn-secondary" : "btn-dark"}`} type="button" onClick={withAccount(addToCart)} disabled={antique.sold}><ShoppingBag size={17} /> {antique.sold ? t("sold") : t("addToCart")}</Button>
       <Button className={`btn btn-${wishlisted ? "danger" : "outline-dark"}`} type="button" onClick={withAccount(toggleWishlist)}>
-        <Heart size={17} fill={wishlisted ? "currentColor" : "none"} /> {wishlisted ? t("saved") : t("savePiece")}</Button>
+        <Heart size={17} fill={wishlisted ? "currentColor" : "none"} /> {wishlisted ? t("interestSaved") : t("interestSave")}</Button>
       <Button className={`btn btn-${engagement.liked ? "danger" : "outline-dark"}`} type="button" disabled={engagement.busy}
         aria-pressed={engagement.liked} onClick={withAccount(() => void engagement.toggleLike())}>
         <Heart size={17} fill={engagement.liked ? "currentColor" : "none"} /> {engagement.liked ? t("likedPiece") : t("likePiece")}</Button>

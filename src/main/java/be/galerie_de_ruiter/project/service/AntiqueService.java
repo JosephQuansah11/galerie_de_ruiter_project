@@ -3,11 +3,13 @@ package be.galerie_de_ruiter.project.service;
 import be.galerie_de_ruiter.project.domain.Antique;
 import be.galerie_de_ruiter.project.domain.AntiqueImage;
 import be.galerie_de_ruiter.project.domain.Designer;
+import be.galerie_de_ruiter.project.dto.AntiqueBulkDeleteResponse;
 import be.galerie_de_ruiter.project.dto.AntiqueRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueResponse;
 import be.galerie_de_ruiter.project.dto.DesignerResponse;
 import be.galerie_de_ruiter.project.dto.AntiqueUpdateRequest;
 import be.galerie_de_ruiter.project.repository.AntiqueImageRepository;
+import be.galerie_de_ruiter.project.repository.AntiqueInterestRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueLikeRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueModelRepository;
 import be.galerie_de_ruiter.project.repository.AntiqueRepository;
@@ -22,7 +24,9 @@ import lombok.RequiredArgsConstructor;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,6 +53,7 @@ public class AntiqueService {
     private final AntiqueModelRepository antiqueModelRepository;
     private final AntiqueLikeRepository antiqueLikeRepository;
     private final AntiqueViewRepository antiqueViewRepository;
+    private final AntiqueInterestRepository antiqueInterestRepository;
     private final AntiqueModelStorage modelStorage;
     private final UserService users;
     private final CategoryRepository categoryRepository;
@@ -198,7 +203,31 @@ public class AntiqueService {
 
     @Transactional
     public void delete(UUID id) {
-        Antique antique = findAntique(id);
+        deleteAntique(findAntique(id));
+    }
+
+    /**
+     * Deletes every selected piece that still exists. A piece another tab or an earlier click
+     * already removed is reported as missing rather than making the rest of the selection fail.
+     */
+    @Transactional
+    public AntiqueBulkDeleteResponse deleteMany(List<UUID> ids) {
+        int deleted = 0;
+        List<UUID> missing = new ArrayList<>();
+        for (UUID id : new LinkedHashSet<>(ids)) {
+            Optional<Antique> antique = antiques.findById(id);
+            if (antique.isEmpty()) {
+                missing.add(id);
+                continue;
+            }
+            deleteAntique(antique.get());
+            deleted += 1;
+        }
+        return new AntiqueBulkDeleteResponse(deleted, missing);
+    }
+
+    private void deleteAntique(Antique antique) {
+        UUID id = antique.getId();
         antiqueImageRepository.deleteAllByAntiqueId(id);
         antiqueModelRepository.deleteByAntiqueId(id);
         modelStorage.delete(id);
@@ -207,6 +236,7 @@ public class AntiqueService {
         // carries the foreign key would reject the delete outright.
         antiqueViewRepository.deleteAllByAntiqueId(id);
         antiqueLikeRepository.deleteAllByAntiqueId(id);
+        antiqueInterestRepository.deleteAllByAntiqueId(id);
         antiques.delete(antique);
     }
 

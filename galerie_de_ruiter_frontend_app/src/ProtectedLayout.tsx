@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import { Container } from "react-bootstrap";
+import { useLocation } from "react-router-dom";
 import { CustomNav } from "@/components/Navigation";
 import { PageLoading } from "@/components/PageLoading";
 import { SiteFooter } from "@/components/SiteFooter";
+import { useAuth } from "./context/AuthContext";
 import { ShoppingProvider } from "./context/ShoppingContext";
 import { ProtectedRoutes } from "./ProtectedRoutes";
 
@@ -17,10 +19,15 @@ import { ProtectedRoutes } from "./ProtectedRoutes";
  * reaches without an account, which is where the Instagram profile is worth having.
  */
 export function ProtectedLayout() {
+  const { authenticated } = useAuth();
+  const { pathname } = useLocation();
+  // The interest list only matters where a heart is drawn; opening an admin page does not need
+  // another authenticated request.
+  const loadWishlist = pathname === "/wishlist" || pathname.startsWith("/antiques");
   return <Container className="container-div">
     <CustomNav />
     {/* The navigation stays put while a page's own chunk arrives. */}
-    <ShoppingProvider><main className="app-main main-content">
+    <ShoppingProvider authenticated={authenticated} loadWishlist={loadWishlist}><main className="app-main main-content">
       <Suspense fallback={<PageLoading />}><ProtectedRoutes /></Suspense>
     </main></ShoppingProvider>
     <SiteFooter />

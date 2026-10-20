@@ -104,16 +104,16 @@ The app is one HTML page, so what a crawler can reach is decided in five places:
 **What a visitor may do.** The landing page, the gallery story, the pop-up's address, the concierge
 chat, the first page of the collection and a piece's own page are readable without an account, and
 they are the pages a crawler may index. Everything past that needs one: the pages after the first of
-the collection, the basket, the wishlist, the profile and the admin. On a piece's page the story,
-photographs and price are public; saving it, liking it or putting it in the basket is what sends the
-visitor to sign in. The collection is gated where an action happens rather than at the page:
-`src/pages/antiques/CataloguePage.tsx` gives a visitor the first page and an invitation to sign in
-where the paging controls would be, `src/pages/antiques/AntiqueRow.tsx` and
-`src/pages/antiques/DetailSummary.tsx` send the save, basket and like buttons to the sign-in page
-with the page they are on as the one to come back to, and the admin, basket, wishlist, profile and
-preferences screens sit behind `RequireAccount` in `src/ProtectedRoutes.tsx`. The navigation follows
-the same line: `src/components/NavigationLinks.tsx` shows a visitor the four public destinations and
-hides the rest rather than offering a link that only bounces them.
+the collection, the basket, the interested pieces, the profile and the admin. On a piece's page the
+story, photographs and price are public; marking it as interesting, liking it or putting it in the
+basket is what sends the visitor to sign in. The collection is gated where an action happens rather
+than at the page: `src/pages/antiques/CataloguePage.tsx` gives a visitor the first page and an
+invitation to sign in where the paging controls would be, `src/pages/antiques/AntiqueRow.tsx` and
+`src/pages/antiques/DetailSummary.tsx` send the interest, basket and like buttons to the sign-in
+page with the page they are on as the one to come back to, and the admin, basket, interested
+pieces, profile and preferences screens sit behind `RequireAccount` in `src/ProtectedRoutes.tsx`.
+The navigation follows the same line: `src/components/NavigationLinks.tsx` shows a visitor the four
+public destinations and hides the rest rather than offering a link that only bounces them.
 
 The site's public origin lives in `site.config.mjs`, in one place, because three build steps need
 it: the sitemap (and the `Sitemap:` line in `robots.txt`), the absolute `og:url`/`og:image` of the
@@ -353,7 +353,7 @@ four things were behind that. All four are fixed:
   from `fonts.googleapis.com` and `fonts.gstatic.com`, which cost two extra origins and arrived late
   enough to swap the text after it had already been painted.
 - **Pictures are sized for the slot and cached for a year.** Every card, related strip, basket,
-  wishlist and admin inventory row asks for the 400-pixel `/thumbnail` copy (about 40 KB), and the
+  interested pieces and admin inventory row asks for the 400-pixel `/thumbnail` copy (about 40 KB), and the
   catalogue card offers 400w/800w through `srcset`. A piece's own page offers 800w and 1600w
   copies and fetches the original only when a visitor asks for it. Antique, welcome-slider and About
   image responses send `Cache-Control: public, max-age=31536000, immutable`, so a returning visitor
@@ -690,6 +690,18 @@ default clarity` into the enforced `Content-Security-Policy` in `security-header
 lazy route (`/login`), plus a page that mounts the 3D viewer — and then delete the report-only
 header. The collection is also worth running once with analytics accepted, because Clarity's own
 script runs in the page after the loader has requested it.
+
+## Inventory and interested visitors
+
+The admin inventory at `/admin/antiques` supports selecting several pieces with the checkboxes and
+**Delete selected**; the deletion is one API transaction, and a piece that another tab already
+removed is reported rather than stopping the rest.
+
+A signed-in visitor marks a piece with **I'm interested** (the heart on a piece or in the
+catalogue). The wishlist is now a server-backed interest list rather than a browser-only list:
+`GET/POST/DELETE /api/wishlist` stores the visitor's account against the piece, and
+`/admin/interests` shows every marked piece with the visitor's name, email address and the date, so
+the gallery can follow up. The public like counter remains a separate, anonymous number.
 
 ## Analytics
 

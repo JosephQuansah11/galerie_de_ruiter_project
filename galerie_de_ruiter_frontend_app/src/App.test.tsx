@@ -96,7 +96,7 @@ describe("App shell", () => {
     expect(screen.queryByText(i18n.t("welcomeBack"))).not.toBeInTheDocument();
   });
 
-  it.each(["/wishlist", "/cart", "/profile", "/preferences", "/admin/antiques", "/admin/dashboard"])(
+  it.each(["/wishlist", "/cart", "/profile", "/preferences", "/admin/antiques", "/admin/dashboard", "/admin/interests"])(
     "sends a visitor who opens %s to the sign-in page",
     async (route) => {
       window.history.pushState({}, "", route);

@@ -3,6 +3,7 @@ import type { ShoppingAction, ShoppingState } from "./shoppingTypes";
 export const initialShoppingState: ShoppingState = { wishlist: [], cart: [] };
 
 export function shoppingReducer(state: ShoppingState, action: ShoppingAction): ShoppingState {
+  if (action.type === "set-wishlist") return { ...state, wishlist: action.wishlist };
   if (action.type === "toggle-wishlist") {
     const exists = state.wishlist.some((item) => item.id === action.antique.id);
     const wishlist = exists ? state.wishlist.filter((item) => item.id !== action.antique.id) : [...state.wishlist, action.antique];

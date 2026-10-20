@@ -1,5 +1,5 @@
 import type { RefObject } from "react";
-import { Badge } from "react-bootstrap";
+import { Badge, Form } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
 import { BadgeCheck, Image, Pencil, Trash2, Undo2 } from "lucide-react";
 import type Antique from "@/models/antiques/Antique";
@@ -11,6 +11,10 @@ type Props = {
   onEdit: (antique: Antique) => void;
   onDelete: (antique: Antique) => void;
   onToggleSold: (antique: Antique) => void;
+  selectedIds: ReadonlySet<string>;
+  onSelect: (id: string, selected: boolean) => void;
+  selectLabel: (title: string) => string;
+  selectDisabled?: boolean;
   deletingId?: string;
   soldSavingId?: string;
   uncategorized: string;
@@ -24,11 +28,14 @@ type Props = {
   /** The list itself, so a shortcut can bring its last row into view. */
   listRef?: RefObject<HTMLDivElement | null>;
 };
-export function InventoryList({ antiques, onEdit, onDelete, onToggleSold, deletingId, soldSavingId,
-  uncategorized, priceOnRequest, locale, editLabel, deleteLabel, soldLabel, markSoldLabel, markAvailableLabel,
-  listRef }: Props) {
+export function InventoryList({ antiques, onEdit, onDelete, onToggleSold, selectedIds, onSelect, selectLabel,
+  selectDisabled, deletingId, soldSavingId, uncategorized, priceOnRequest, locale, editLabel, deleteLabel,
+  soldLabel, markSoldLabel, markAvailableLabel, listRef }: Props) {
   return <div className="inventory-list" ref={listRef}>{antiques.map((antique) =>
-    <article className={`inventory-row${antique.sold ? " is-sold" : ""}`} key={antique.id}>
+    <article className={`inventory-row${antique.sold ? " is-sold" : ""}${selectedIds.has(antique.id) ? " is-selected" : ""}`} key={antique.id}>
+      <Form.Check className="inventory-select" type="checkbox" checked={selectedIds.has(antique.id)}
+        disabled={selectDisabled} aria-label={selectLabel(antique.title)}
+        onChange={(event) => onSelect(antique.id, event.target.checked)} />
       <span className="inventory-thumb">
         {antique.imageUrl ? <img src={resolveAntiqueThumbnailUrl(antique.imageUrl)} alt="" loading="lazy" decoding="async" width={400} height={300} />
           : <span className="inventory-placeholder"><Image size={20} /></span>}

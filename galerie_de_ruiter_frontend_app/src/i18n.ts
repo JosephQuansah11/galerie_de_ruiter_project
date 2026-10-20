@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import interestLabels from "./i18nInterest";
 
 /** The keys of one language, without the labels added below. */
 const enTranslation: Record<string, string> = {
@@ -277,7 +278,7 @@ const enTranslation: Record<string, string> = {
       alreadyHaveAccount: "Already have an account? Sign in",
       oneIdentity: "One identity, shared everywhere.",
       oneIdentityText:
-        "One account for saved pieces, the wishlist and the conversation with the gallery.",
+        "One account for interested pieces, the basket and the conversation with the gallery.",
       username: "Username",
       signInIdentifier: "Email or username",
       password: "Password",
@@ -334,6 +335,10 @@ const enTranslation: Record<string, string> = {
       editAntique: "Edit",
       deleteAntique: "Delete",
       confirmDeleteAntique: "Delete “{{name}}”? This cannot be undone.",
+      selectAntiqueNamed: "Select {{title}}",
+      selectAllAntiques: "Select all",
+      deleteSelectedAntiques: "Delete selected ({{count}})",
+      confirmDeleteSelectedAntiques: "Delete {{count}} selected pieces? This cannot be undone.",
       antiqueManagementActionFailed: "The antique could not be updated or deleted. Please try again.",
       searchInventory: "Search inventory",
       loadingInventory: "Loading inventory...",
@@ -742,7 +747,7 @@ const nlBeTranslation: Record<string, string> = {
       alreadyHaveAccount: "Heb je al een account? Inloggen",
       oneIdentity: "Eén identiteit, overal gedeeld.",
       oneIdentityText:
-        "Eén account voor bewaarde stukken, de verlanglijst en het gesprek met de galerie.",
+        "Eén account voor geïnteresseerde stukken, de winkelmand en het gesprek met de galerie.",
       username: "Gebruikersnaam",
       signInIdentifier: "E-mail of gebruikersnaam",
       // password: "Wachtwoord",
@@ -800,6 +805,10 @@ const nlBeTranslation: Record<string, string> = {
       editAntique: "Bewerken",
       deleteAntique: "Verwijderen",
       confirmDeleteAntique: "“{{name}}” verwijderen? Dit kan niet ongedaan worden gemaakt.",
+      selectAntiqueNamed: "{{title}} selecteren",
+      selectAllAntiques: "Alles selecteren",
+      deleteSelectedAntiques: "Geselecteerde verwijderen ({{count}})",
+      confirmDeleteSelectedAntiques: "{{count}} geselecteerde stukken verwijderen? Dit kan niet ongedaan worden gemaakt.",
       antiqueManagementActionFailed: "Het antiekstuk kon niet worden bijgewerkt of verwijderd. Probeer het opnieuw.",
       searchInventory: "Inventaris doorzoeken",
       loadingInventory: "Inventaris laden...",
@@ -1765,7 +1774,7 @@ const folderImportLabels: Record<string, Record<string, string>> = {
 function translationFor(language: string, keys: Record<string, string>): Record<string, string> {
   const translation = { ...keys };
   for (const labels of [engagementLabels, chatAccessLabels, availabilityLabels, imageUploadLabels,
-    aboutEditorLabels, cataloguePagingLabels, listNavigationLabels, pageMetaLabels, routeLabels, footerLabels, folderImportLabels]) {
+    aboutEditorLabels, cataloguePagingLabels, listNavigationLabels, pageMetaLabels, routeLabels, footerLabels, folderImportLabels, interestLabels]) {
     Object.assign(translation, labels[language] ?? labels.en);
   }
   return translation;

@@ -130,4 +130,74 @@ class AntiqueCreationResponseTest {
                 .andExpect(jsonPath("$[0].title").value("Production transaction test"))
                 .andExpect(jsonPath("$[0].imageUrls").isEmpty());
     }
+
+    @Test
+    void adminCanDeleteSeveralPiecesAtOnce() throws Exception {
+        Designer artist = designers.save(new Designer("Batch", null, "Artist"));
+        User creator = usersRepository.save(new User("batch-subject", "batch@example.com", "Batch Admin"));
+        when(users.findOrCreate(anyString(), nullable(String.class), nullable(String.class))).thenReturn(creator);
+
+        String first = createPiece(artist, "Batch piece one");
+        String second = createPiece(artist, "Batch piece two");
+
+        mvc.perform(post("/api/antiques/batch-delete")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"ids\":[\"%s\",\"%s\"]}".formatted(first, second)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.deleted").value(2))
+                .andExpect(jsonPath("$.missing").isEmpty());
+    }
+
+    @Test
+    void aVisitorCanMarkAPieceAndTheAdminSeesWho() throws Exception {
+        Designer artist = designers.save(new Designer("Interested", null, "Artist"));
+        User visitor = usersRepository.save(new User("wishlist-subject", "visitor@example.com", "Wishlist Visitor"));
+        User creator = usersRepository.save(new User("wishlist-admin", "admin@example.com", "Wishlist Admin"));
+        when(users.findOrCreate(anyString(), nullable(String.class), nullable(String.class))).thenReturn(creator, visitor);
+
+        String id = createPiece(artist, "Wishlist piece");
+
+        mvc.perform(post("/api/wishlist/" + id)
+                        .with(jwt().jwt((token) -> token.subject("wishlist-subject")))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        mvc.perform(get("/api/wishlist").with(jwt().jwt((token) -> token.subject("wishlist-subject"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(id))
+                .andExpect(jsonPath("$[0].title").value("Wishlist piece"));
+
+        mvc.perform(get("/api/admin/interests")
+                        .with(jwt().jwt((token) -> token.subject("wishlist-admin"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("Wishlist piece"))
+                .andExpect(jsonPath("$[0].people[0].email").value("visitor@example.com"));
+
+        mvc.perform(delete("/api/wishlist/" + id)
+                        .with(jwt().jwt((token) -> token.subject("wishlist-subject")))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/wishlist").with(jwt().jwt((token) -> token.subject("wishlist-subject"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+
+        mvc.perform(delete("/api/antiques/" + id)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+    }
+
+    private String createPiece(Designer artist, String title) throws Exception {
+        String created = mvc.perform(post("/api/antiques")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"%s\",\"artistId\":\"%s\",\"price\":10}".formatted(title, artist.getId())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return new ObjectMapper().readTree(created).get("id").asText();
+    }
 }

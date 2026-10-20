@@ -2,13 +2,14 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
 import AntiqueAdminPage from "./AntiqueAdminPage";
-import { deleteAntique, deleteAntiqueImage, getAllAntiques, getImageFormatStatus, convertImagesToWebp, reorderAntiqueImages, setAntiqueSold, updateAntique } from "@/apis/backend_api";
+import { deleteAntique, deleteAntiques, deleteAntiqueImage, getAllAntiques, getImageFormatStatus, convertImagesToWebp, reorderAntiqueImages, setAntiqueSold, updateAntique } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 
 jest.mock("@/apis/backend_api", () => ({
   getAllAntiques: jest.fn(),
   updateAntique: jest.fn(),
   deleteAntique: jest.fn(),
+  deleteAntiques: jest.fn(),
   deleteAntiqueImage: jest.fn(),
   reorderAntiqueImages: jest.fn(),
   uploadAntiqueImage: jest.fn(),
@@ -20,6 +21,7 @@ jest.mock("@/apis/backend_api", () => ({
 
 const mockedAntiques = getAllAntiques as jest.Mock;
 const mockedDelete = deleteAntique as jest.Mock;
+const mockedDeleteMany = deleteAntiques as jest.Mock;
 const mockedSold = setAntiqueSold as jest.Mock;
 const mockedUpdate = updateAntique as jest.Mock;
 const mockedDeleteImage = deleteAntiqueImage as jest.Mock;
@@ -43,6 +45,7 @@ const inventory: Antique[] = [
 beforeEach(() => {
   mockedAntiques.mockResolvedValue(inventory);
   mockedDelete.mockResolvedValue(undefined);
+  mockedDeleteMany.mockResolvedValue({ deleted: 2, missing: [] });
   mockedUpdate.mockResolvedValue(inventory[0]);
   mockedDeleteImage.mockResolvedValue(undefined);
   mockedReorder.mockResolvedValue(undefined);
@@ -100,6 +103,27 @@ describe("Antique administration page", () => {
     await waitFor(() => expect(mockedDelete).toHaveBeenCalledWith("1"));
     await waitFor(() => expect(screen.queryByText("Carved walnut mirror")).not.toBeInTheDocument());
     expect(screen.getByText("Brass reading lamp")).toBeInTheDocument();
+  });
+
+  it("deletes several selected pieces at once", async () => {
+    renderPage(<AntiqueAdminPage />);
+    await screen.findByText("Carved walnut mirror");
+
+    fireEvent.click(screen.getByRole("checkbox", {
+      name: i18n.t("selectAntiqueNamed", { title: "Carved walnut mirror" }),
+    }));
+    fireEvent.click(screen.getByRole("checkbox", {
+      name: i18n.t("selectAntiqueNamed", { title: "Brass reading lamp" }),
+    }));
+    fireEvent.click(screen.getByRole("button", {
+      name: i18n.t("deleteSelectedAntiques", { count: 2 }),
+    }));
+
+    await waitFor(() => expect(mockedDeleteMany).toHaveBeenCalledWith(
+      expect.arrayContaining(["1", "2"]),
+    ));
+    expect(screen.queryByText("Carved walnut mirror")).not.toBeInTheDocument();
+    expect(screen.queryByText("Brass reading lamp")).not.toBeInTheDocument();
   });
 
   it("keeps the piece when the curator cancels the confirmation", async () => {

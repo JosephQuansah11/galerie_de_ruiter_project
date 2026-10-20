@@ -2,9 +2,9 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Alert, Form, Modal, Spinner } from "react-bootstrap";
 import { Button } from "@/components/ReactButton";
 import { JumpToBottom } from "@/components/JumpToBottom";
-import { Check, FolderUp, Plus, Search, X } from "lucide-react";
+import { Check, FolderUp, Plus, Search, Trash2, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { deleteAntique as deleteAntiqueRequest, deleteAntiqueImage, getAllAntiques, reorderAntiqueImages, setAntiqueSold as setAntiqueSoldRequest, updateAntique as updateAntiqueRequest, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
+import { deleteAntique as deleteAntiqueRequest, deleteAntiques, deleteAntiqueImage, getAllAntiques, reorderAntiqueImages, setAntiqueSold as setAntiqueSoldRequest, updateAntique as updateAntiqueRequest, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/context/LanguageContext";
@@ -35,6 +35,8 @@ export default function AntiqueAdminPage() {
   const [modelFileInvalid, setModelFileInvalid] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [deletingId, setDeletingId] = useState<string>();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [soldSavingId, setSoldSavingId] = useState<string>();
   const [actionError, setActionError] = useState<string>();
   // The piece's photographs: stored and freshly picked in one order the admin can change.
@@ -48,6 +50,25 @@ export default function AntiqueAdminPage() {
   const filtered = antiques.filter((antique) =>
     antique.title.toLowerCase().includes(query.toLowerCase()),
   );
+  const allFilteredSelected = filtered.length > 0 && filtered.every((antique) => selectedIds.has(antique.id));
+  const toggleSelected = (id: string, selected: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (selected) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+  const toggleAllFiltered = (selected: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      for (const antique of filtered) {
+        if (selected) next.add(antique.id);
+        else next.delete(antique.id);
+      }
+      return next;
+    });
+  };
   const openEdit = (antique: Antique) => {
     setEditing(antique);
     setEditTitle(antique.title);
@@ -115,10 +136,31 @@ export default function AntiqueAdminPage() {
     try {
       await deleteAntiqueRequest(antique.id);
       setAntiques((current) => current.filter((item) => item.id !== antique.id));
+      setSelectedIds((current) => {
+        const next = new Set(current);
+        next.delete(antique.id);
+        return next;
+      });
     } catch (error) {
       setActionError(managementErrorKey(error));
     } finally {
       setDeletingId(undefined);
+    }
+  };
+  /** Removes every ticked piece in one request; the list waits in the meantime. */
+  const removeSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(t("confirmDeleteSelectedAntiques", { count: selectedIds.size }))) return;
+    setBulkDeleting(true);
+    setActionError(undefined);
+    try {
+      await deleteAntiques([...selectedIds]);
+      setAntiques((current) => current.filter((item) => !selectedIds.has(item.id)));
+      setSelectedIds(new Set());
+    } catch (error) {
+      setActionError(managementErrorKey(error));
+    } finally {
+      setBulkDeleting(false);
     }
   };
   const toggleSold = async (antique: Antique) => {
@@ -157,6 +199,11 @@ export default function AntiqueAdminPage() {
         <Link className="btn btn-outline-secondary inventory-add-button" to="/admin/antiques/import">
           <FolderUp size={16} /> {t("importFolder")}
         </Link>
+        <Button as="button" className="btn btn-outline-danger inventory-add-button" disabled={selectedIds.size === 0 || bulkDeleting}
+          onClick={() => void removeSelected()}>
+          {bulkDeleting ? <Spinner animation="border" size="sm" /> : <Trash2 size={16} />}
+          {t("deleteSelectedAntiques", { count: selectedIds.size })}
+        </Button>
         <Button as="button" className="btn btn-primary inventory-add-button" onClick={() => navigate("/admin/antiques/new")}>
           <Plus size={16} /> {t("addAntique")}
         </Button>
@@ -165,6 +212,11 @@ export default function AntiqueAdminPage() {
       {!loading && !loadError && <p className="inventory-result-count">
         {t("inventoryResultCount", { filtered: filtered.length, total: antiques.length })}
       </p>}
+      {!loading && !loadError && filtered.length > 0 && <div className="inventory-selection">
+        <Form.Check id="inventory-select-all" type="checkbox" label={t("selectAllAntiques")}
+          checked={allFilteredSelected} disabled={bulkDeleting}
+          onChange={(event) => toggleAllFiltered(event.target.checked)} />
+      </div>}
       {loading && (
         <div className="catalogue-state">
           <Spinner animation="border" size="sm" /> {t("loadingInventory")}
@@ -175,7 +227,9 @@ export default function AntiqueAdminPage() {
         <Alert variant="light">{t("noAntiquesFound")}</Alert>
       )}
       {!loading && !loadError && <InventoryList antiques={filtered} listRef={listRef} onEdit={openEdit} onDelete={removeAntique}
-        onToggleSold={toggleSold} deletingId={deletingId} soldSavingId={soldSavingId}
+        onToggleSold={toggleSold} selectedIds={selectedIds} onSelect={toggleSelected}
+        selectLabel={(title) => t("selectAntiqueNamed", { title })} selectDisabled={bulkDeleting}
+        deletingId={deletingId} soldSavingId={soldSavingId}
         uncategorized={t("uncategorized")} priceOnRequest={t("priceOnRequest")}
         locale={locale} editLabel={t("editAntique")} deleteLabel={t("deleteAntique")}
         soldLabel={t("sold")} markSoldLabel={t("markSold")} markAvailableLabel={t("markAvailable")} />}

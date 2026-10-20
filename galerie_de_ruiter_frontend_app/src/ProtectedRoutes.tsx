@@ -25,14 +25,15 @@ const AboutAdminPage = lazy(() => import("./pages/admin/AboutAdminPage"));
 const HomeAdminPage = lazy(() => import("./pages/admin/HomeAdminPage"));
 const WishlistPage = lazy(() => import("./pages/shopping/WishlistPage"));
 const CartPage = lazy(() => import("./pages/shopping/CartPage"));
+const AdminInterestsPage = lazy(() => import("./pages/admin/AdminInterestsPage"));
 const ProfilePage = lazy(() => import("./pages/profile/ProfilePage").then((module) => ({ default: module.ProfilePage })));
 const PreferencesPage = lazy(() => import("./pages/preferences/PreferencesPage").then((module) => ({ default: module.PreferencesPage })));
 
 /**
  * Everything behind an account. The dashboard, the concierge chat, the gallery story and the
  * pop-up's address sit deliberately outside this guard, so a visitor can read the gallery before
- * signing in. What an account buys is acting on it: the catalogue, the wishlist, the cart and
- * the profile screens all land here.
+ * signing in. What an account buys is acting on it: the catalogue, the interested pieces, the cart
+ * and the profile screens all land here.
  */
 function RequireAccount() {
   const auth = useAuth();
@@ -89,6 +90,7 @@ export function ProtectedRoutes() {
         <Route path="/admin/antiques/new" element={<AddNewAntique />} />
         <Route path="/admin/antiques/import" element={<AntiqueFolderImportPage />} />
         <Route path="/admin/antiques" element={<AntiqueAdminPage />} />
+        <Route path="/admin/interests" element={<AdminInterestsPage />} />
         <Route path="/admin/categories" element={<CategoryAdminPage />} />
         <Route path="/admin/location" element={<LocationAdminPage />} />
         <Route path="/admin/about" element={<AboutAdminPage />} />

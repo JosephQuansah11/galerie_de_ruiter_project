@@ -56,6 +56,18 @@ export async function deleteAntique(id: string): Promise<void> {
   });
   invalidateCache("antiques");
 }
+export type AntiqueBulkDeleteResult = { deleted: number; missing: string[] };
+
+/** Removes several selected pieces in one request; an already-gone id is reported as missing. */
+export async function deleteAntiques(ids: string[]): Promise<AntiqueBulkDeleteResult> {
+  const response = await axiosInstance.post<AntiqueBulkDeleteResult>(
+    `${backendBaseURL}/api/antiques/batch-delete`,
+    { ids },
+    { headers: { ...(await csrfHeaders()), "Content-Type": "application/json" } },
+  );
+  invalidateCache("antiques");
+  return response.data;
+}
 export type AntiqueEngagement = { antiqueId: string; viewCount: number; likeCount: number; liked: boolean };
 
 /**

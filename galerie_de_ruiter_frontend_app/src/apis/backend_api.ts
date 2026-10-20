@@ -1,4 +1,5 @@
 export * from "./antique_api";
+export * from "./wishlist_api";
 export * from "./catalogue_api";
 export * from "./designer_api";
 export * from "./home_api";

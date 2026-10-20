@@ -1,0 +1,19 @@
+// Multi-select in the inventory, and the administrator's interested-visitor screen.
+.inventory-selection { margin: 0 0 0.5rem; }
+.inventory-select { margin-top: 0.25rem; }
+.admin-page .inventory-row.is-selected { border-color: var(--theme-primary); box-shadow: 0 0 0 2px var(--theme-primary) inset; }
+// The interest list's short explanation and a retryable error.
+.shopping-gallery-note { max-width: 42rem; margin: -0.5rem 0 1.25rem; color: var(--theme-text-secondary); }
+.shopping-error { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.interests-page { width: min(100%, 72rem); }
+.interests-group { display: grid; gap: 0.75rem; margin: 1rem 0; padding: 1rem; border: 1px solid var(--theme-border); border-radius: 0.4rem; background: var(--theme-surface); }
+.interests-group-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem 1rem; }
+.interests-group-heading img { width: 6rem; height: 4.5rem; object-fit: contain; background: var(--theme-background); }
+.interests-group-heading h2 { margin: 0; font-size: 1.15rem; }
+.interests-group-heading span { color: var(--theme-text-secondary); font-size: 0.88rem; }
+.interests-count { display: inline-flex; align-items: center; gap: 0.3rem; margin-left: auto; }
+.interests-people { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.interests-people li { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem 1rem; padding-top: 0.5rem; border-top: 1px solid var(--theme-border); }
+.interests-person { display: grid; flex: 1 1 14rem; gap: 0.1rem; }
+.interests-person span, .interests-people time { color: var(--theme-text-secondary); font-size: 0.85rem; }
+.interests-mail, .interests-piece-link { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; }

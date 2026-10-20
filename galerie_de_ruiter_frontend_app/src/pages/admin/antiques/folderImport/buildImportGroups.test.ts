@@ -1,4 +1,4 @@
-import { buildImportGroups } from "./buildImportGroups";
+import { buildImportGroups, humaniseName } from "./buildImportGroups";
 import type { CsvRecord } from "./csv";
 
 function image(path: string): File {
@@ -226,5 +226,42 @@ describe("reading categories from the folder hierarchy", () => {
     expect(build.groups[0].categoryPath).toEqual(["Boeken", "Fotografie"]);
     // The folder name itself is kept for matching a CSV that writes it in full.
     expect(build.groups[0].folderName).toBe("Stoel by John Doe");
+  });
+
+  it("takes the artist from a folder that ends with a dash", () => {
+    const build = buildImportGroups([
+      image("Boeken/Fotografie/Luc Tuymans -/front.jpg"),
+    ], [], "folder");
+
+    expect(build.groups[0]).toMatchObject({ title: "", artistName: "Luc Tuymans" });
+    expect(build.groups[0].categoryPath).toEqual(["Boeken", "Fotografie"]);
+  });
+
+  it("keeps an artist's trailing dash but joins a hyphen inside a word", () => {
+    expect(humaniseName("carved-mirror")).toBe("carved mirror");
+    expect(humaniseName("Luc Tuymans -")).toBe("Luc Tuymans -");
+  });
+
+  it("takes the artist from a CSV title", () => {
+    const build = buildImportGroups([
+      image("Boeken/Fotografie/A perfect chaos of impressions/front.jpg"),
+    ], [
+      record({ title: "A perfect chaos of impressions by Eddy Van Gestel", line: 2 }),
+    ], "folder");
+
+    expect(build.groups[0]).toMatchObject({
+      title: "A perfect chaos of impressions",
+      artistName: "Eddy Van Gestel",
+    });
+  });
+
+  it("takes an artist marked with a trailing dash from a CSV title", () => {
+    const build = buildImportGroups([
+      image("Boeken/Fotografie/The White Horse/front.jpg"),
+    ], [
+      record({ title: "Luc Tuymans -", line: 2 }),
+    ], "folder");
+
+    expect(build.groups[0]).toMatchObject({ title: "The White Horse", artistName: "Luc Tuymans" });
   });
 });

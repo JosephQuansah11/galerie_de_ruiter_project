@@ -23,22 +23,37 @@ function looksLikeArtistName(value: string): boolean {
 }
 
 /**
- * Reads `Title by Artist` from a folder name.
+ * Reads `Title by Artist` or `Artist -` from a folder name or a CSV title.
  *
- * <p>The curator sometimes puts the maker in the item folder: `Stoel by John Doe`. The word "by"
- * comes before the name, and the name is always at the end. Only the last " by " counts, so a title
- * that happens to contain the word earlier is left alone. Only a name-shaped suffix is taken, so
- * `The Book by the Sea` stays a title; the row stays editable either way.</p>
+ * <p>The curator sometimes puts the maker in the name: `Stoel by John Doe`, or an artist
+ * followed by a dash when the title is stored elsewhere (`Luc Tuymans -`). The word "by"
+ * comes before the name, and the name is always at the end. Only the last " by " counts, so a
+ * title that happens to contain the word earlier is left alone. Only a name-shaped suffix is
+ * taken, so `The Book by the Sea` stays a title; the row stays editable either way.</p>
  */
 export function splitTitleArtist(value: string): { title: string; artistName?: string } {
   const trimmed = value.trim();
   const matches = [...trimmed.matchAll(/\s+by\s+/gi)];
   const last = matches[matches.length - 1];
-  if (!last || last.index === undefined) return { title: trimmed };
-  const artistName = trimmed.slice(last.index + last[0].length).trim();
-  const title = trimmed.slice(0, last.index).trim();
-  if (!title || !artistName || !looksLikeArtistName(artistName)) return { title: trimmed };
-  return { title, artistName: artistName.replace(/\s+/g, " ") };
+  if (last && last.index !== undefined) {
+    const artistName = trimmed.slice(last.index + last[0].length).trim();
+    const title = trimmed.slice(0, last.index).trim();
+    if (!title || !artistName || !looksLikeArtistName(artistName)) return { title: trimmed };
+    return { title, artistName: artistName.replace(/\s+/g, " ") };
+  }
+
+  // `Luc Tuymans -`: a trailing dash marks the name as the artist, with the title held in the
+  // folder or CSV row. A single word is not taken, because `Stoel -` is a title, not a person.
+  const trailingDash = trimmed.match(/^(.+?)\s+[-–—]$/);
+  if (trailingDash) {
+    const artistName = trailingDash[1].trim();
+    const words = artistName.split(/\s+/).filter(Boolean);
+    if (words.length >= 2 && looksLikeArtistName(artistName)) {
+      return { title: "", artistName: artistName.replace(/\s+/g, " ") };
+    }
+  }
+
+  return { title: trimmed };
 }
 
 /** An artist's name in the order the gallery writes it. */

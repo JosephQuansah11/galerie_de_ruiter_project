@@ -36,8 +36,8 @@ export type ImportGroup = {
    */
   categoryPath: string[];
   /**
-   * The artist the folder's `Title by Artist` names, if it has one. The row may still need a
-   * matching artist record; the import resolves or creates it.
+   * The artist the folder's `Title by Artist` or `Name -` names, if it has one. The row may still
+   * need a matching artist record; the import resolves or creates it.
    */
   artistName?: string;
   record?: CsvRecord;
@@ -82,7 +82,16 @@ function isSupportedImage(file: File): boolean {
 /** A spreadsheet's `Carved_mirror` or `carved-mirror` reads as a title. */
 export function humaniseName(name: string): string {
   const base = name.split("/").filter(Boolean).pop() ?? name;
-  return base.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+  // A trailing dash is the `Artist -` marker and stays; a dash inside a word
+  // (`carved-mirror`) still becomes a space.
+  return base
+    .replace(/\.[^.]+$/, "")
+    .replace(/_+/g, " ")
+    .replace(/\s+-\s*$/, " \u0000")
+    .replace(/-+/g, " ")
+    .replace(/\u0000/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function normalisePath(value: string): string {
@@ -392,7 +401,15 @@ export function buildImportGroups(
     if (!record) continue;
 
     group.record = record;
-    group.title = record.title?.trim() || group.title;
+    // A CSV title can carry the maker too (`Silvereye by Guido Argentini`, `Luc Tuymans -`);
+    // the title column is often the only place the artist appears, so split it before it
+    // replaces the folder title. A bare artist marker keeps the title the folder already has.
+    const recordTitle = record.title?.trim();
+    if (recordTitle) {
+      const { title, artistName } = splitTitleArtist(recordTitle);
+      group.title = title || group.title;
+      if (artistName) group.artistName = artistName;
+    }
     group.description = record.description ?? "";
     group.price = record.price === undefined ? "" : String(record.price);
     group.category = record.category?.trim() || group.category;

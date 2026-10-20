@@ -19,6 +19,18 @@ describe("reading the artist from a title folder", () => {
     expect(splitTitleArtist("Boek over kunst by Jan van Eyck")).toEqual({
       title: "Boek over kunst", artistName: "Jan van Eyck",
     });
+    expect(splitTitleArtist("A perfect chaos of impressions by Eddy Van Gestel")).toEqual({
+      title: "A perfect chaos of impressions", artistName: "Eddy Van Gestel",
+    });
+    expect(splitTitleArtist("Silvereye by Guido Argentini")).toEqual({
+      title: "Silvereye", artistName: "Guido Argentini",
+    });
+  });
+
+  it("takes an artist followed by a dash", () => {
+    expect(splitTitleArtist("Luc Tuymans -")).toEqual({ title: "", artistName: "Luc Tuymans" });
+    // A single word before the dash is a title, not a person.
+    expect(splitTitleArtist("Stoel -")).toEqual({ title: "Stoel -" });
   });
 
   it("leaves a folder without a usable name alone", () => {

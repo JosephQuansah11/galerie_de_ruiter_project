@@ -311,6 +311,61 @@ services:
       - path: /fonts/*
         name: Cache-Control
         value: public, max-age=31536000, immutable
+      # Cloudflare's JavaScript Detections injects an inline <script> into HTML responses. Its token
+      # changes on every request, so `script-src` cannot allow it with a hash - and 'unsafe-inline'
+      # would undo the policy. Cloudflare's documented opt-out is a `no-transform` cache directive on
+      # the HTML response, which is why every HTML entry point carries it below. Render matches a
+      # header path against the request path, so each route in the `routes` block needs its own
+      # entry; hashed assets keep their longer cache lifetime. Changing this block takes a Blueprint
+      # sync, and Cloudflare may serve an older cached HTML response until it expires or is purged.
+      - path: /
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /index.html
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /404.html
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /chat
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /about
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /map
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /login
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /register
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /logout
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /profile
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /preferences
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /wishlist
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /cart
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /antiques
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /antiques/*
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
+      - path: /admin/*
+        name: Cache-Control
+        value: public, max-age=0, s-maxage=300, no-transform
       # The manifest agents and registries look for by convention (public/.well-known/ai-catalog.json,
       # served at /ard.json's path too). The publishing guide asks for
       # `Access-Control-Allow-Origin: *`, because a crawler reading it from a page of its own makes a

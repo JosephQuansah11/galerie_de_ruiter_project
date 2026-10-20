@@ -116,6 +116,37 @@ describe("security headers", () => {
     expect(nginx).toContain("expires max;");
   });
 
+  it("keeps Cloudflare's JavaScript Detections out of the HTML", () => {
+    // Cloudflare injects a per-request inline script into HTML responses. Its token changes every
+    // time, so no CSP hash can allow it, and 'unsafe-inline' would undo script-src. `no-transform`
+    // is Cloudflare's documented opt-out. Render matches headers against the request path, so every
+    // HTML entry point needs the directive.
+    const htmlPaths = [
+      "/",
+      "/index.html",
+      "/404.html",
+      "/chat",
+      "/about",
+      "/map",
+      "/login",
+      "/register",
+      "/logout",
+      "/profile",
+      "/preferences",
+      "/wishlist",
+      "/cart",
+      "/antiques",
+      "/antiques/*",
+      "/admin/*",
+    ];
+    for (const path of htmlPaths) {
+      expect(`${path}: ${fromBlueprint(path)["cache-control"]}`).toContain("no-transform");
+    }
+    // nginx sends it at server level, and repeats it in /logout because that location's own
+    // add_header drops the inherited headers.
+    expect(nginx.match(/add_header Cache-Control "no-transform" always;/g) ?? []).toHaveLength(2);
+  });
+
   it("lets agents read the discovery files from their own origin, and nothing else", () => {
     // The manifest agents and registries look for (public/.well-known/) is fetched cross-origin by a
     // crawler, so the one directory that exists to be read from elsewhere grants that - in both

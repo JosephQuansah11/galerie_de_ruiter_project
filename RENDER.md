@@ -179,6 +179,21 @@ header is for, for why there is deliberately no `Cross-Origin-Embedder-Policy`
 and that is what broke sign-in), and for why `Clear-Site-Data` sits on `/logout`
 rather than on the whole site.
 
+### Cloudflare's inline-script CSP error
+
+If a browser reports that an inline script was blocked on a gallery page, the script is usually
+Cloudflare's JavaScript Detections, not the application. Cloudflare injects it into HTML responses
+with a token that changes on every request, so no CSP hash can allow it, and adding
+`'unsafe-inline'` would undo the policy. The `Cache-Control` entries for the HTML entry points in
+`render.yaml` send `no-transform`, Cloudflare's documented opt-out; the container deployment sends
+the same directive from `nginx.conf`, and `src/securityHeaders.test.ts` checks both. After a
+Blueprint sync, purge Cloudflare's cache for the HTML routes (or wait for `s-maxage=300` to expire)
+and confirm the response no longer contains `/cdn-cgi/challenge-platform/scripts/jsd/main.js`.
+JavaScript Detections can still be used with a nonce-based policy, which Cloudflare reads from the
+CSP response header; a hash cannot work because the injected script changes each time. If the site
+does not need JavaScript Detections, turning it off in Cloudflare (*Security* → *Bots*) removes the
+injected script immediately, without waiting for a Blueprint sync or a cache purge.
+
 ## Secrets and first-time setup
 
 1. Create or apply the blueprint from `render.yaml`; it sets Render's automatic

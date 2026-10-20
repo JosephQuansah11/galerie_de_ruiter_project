@@ -535,6 +535,13 @@ type is served from this origin now (see *Speed*). The one inline handler the pa
 (the `onload` that flipped the font stylesheet from `media="print"`) went with the Google Fonts
 stylesheet it was flipping.
 
+A console error about an inline script on this origin is not the application. Cloudflare's
+JavaScript Detections injects a per-request `<script>` into HTML responses; the token changes on
+every response, so no CSP hash can allow it. The HTML responses carry `Cache-Control: no-transform`
+(see `render.yaml` and `nginx.conf`), which is Cloudflare's documented opt-out and keeps
+`script-src` free of `'unsafe-inline'`. If JavaScript Detections is wanted, it needs a nonce-based
+policy, which Cloudflare can propagate, not a hash.
+
 `style-src-attr 'unsafe-inline'` is what keeps the gallery itself working: the dashboard charts size
 their bars, the theme picker draws its swatches and the photo carousel positions its slides with
 style *attributes*, which `style-src 'self'` alone blocks. Allowing inline attributes is not the

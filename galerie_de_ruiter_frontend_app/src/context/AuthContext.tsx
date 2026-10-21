@@ -9,6 +9,7 @@ import { syncCurrentUser, updateCurrentUser } from "@/pages/auth/authApi";
 import { changePassword as changePasswordWithSupabase, signIn as signInWithSupabase, signUp } from "@/services/supabaseAuth";
 import { clearChatSession } from "@/services/chatSession";
 import { clearCache } from "@/services/apiCache";
+import { clearCsrfTokenCache } from "@/apis/client";
 import { setUnauthorizedHandler } from "@/apis/authPromise";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -57,15 +58,18 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   useEffect(() => {
     setUnauthorizedHandler(() => {
       clearCache();
+      clearCsrfTokenCache();
       forget();
     });
     return () => setUnauthorizedHandler(undefined);
   }, [forget]);
   /** Signs in where the visitor stands: no navigation, so the form can show an error instead. */
   const signIn = async (usernameOrEmail: string, password: string) => {
+    clearCsrfTokenCache();
     adopt(await signInWithSupabase(usernameOrEmail, password));
   };
   const register = async (registration: Registration) => {
+    clearCsrfTokenCache();
     const session = await signUp(registration);
     // A project that confirms addresses by email returns no session: the caller shows "check your
     // inbox" and the visitor signs in once they have.
@@ -101,6 +105,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     logout: () => {
       clearChatSession();
       clearCache();
+      clearCsrfTokenCache();
       return endSession();
     },
     signIn, register, updateProfile, changePassword,

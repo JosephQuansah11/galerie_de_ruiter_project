@@ -65,6 +65,7 @@ export function readCsrfCookie(): string | undefined {
 
 /** Drops the cached token after a sign-out, so the next write asks the new session for one. */
 export function clearCsrfTokenCache(): void {
+  csrfClients.clear()
   csrfTokens.clear()
   csrfRequests.clear()
 }

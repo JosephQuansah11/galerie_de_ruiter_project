@@ -1,4 +1,4 @@
-import { clearCache, cachedRequest, invalidateCache, readCache, writeCache } from "./apiCache";
+import { clearCache, cachedRequest, invalidateCache, MAX_CACHE_ENTRIES, readCache, writeCache } from "./apiCache";
 
 describe("api response cache", () => {
   beforeEach(() => {
@@ -46,5 +46,36 @@ describe("api response cache", () => {
     invalidateCache("test");
     expect(await cachedRequest("test", loader)).toBe("first");
     expect(loader).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps both the memory and session copies bounded", () => {
+    for (let index = 0; index < MAX_CACHE_ENTRIES + 25; index += 1) {
+      writeCache(`search:${index}`, index);
+    }
+
+    expect(readCache("search:0")).toBeUndefined();
+    expect(readCache(`search:${MAX_CACHE_ENTRIES + 24}`)).toBe(MAX_CACHE_ENTRIES + 24);
+    const stored = Array.from({ length: sessionStorage.length }, (_, index) => sessionStorage.key(index))
+      .filter((key): key is string => Boolean(key?.startsWith("galerie-cache:")));
+    expect(stored.length).toBeLessThanOrEqual(MAX_CACHE_ENTRIES);
+  });
+
+  it("removes an entry as soon as its TTL has passed", () => {
+    writeCache("expired", "old", -1);
+    writeCache("fresh", "new");
+
+    expect(readCache("expired")).toBeUndefined();
+    expect(readCache("fresh")).toBe("new");
+  });
+
+  it("keeps a recently read entry when the cache is full", () => {
+    for (let index = 0; index < MAX_CACHE_ENTRIES; index += 1) {
+      writeCache(`search:${index}`, index);
+    }
+    expect(readCache("search:0")).toBe(0);
+    writeCache("search:new", "new");
+
+    expect(readCache("search:0")).toBe(0);
+    expect(readCache("search:1")).toBeUndefined();
   });
 });

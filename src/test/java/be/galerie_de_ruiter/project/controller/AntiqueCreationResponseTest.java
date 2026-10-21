@@ -174,6 +174,7 @@ class AntiqueCreationResponseTest {
                                 .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Wishlist piece"))
+                .andExpect(jsonPath("$[0].sold").value(false))
                 .andExpect(jsonPath("$[0].people[0].email").value("visitor@example.com"));
 
         mvc.perform(delete("/api/wishlist/" + id)

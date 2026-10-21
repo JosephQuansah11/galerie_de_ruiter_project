@@ -17,6 +17,7 @@ export type AdminInterestGroup = {
   artist?: string | null;
   category?: string | null;
   imageUrl?: string | null;
+  sold: boolean;
   people: InterestedPerson[];
 };
 

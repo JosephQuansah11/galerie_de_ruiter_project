@@ -11,6 +11,7 @@ public record AdminInterestGroupResponse(
         String artist,
         String category,
         String imageUrl,
+        boolean sold,
         List<InterestedPerson> people) {
 
     /** One signed-in visitor who marked the piece, with enough detail to contact them. */

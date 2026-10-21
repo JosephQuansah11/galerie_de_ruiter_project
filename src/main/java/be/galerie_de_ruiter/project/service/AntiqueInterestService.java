@@ -84,6 +84,7 @@ public class AntiqueInterestService {
                     artistName(response.artist()),
                     response.category(),
                     response.imageUrl(),
+                    response.sold(),
                     people);
         }).toList();
     }

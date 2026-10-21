@@ -146,11 +146,17 @@ public class AntiqueImageController {
         // first, which is why this happens after the save. If the bucket is not configured, or the
         // object cannot be confirmed there, the row keeps its copy and nothing is lost.
         if (storage.isEnabled()) {
-            String key = storage.put(id, saved.getId(), bytes, contentType);
-            if (storage.exists(key)) {
-                saved.setStorageKey(key);
-                saved.setImageData(null);
-                saved = images.save(saved);
+            try {
+                String key = storage.put(id, saved.getId(), bytes, contentType);
+                if (storage.exists(key)) {
+                    saved.setStorageKey(key);
+                    saved.setImageData(null);
+                    saved = images.save(saved);
+                }
+            } catch (RuntimeException storageUnavailable) {
+                // The row already holds the photograph. A bucket that is misconfigured or has a
+                // bad minute must not make an image upload fail and roll the whole edit back; the
+                // next storage migration can copy this row once the bucket is healthy again.
             }
         }
         return AntiqueImageResponse.from(saved, id);

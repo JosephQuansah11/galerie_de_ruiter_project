@@ -9,7 +9,7 @@
 .admin-row-actions { display: flex; align-items: center; gap: 0.5rem; }
 .category-create-form { display: grid; grid-template-columns: 1.2fr 1fr auto; gap: 0.6rem; margin: 1.5rem 0; }
 .category-create-form button { display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
-.inventory-toolbar { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0 0.75rem; }
+.inventory-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin: 1.5rem 0 .75rem; }
 .admin-page .inventory-search { display: flex; flex-direction: row; align-items: center; flex: 1 1 20rem; width: 100%; max-width: none; gap: 0.4rem; min-width: 0; height: 3rem; margin: 0; padding: 0.25rem 0.3rem 0.25rem 0.2rem; border: 1px solid var(--theme-border); border-radius: 999px; background: var(--theme-surface); color: var(--theme-text-secondary); box-shadow: 0 0.3rem 0.9rem rgba(60, 31, 37, 0.06); transition: border-color 160ms ease, box-shadow 160ms ease; }
 .admin-page .inventory-search:focus-within { border-color: var(--theme-primary); box-shadow: 0 0.45rem 1.2rem rgba(60, 31, 37, 0.14); }
 .inventory-search .inventory-search-icon { display: grid; place-items: center; flex: 0 0 auto; width: 2.4rem; height: 2.4rem; border-radius: 999px; background: rgba(132, 26, 35, 0.09); color: var(--theme-primary); }

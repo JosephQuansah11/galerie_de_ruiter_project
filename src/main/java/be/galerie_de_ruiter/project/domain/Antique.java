@@ -2,6 +2,8 @@ package be.galerie_de_ruiter.project.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -74,6 +76,15 @@ public class Antique {
     @ManyToOne
     private Category category;
 
+    /**
+     * The gallery's follow-up stage for the interest in this piece. It is separate from
+     * {@link #sold}: an unsold piece can be new or in progress, while a sold piece is shown as
+     * sold by the admin screen regardless of this value.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'NEW'")
+    private InterestStatus interestStatus = InterestStatus.NEW;
+
     @ManyToOne(optional = false)
     private User createdBy;
 
@@ -135,6 +146,14 @@ public class Antique {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+
+    public InterestStatus getInterestStatus() {
+        return interestStatus == null ? InterestStatus.NEW : interestStatus;
+    }
+
+    public void setInterestStatus(InterestStatus interestStatus) {
+        this.interestStatus = interestStatus == null ? InterestStatus.NEW : interestStatus;
     }
 
     public byte[] getImageData() {

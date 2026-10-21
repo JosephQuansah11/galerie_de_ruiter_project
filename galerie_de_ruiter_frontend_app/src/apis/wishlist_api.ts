@@ -10,6 +10,8 @@ export type InterestedPerson = {
   addedAt: string;
 };
 
+export type InterestStatus = "NEW" | "IN_PROGRESS" | "SOLD";
+
 /** The pieces at least one visitor marked, with the people to contact. */
 export type AdminInterestGroup = {
   antiqueId: string;
@@ -18,6 +20,7 @@ export type AdminInterestGroup = {
   category?: string | null;
   imageUrl?: string | null;
   sold: boolean;
+  status: InterestStatus;
   people: InterestedPerson[];
 };
 
@@ -43,4 +46,14 @@ export async function removeWishlistItem(antiqueId: string): Promise<void> {
 export async function getAdminInterests(): Promise<AdminInterestGroup[]> {
   const response = await axiosInstance.get<AdminInterestGroup[]>(`${backendBaseURL}/api/admin/interests`);
   return Array.isArray(response.data) ? response.data : [];
+}
+
+/** Admin only: move a piece's interest follow-up between new and in progress. */
+export async function setInterestStatus(
+  antiqueId: string,
+  status: Exclude<InterestStatus, "SOLD">,
+): Promise<void> {
+  await axiosInstance.put(`${backendBaseURL}/api/admin/interests/${antiqueId}/status`, { status }, {
+    headers: { ...(await csrfHeaders()), "Content-Type": "application/json" },
+  });
 }

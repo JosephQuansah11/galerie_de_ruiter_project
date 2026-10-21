@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Badge, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { BadgeCheck, Check, Mail, Search, Users, X } from "lucide-react";
+import { BadgeCheck, Check, Mail, Search, Users, X, ArrowRight, Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { getAdminInterests, setAntiqueSold, type AdminInterestGroup } from "@/apis/backend_api";
+import { getAdminInterests, setAntiqueSold, setInterestStatus, type AdminInterestGroup, type InterestStatus } from "@/apis/backend_api";
 import { Button } from "@/components/ReactButton";
 import { useLanguage } from "@/context/LanguageContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { resolveAntiqueThumbnailUrl } from "@/models/antiques/Antique";
 import { InventoryHeading } from "./antiques/InventoryHeading";
+
+/** Sold wins over the stored stage: an item marked sold belongs in the sold section. */
+const groupStatus = (group: AdminInterestGroup): InterestStatus =>
+  group.sold ? "SOLD" : group.status;
 
 /**
  * What visitors marked as interesting, grouped by piece. This is the wishlist's replacement: the
@@ -20,7 +24,9 @@ export default function AdminInterestsPage() {
   const { locale } = useLanguage();
   const [groups, setGroups] = useState<AdminInterestGroup[]>();
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | InterestStatus>("ALL");
   const [savingId, setSavingId] = useState<string>();
+  const [savingStatusId, setSavingStatusId] = useState<string>();
   const [error, setError] = useState(false);
   const [actionError, setActionError] = useState<string>();
   usePageMeta({ title: t("metaAdminInterestsTitle"), canonicalPath: "/admin/interests", noindex: true });
@@ -36,17 +42,49 @@ export default function AdminInterestsPage() {
   const filteredGroups = useMemo(() => {
     if (!groups) return [];
     const needle = query.trim().toLocaleLowerCase(locale);
-    if (!needle) return groups;
     const matches = (value?: string | null) =>
       Boolean(value && value.toLocaleLowerCase(locale).includes(needle));
     return groups.flatMap((group) => {
+      if (statusFilter !== "ALL" && groupStatus(group) !== statusFilter) return [];
+      if (!needle) return [group];
       const itemMatches = matches(group.title) || matches(group.artist) || matches(group.category);
       const people = group.people.filter((person) => matches(person.name) || matches(person.email));
       if (!itemMatches && people.length === 0) return [];
       // A search for a visitor narrows the people list; a search for the piece keeps all of them.
       return [{ ...group, people: itemMatches ? group.people : people }];
     });
-  }, [groups, query, locale]);
+  }, [groups, query, statusFilter, locale]);
+
+  const statusCounts = useMemo(() => {
+    const counts = { ALL: groups?.length ?? 0, NEW: 0, IN_PROGRESS: 0, SOLD: 0 };
+    for (const group of groups ?? []) counts[groupStatus(group)] += 1;
+    return counts;
+  }, [groups]);
+
+  const sections = (["NEW", "IN_PROGRESS", "SOLD"] as const)
+    .filter((status) => statusFilter === "ALL" || statusFilter === status)
+    .map((status) => ({ status, groups: filteredGroups.filter((group) => groupStatus(group) === status) }))
+    .filter((section) => section.groups.length > 0);
+
+  const statusLabel = (status: "ALL" | InterestStatus) => t(
+    status === "ALL" ? "interestStatusAll"
+      : status === "NEW" ? "interestStatusNew"
+        : status === "IN_PROGRESS" ? "interestStatusInProgress"
+          : "interestStatusSold");
+
+  const updateStatus = async (group: AdminInterestGroup, status: "NEW" | "IN_PROGRESS") => {
+    setSavingStatusId(group.antiqueId);
+    setActionError(undefined);
+    try {
+      await setInterestStatus(group.antiqueId, status);
+      setGroups((current) => current?.map((item) =>
+        item.antiqueId === group.antiqueId ? { ...item, status } : item));
+    } catch {
+      setActionError("interestStatusUpdateFailed");
+    } finally {
+      setSavingStatusId(undefined);
+    }
+  };
 
   const markSold = async (group: AdminInterestGroup) => {
     if (!window.confirm(t("confirmMarkInterestSold", { title: group.title }))) return;
@@ -82,6 +120,13 @@ export default function AdminInterestsPage() {
           <X size={16} aria-hidden="true" />
         </button>}
       </label>
+      <div className="interests-status-filter" role="group" aria-label={t("interestStatusFilter")}>
+        {(["ALL", "NEW", "IN_PROGRESS", "SOLD"] as const).map((status) =>
+          <button key={status} type="button" className={`btn btn-sm ${statusFilter === status ? "btn-dark" : "btn-outline-dark"}`}
+            aria-pressed={statusFilter === status} onClick={() => setStatusFilter(status)}>
+            {statusLabel(status)} <span>{statusCounts[status]}</span>
+          </button>)}
+      </div>
     </div>}
     {groups && groups.length > 0 && <p className="inventory-result-count" aria-live="polite">
       {t("interestsResultCount", { filtered: filteredGroups.length, total: groups.length })}
@@ -91,9 +136,14 @@ export default function AdminInterestsPage() {
     </div>}
     {groups && groups.length === 0 && <Alert variant="light">{t("adminInterestsEmpty")}</Alert>}
     {groups && groups.length > 0 && filteredGroups.length === 0 && <Alert variant="light">
-      {t("noInterestsFound", { query: query.trim() })}
+      {query.trim()
+        ? t("noInterestsFound", { query: query.trim() })
+        : t("noInterestsInStatus", { status: statusLabel(statusFilter) })}
     </Alert>}
-    {filteredGroups.map((group) => <section className="interests-group" key={group.antiqueId}>
+    {sections.map((section) => <section className="interests-section" key={section.status}>
+      <h2 className="interests-section-title">{statusLabel(section.status)}
+        <Badge bg="dark">{section.groups.length}</Badge></h2>
+      {section.groups.map((group) => <section className="interests-group" key={group.antiqueId}>
       <div className="interests-group-heading">
         {group.imageUrl && <img src={resolveAntiqueThumbnailUrl(group.imageUrl)} alt="" loading="lazy"
           decoding="async" width={96} height={72} />}
@@ -105,6 +155,14 @@ export default function AdminInterestsPage() {
           <Badge bg="dark" className="interests-count">
             <Users size={14} aria-hidden="true" /> {t("interestsPeopleCount", { count: group.people.length })}
           </Badge>
+          {!group.sold && <Button as="button" className="btn btn-outline-secondary btn-sm" type="button"
+            disabled={savingStatusId === group.antiqueId}
+            onClick={() => void updateStatus(group, group.status === "NEW" ? "IN_PROGRESS" : "NEW")}>
+            {savingStatusId === group.antiqueId
+              ? <Spinner animation="border" size="sm" />
+              : group.status === "NEW" ? <ArrowRight size={15} aria-hidden="true" /> : <Undo2 size={15} aria-hidden="true" />}
+            {group.status === "NEW" ? t("markInterestInProgress") : t("markInterestNew")}
+          </Button>}
           {group.sold
             ? <Badge bg="dark" className="interests-sold"><Check size={14} aria-hidden="true" /> {t("sold")}</Badge>
             : <Button as="button" className="btn btn-outline-success btn-sm" type="button"
@@ -131,6 +189,7 @@ export default function AdminInterestsPage() {
         </li>)}
       </ul>
       <Link className="interests-piece-link" to={`/antiques/${group.antiqueId}`}>{t("viewPiece")}</Link>
+      </section>)}
     </section>)}
   </section>;
 }

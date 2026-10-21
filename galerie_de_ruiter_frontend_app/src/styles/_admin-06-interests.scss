@@ -6,7 +6,10 @@
 .shopping-gallery-note { max-width: 42rem; margin: -0.5rem 0 1.25rem; color: var(--theme-text-secondary); }
 .shopping-error { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .interests-page { width: min(100%, 72rem); }
-.interests-toolbar { margin: 1rem 0; }
+.interests-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
+.interests-status-filter { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.interests-section { margin: 1.25rem 0; }
+.interests-section-title { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase; }
 .interests-search { display: flex; align-items: center; gap: 0.5rem; width: min(100%, 32rem); padding: 0.45rem 0.7rem; border: 1px solid var(--theme-border); border-radius: 999px; background: var(--theme-surface); color: var(--theme-text-secondary); }
 .interests-search input { flex: 1 1 auto; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--theme-text); }
 .interests-search button { display: grid; place-items: center; padding: 0.15rem; border: 0; background: transparent; color: var(--theme-text-secondary); }

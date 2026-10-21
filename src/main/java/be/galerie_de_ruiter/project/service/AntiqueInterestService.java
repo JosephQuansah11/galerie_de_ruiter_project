@@ -2,6 +2,7 @@ package be.galerie_de_ruiter.project.service;
 
 import be.galerie_de_ruiter.project.domain.Antique;
 import be.galerie_de_ruiter.project.domain.AntiqueInterest;
+import be.galerie_de_ruiter.project.domain.InterestStatus;
 import be.galerie_de_ruiter.project.domain.User;
 import be.galerie_de_ruiter.project.dto.AdminInterestGroupResponse;
 import be.galerie_de_ruiter.project.dto.AntiqueResponse;
@@ -85,8 +86,17 @@ public class AntiqueInterestService {
                     response.category(),
                     response.imageUrl(),
                     response.sold(),
+                    antique.isSold() ? "SOLD" : antique.getInterestStatus().name(),
                     people);
         }).toList();
+    }
+
+    /** Moves the interest follow-up for one piece between new and in progress. */
+    @Transactional
+    public void setStatus(UUID antiqueId, InterestStatus status) {
+        Antique antique = requireAntique(antiqueId);
+        antique.setInterestStatus(status);
+        antiques.save(antique);
     }
 
     private User currentUser(Jwt jwt) {

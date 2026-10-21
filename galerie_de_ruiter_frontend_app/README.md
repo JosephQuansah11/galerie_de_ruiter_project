@@ -701,9 +701,10 @@ A signed-in visitor marks a piece with **I'm interested** (the heart on a piece 
 catalogue). The wishlist is now a server-backed interest list rather than a browser-only list:
 `GET/POST/DELETE /api/wishlist` stores the visitor's account against the piece, and
 `/admin/interests` shows every marked piece with the visitor's name, email address and the date, so
-the gallery can follow up. The page searches by visitor name or piece title, and a piece whose sale
-has been agreed can be marked sold from the same screen. The public like counter remains a separate,
-anonymous number.
+the gallery can follow up. The page searches by visitor name or piece title and groups pieces into
+**New**, **In progress** and **Sold**; a piece can be moved between the two open stages, and a piece
+whose sale has been agreed can be marked sold from the same screen. The public like counter remains
+a separate, anonymous number.
 
 ## Analytics
 

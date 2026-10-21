@@ -175,7 +175,20 @@ class AntiqueCreationResponseTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Wishlist piece"))
                 .andExpect(jsonPath("$[0].sold").value(false))
+                .andExpect(jsonPath("$[0].status").value("NEW"))
                 .andExpect(jsonPath("$[0].people[0].email").value("visitor@example.com"));
+
+        mvc.perform(put("/api/admin/interests/" + id + "/status")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"IN_PROGRESS\"}"))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/admin/interests")
+                        .with(jwt().jwt((token) -> token.subject("wishlist-admin"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].status").value("IN_PROGRESS"));
 
         mvc.perform(delete("/api/wishlist/" + id)
                         .with(jwt().jwt((token) -> token.subject("wishlist-subject")))

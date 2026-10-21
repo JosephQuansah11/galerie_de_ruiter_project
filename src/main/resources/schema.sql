@@ -54,6 +54,11 @@ ALTER TABLE antique_images ADD COLUMN IF NOT EXISTS thumbnail BYTEA;
 ALTER TABLE antique_images ADD COLUMN IF NOT EXISTS medium BYTEA;
 ALTER TABLE antique_images ADD COLUMN IF NOT EXISTS large BYTEA;
 
+-- The admin interest pipeline stage. Sold is derived from the existing sold flag, so only the
+-- two open stages are stored.
+ALTER TABLE antiques ADD COLUMN IF NOT EXISTS interest_status VARCHAR(255) NOT NULL DEFAULT 'NEW';
+UPDATE antiques SET interest_status = 'NEW' WHERE interest_status IS NULL;
+
 -- The visitor interest list. Hibernate creates this too; naming it here means an older database
 -- has the table before an update/delete request reaches it.
 CREATE TABLE IF NOT EXISTS antique_interests (

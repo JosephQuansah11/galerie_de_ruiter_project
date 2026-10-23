@@ -152,6 +152,33 @@ describe("Catalogue page", () => {
     expect(await screen.findByRole("button", { name: new RegExp(i18n.t("allPieces"), "i") })).toBeInTheDocument();
   });
 
+  it("shows a subcategory's pieces when its main category is picked", async () => {
+    mockedCategories.mockResolvedValueOnce([
+      {
+        id: "c1", name: "Audio - Tv", visible: true, itemCount: 0,
+        children: [{ id: "c2", name: "Decoration", visible: true, parentId: "c1", parentName: "Audio - Tv", itemCount: 1, children: [] }],
+      },
+      { id: "c3", name: "Mirrors", visible: true, itemCount: 1, children: [] },
+    ]);
+    mockedAntiques.mockResolvedValueOnce([
+      { id: "1", title: "Carved walnut mirror", category: "Mirrors", description: "Late 19th century", price: 480 },
+      { id: "2", title: "Brass vase", category: "Audio - Tv / Decoration", description: "Art deco", price: 120 },
+    ]);
+
+    renderPage(<AntiquesPage />, { shopping: true });
+    await screen.findByText("Carved walnut mirror");
+
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(i18n.t("allPieces"), "i") }));
+    fireEvent.click(await screen.findByRole("button", { name: /Audio - Tv/ }));
+
+    // The piece filed under the subcategory belongs to the main category's branch…
+    expect(screen.getByText("Brass vase")).toBeInTheDocument();
+    // …and the rest of the collection is filtered out.
+    expect(screen.queryByText("Carved walnut mirror")).not.toBeInTheDocument();
+    // The heading reports what the filter found, not the whole collection.
+    expect(document.querySelector(".catalogue-count strong")?.textContent).toBe("1");
+  });
+
   it("reports a failing catalogue request", async () => {
     mockedAntiques.mockRejectedValueOnce(new Error("network down"));
 

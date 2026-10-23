@@ -31,6 +31,10 @@ describe("Catalogue category filter", () => {
     expect(child.closest(".collection-dropdown-children")?.previousElementSibling).toBe(parent);
     // …and its name never has to repeat the main category to make that clear.
     expect(screen.queryByText("Audio - Tv / Decoration")).not.toBeInTheDocument();
+    // The main category answers for its whole branch, so its count is the branch's: the five pieces
+    // filed on the parent row plus the two in the subcategory.
+    expect(parent.textContent).toContain("7");
+    expect(child.textContent).toContain("2");
   });
 
   it("filters on the subcategory the visitor picks", async () => {

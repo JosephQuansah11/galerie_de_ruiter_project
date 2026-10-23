@@ -54,7 +54,8 @@ export function CataloguePage(props: Props) {
     ? props.filteredAntiques
     : props.filteredAntiques.slice((currentPage - 1) * effectivePageSize, currentPage * effectivePageSize);
   return <section className="catalogue-page">
-    <CatalogueHeading count={props.antiques.length} shown={props.filteredAntiques.length} query={props.query} />
+    <CatalogueHeading count={props.antiques.length} shown={props.filteredAntiques.length} query={props.query}
+      categoryActive={Boolean(props.category) && props.category !== t("allPieces")} />
     <div className="catalogue-controls">
       <Form className="catalogue-search" role="search" onSubmit={(event) => event.preventDefault()}>
         <span className="catalogue-search-icon" aria-hidden="true"><Search size={18} /></span>
@@ -89,10 +90,12 @@ export function CataloguePage(props: Props) {
  * The heading answers the question a search asks: how many pieces match what I typed, out of how
  * many there are. Before this it always reported the whole collection, so a search that found four
  * pieces still said "66 pieces listed" above them, which looks like a filter that did not apply.
+ * A category filter counts as filtering for the same reason.
  */
-function CatalogueHeading({ count, shown, query }: { count: number; shown: number; query: string }) {
+function CatalogueHeading({ count, shown, query, categoryActive }: { count: number; shown: number; query: string; categoryActive: boolean }) {
   const { t } = useTranslation();
   const searching = query.trim().length > 0;
+  const filtered = searching || categoryActive;
   return <div className="catalogue-heading"><div>
     <Badge bg="dark" className="catalogue-kicker">{searching ? t("search", { defaultValue: "Search" }) : t("collection")}</Badge>
     <h1>{searching ? t("searchResultsTitle", { defaultValue: "Results for “{{query}}”", query: query.trim() }) : t("collectionTitle")}</h1>
@@ -100,7 +103,7 @@ function CatalogueHeading({ count, shown, query }: { count: number; shown: numbe
       ? t("searchResultsIntro", { defaultValue: "{{shown}} of {{total}} pieces match.", shown, total: count })
       : t("collectionIntro")}</p>
   </div><div className="catalogue-count">
-    <strong>{searching ? shown : count}</strong>
+    <strong>{filtered ? shown : count}</strong>
     <span>{searching ? t("resultsFound", { defaultValue: "results" }) : t("piecesListed")}</span>
   </div></div>;
 }

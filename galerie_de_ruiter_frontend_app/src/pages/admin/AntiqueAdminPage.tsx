@@ -4,8 +4,11 @@ import { Button } from "@/components/ReactButton";
 import { JumpToBottom } from "@/components/JumpToBottom";
 import { Check, FolderUp, Plus, Search, Trash2, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { deleteAntique as deleteAntiqueRequest, deleteAntiques, deleteAntiqueImage, getAllAntiques, reorderAntiqueImages, setAntiqueSold as setAntiqueSoldRequest, updateAntique as updateAntiqueRequest, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
+import { deleteAntique as deleteAntiqueRequest, deleteAntiques, deleteAntiqueImage, getAllAntiques, getAllCategories, reorderAntiqueImages, setAntiqueSold as setAntiqueSoldRequest, updateAntique as updateAntiqueRequest, uploadAntiqueImage, uploadAntiqueModel } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
+import type { Category } from "@/models/antiques/Antique";
+import { CategoryOptions } from "@/pages/antiques/CategoryOptions";
+import { subscribeToContentUpdates } from "@/services/contentUpdates";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/context/LanguageContext";
 import { InventoryList } from "./antiques/InventoryList";
@@ -18,11 +21,26 @@ import { MODEL_MAX_SIZE_MB, isUploadableModel } from "../antiques/modelUploadLim
 import { useAntiqueImageEditing } from "./antiques/useAntiqueImageEditing";
 import { managementErrorKey, modelUploadErrorKey } from "../antiques/antiqueSaveErrors";
 
+/** Finds the category a piece already shows, matching both the plain name and `Main / Child`. */
+function categoryIdForLabel(categories: Category[], label?: string | null): string {
+  if (!label) return "";
+  for (const category of categories) {
+    if (category.name === label) return category.id;
+    for (const child of category.children ?? []) {
+      if (child.name === label || `${child.parentName ?? category.name} / ${child.name}` === label) {
+        return child.id;
+      }
+    }
+  }
+  return "";
+}
+
 export default function AntiqueAdminPage() {
   const { t } = useTranslation();
   const { locale } = useLanguage();
   const navigate = useNavigate();
   const [antiques, setAntiques] = useState<Antique[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [query, setQuery] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
@@ -31,6 +49,7 @@ export default function AntiqueAdminPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editPrice, setEditPrice] = useState("");
+  const [editCategoryId, setEditCategoryId] = useState("");
   const [editModelFile, setEditModelFile] = useState<File>();
   const [modelFileInvalid, setModelFileInvalid] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -47,6 +66,13 @@ export default function AntiqueAdminPage() {
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, []);
+  useEffect(() => {
+    getAllCategories().then(setCategories).catch(() => undefined);
+  }, []);
+  // A piece changed in another tab or by an import is fetched again rather than requiring a reload.
+  useEffect(() => subscribeToContentUpdates("antiques", () => {
+    getAllAntiques().then((items) => { setAntiques(items); setLoadError(false); }).catch(() => setLoadError(true));
+  }), []);
   const filtered = antiques.filter((antique) =>
     antique.title.toLowerCase().includes(query.toLowerCase()),
   );
@@ -74,6 +100,7 @@ export default function AntiqueAdminPage() {
     setEditTitle(antique.title);
     setEditDescription(antique.description ?? "");
     setEditPrice(antique.price == null ? "" : String(antique.price));
+    setEditCategoryId(categoryIdForLabel(categories, antique.category));
     setEditModelFile(undefined);
     setModelFileInvalid(false);
     editingImages.load(antique.imageUrls ?? []);
@@ -90,6 +117,7 @@ export default function AntiqueAdminPage() {
         title: editTitle.trim(),
         description: editDescription,
         price: Number(editPrice),
+        categoryId: editCategoryId || undefined,
       });
       if (editModelFile) {
         try {
@@ -249,6 +277,13 @@ export default function AntiqueAdminPage() {
               <Form.Label>{t("description")}</Form.Label>
               <Form.Control as="textarea" rows={6} value={editDescription} onChange={(event) => setEditDescription(event.target.value)} />
               <DescriptionLimitHint value={editDescription} />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="edit-antique-category">
+              <Form.Label>{t("category")}</Form.Label>
+              <Form.Select value={editCategoryId} onChange={(event) => setEditCategoryId(event.target.value)}>
+                <option value="">{t("uncategorized")}</option>
+                <CategoryOptions categories={categories} />
+              </Form.Select>
             </Form.Group>
             <AntiqueImageEditor
               images={editingImages.images}

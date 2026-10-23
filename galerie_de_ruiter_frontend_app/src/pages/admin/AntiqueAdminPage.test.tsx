@@ -2,11 +2,12 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
 import AntiqueAdminPage from "./AntiqueAdminPage";
-import { deleteAntique, deleteAntiques, deleteAntiqueImage, getAllAntiques, getImageFormatStatus, convertImagesToWebp, reorderAntiqueImages, setAntiqueSold, updateAntique } from "@/apis/backend_api";
+import { deleteAntique, deleteAntiques, deleteAntiqueImage, getAllAntiques, getAllCategories, getImageFormatStatus, convertImagesToWebp, reorderAntiqueImages, setAntiqueSold, updateAntique } from "@/apis/backend_api";
 import type Antique from "@/models/antiques/Antique";
 
 jest.mock("@/apis/backend_api", () => ({
   getAllAntiques: jest.fn(),
+  getAllCategories: jest.fn(),
   updateAntique: jest.fn(),
   deleteAntique: jest.fn(),
   deleteAntiques: jest.fn(),
@@ -20,6 +21,7 @@ jest.mock("@/apis/backend_api", () => ({
 }));
 
 const mockedAntiques = getAllAntiques as jest.Mock;
+const mockedCategories = getAllCategories as jest.Mock;
 const mockedDelete = deleteAntique as jest.Mock;
 const mockedDeleteMany = deleteAntiques as jest.Mock;
 const mockedSold = setAntiqueSold as jest.Mock;
@@ -44,6 +46,9 @@ const inventory: Antique[] = [
 
 beforeEach(() => {
   mockedAntiques.mockResolvedValue(inventory);
+  mockedCategories.mockResolvedValue([
+    { id: "cat-1", name: "Mirrors", visible: true, parentId: null, parentName: null, itemCount: 1, children: [] },
+  ]);
   mockedDelete.mockResolvedValue(undefined);
   mockedDeleteMany.mockResolvedValue({ deleted: 2, missing: [] });
   mockedUpdate.mockResolvedValue(inventory[0]);
@@ -180,6 +185,20 @@ describe("Antique administration page", () => {
     fireEvent.click(screen.getByRole("button", { name: `${i18n.t("markAvailable")}: Carved walnut mirror` }));
 
     await waitFor(() => expect(mockedSold).toHaveBeenCalledWith("1", false));
+  });
+
+  it("changes the category when the editor saves", async () => {
+    renderPage(<AntiqueAdminPage />);
+    await screen.findByText("Carved walnut mirror");
+
+    fireEvent.click(screen.getByRole("button", { name: `${i18n.t("editAntique")}: Carved walnut mirror` }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText(i18n.t("category")), { target: { value: "cat-1" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: i18n.t("saveAntique") }));
+
+    await waitFor(() => expect(mockedUpdate).toHaveBeenCalledWith("1", expect.objectContaining({
+      categoryId: "cat-1",
+    })));
   });
 
   it("removes a photograph from a piece when the editor saves", async () => {

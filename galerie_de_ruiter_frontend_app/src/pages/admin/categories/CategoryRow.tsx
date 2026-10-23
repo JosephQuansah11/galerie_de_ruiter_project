@@ -10,7 +10,8 @@ export function CategoryRow({ category, depth = 0, toggle, remove }: Props) {
   return <div className={`admin-row category-row${depth > 0 ? " is-subcategory" : ""}`}>
     <div className="category-row-title">
       {depth > 0 && <CornerDownRight className="category-row-branch" size={15} aria-hidden="true" />}
-      <strong>{category.name}</strong><span>{category.itemCount} {t("pieces")}</span>
+      <strong>{category.parentName ? `${category.parentName} / ${category.name}` : category.name}</strong>
+      <span>{category.itemCount} {t("pieces")}</span>
     </div>
     <div className="admin-row-actions">
       <Form.Check type="switch" id={`category-${category.id}`} checked={category.visible}

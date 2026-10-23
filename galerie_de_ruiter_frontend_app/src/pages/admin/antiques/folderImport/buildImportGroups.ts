@@ -35,11 +35,15 @@ export type ImportGroup = {
    * folders do not name a category - a loose photograph, for example.
    */
   categoryPath: string[];
-  /**
-   * The artist the folder's `Title by Artist` or `Name -` names, if it has one. The row may still
+  /** The artist the folder's `Title by Artist` or `Name -` names, if it has one. The row may still
    * need a matching artist record; the import resolves or creates it.
    */
   artistName?: string;
+  /**
+   * How a CSV row found this piece: by a file/folder path, by its title, or not at all. The import
+   * screen uses it to filter the preview.
+   */
+  match: "csvPath" | "csvTitle" | "folder";
   record?: CsvRecord;
 };
 
@@ -183,6 +187,7 @@ function createGroups(images: ImportImage[], grouping: CsvGrouping, categorySour
         description: "",
         price: "",
         categoryPath,
+        match: "folder",
       };
       groups.set(key, group);
     }
@@ -382,25 +387,28 @@ export function buildImportGroups(
   for (const group of groups) {
     const keys = groupKeys(group);
     let record: CsvRecord | undefined;
+    let match: ImportGroup["match"] = "folder";
     for (const key of keys) {
       record = lookup(byPath, key);
-      if (record) break;
+      if (record) { match = "csvPath"; break; }
     }
     if (!record) {
       for (const key of keys) {
         record = lookup(byTitle, key);
-        if (record) break;
+        if (record) { match = "csvTitle"; break; }
       }
     }
     // One row and one piece is unambiguous even when neither repeats the other's name - but only
     // when the row did not name a file: a row naming a missing image is a warning, not a guess.
     if (!record && groups.length === 1 && records.length === 1 && !records[0].file) {
       record = records[0];
+      match = "csvTitle";
       used.add(recordId(record));
     }
     if (!record) continue;
 
     group.record = record;
+    group.match = match;
     // A CSV title can carry the maker too (`Silvereye by Guido Argentini`, `Luc Tuymans -`);
     // the title column is often the only place the artist appears, so split it before it
     // replaces the folder title. A bare artist marker keeps the title the folder already has.

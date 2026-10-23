@@ -11,5 +11,6 @@ import java.util.UUID;
  * blob - into the heap. The count is asked of PostgreSQL instead (see
  * {@code CategoryRepository.findAllWithCounts()}).</p>
  */
-public record CategoryResponse(UUID id, String name, boolean visible, UUID parentId, long itemCount, List<CategoryResponse> children) {
+public record CategoryResponse(UUID id, String name, boolean visible, UUID parentId, String parentName,
+                               long itemCount, List<CategoryResponse> children) {
 }

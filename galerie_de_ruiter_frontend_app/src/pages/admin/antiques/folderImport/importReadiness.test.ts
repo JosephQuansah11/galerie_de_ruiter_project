@@ -11,6 +11,7 @@ function draft(overrides: Partial<ImportGroupDraft> = {}): ImportGroupDraft {
     description: "",
     price: "480",
     categoryPath: ["Mirrors"],
+    match: "folder",
     selected: true,
     categoryId: "cat-mirrors",
     status: "pending",

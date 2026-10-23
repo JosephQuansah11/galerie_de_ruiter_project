@@ -88,6 +88,9 @@ public class SecurityConfiguration {
 				.requestMatchers(HttpMethod.GET,"/api/admin/users").hasRole("ADMIN")
 				.requestMatchers(HttpMethod.GET, "/api/admin/interests").hasRole("ADMIN")
 				.requestMatchers("/api/wishlist/**").authenticated()
+				// The content socket carries only topic names; every read and write behind it is
+				// still authorized by the normal API rules.
+				.requestMatchers("/ws/content").permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/login").permitAll()
 				.requestMatchers(HttpMethod.POST, "/api").authenticated()
 				.requestMatchers( "/api").authenticated()

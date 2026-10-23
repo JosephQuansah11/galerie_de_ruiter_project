@@ -15,7 +15,9 @@ export function CollectionFilter({ categories, category, onSelect }: {
         <Dropdown.Item as="button" onClick={() => onSelect("")}>{t("allPieces")}</Dropdown.Item>
         <div className="collection-dropdown-grid">{categories.map((item) => <div className="collection-dropdown-group" key={item.id}>
           <Dropdown.Item as="button" onClick={() => onSelect(item.name)}>{item.name}<span>{item.itemCount}</span></Dropdown.Item>
-          {item.children?.map((child) => <Dropdown.Item as="button" className="collection-dropdown-child" key={child.id} onClick={() => onSelect(child.name)}>{child.name}<span>{child.itemCount}</span></Dropdown.Item>)}
+          {item.children?.map((child) => <Dropdown.Item as="button" className="collection-dropdown-child" key={child.id} onClick={() => onSelect(child.name)}>
+            {child.parentName ? `${child.parentName} / ${child.name}` : child.name}<span>{child.itemCount}</span>
+          </Dropdown.Item>)}
         </div>)}</div>
       </Dropdown.Menu>
     </Dropdown>

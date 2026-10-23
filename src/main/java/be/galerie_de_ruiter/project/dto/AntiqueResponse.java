@@ -2,6 +2,7 @@ package be.galerie_de_ruiter.project.dto;
 
 import be.galerie_de_ruiter.project.domain.Antique;
 import be.galerie_de_ruiter.project.domain.AntiqueImage;
+import be.galerie_de_ruiter.project.domain.Category;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,7 +21,7 @@ public record AntiqueResponse(UUID id, String title, DesignerResponse artist, St
                 DesignerResponse.from(antique.getArtist()),
                 antique.getDescription(),
                 antique.getPrice(),
-                antique.getCategory() == null ? null : antique.getCategory().getName(),
+                categoryLabel(antique.getCategory()),
                 antique.getModelUrl(),
                 imageUrls.stream().findFirst().orElse(null),
                 imageUrls,
@@ -28,6 +29,13 @@ public record AntiqueResponse(UUID id, String title, DesignerResponse artist, St
                 antique.getLikeCount(),
                 antique.isSold()
         );
+    }
+
+    /** A subcategory is always shown with its main category: `Main / Child`. */
+    private static String categoryLabel(Category category) {
+        if (category == null) return null;
+        Category parent = category.getParent();
+        return parent == null ? category.getName() : parent.getName() + " / " + category.getName();
     }
 
     private static List<String> imageUrls(Antique antique) {

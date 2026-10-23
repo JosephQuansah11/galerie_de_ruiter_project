@@ -13,12 +13,12 @@ export function CategoryOptions({ categories }: { categories: Category[] }) {
   ])}</>;
 }
 
-/** The label a chosen category id reads as, including its main category for a subcategory. */
+/** The label a category id reads as, including its main category for a subcategory. */
 export function categoryLabel(categories: Category[], id: string): string | undefined {
   for (const category of categories) {
     if (category.id === id) return category.name;
     const child = (category.children ?? []).find((item) => item.id === id);
-    if (child) return `${category.name} / ${child.name}`;
+    if (child) return `${child.parentName ?? category.name} / ${child.name}`;
   }
   return undefined;
 }

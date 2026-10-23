@@ -14,6 +14,17 @@ export function matchesAntiqueQuery(
     antique.category,
   ].some((text) => text?.toLowerCase().includes(query.trim().toLowerCase()));
   const categoryMatch = !category || category === allPieces
-    || antique.category?.toLowerCase() === category.toLowerCase();
+    || matchesCategoryLabel(antique.category, category);
   return queryMatch && categoryMatch;
+}
+
+/**
+ * A piece carries `Main / Child` once its subcategory has a parent, while the catalogue's filter
+ * still offers the child's own name. Either form selects the piece.
+ */
+function matchesCategoryLabel(value: string | null | undefined, wanted: string): boolean {
+  if (!value) return false;
+  const needle = wanted.trim().toLowerCase();
+  const label = value.toLowerCase();
+  return label === needle || label.endsWith(` / ${needle}`);
 }

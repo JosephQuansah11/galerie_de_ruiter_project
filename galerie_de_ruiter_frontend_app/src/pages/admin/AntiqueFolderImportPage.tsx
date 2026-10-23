@@ -38,6 +38,7 @@ export default function AntiqueFolderImportPage() {
   const input = useRef<HTMLInputElement>(null);
   const csvInput = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
+  const [matchFilter, setMatchFilter] = useState<"all" | "csvPath" | "csvTitle" | "folder">("all");
   const [categoryChoice, setCategoryChoice] = useState("");
 
   useEffect(() => {
@@ -47,7 +48,8 @@ export default function AntiqueFolderImportPage() {
   }, []);
 
   const visible = imported.groups.filter((group) =>
-    `${group.title} ${group.label} ${artistSearchName(group)}`.toLowerCase().includes(query.trim().toLowerCase()));
+    `${group.title} ${group.label} ${artistSearchName(group)}`.toLowerCase().includes(query.trim().toLowerCase())
+    && (matchFilter === "all" || group.match === matchFilter));
   const selected = imported.groups.filter((group) => group.selected && group.status !== "saved");
   const allVisibleSelected = visible.length > 0
     && visible.every((group) => group.selected || group.status === "saved");
@@ -239,6 +241,13 @@ export default function AntiqueFolderImportPage() {
           <Form.Control size="sm" value={query} onChange={(event) => setQuery(event.target.value)}
             placeholder={t("searchImportedPieces")} aria-label={t("searchImportedPieces")} />
         </div>
+        <Form.Select size="sm" className="folder-import-match-filter" value={matchFilter}
+          aria-label={t("importMatchFilter")} onChange={(event) => setMatchFilter(event.target.value as typeof matchFilter)}>
+          <option value="all">{t("importMatchAll")}</option>
+          <option value="csvPath">{t("importMatchCsvPath")}</option>
+          <option value="csvTitle">{t("importMatchCsvTitle")}</option>
+          <option value="folder">{t("importMatchFolder")}</option>
+        </Form.Select>
         <Form.Check type="checkbox" id="folder-import-select-all" label={t("selectAllPieces")}
           checked={allVisibleSelected} disabled={visible.length === 0 || imported.importing}
           onChange={(event) => imported.toggleAll(visible.map((group) => group.id), event.target.checked)} />

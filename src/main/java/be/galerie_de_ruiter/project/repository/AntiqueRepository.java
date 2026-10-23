@@ -20,6 +20,7 @@ public interface AntiqueRepository extends JpaRepository<Antique, UUID> {
                    a.description as description,
                    a.price as price,
                    c.name as category,
+                   p.name as parentCategory,
                    a.sold as sold,
                    a.modelUrl as modelUrl,
                    a.viewCount as viewCount,
@@ -27,6 +28,7 @@ public interface AntiqueRepository extends JpaRepository<Antique, UUID> {
             from Antique a
             left join a.artist d
             left join a.category c
+            left join c.parent p
             """)
     List<CatalogueRow> findCatalogueRows();
 
@@ -81,6 +83,8 @@ public interface AntiqueRepository extends JpaRepository<Antique, UUID> {
         java.math.BigDecimal getPrice();
 
         String getCategory();
+
+        String getParentCategory();
 
         String getModelUrl();
 

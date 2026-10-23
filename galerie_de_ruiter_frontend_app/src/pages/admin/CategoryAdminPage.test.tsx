@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderPage } from "../../../test/renderPage";
 import i18n from "../../i18n";
 import CategoryAdminPage from "./CategoryAdminPage";
-import { createCategory, getAllCategories } from "@/apis/backend_api";
+import { createCategory, deleteCategory, getAllCategories } from "@/apis/backend_api";
 import type { Category } from "@/models/antiques/Antique";
 
 const mockAuth = {
@@ -34,6 +34,7 @@ jest.mock("@/apis/backend_api", () => ({
 
 const mockedCategories = getAllCategories as jest.Mock;
 const mockedCreate = createCategory as jest.Mock;
+const mockedDelete = deleteCategory as jest.Mock;
 
 const categories: Category[] = [
   { id: "c1", name: "Mirrors", visible: true, itemCount: 2, children: [] },
@@ -44,6 +45,7 @@ beforeEach(() => {
   mockAuth.isAdmin = true;
   mockedCategories.mockResolvedValue(categories);
   mockedCreate.mockResolvedValue({ id: "c3", name: "Ceramics", visible: true, itemCount: 0, children: [] });
+  mockedDelete.mockResolvedValue(undefined);
 });
 
 describe("Category administration page", () => {
@@ -55,18 +57,33 @@ describe("Category administration page", () => {
   });
 
   it("shows a subcategory inside its main category, once", async () => {
-    const child: Category = { id: "c2", name: "Mirrors", visible: true, parentId: "c1", itemCount: 2, children: [] };
+    const child: Category = { id: "c2", name: "Mirrors", visible: true, parentId: "c1", parentName: "Furniture", itemCount: 2, children: [] };
     const parent: Category = { id: "c1", name: "Furniture", visible: true, itemCount: 5, children: [child] };
     mockedCategories.mockResolvedValueOnce([parent, child]);
 
     renderPage(<CategoryAdminPage />);
 
     const parentLabel = await screen.findByText("Furniture", { selector: "strong" });
-    const childLabel = screen.getByText("Mirrors", { selector: "strong" });
+    const childLabel = screen.getByText("Furniture / Mirrors", { selector: "strong" });
     expect(parentLabel.closest("li")).toContainElement(childLabel);
     expect(childLabel.closest("ul")).toHaveClass("category-tree-children");
     // The flat row and the nested copy are one node, not two.
-    expect(screen.getAllByText("Mirrors", { selector: "strong" })).toHaveLength(1);
+    expect(screen.getAllByText("Furniture / Mirrors", { selector: "strong" })).toHaveLength(1);
+  });
+
+  it("removes a deleted subcategory from its parent in place", async () => {
+    const child: Category = { id: "c2", name: "Mirrors", visible: true, parentId: "c1", parentName: "Furniture", itemCount: 2, children: [] };
+    const parent: Category = { id: "c1", name: "Furniture", visible: true, itemCount: 5, children: [child] };
+    mockedCategories.mockResolvedValueOnce([parent, child]);
+
+    renderPage(<CategoryAdminPage />);
+    await screen.findByText("Furniture", { selector: "strong" });
+
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("deleteCategoryNamed", { name: "Mirrors" }) }));
+
+    await waitFor(() => expect(mockedDelete).toHaveBeenCalledWith("c2"));
+    expect(screen.queryByText("Furniture / Mirrors", { selector: "strong" })).not.toBeInTheDocument();
+    expect(screen.getByText("Furniture", { selector: "strong" })).toBeInTheDocument();
   });
 
   it("creates a category from the curator form", async () => {

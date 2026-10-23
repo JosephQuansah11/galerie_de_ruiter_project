@@ -20,6 +20,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
      */
     @Query("""
             select c.id as id, c.name as name, c.visible as visible, p.id as parentId,
+                   p.name as parentName,
                    (select count(a.id) from Antique a where a.category = c) as itemCount
             from Category c
             left join c.parent p
@@ -35,6 +36,8 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
         boolean isVisible();
 
         UUID getParentId();
+
+        String getParentName();
 
         long getItemCount();
     }

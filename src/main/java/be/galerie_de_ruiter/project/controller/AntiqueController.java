@@ -7,6 +7,7 @@ import be.galerie_de_ruiter.project.dto.AntiqueBulkDeleteResponse;
 import be.galerie_de_ruiter.project.dto.AntiqueSoldRequest;
 import be.galerie_de_ruiter.project.dto.AntiqueUpdateRequest;
 import be.galerie_de_ruiter.project.service.AntiqueService;
+import be.galerie_de_ruiter.project.service.ContentWebSocketHandler;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -27,8 +28,12 @@ import java.util.UUID;
 @RequestMapping("/api/antiques")
 public class AntiqueController {
 	private final AntiqueService antiques;
+	private final ContentWebSocketHandler contentUpdates;
 
-	public AntiqueController(AntiqueService antiques) { this.antiques = antiques; }
+	public AntiqueController(AntiqueService antiques, ContentWebSocketHandler contentUpdates) {
+		this.antiques = antiques;
+		this.contentUpdates = contentUpdates;
+	}
 
 	@GetMapping
 	public List<AntiqueResponse> findAll() { return antiques.findAllResponses(); }
@@ -36,13 +41,17 @@ public class AntiqueController {
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
 	public AntiqueResponse create(@Valid @RequestBody AntiqueRequest request, @AuthenticationPrincipal Jwt jwt) {
-		return antiques.createResponse(request, jwt);
+		AntiqueResponse created = antiques.createResponse(request, jwt);
+		contentUpdates.broadcast("antiques");
+		return created;
 	}
 
 	@PutMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
 	public AntiqueResponse update(@PathVariable UUID id, @Valid @RequestBody AntiqueUpdateRequest request) {
-		return antiques.update(id, request);
+		AntiqueResponse updated = antiques.update(id, request);
+		contentUpdates.broadcast("antiques");
+		return updated;
 	}
 
 	/**
@@ -52,13 +61,16 @@ public class AntiqueController {
 	@PutMapping("/{id}/sold")
 	@PreAuthorize("hasRole('ADMIN')")
 	public AntiqueResponse setSold(@PathVariable UUID id, @Valid @RequestBody AntiqueSoldRequest request) {
-		return antiques.setSold(id, request.sold());
+		AntiqueResponse updated = antiques.setSold(id, request.sold());
+		contentUpdates.broadcast("antiques");
+		return updated;
 	}
 
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<Void> delete(@PathVariable UUID id) {
 		antiques.delete(id);
+		contentUpdates.broadcast("antiques");
 		return ResponseEntity.noContent().build();
 	}
 
@@ -69,6 +81,8 @@ public class AntiqueController {
 	@PostMapping("/batch-delete")
 	@PreAuthorize("hasRole('ADMIN')")
 	public AntiqueBulkDeleteResponse deleteMany(@Valid @RequestBody AntiqueBulkDeleteRequest request) {
-		return antiques.deleteMany(request.ids());
+		AntiqueBulkDeleteResponse result = antiques.deleteMany(request.ids());
+		contentUpdates.broadcast("antiques");
+		return result;
 	}
 }

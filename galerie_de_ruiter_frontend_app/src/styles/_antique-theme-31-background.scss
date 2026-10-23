@@ -1,0 +1,43 @@
+// The gallery backdrop: aged paper and gilded hairlines for the light theme, deep lacquer and
+// brass for the dark one. The layers drift slowly so the page feels alive without distracting.
+@keyframes antique-backdrop-drift {
+  0% { background-position: 0 0, 0 0, 0 0, 0 0; }
+  100% { background-position: 140px 70px, -110px 55px, 70px -45px, 0 0; }
+}
+
+body:not(.theme-dark),
+body:not(.theme-dark) .app-main,
+body:not(.theme-dark) .main-content {
+  background-color: var(--theme-parchment);
+  background-image:
+    radial-gradient(circle at 50% -4%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0) 58%),
+    repeating-linear-gradient(45deg, rgba(176, 138, 74, 0.038) 0 1px, rgba(0, 0, 0, 0) 1px 15px),
+    repeating-linear-gradient(-45deg, rgba(60, 31, 37, 0.022) 0 1px, rgba(0, 0, 0, 0) 1px 19px),
+    radial-gradient(circle at 86% 12%, rgba(176, 138, 74, 0.11), rgba(176, 138, 74, 0) 44%);
+  background-attachment: fixed;
+  animation: antique-backdrop-drift 150s linear infinite;
+}
+
+body.theme-dark,
+body.theme-dark .app-main,
+body.theme-dark .main-content {
+  background-color: #241418;
+  background-image:
+    radial-gradient(circle at 50% -12%, rgba(216, 180, 118, 0.18), rgba(216, 180, 118, 0) 56%),
+    repeating-linear-gradient(45deg, rgba(216, 180, 118, 0.055) 0 1px, rgba(0, 0, 0, 0) 1px 17px),
+    repeating-linear-gradient(-45deg, rgba(255, 248, 244, 0.028) 0 1px, rgba(0, 0, 0, 0) 1px 23px),
+    radial-gradient(circle at 10% 88%, rgba(120, 30, 45, 0.32), rgba(120, 30, 45, 0) 48%);
+  background-attachment: fixed;
+  animation: antique-backdrop-drift 190s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not(.theme-dark),
+  body:not(.theme-dark) .app-main,
+  body:not(.theme-dark) .main-content,
+  body.theme-dark,
+  body.theme-dark .app-main,
+  body.theme-dark .main-content {
+    animation: none;
+  }
+}

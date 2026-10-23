@@ -87,8 +87,15 @@ public class AntiqueService {
         DesignerResponse artist = row.getArtistId() == null ? null : new DesignerResponse(
                 row.getArtistId(), row.getArtistFirstName(), row.getArtistLastName(), row.getArtistMiddleName());
         return new AntiqueResponse(row.getId(), row.getTitle(), artist, row.getDescription(), row.getPrice(),
-                row.getCategory(), row.getModelUrl(), imageUrls.stream().findFirst().orElse(null), imageUrls,
+                categoryLabel(row.getCategory(), row.getParentCategory()), row.getModelUrl(),
+                imageUrls.stream().findFirst().orElse(null), imageUrls,
                 row.getViewCount(), row.getLikeCount(), row.isSold());
+    }
+
+    /** A subcategory is always shown with its main category: `Main / Child`. */
+    private static String categoryLabel(String category, String parentCategory) {
+        if (category == null) return null;
+        return parentCategory == null || parentCategory.isBlank() ? category : parentCategory + " / " + category;
     }
 
     /** The display order as a number, as the entity compares it: blank or odd sorts last. */

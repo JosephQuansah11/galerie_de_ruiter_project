@@ -130,6 +130,7 @@ public class CategoryService {
                 row.getName(),
                 row.isVisible(),
                 row.getParentId(),
+                row.getParentName(),
                 row.getItemCount(),
                 children.getOrDefault(row.getId(), List.of()).stream()
                         .filter(CategoryCount::isVisible)

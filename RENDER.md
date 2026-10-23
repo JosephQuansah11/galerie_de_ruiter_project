@@ -95,6 +95,15 @@ so WebP is the one modern format the whole pipeline - upload, storage, variants 
 the gallery supports - can guarantee. The URLs are already split per size, so an AVIF pipeline can
 later sit beside them with a `<picture>` element rather than a rewrite.
 
+## Live content updates
+
+The API exposes a public WebSocket at `/ws/content`. It carries only a topic name (`categories`,
+`antiques`, `home`, `about`, `location`); the browser fetches fresh data through the normal,
+authorized API when it hears one. The admin screens subscribe to it, so a category or piece changed
+in another tab or by another administrator appears without a page reload. Render web services
+support WebSocket connections; the browser reconnects with a short backoff if the socket drops.
+
+
 ## Cloudflare R2 optimization
 
 R2 is the cheaper home for the gallery's originals because its egress is free. It is optional:

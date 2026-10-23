@@ -28,6 +28,8 @@ export type Category = {
   name: string;
   visible: boolean;
   parentId?: string | null;
+  /** The main category's name when this is a subcategory; the API sends it with every row. */
+  parentName?: string | null;
   itemCount: number;
   children: Category[];
 };

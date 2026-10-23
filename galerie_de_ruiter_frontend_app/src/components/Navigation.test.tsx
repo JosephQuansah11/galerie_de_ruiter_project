@@ -137,4 +137,32 @@ describe("Gallery navigation", () => {
     expect(await screen.findByText(i18n.t("antiques"))).toBeInTheDocument();
     expect(mockedCategories).toHaveBeenCalled();
   });
+
+  it("shows the categories as a tree, so a subcategory is never read as a main one", async () => {
+    mockedCategories.mockResolvedValue([
+      {
+        id: "c1", name: "Audio - Tv", visible: true, itemCount: 3,
+        children: [{ id: "c2", name: "Decoration", visible: true, parentId: "c1", parentName: "Audio - Tv", itemCount: 1, children: [] }],
+      },
+    ]);
+    renderPage(<CustomNav />, { auth: false });
+    await flushPromises();
+
+    fireEvent.click(screen.getByText(i18n.t("antiques")));
+
+    const grid = document.querySelector(".category-dropdown-grid");
+    if (!grid) throw new Error("The Antiek menu did not render its category tree.");
+    const parent = grid.querySelector(".category-dropdown-group > .category-parent");
+    const child = grid.querySelector(".category-dropdown-children > .category-child");
+    if (!parent || !child) throw new Error("The Antiek menu did not nest a subcategory under its main category.");
+
+    // The child hangs under the parent's branch…
+    expect(parent.closest(".category-dropdown-group")).toBe(child.closest(".category-dropdown-group"));
+    // …so it keeps its own name instead of repeating the main category in front of it.
+    expect(parent.textContent).toContain("Audio - Tv");
+    expect(child.textContent).toContain("Decoration");
+    expect(child.textContent).not.toContain("Audio - Tv");
+    // The branch still filters the catalogue on the subcategory.
+    expect(child).toHaveAttribute("href", `/antiques?category=${encodeURIComponent("Decoration")}`);
+  });
 });

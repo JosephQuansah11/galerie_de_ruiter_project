@@ -1,0 +1,19 @@
+// The catalogue's category picker: a tree of main categories with their subcategories stacked
+// underneath behind a guide line. The columns share one grid, so the names and their counts line up
+// instead of reading "Audio - Tv / Decoration" in a flat list.
+.collection-filter-dropdown { position: relative; flex: 0 0 auto; }
+.collection-filter-dropdown .dropdown-toggle { min-height: 2.5rem; border-color: var(--theme-primary); color: var(--theme-primary); }
+.collection-dropdown-menu { width: min(56rem, calc(100vw - 2rem)); max-height: min(70vh, 36rem); overflow-y: auto; padding: 0.75rem; }
+.collection-dropdown-all { font-weight: 600; }
+.collection-dropdown-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); align-items: start; gap: 0.6rem; padding-top: 0.45rem; }
+.collection-dropdown-group { min-width: 0; padding: 0.35rem; border: 1px solid var(--theme-border); border-radius: 0.35rem; }
+.collection-dropdown-group .dropdown-item { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; min-height: 2.15rem; padding: 0.35rem 0.5rem; border-radius: 0.3rem; white-space: normal; }
+.collection-dropdown-group .collection-dropdown-parent { font-weight: 700; }
+.collection-dropdown-children { display: grid; gap: 0.05rem; margin: 0.2rem 0 0 0.55rem; padding-left: 0.6rem; border-left: 1px solid var(--theme-border); }
+.collection-dropdown-group .collection-dropdown-child { padding-left: 0.5rem; font-size: 0.9rem; }
+.collection-dropdown-name { min-width: 0; overflow-wrap: anywhere; }
+.collection-dropdown-count { flex: 0 0 auto; min-width: 1.75rem; color: var(--theme-text-secondary); font-size: 0.8rem; text-align: right; }
+@media (max-width: 640px) {
+  .collection-dropdown-menu { width: calc(100vw - 2rem); }
+  .collection-dropdown-grid { grid-template-columns: 1fr; }
+}

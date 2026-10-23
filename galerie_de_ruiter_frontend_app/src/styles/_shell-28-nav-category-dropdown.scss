@@ -2,10 +2,10 @@
   position: absolute;
   top: calc(100% + 0.35rem);
   left: 0;
-  width: min(48rem, calc(100vw - 1rem));
-  max-height: min(60vh, 32rem);
+  width: min(56rem, calc(100vw - 1rem));
+  max-height: min(70vh, 36rem);
   overflow: auto;
-  padding: 0.65rem;
+  padding: 0.75rem;
   border: 1px solid rgba(255, 250, 247, 0.22);
   border-radius: 0.65rem;
   background: linear-gradient(155deg, var(--theme-nav-start), var(--theme-nav-end));
@@ -18,32 +18,19 @@
   color: #fffaf7;
 }
 
-#Navbar .nav-category-dropdown .category-dropdown-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
-  gap: 0.5rem;
-  padding-top: 0.45rem;
-}
-
-#Navbar .nav-category-dropdown .category-dropdown-group {
-  min-width: 0;
-  padding: 0.25rem;
-  border: 1px solid rgba(255, 250, 247, 0.22);
-  border-radius: 0.35rem;
-}
-
-#Navbar .nav-category-dropdown .category-dropdown-group .dropdown-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.4rem;
-  color: #fffaf7;
-  white-space: normal;
-}
+// The tree: one column per main category, its subcategories stacked underneath behind a guide line.
+// Rows share a height and counts share a right-hand column, so every group lines up.
+#Navbar .nav-category-dropdown .category-dropdown-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); align-items: start; gap: 0.6rem; padding-top: 0.45rem; }
+#Navbar .nav-category-dropdown .category-dropdown-group { min-width: 0; padding: 0.35rem; border: 1px solid rgba(255, 250, 247, 0.22); border-radius: 0.35rem; }
+#Navbar .nav-category-dropdown .category-dropdown-group .dropdown-item { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; min-height: 2.15rem; padding: 0.35rem 0.5rem; border-radius: 0.3rem; color: #fffaf7; white-space: normal; }
+#Navbar .nav-category-dropdown .category-dropdown-group .category-parent { font-weight: 700; }
+#Navbar .nav-category-dropdown .category-dropdown-children { display: grid; gap: 0.05rem; margin: 0.2rem 0 0 0.55rem; padding-left: 0.6rem; border-left: 1px solid rgba(255, 250, 247, 0.3); }
+#Navbar .nav-category-dropdown .category-dropdown-group .category-child { padding-left: 0.5rem; font-size: 0.9rem; }
+#Navbar .nav-category-dropdown .category-name { min-width: 0; overflow-wrap: anywhere; }
+#Navbar .nav-category-dropdown .category-dropdown-group .category-count { flex: 0 0 auto; min-width: 1.75rem; text-align: right; opacity: 0.75; }
 
 #Navbar .nav-category-dropdown .category-dropdown-group .dropdown-item:hover,
 #Navbar .nav-category-dropdown .category-dropdown-group .dropdown-item:focus {
   background: rgba(255, 250, 247, 0.14);
   color: #fffaf7;
 }
-

@@ -35,14 +35,6 @@
   .catalogue-search-submit { padding: 0 0.85rem; }
   .catalogue-search-submit span { display: none; }
 }
-.collection-filter-dropdown { position: relative; flex: 0 0 auto; }
-.collection-filter-dropdown .dropdown-toggle { min-height: 2.5rem; border-color: var(--theme-primary); color: var(--theme-primary); }
-.collection-dropdown-menu { width: min(48rem, calc(100vw - 2rem)); max-height: min(60vh, 32rem); overflow-y: auto; padding: 0.65rem; }
-.collection-dropdown-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.5rem; padding-top: 0.45rem; }
-.collection-dropdown-group { min-width: 0; padding: 0.25rem; border: 1px solid var(--theme-border); border-radius: 0.35rem; }
-.collection-dropdown-group .dropdown-item { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; white-space: normal; }
-.collection-dropdown-group .dropdown-item span { color: var(--theme-text-secondary); font-size: 0.8rem; }
-.collection-dropdown-group .collection-dropdown-child { padding-left: 1.4rem; font-size: 0.88rem; }
 .catalogue-card { height: 100%; overflow: hidden; cursor: pointer; border: 1px solid rgba(30, 32, 34, 0.13); background: var(--theme-surface); box-shadow: 0 0.8rem 2rem rgba(30, 32, 34, 0.08); transition: transform 160ms ease, box-shadow 160ms ease; }
 .catalogue-card:hover { transform: translateY(-0.25rem); box-shadow: 0 1.2rem 2.5rem rgba(30, 32, 34, 0.14); }
 .catalogue-card-image { display: grid; place-items: center; height: min(30vh, 24rem); overflow: hidden; background: linear-gradient(135deg, #cfb89b, #7b6d5c); color: rgba(255, 255, 255, 0.8); font: 4rem Georgia, serif; }

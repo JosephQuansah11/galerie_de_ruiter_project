@@ -35,13 +35,12 @@
     width: calc(100% + 1.5rem);
     max-height: calc(100dvh - var(--top-nav-height));
     margin: 0 -0.75rem -0.35rem;
-    overflow-y: auto;
     background: linear-gradient(165deg, var(--theme-nav-start), var(--theme-nav-end));
   }
 
-  #Navbar .navbar-collapse:has(.icons-list-user-profile .dropdown-menu.show) {
-    overflow: visible;
-  }
+  // The panel itself never scrolls or clips: the link list inside it does the scrolling (see the
+  // collapsed navigation block), which leaves the profile row pinned to the bottom edge and lets a
+  // menu opened from the panel float over the page instead of stretching the navigation.
 
   // The collapsed menu itself — every list, list entry and drop-down inside it — is
   // owned by the single "Collapsed (small screen) navigation" block further down, so

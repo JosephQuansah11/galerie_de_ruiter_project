@@ -1,20 +1,15 @@
 @media (max-width: 1199.98px) {
-  // Menus opened from the collapsed panel flow in place at the panel width instead
-  // of floating beside it, so the whole drop-down covers the navigation bar too.
-  #Navbar .navbar-nav .dropdown-menu,
-  #Navbar .icons-list-user-profile .dropdown-menu {
-    position: static !important;
-    inset: auto !important;
-    transform: none !important;
-    width: 100%;
-    min-width: 0;
-    margin: 0.3rem 0 0;
-    box-shadow: none;
-  }
+  // The category menu belongs to the link list, so it opens in place at the panel's width and the
+  // list scrolls to it.
+  #Navbar .navbar-nav .dropdown-menu { position: static !important; inset: auto !important; transform: none !important; width: 100%; min-width: 0; max-height: none; margin: 0.3rem 0 0; box-shadow: none; }
   #Navbar .navbar-nav .dropdown-menu .dropdown-item,
   #Navbar .category-dropdown-grid {
     width: 100%;
   }
+
+  // The profile menu is the exception: it drops from the avatar the way it does on a wide screen,
+  // floating over the page, so opening it never stretches the navigation or moves the rows.
+  #Navbar .icons-list-user-profile .dropdown-menu { min-width: min(15rem, calc(100vw - 2rem)); max-width: calc(100vw - 2rem); max-height: min(60dvh, 22rem); box-shadow: 0 1rem 2.2rem rgba(18, 6, 9, 0.45); z-index: 2100; }
 
   .chat-page,
   .profile-page,

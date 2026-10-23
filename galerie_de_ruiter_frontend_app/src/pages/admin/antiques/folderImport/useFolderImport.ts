@@ -216,6 +216,7 @@ export function useFolderImport() {
         if (previewUrl) previews.current.push(previewUrl);
         return {
           ...group,
+          match: group.match ?? "folder",
           images,
           previewUrl,
           status: group.status === "saving" ? "pending" as const : group.status,

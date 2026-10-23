@@ -53,7 +53,7 @@ export function FolderImportRow({ group, imported }: {
         <Badge bg={group.record ? "success" : "secondary"}>
           {group.record ? t("csvMatched") : t("csvMissing")}
         </Badge>
-        {group.record && group.match !== "folder" && <Badge bg="light" text="dark">
+        {group.record && (group.match === "csvPath" || group.match === "csvTitle") && <Badge bg="light" text="dark">
           {t(group.match === "csvPath" ? "importMatchCsvPath" : "importMatchCsvTitle")}
         </Badge>}
         {group.existing && <Badge bg="info">{t("importWillUpdate")}</Badge>}
